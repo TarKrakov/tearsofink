@@ -3,6 +3,6 @@
   "textures": {
     "top": "tears-of-ink:block/ashen_soil_top",
     "side": "tears-of-ink:block/ashen_soil_side",
-    "bottom": "minecraft:block/dirt"
+    "bottom": "tears-of-ink:block/ashen_soil_bottom"
   }
 }
