@@ -3,7 +3,7 @@
 	"package": "com.tarkrakov.tearsofink.client.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
-		"ExampleClientMixin"
+		"FogRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
