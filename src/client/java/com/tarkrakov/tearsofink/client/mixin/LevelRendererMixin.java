@@ -1,5 +1,6 @@
 package com.tarkrakov.tearsofink.client.mixin;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.client.fog.InkFog;
 import net.minecraft.client.renderer.LevelRenderer;
@@ -22,6 +23,9 @@ public abstract class LevelRendererMixin {
 	private static final ResourceLocation TEARSOFINK$SUN = TearsOfInk.id("textures/environment/ink_sun.png");
 	@Unique
 	private static final ResourceLocation TEARSOFINK$MOON = TearsOfInk.id("textures/environment/ink_moon_phases.png");
+	/** Насколько яркими остаются солнце и луна в тумане пустошей (1 = как в ванилле). */
+	@Unique
+	private static final float TEARSOFINK$SKY_BODY_BRIGHTNESS = 0.65f;
 
 	@ModifyArg(
 			method = "renderSky",
@@ -31,7 +35,12 @@ public abstract class LevelRendererMixin {
 	private ResourceLocation tearsofink$swapSunAndMoon(ResourceLocation texture) {
 		if (InkFog.strength() < 0.5f || !"minecraft".equals(texture.getNamespace())) return texture;
 		return switch (texture.getPath()) {
-			case "textures/environment/sun.png" -> TEARSOFINK$SUN;
+			case "textures/environment/sun.png" -> {
+				// Приглушаем солнце (и следом луну): они рисуются «на просвет», альфа = яркость.
+				float[] c = RenderSystem.getShaderColor();
+				RenderSystem.setShaderColor(c[0], c[1], c[2], c[3] * TEARSOFINK$SKY_BODY_BRIGHTNESS);
+				yield TEARSOFINK$SUN;
+			}
 			case "textures/environment/moon_phases.png" -> TEARSOFINK$MOON;
 			default -> texture;
 		};

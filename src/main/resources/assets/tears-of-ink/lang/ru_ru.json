@@ -1,3 +1,6 @@
 {
-  "biome.tears-of-ink.ink_wastes": "Чернильные пустоши"
+  "biome.tears-of-ink.ink_wastes": "Чернильные пустоши",
+  "block.tears-of-ink.ashen_soil": "Пепельная земля",
+  "block.tears-of-ink.ash": "Пепел",
+  "itemGroup.tears-of-ink.main": "Tears of Ink"
 }

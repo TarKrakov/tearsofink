@@ -1,5 +1,7 @@
 package com.tarkrakov.tearsofink;
 
+import com.tarkrakov.tearsofink.block.ModBlocks;
+import com.tarkrakov.tearsofink.item.ModCreativeTab;
 import net.fabricmc.api.ModInitializer;
 
 import net.minecraft.resources.ResourceLocation;
@@ -21,6 +23,8 @@ public class TearsOfInk implements ModInitializer {
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
 
+		ModBlocks.init();
+		ModCreativeTab.init();
 		LOGGER.info("Tears of Ink: чернила проливаются в мир.");
 	}
 
