@@ -33,17 +33,21 @@ public abstract class LevelRendererMixin {
 					target = "Lcom/mojang/blaze3d/systems/RenderSystem;setShaderTexture(ILnet/minecraft/resources/ResourceLocation;)V"),
 			index = 1)
 	private ResourceLocation tearsofink$swapSunAndMoon(ResourceLocation texture) {
-		if (InkFog.strength() < 0.5f || !"minecraft".equals(texture.getNamespace())) return texture;
-		return switch (texture.getPath()) {
-			case "textures/environment/sun.png" -> {
-				// Приглушаем солнце (и следом луну): они рисуются «на просвет», альфа = яркость.
-				float[] c = RenderSystem.getShaderColor();
-				RenderSystem.setShaderColor(c[0], c[1], c[2], c[3] * TEARSOFINK$SKY_BODY_BRIGHTNESS);
-				yield TEARSOFINK$SUN;
-			}
-			case "textures/environment/moon_phases.png" -> TEARSOFINK$MOON;
-			default -> texture;
-		};
+		if (!"minecraft".equals(texture.getNamespace())) return texture;
+		float s = InkFog.strength();
+		boolean sun = "textures/environment/sun.png".equals(texture.getPath());
+		boolean moon = "textures/environment/moon_phases.png".equals(texture.getPath());
+		if (!sun && !moon) return texture;
+
+		if (sun && s > 0f) {
+			// Затухание при переходе: обычное солнце тает в дымке (s 0 → 0.5),
+			// затем из дымки проступает наше (s 0.5 → 1). Луна рисуется следом с тем же цветом.
+			float fade = s < 0.5f ? 1f - 2f * s : (2f * s - 1f) * TEARSOFINK$SKY_BODY_BRIGHTNESS;
+			float[] c = RenderSystem.getShaderColor();
+			RenderSystem.setShaderColor(c[0], c[1], c[2], c[3] * fade);
+		}
+		if (s < 0.5f) return texture;
+		return sun ? TEARSOFINK$SUN : TEARSOFINK$MOON;
 	}
 
 	@Inject(method = "renderClouds", at = @At("HEAD"), cancellable = true)

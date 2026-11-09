@@ -28,11 +28,11 @@ public abstract class FogRendererMixin {
 		float s = InkFog.strength();
 		float vanillaStart = RenderSystem.getShaderFogStart();
 		float vanillaEnd = RenderSystem.getShaderFogEnd();
-		float end = Math.min(renderDistance, InkFog.FOG_END);
-		float start = Math.min(InkFog.FOG_START, end * 0.5f);
+		float end = InkFog.fogEnd(vanillaEnd, renderDistance);
+		float start = Mth.lerp(s, vanillaStart, Math.min(InkFog.FOG_START, end * 0.5f));
 
-		RenderSystem.setShaderFogStart(Mth.lerp(s, vanillaStart, start));
-		RenderSystem.setShaderFogEnd(Mth.lerp(s, vanillaEnd, end));
+		RenderSystem.setShaderFogStart(Math.min(start, end));
+		RenderSystem.setShaderFogEnd(end);
 		if (s > 0.5f) {
 			RenderSystem.setShaderFogShape(FogShape.SPHERE);
 		}
