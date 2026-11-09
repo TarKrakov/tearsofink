@@ -3,15 +3,14 @@
 	"id": "tears-of-ink",
 	"version": "${version}",
 	"name": "Tears of Ink",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"description": "Осколок иного мира: Чернильные пустоши, Башня Пути Проклятия и цена силы.",
 	"authors": [
-		"Me!"
+		"TarKrakov"
 	],
 	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
+		"sources": "https://github.com/TarKrakov/tearsofink"
 	},
-	"license": "CC0-1.0",
+	"license": "All-Rights-Reserved",
 	"icon": "assets/tears-of-ink/icon.png",
 	"environment": "*",
 	"entrypoints": {

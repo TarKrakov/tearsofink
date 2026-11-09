@@ -21,7 +21,7 @@ public class TearsOfInk implements ModInitializer {
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
 
-		LOGGER.info("Hello Fabric world!");
+		LOGGER.info("Tears of Ink: чернила проливаются в мир.");
 	}
 
 	public static ResourceLocation id(String path) {
