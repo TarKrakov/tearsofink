@@ -21,7 +21,7 @@ import net.minecraft.world.phys.Vec3;
 public class FlameDanceParticle extends TextureSheetParticle {
 	// ===== Настройки — крутить здесь =====
 	/** Размер огонька (половина стороны квадрата, в блоках). */
-	public static final float SIZE = 0.8f;
+	public static final float SIZE = 0.5f;
 	/** Сколько пустых пикселей под пламенем в кадре автора (из 64) — чтобы низ огня стоял на полу камеры. */
 	public static final float EMPTY_BELOW = 13f / 64f;
 	/** Сколько тиков показывается каждый кадр (20 тиков = 1 секунда). */
