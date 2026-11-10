@@ -20,8 +20,10 @@
   "block.tears-of-ink.pale_pressure_plate": "Бледная нажимная плита",
   "block.tears-of-ink.tearbloom": "Слёзница",
   "block.tears-of-ink.potted_tearbloom": "Слёзница в горшке",
-  "block.tears-of-ink.pigment_ore": "Пигментная руда",
-  "block.tears-of-ink.deepslate_pigment_ore": "Глубинносланцевая пигментная руда",
   "block.tears-of-ink.ink_puddle": "Чернильная лужа",
-  "item.tears-of-ink.pigment": "Пигмент"
+  "item.tears-of-ink.pigment": "Пигмент",
+  "block.tears-of-ink.asphodelite_rock": "Асфоделитовая порода",
+  "block.tears-of-ink.asphodelite_ore": "Асфоделит",
+  "block.tears-of-ink.deepslate_asphodelite_ore": "Глубинный асфоделит",
+  "item.tears-of-ink.asphoda": "Асфода"
 }

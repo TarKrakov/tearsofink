@@ -106,11 +106,14 @@ public final class ModBlocks {
 	public static final Block POTTED_TEARBLOOM = registerNoItem("potted_tearbloom", new FlowerPotBlock(TEARBLOOM,
 			BlockBehaviour.Properties.ofFullCopy(Blocks.POTTED_LILY_OF_THE_VALLEY).lightLevel(s -> 3)));
 
-	/** Пигментная руда (камень и глубинный сланец). */
-	public static final Block PIGMENT_ORE = register("pigment_ore", new DropExperienceBlock(UniformInt.of(1, 3),
-			BlockBehaviour.Properties.ofFullCopy(Blocks.COAL_ORE)));
-	public static final Block DEEPSLATE_PIGMENT_ORE = register("deepslate_pigment_ore", new DropExperienceBlock(UniformInt.of(1, 3),
-			BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE_COAL_ORE)));
+	/** Асфоделитовая порода: камень под Чернильными пустошами (вместо обычного камня выше y=0). */
+	public static final Block ASPHODELITE_ROCK = register("asphodelite_rock", new Block(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	/** Асфоделит: руда в асфоделитовой породе и глубинном сланце. Роняет Асфоду — материал для снаряжения. */
+	public static final Block ASPHODELITE_ORE = register("asphodelite_ore", new DropExperienceBlock(UniformInt.of(2, 5),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block DEEPSLATE_ASPHODELITE_ORE = register("deepslate_asphodelite_ore", new DropExperienceBlock(UniformInt.of(2, 5),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE_IRON_ORE)));
 
 	/** Чернильная лужа: тонкий слой чернил, замедляет. */
 	public static final Block INK_PUDDLE = register("ink_puddle", new InkPuddleBlock(

@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "tears-of-ink:block/deepslate_pigment_ore"
+    "all": "tears-of-ink:block/deepslate_asphodelite_ore"
   }
 }

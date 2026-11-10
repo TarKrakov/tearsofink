@@ -7,7 +7,9 @@ import net.minecraft.world.item.Item;
 
 /** Предметы мода (не блоки). */
 public final class ModItems {
-	/** Пигмент: добывается из пигментной руды, нужен для Печатей и снаряжения. */
+	/** Асфода: кусочки Асфоделита, материал для снаряжения. */
+	public static final Item ASPHODA = register("asphoda", new Item(new Item.Properties()));
+	/** Пигмент: падает с врагов и из сундуков, используется в крафтах. */
 	public static final Item PIGMENT = register("pigment", new Item(new Item.Properties()));
 
 	private ModItems() {}

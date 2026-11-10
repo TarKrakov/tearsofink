@@ -22,8 +22,10 @@ public final class ModCreativeTab {
 						output.accept(ModBlocks.ASH);
 						output.accept(ModBlocks.INK_PUDDLE);
 						output.accept(ModBlocks.TEARBLOOM);
-						output.accept(ModBlocks.PIGMENT_ORE);
-						output.accept(ModBlocks.DEEPSLATE_PIGMENT_ORE);
+						output.accept(ModBlocks.ASPHODELITE_ROCK);
+						output.accept(ModBlocks.ASPHODELITE_ORE);
+						output.accept(ModBlocks.DEEPSLATE_ASPHODELITE_ORE);
+						output.accept(ModItems.ASPHODA);
 						output.accept(ModItems.PIGMENT);
 						output.accept(ModBlocks.PALE_LOG);
 						output.accept(ModBlocks.STRIPPED_PALE_LOG);

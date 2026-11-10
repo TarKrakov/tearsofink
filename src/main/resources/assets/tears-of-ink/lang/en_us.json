@@ -20,8 +20,10 @@
   "block.tears-of-ink.pale_pressure_plate": "Pale Pressure Plate",
   "block.tears-of-ink.tearbloom": "Tearbloom",
   "block.tears-of-ink.potted_tearbloom": "Potted Tearbloom",
-  "block.tears-of-ink.pigment_ore": "Pigment Ore",
-  "block.tears-of-ink.deepslate_pigment_ore": "Deepslate Pigment Ore",
   "block.tears-of-ink.ink_puddle": "Ink Puddle",
-  "item.tears-of-ink.pigment": "Pigment"
+  "item.tears-of-ink.pigment": "Pigment",
+  "block.tears-of-ink.asphodelite_rock": "Asphodelite Rock",
+  "block.tears-of-ink.asphodelite_ore": "Asphodelite",
+  "block.tears-of-ink.deepslate_asphodelite_ore": "Deepslate Asphodelite",
+  "item.tears-of-ink.asphoda": "Asphoda"
 }
