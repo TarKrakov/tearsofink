@@ -24,6 +24,10 @@ public final class ModParticles {
 	public static final SimpleParticleType INK_DRIP_FALL = simple("ink_drip_fall");
 	public static final SimpleParticleType INK_DRIP_LAND = simple("ink_drip_land");
 
+	/** Огонёк, танцующий на месте в камере фонаря (лист огня автора, 8 кадров). */
+	public static final SimpleParticleType FLAME_DANCE = Registry.register(
+			BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id("flame_dance"), FabricParticleTypes.simple(true));
+
 	private static SimpleParticleType simple(String name) {
 		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id(name), FabricParticleTypes.simple());
 	}

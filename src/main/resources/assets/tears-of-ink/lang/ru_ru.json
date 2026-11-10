@@ -104,9 +104,9 @@
   "key.categories.tears-of-ink": "Tears of Ink",
   "key.tears-of-ink.dash": "Рывок",
   "block.tears-of-ink.ink_lantern": "Чернильный фонарь",
-  "block.tears-of-ink.brazier": "Жаровня",
   "block.tears-of-ink.eternal_lantern": "Вечный фонарь",
   "item.tears-of-ink.hand_lantern": "Ручной фонарь",
   "item.tears-of-ink.bright_hand_lantern": "Яркий ручной фонарь",
-  "message.tears-of-ink.too_many_flames": "Лес не позволит вам зажечь больше Пламени."
+  "message.tears-of-ink.too_many_flames": "Лес не позволит вам зажечь больше Пламени.",
+  "block.tears-of-ink.stone_lantern": "Каменный фонарь"
 }

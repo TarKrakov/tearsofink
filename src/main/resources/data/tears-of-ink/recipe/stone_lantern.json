@@ -2,11 +2,14 @@
   "type": "minecraft:crafting_shaped",
   "category": "misc",
   "pattern": [
-    "A A",
+    "RAR",
     "PLP",
-    "III"
+    "RRR"
   ],
   "key": {
+    "R": {
+      "item": "tears-of-ink:asphodelite_rock"
+    },
     "A": {
       "item": "tears-of-ink:asphoda"
     },
@@ -15,13 +18,10 @@
     },
     "L": {
       "item": "tears-of-ink:ink_lantern"
-    },
-    "I": {
-      "item": "minecraft:iron_ingot"
     }
   },
   "result": {
-    "id": "tears-of-ink:brazier",
+    "id": "tears-of-ink:stone_lantern",
     "count": 1
   }
 }

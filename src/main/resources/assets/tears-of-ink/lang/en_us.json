@@ -104,9 +104,9 @@
   "key.categories.tears-of-ink": "Tears of Ink",
   "key.tears-of-ink.dash": "Dash",
   "block.tears-of-ink.ink_lantern": "Ink Lantern",
-  "block.tears-of-ink.brazier": "Brazier",
   "block.tears-of-ink.eternal_lantern": "Eternal Lantern",
   "item.tears-of-ink.hand_lantern": "Hand Lantern",
   "item.tears-of-ink.bright_hand_lantern": "Bright Hand Lantern",
-  "message.tears-of-ink.too_many_flames": "The forest will not let you kindle another Flame."
+  "message.tears-of-ink.too_many_flames": "The forest will not let you kindle another Flame.",
+  "block.tears-of-ink.stone_lantern": "Stone Lantern"
 }

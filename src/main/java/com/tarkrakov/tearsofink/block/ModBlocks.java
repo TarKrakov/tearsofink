@@ -47,7 +47,7 @@ import net.minecraft.world.level.block.ColoredFallingBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
-import com.tarkrakov.tearsofink.block.lantern.BrazierBlock;
+import com.tarkrakov.tearsofink.block.lantern.StoneLanternBlock;
 import com.tarkrakov.tearsofink.block.lantern.FogClearing;
 import com.tarkrakov.tearsofink.block.lantern.InkLanternBlock;
 
@@ -272,7 +272,7 @@ public final class ModBlocks {
 
 	// ===== Фонари: разгоняют мглу, светят, не дают появляться нашим врагам =====
 	/** Радиус ясности (блоков) у каждого вида фонаря. */
-	public static final int INK_LANTERN_RADIUS = 10, BRAZIER_RADIUS = 18, ETERNAL_LANTERN_RADIUS = 14;
+	public static final int INK_LANTERN_RADIUS = 10, STONE_LANTERN_RADIUS = 18, ETERNAL_LANTERN_RADIUS = 14;
 
 	private static BlockBehaviour.Properties lanternProps(int light) {
 		return BlockBehaviour.Properties.ofFullCopy(Blocks.LANTERN)
@@ -283,9 +283,11 @@ public final class ModBlocks {
 
 	/** Чернильный фонарь: малый, ставится на землю/забор или подвешивается. Можно скрафтить. */
 	public static final Block INK_LANTERN = register("ink_lantern", new InkLanternBlock(INK_LANTERN_RADIUS, false, lanternProps(14)));
-	/** Жаровня: большой огонь поселений. Можно скрафтить. */
-	public static final Block BRAZIER = register("brazier", new BrazierBlock(BRAZIER_RADIUS,
-			lanternProps(15).sound(SoundType.METAL).noOcclusion()));
+	/** Каменный фонарь (модель автора): большой, в два блока; огонь — танцующая частица. Можно скрафтить. */
+	public static final Block STONE_LANTERN = register("stone_lantern", new StoneLanternBlock(STONE_LANTERN_RADIUS,
+			lanternProps(15).sound(SoundType.STONE).noOcclusion()
+					.lightLevel(s -> s.getValue(StoneLanternBlock.HALF) == net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER
+							&& s.getValue(FogClearing.LIT) ? 15 : 0)));
 	/** Вечный фонарь: сюжетные места; горит всегда, не ломается, не крафтится. */
 	public static final Block ETERNAL_LANTERN = register("eternal_lantern", new InkLanternBlock(ETERNAL_LANTERN_RADIUS, true,
 			lanternProps(15).strength(-1f, 3600000f)));

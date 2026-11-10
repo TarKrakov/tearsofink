@@ -78,7 +78,7 @@ public final class ModCreativeTab {
 						output.accept(ModBlocks.PALE_LEAVES);
 						output.accept(ModBlocks.PALE_SAPLING);
 						output.accept(ModBlocks.INK_LANTERN);
-						output.accept(ModBlocks.BRAZIER);
+						output.accept(ModBlocks.STONE_LANTERN);
 						output.accept(ModBlocks.ETERNAL_LANTERN);
 						output.accept(ModItems.HAND_LANTERN);
 						output.accept(ModItems.BRIGHT_HAND_LANTERN);

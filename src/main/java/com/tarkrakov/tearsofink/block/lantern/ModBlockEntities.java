@@ -10,7 +10,7 @@ public final class ModBlockEntities {
 	public static final BlockEntityType<LanternBeaconBlockEntity> LANTERN_BEACON = Registry.register(
 			BuiltInRegistries.BLOCK_ENTITY_TYPE, TearsOfInk.id("lantern_beacon"),
 			BlockEntityType.Builder.of(LanternBeaconBlockEntity::new,
-					ModBlocks.INK_LANTERN, ModBlocks.BRAZIER, ModBlocks.ETERNAL_LANTERN).build(null));
+					ModBlocks.INK_LANTERN, ModBlocks.STONE_LANTERN, ModBlocks.ETERNAL_LANTERN).build(null));
 
 	private ModBlockEntities() {}
 

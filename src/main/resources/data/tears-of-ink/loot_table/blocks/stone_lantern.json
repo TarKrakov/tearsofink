@@ -7,7 +7,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "tears-of-ink:brazier"
+          "name": "tears-of-ink:stone_lantern"
         }
       ],
       "conditions": [
@@ -16,8 +16,9 @@
         },
         {
           "condition": "minecraft:block_state_property",
-          "block": "tears-of-ink:brazier",
+          "block": "tears-of-ink:stone_lantern",
           "properties": {
+            "half": "lower",
             "player_made": "true"
           }
         }

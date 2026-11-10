@@ -2,6 +2,8 @@ package com.tarkrakov.tearsofink.client;
 
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.client.fog.FogBankSpawner;
+import com.tarkrakov.tearsofink.client.fog.FlameDanceSpawner;
+import com.tarkrakov.tearsofink.client.particle.FlameDanceParticle;
 import com.tarkrakov.tearsofink.block.WoodSet;
 import com.tarkrakov.tearsofink.client.particle.DripParticle;
 import com.tarkrakov.tearsofink.client.particle.FogBankParticle;
@@ -32,6 +34,8 @@ public class TearsOfInkClient implements ClientModInitializer {
 		particles.register(ModParticles.INK_DRIP_FALL, s -> new DripParticle.Provider(s, DripParticle.Phase.FALL, ModParticles.INK_DRIP_LAND));
 		particles.register(ModParticles.INK_DRIP_LAND, s -> new DripParticle.Provider(s, DripParticle.Phase.LAND, null));
 		ClientTickEvents.END_CLIENT_TICK.register(FogBankSpawner::tick);
+		ParticleFactoryRegistry.getInstance().register(ModParticles.FLAME_DANCE, FlameDanceParticle.Provider::new);
+		ClientTickEvents.END_CLIENT_TICK.register(FlameDanceSpawner::tick);
 
 		// Душа и Чернила: полоски и надпись при входе/выходе
 		ClientPlayNetworking.registerGlobalReceiver(InkSyncPayload.TYPE, (payload, context) -> context.client().execute(() -> InkHud.receive(payload)));
@@ -58,6 +62,6 @@ public class TearsOfInkClient implements ClientModInitializer {
 		}
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.POTTED_TEARBLOOM, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.PALE_TRAPDOOR, RenderType.cutout());
-		BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.cutout(), ModBlocks.INK_LANTERN, ModBlocks.BRAZIER, ModBlocks.ETERNAL_LANTERN);
+		BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.cutout(), ModBlocks.INK_LANTERN, ModBlocks.STONE_LANTERN, ModBlocks.ETERNAL_LANTERN);
 	}
 }
