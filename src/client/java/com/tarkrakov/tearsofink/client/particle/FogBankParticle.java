@@ -13,7 +13,7 @@ import net.minecraft.util.Mth;
 public class FogBankParticle extends TextureSheetParticle {
 	// ===== Настройки =====
 	/** Максимальная непрозрачность клуба (0..1). */
-	public static final float MAX_ALPHA = 0.35f;
+	public static final float MAX_ALPHA = 0.25f;
 	/** Размер клуба (половина стороны, в блоках). */
 	public static final float MIN_SIZE = 2.5f, MAX_SIZE = 5.0f;
 	/** Время жизни в тиках (20 тиков = 1 секунда). */
