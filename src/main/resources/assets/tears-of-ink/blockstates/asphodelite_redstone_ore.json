@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=false": {
+      "model": "tears-of-ink:block/asphodelite_redstone_ore"
+    },
+    "lit=true": {
+      "model": "tears-of-ink:block/asphodelite_redstone_ore"
+    }
+  }
+}

@@ -3,6 +3,14 @@
   "values": [
     "tears-of-ink:asphodelite_rock",
     "tears-of-ink:asphodelite_ore",
-    "tears-of-ink:deepslate_asphodelite_ore"
+    "tears-of-ink:deepslate_asphodelite_ore",
+    "tears-of-ink:asphodelite_coal_ore",
+    "tears-of-ink:asphodelite_iron_ore",
+    "tears-of-ink:asphodelite_copper_ore",
+    "tears-of-ink:asphodelite_gold_ore",
+    "tears-of-ink:asphodelite_redstone_ore",
+    "tears-of-ink:asphodelite_lapis_ore",
+    "tears-of-ink:asphodelite_diamond_ore",
+    "tears-of-ink:asphodelite_emerald_ore"
   ]
 }

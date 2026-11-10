@@ -104,7 +104,15 @@
       "minecraft:disk_sand",
       "minecraft:disk_clay",
       "minecraft:disk_gravel",
-      "tears-of-ink:ore_asphodelite"
+      "tears-of-ink:ore_asphodelite",
+      "tears-of-ink:ore_asphodelite_coal_ore",
+      "tears-of-ink:ore_asphodelite_iron_ore",
+      "tears-of-ink:ore_asphodelite_copper_ore",
+      "tears-of-ink:ore_asphodelite_gold_ore",
+      "tears-of-ink:ore_asphodelite_redstone_ore",
+      "tears-of-ink:ore_asphodelite_lapis_ore",
+      "tears-of-ink:ore_asphodelite_diamond_ore",
+      "tears-of-ink:ore_asphodelite_emerald_ore"
     ],
     [],
     [

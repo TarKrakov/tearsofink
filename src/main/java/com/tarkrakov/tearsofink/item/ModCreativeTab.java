@@ -26,6 +26,14 @@ public final class ModCreativeTab {
 						output.accept(ModBlocks.ASPHODELITE_ORE);
 						output.accept(ModBlocks.DEEPSLATE_ASPHODELITE_ORE);
 						output.accept(ModItems.ASPHODA);
+						output.accept(ModBlocks.ASPHODELITE_COAL_ORE);
+						output.accept(ModBlocks.ASPHODELITE_IRON_ORE);
+						output.accept(ModBlocks.ASPHODELITE_COPPER_ORE);
+						output.accept(ModBlocks.ASPHODELITE_GOLD_ORE);
+						output.accept(ModBlocks.ASPHODELITE_REDSTONE_ORE);
+						output.accept(ModBlocks.ASPHODELITE_LAPIS_ORE);
+						output.accept(ModBlocks.ASPHODELITE_DIAMOND_ORE);
+						output.accept(ModBlocks.ASPHODELITE_EMERALD_ORE);
 						output.accept(ModItems.PIGMENT);
 						output.accept(ModBlocks.PALE_LOG);
 						output.accept(ModBlocks.STRIPPED_PALE_LOG);

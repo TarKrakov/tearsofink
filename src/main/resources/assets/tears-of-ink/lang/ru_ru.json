@@ -25,5 +25,13 @@
   "block.tears-of-ink.asphodelite_rock": "Асфоделитовая порода",
   "block.tears-of-ink.asphodelite_ore": "Асфоделит",
   "block.tears-of-ink.deepslate_asphodelite_ore": "Глубинный асфоделит",
-  "item.tears-of-ink.asphoda": "Асфода"
+  "item.tears-of-ink.asphoda": "Асфода",
+  "block.tears-of-ink.asphodelite_coal_ore": "Асфоделитовая угольная руда",
+  "block.tears-of-ink.asphodelite_iron_ore": "Асфоделитовая железная руда",
+  "block.tears-of-ink.asphodelite_copper_ore": "Асфоделитовая медная руда",
+  "block.tears-of-ink.asphodelite_gold_ore": "Асфоделитовая золотая руда",
+  "block.tears-of-ink.asphodelite_redstone_ore": "Асфоделитовая редстоуновая руда",
+  "block.tears-of-ink.asphodelite_lapis_ore": "Асфоделитовая лазуритовая руда",
+  "block.tears-of-ink.asphodelite_diamond_ore": "Асфоделитовая алмазная руда",
+  "block.tears-of-ink.asphodelite_emerald_ore": "Асфоделитовая изумрудная руда"
 }

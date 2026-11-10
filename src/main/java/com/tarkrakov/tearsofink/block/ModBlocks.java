@@ -24,6 +24,8 @@ import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
 import net.minecraft.world.level.block.PressurePlateBlock;
+import net.minecraft.world.level.block.RedStoneOreBlock;
+import net.minecraft.util.valueproviders.ConstantInt;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
 import net.minecraft.world.level.block.TrapDoorBlock;
@@ -117,6 +119,24 @@ public final class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE).lightLevel(s -> ASPHODELITE_LIGHT)));
 	public static final Block DEEPSLATE_ASPHODELITE_ORE = register("deepslate_asphodelite_ore", new DropExperienceBlock(UniformInt.of(2, 5),
 			BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE_IRON_ORE).lightLevel(s -> ASPHODELITE_LIGHT)));
+
+	// ===== Ванильные руды в асфоделитовой породе (лут — ванильный) =====
+	public static final Block ASPHODELITE_COAL_ORE = register("asphodelite_coal_ore", new DropExperienceBlock(UniformInt.of(0, 2),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.COAL_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block ASPHODELITE_IRON_ORE = register("asphodelite_iron_ore", new DropExperienceBlock(ConstantInt.of(0),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block ASPHODELITE_COPPER_ORE = register("asphodelite_copper_ore", new DropExperienceBlock(ConstantInt.of(0),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.COPPER_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block ASPHODELITE_GOLD_ORE = register("asphodelite_gold_ore", new DropExperienceBlock(ConstantInt.of(0),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.GOLD_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block ASPHODELITE_REDSTONE_ORE = register("asphodelite_redstone_ore", new RedStoneOreBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.REDSTONE_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block ASPHODELITE_LAPIS_ORE = register("asphodelite_lapis_ore", new DropExperienceBlock(UniformInt.of(2, 5),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.LAPIS_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block ASPHODELITE_DIAMOND_ORE = register("asphodelite_diamond_ore", new DropExperienceBlock(UniformInt.of(3, 7),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DIAMOND_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block ASPHODELITE_EMERALD_ORE = register("asphodelite_emerald_ore", new DropExperienceBlock(UniformInt.of(3, 7),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.EMERALD_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
 
 	/** Чернильная лужа: тонкий слой чернил, замедляет. */
 	public static final Block INK_PUDDLE = register("ink_puddle", new InkPuddleBlock(

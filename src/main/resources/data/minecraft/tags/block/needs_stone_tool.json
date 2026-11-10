@@ -2,6 +2,10 @@
   "replace": false,
   "values": [
     "tears-of-ink:asphodelite_ore",
-    "tears-of-ink:deepslate_asphodelite_ore"
+    "tears-of-ink:deepslate_asphodelite_ore",
+    "tears-of-ink:asphodelite_coal_ore",
+    "tears-of-ink:asphodelite_iron_ore",
+    "tears-of-ink:asphodelite_copper_ore",
+    "tears-of-ink:asphodelite_lapis_ore"
   ]
 }
