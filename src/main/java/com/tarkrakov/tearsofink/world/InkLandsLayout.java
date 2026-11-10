@@ -11,6 +11,8 @@ import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.levelgen.synth.SimplexNoise;
 
+import java.util.function.IntBinaryOperator;
+
 /**
  * Раскладка Чернильных Земель: одна область на мир.
  * От края к центру: Бледнолесье → (круглые пятна Кроволесья) → Чернолесье. Вся вода внутри — Смоляное озеро.
@@ -20,7 +22,7 @@ import net.minecraft.world.level.levelgen.synth.SimplexNoise;
 public final class InkLandsLayout {
 	// ===== Размеры (в блоках) =====
 	/** На каком расстоянии от точки 0,0 ищем место для центра. */
-	public static final int[] CENTER_DISTANCES = {2000, 1600, 2400};
+	public static final int[] CENTER_DISTANCES = {1400, 1200, 1700};
 	/** Радиус всей области. */
 	public static final int RADIUS = 900;
 	/** Радиус ядра — Чернолесья. */
@@ -54,6 +56,11 @@ public final class InkLandsLayout {
 	/** Дороги начинаются чуть за краем области и доходят почти до центра. */
 	public static final double ROAD_START_FRACTION = 1.08;
 	public static final int ROAD_END_RADIUS = 30;
+	/** Насколько дорога может отходить от рельефа вверх/вниз (срез холмов и насыпь над ямами). */
+	public static final int ROAD_MAX_CUT_FILL = 5;
+	/** Шаг выборки высоты вдоль дороги и ширина сглаживания (в шагах). */
+	public static final int ROAD_PROFILE_STEP = 8;
+	public static final int ROAD_SMOOTHING = 5;
 
 	private final Climate.Sampler sampler;
 	private final BlockPos center;
@@ -62,6 +69,8 @@ public final class InkLandsLayout {
 	private final SimplexNoise detailNoise;
 	private final SimplexNoise roadNoise;
 	private final double[] roadAngles = new double[ROADS];
+	/** Сглаженная высота каждой дороги вдоль её длины (считается один раз). */
+	private volatile double[][] roadProfiles;
 
 	private InkLandsLayout(Climate.Sampler sampler, BlockPos center) {
 		this.sampler = sampler;
@@ -145,25 +154,82 @@ public final class InkLandsLayout {
 	// ----- Дороги -----
 	/** Точка, где начинается дорога номер index (0..ROADS-1) — чуть за краем области. */
 	public BlockPos roadStart(int index) {
-		double d = RADIUS * 1.12;
+		double d = RADIUS * 1.04;
 		double angle = roadAngles[Math.floorMod(index, ROADS)] + roadNoise.getValue(d / ROAD_MEANDER_SCALE, Math.floorMod(index, ROADS) * 10.0) * ROAD_MEANDER;
 		return new BlockPos(center.getX() + (int) Math.round(Math.cos(angle) * d), 0,
 				center.getZ() + (int) Math.round(Math.sin(angle) * d));
 	}
 
+	private double roadAngle(int road, double d) {
+		return roadAngles[road] + roadNoise.getValue(d / ROAD_MEANDER_SCALE, road * 10.0) * ROAD_MEANDER;
+	}
+
 	/** Лежит ли точка на одной из магистралей. */
 	public boolean isRoad(int x, int z) {
+		return roadAt(x, z) != null;
+	}
+
+	/** Если точка на дороге — {номер дороги, расстояние до центра}, иначе null. */
+	public double[] roadAt(int x, int z) {
 		double dx = x - center.getX();
 		double dz = z - center.getZ();
 		double d = Math.sqrt(dx * dx + dz * dz);
-		if (d < ROAD_END_RADIUS || d > RADIUS * ROAD_START_FRACTION) return false;
+		if (d < ROAD_END_RADIUS || d > RADIUS * ROAD_START_FRACTION) return null;
 		double angle = Math.atan2(dz, dx);
 		for (int i = 0; i < ROADS; i++) {
-			double roadAngle = roadAngles[i] + roadNoise.getValue(d / ROAD_MEANDER_SCALE, i * 10.0) * ROAD_MEANDER;
-			double diff = Mth.wrapDegrees((angle - roadAngle) * Mth.RAD_TO_DEG) * Mth.DEG_TO_RAD;
-			if (Math.abs(diff) < Math.PI / 2 && Math.abs(Math.sin(diff)) * d < ROAD_HALF_WIDTH) return true;
+			double diff = Mth.wrapDegrees((angle - roadAngle(i, d)) * Mth.RAD_TO_DEG) * Mth.DEG_TO_RAD;
+			if (Math.abs(diff) < Math.PI / 2 && Math.abs(Math.sin(diff)) * d < ROAD_HALF_WIDTH) return new double[]{i, d};
 		}
-		return false;
+		return null;
+	}
+
+	/**
+	 * Высота полотна дороги в этом месте: сглаженный рельеф вдоль дороги.
+	 * @param baseHeight высота рельефа (x, z) → y, без построек
+	 */
+	public double roadHeight(int road, double d, IntBinaryOperator baseHeight) {
+		double[][] profiles = roadProfiles;
+		if (profiles == null) {
+			synchronized (this) {
+				profiles = roadProfiles;
+				if (profiles == null) {
+					profiles = buildRoadProfiles(baseHeight);
+					roadProfiles = profiles;
+				}
+			}
+		}
+		double[] profile = profiles[road];
+		double t = (d - ROAD_END_RADIUS) / ROAD_PROFILE_STEP;
+		int i = Mth.clamp((int) Math.floor(t), 0, profile.length - 2);
+		return Mth.lerp(Mth.clamp(t - i, 0, 1), profile[i], profile[i + 1]);
+	}
+
+	private double[][] buildRoadProfiles(IntBinaryOperator baseHeight) {
+		int samples = (int) Math.ceil((RADIUS * ROAD_START_FRACTION - ROAD_END_RADIUS) / ROAD_PROFILE_STEP) + 2;
+		double[][] result = new double[ROADS][];
+		for (int road = 0; road < ROADS; road++) {
+			double[] raw = new double[samples];
+			for (int i = 0; i < samples; i++) {
+				double d = ROAD_END_RADIUS + i * ROAD_PROFILE_STEP;
+				double a = roadAngle(road, d);
+				raw[i] = baseHeight.applyAsInt(center.getX() + (int) Math.round(Math.cos(a) * d),
+						center.getZ() + (int) Math.round(Math.sin(a) * d));
+			}
+			double[] smooth = new double[samples];
+			for (int i = 0; i < samples; i++) {
+				double sum = 0;
+				int n = 0;
+				for (int k = -ROAD_SMOOTHING; k <= ROAD_SMOOTHING; k++) {
+					int j = i + k;
+					if (j < 0 || j >= samples) continue;
+					sum += raw[j];
+					n++;
+				}
+				smooth[i] = sum / n;
+			}
+			result[road] = smooth;
+		}
+		return result;
 	}
 
 	private static boolean isWater(Holder<Biome> biome) {
