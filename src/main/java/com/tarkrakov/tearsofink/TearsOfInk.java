@@ -3,6 +3,7 @@ package com.tarkrakov.tearsofink;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.item.ModCreativeTab;
 import com.tarkrakov.tearsofink.particle.ModParticles;
+import com.tarkrakov.tearsofink.world.ModTreeTypes;
 import net.fabricmc.api.ModInitializer;
 
 import net.minecraft.resources.ResourceLocation;
@@ -24,6 +25,7 @@ public class TearsOfInk implements ModInitializer {
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
 
+		ModTreeTypes.init();
 		ModBlocks.init();
 		ModCreativeTab.init();
 		ModParticles.init();
