@@ -143,6 +143,14 @@ public final class InkLandsLayout {
 	}
 
 	// ----- Дороги -----
+	/** Точка, где начинается дорога номер index (0..ROADS-1) — чуть за краем области. */
+	public BlockPos roadStart(int index) {
+		double d = RADIUS * 1.12;
+		double angle = roadAngles[Math.floorMod(index, ROADS)] + roadNoise.getValue(d / ROAD_MEANDER_SCALE, Math.floorMod(index, ROADS) * 10.0) * ROAD_MEANDER;
+		return new BlockPos(center.getX() + (int) Math.round(Math.cos(angle) * d), 0,
+				center.getZ() + (int) Math.round(Math.sin(angle) * d));
+	}
+
 	/** Лежит ли точка на одной из магистралей. */
 	public boolean isRoad(int x, int z) {
 		double dx = x - center.getX();
