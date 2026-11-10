@@ -29,6 +29,10 @@ public final class ModTreeTypes {
 	public static final Feature<SimpleBlockConfiguration> HERB_CIRCLE = Registry.register(
 			BuiltInRegistries.FEATURE, TearsOfInk.id("herb_circle"), new HerbCircleFeature(SimpleBlockConfiguration.CODEC));
 
+	/** Низины Кроволесья. */
+	public static final Feature<NoneFeatureConfiguration> BLOOD_VALLEY = Registry.register(
+			BuiltInRegistries.FEATURE, TearsOfInk.id("blood_valley"), new BloodValleyFeature(NoneFeatureConfiguration.CODEC));
+
 	/** Магистральные дороги Чернильных Земель. */
 	public static final Feature<NoneFeatureConfiguration> INK_ROADS = Registry.register(
 			BuiltInRegistries.FEATURE, TearsOfInk.id("ink_roads"), new InkRoadsFeature(NoneFeatureConfiguration.CODEC));

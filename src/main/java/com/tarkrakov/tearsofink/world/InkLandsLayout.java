@@ -45,11 +45,17 @@ public final class InkLandsLayout {
 	public static final int BLOOD_INNER_MARGIN = 50;
 	public static final double BLOOD_OUTER_FRACTION = 0.88;
 
+	// ===== Низина Кроволесья =====
+	/** Насколько дно долины ниже окружающей земли. */
+	public static final int VALLEY_DEPTH = 7;
+	/** Ширина плавного склона вокруг пятна (за его краем). */
+	public static final int VALLEY_SLOPE = 30;
+
 	// ===== Дороги =====
 	/** Сколько магистралей ведёт к центру. */
 	public static final int ROADS = 5;
 	/** Полуширина дороги (дорога шириной ~2×этого). */
-	public static final double ROAD_HALF_WIDTH = 1.6;
+	public static final double ROAD_HALF_WIDTH = 2.6;
 	/** Насколько дорога петляет (в радианах) и масштаб изгибов. */
 	public static final double ROAD_MEANDER = 0.22;
 	public static final double ROAD_MEANDER_SCALE = 160.0;
@@ -71,6 +77,8 @@ public final class InkLandsLayout {
 	private final double[] roadAngles = new double[ROADS];
 	/** Сглаженная высота каждой дороги вдоль её длины (считается один раз). */
 	private volatile double[][] roadProfiles;
+	/** Высота дна для каждого пятна Кроволесья (считается один раз на пятно). */
+	private final java.util.concurrent.ConcurrentHashMap<Long, Double> valleyFloors = new java.util.concurrent.ConcurrentHashMap<>();
 
 	private InkLandsLayout(Climate.Sampler sampler, BlockPos center) {
 		this.sampler = sampler;
@@ -151,6 +159,49 @@ public final class InkLandsLayout {
 		return new long[]{bx, bz, radius};
 	}
 
+	// ----- Низина Кроволесья -----
+	/**
+	 * Высота земли с учётом низин Кроволесья: плоское дно внутри пятна и плавный склон вокруг.
+	 * @param natural естественная высота в этой точке
+	 * @param baseHeight высота рельефа (x, z) → y — нужна, чтобы одинаково посчитать дно для всех чанков
+	 * @return новая высота или {@code natural}, если точка вне влияния низин
+	 */
+	public double valleyHeight(int x, int z, double natural, IntBinaryOperator baseHeight) {
+		int cellX = Math.floorDiv(x, BLOOD_CELL);
+		int cellZ = Math.floorDiv(z, BLOOD_CELL);
+		double result = natural;
+		for (int i = -1; i <= 1; i++) {
+			for (int j = -1; j <= 1; j++) {
+				long[] blob = bloodBlob(cellX + i, cellZ + j);
+				if (blob == null) continue;
+				double bx = x - blob[0], bz = z - blob[1];
+				double dist = Math.sqrt(bx * bx + bz * bz);
+				if (dist > blob[2] + VALLEY_SLOPE) continue;
+				double floor = valleyFloor(cellX + i, cellZ + j, blob, baseHeight);
+				double t = Mth.clamp((dist - blob[2]) / VALLEY_SLOPE, 0, 1);
+				t = t * t * (3 - 2 * t); // плавный (smoothstep) склон
+				result = Math.min(result, Mth.lerp(t, floor, natural));
+			}
+		}
+		return result;
+	}
+
+	private double valleyFloor(int cellX, int cellZ, long[] blob, IntBinaryOperator baseHeight) {
+		return valleyFloors.computeIfAbsent(((long) cellX << 32) ^ (cellZ & 0xffffffffL), k -> {
+			double sum = 0;
+			int n = 0;
+			for (int a = 0; a < 8; a++) {
+				double angle = a * Mth.TWO_PI / 8;
+				for (double f : new double[]{0, 0.5, 1.0}) {
+					sum += baseHeight.applyAsInt((int) (blob[0] + Math.cos(angle) * blob[2] * f),
+							(int) (blob[1] + Math.sin(angle) * blob[2] * f));
+					n++;
+				}
+			}
+			return sum / n - VALLEY_DEPTH;
+		});
+	}
+
 	// ----- Дороги -----
 	/** Точка, где начинается дорога номер index (0..ROADS-1) — чуть за краем области. */
 	public BlockPos roadStart(int index) {
@@ -212,8 +263,9 @@ public final class InkLandsLayout {
 			for (int i = 0; i < samples; i++) {
 				double d = ROAD_END_RADIUS + i * ROAD_PROFILE_STEP;
 				double a = roadAngle(road, d);
-				raw[i] = baseHeight.applyAsInt(center.getX() + (int) Math.round(Math.cos(a) * d),
-						center.getZ() + (int) Math.round(Math.sin(a) * d));
+				int px = center.getX() + (int) Math.round(Math.cos(a) * d);
+				int pz = center.getZ() + (int) Math.round(Math.sin(a) * d);
+				raw[i] = valleyHeight(px, pz, baseHeight.applyAsInt(px, pz), baseHeight);
 			}
 			double[] smooth = new double[samples];
 			for (int i = 0; i < samples; i++) {

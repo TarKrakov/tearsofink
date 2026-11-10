@@ -60,7 +60,9 @@
     ]
   },
   "features": [
-    [],
+    [
+      "tears-of-ink:blood_valley"
+    ],
     [
       "minecraft:lake_lava_underground",
       "minecraft:lake_lava_surface"
