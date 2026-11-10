@@ -77,6 +77,7 @@ public final class ModCreativeTab {
 						ModBlocks.INK.all().forEach(output::accept);
 						output.accept(ModBlocks.PALE_LEAVES);
 						output.accept(ModBlocks.PALE_SAPLING);
+						output.accept(ModItems.SKILL_BOOK_DASH);
 					})
 					.build());
 

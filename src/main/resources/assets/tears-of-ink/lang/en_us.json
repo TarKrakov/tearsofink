@@ -94,5 +94,13 @@
   "block.tears-of-ink.shore_reed": "Shore Reed",
   "block.tears-of-ink.tall_shore_reed": "Tall Shore Reed",
   "message.tears-of-ink.enter": "Your veins fill with ink…",
-  "message.tears-of-ink.leave": "The grip of inked blood loosens…"
+  "message.tears-of-ink.leave": "The grip of inked blood loosens…",
+  "item.tears-of-ink.skill_book_dash": "Precept of the Dash",
+  "item.tears-of-ink.skill_book_dash.desc1": "Ink in the veins is light as a shadow.",
+  "item.tears-of-ink.skill_book_dash.desc2": "Teaches the Dash. Costs Ink.",
+  "skill.tears-of-ink.dash": "Dash",
+  "message.tears-of-ink.skill_learned": "You have learned: %s.",
+  "message.tears-of-ink.skill_known": "You already know: %s.",
+  "key.categories.tears-of-ink": "Tears of Ink",
+  "key.tears-of-ink.dash": "Dash"
 }

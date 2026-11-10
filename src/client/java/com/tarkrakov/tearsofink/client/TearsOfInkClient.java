@@ -9,6 +9,7 @@ import com.tarkrakov.tearsofink.client.particle.TearGlintParticle;
 import com.tarkrakov.tearsofink.particle.ModParticles;
 import com.tarkrakov.tearsofink.client.hud.InkHud;
 import com.tarkrakov.tearsofink.ink.InkSyncPayload;
+import com.tarkrakov.tearsofink.skill.SkillPayloads;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -35,8 +36,11 @@ public class TearsOfInkClient implements ClientModInitializer {
 		// Душа и Чернила: полоски и надпись при входе/выходе
 		ClientPlayNetworking.registerGlobalReceiver(InkSyncPayload.TYPE, (payload, context) -> context.client().execute(() -> InkHud.receive(payload)));
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> InkHud.reset());
-		ClientTickEvents.END_CLIENT_TICK.register(client -> InkHud.clientTick());
 		HudRenderCallback.EVENT.register(InkHud::render);
+		ClientPlayNetworking.registerGlobalReceiver(SkillPayloads.NotEnough.TYPE, (payload, context) -> context.client().execute(InkHud::pulse));
+
+		// Навыки: клавиши
+		SkillKeys.init();
 
 		// Блоки с прозрачными пикселями (листва, саженец)
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.PALE_LEAVES, RenderType.cutoutMipped());

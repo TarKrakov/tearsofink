@@ -3,6 +3,7 @@ package com.tarkrakov.tearsofink;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.command.ModCommands;
 import com.tarkrakov.tearsofink.ink.InkPowers;
+import com.tarkrakov.tearsofink.skill.Skills;
 import com.tarkrakov.tearsofink.item.ModCreativeTab;
 import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.particle.ModParticles;
@@ -34,6 +35,7 @@ public class TearsOfInk implements ModInitializer {
 		ModCreativeTab.init();
 		ModParticles.init();
 		InkPowers.init();
+		Skills.init();
 		ModCommands.init();
 		LOGGER.info("Tears of Ink: чернила проливаются в мир.");
 	}

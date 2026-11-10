@@ -94,5 +94,13 @@
   "block.tears-of-ink.shore_reed": "Тростник",
   "block.tears-of-ink.tall_shore_reed": "Высокий тростник",
   "message.tears-of-ink.enter": "Ваши вены наполняются чернилами…",
-  "message.tears-of-ink.leave": "Хватка чернильной крови ослабевает…"
+  "message.tears-of-ink.leave": "Хватка чернильной крови ослабевает…",
+  "item.tears-of-ink.skill_book_dash": "Наставление о Рывке",
+  "item.tears-of-ink.skill_book_dash.desc1": "Чернила в венах легки, как тень.",
+  "item.tears-of-ink.skill_book_dash.desc2": "Научит рывку. Стоит Чернил.",
+  "skill.tears-of-ink.dash": "Рывок",
+  "message.tears-of-ink.skill_learned": "Вы постигли приём: %s.",
+  "message.tears-of-ink.skill_known": "Вы уже знаете приём: %s.",
+  "key.categories.tears-of-ink": "Tears of Ink",
+  "key.tears-of-ink.dash": "Рывок"
 }

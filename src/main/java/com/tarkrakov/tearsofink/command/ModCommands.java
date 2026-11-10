@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.command;
 
 import com.tarkrakov.tearsofink.ink.InkData;
 import com.tarkrakov.tearsofink.ink.InkPowers;
+import com.tarkrakov.tearsofink.skill.Skills;
 import com.tarkrakov.tearsofink.world.InkLandsAccess;
 import com.tarkrakov.tearsofink.world.InkLandsLayout;
 import com.mojang.brigadier.context.CommandContext;
@@ -27,6 +28,8 @@ import net.minecraft.world.level.levelgen.Heightmap;
  * /tearsofink soul set <число> — текущая Душа
  * /tearsofink ink bonus <число> — прибавка к запасу Чернил (как от фонтанов и сердец)
  * /tearsofink ink set <число> — текущие Чернила
+ * /tearsofink skills — какие навыки выучены
+ * /tearsofink skills forget — забыть все навыки (чтобы снова проверить книги)
  */
 public final class ModCommands {
 	private ModCommands() {}
@@ -45,6 +48,12 @@ public final class ModCommands {
 						.then(Commands.literal("powers")
 								.executes(ModCommands::powers)
 								.then(Commands.literal("reset").executes(ctx -> change(ctx, d -> InkData.fresh().withInside(d.inside())))))
+						.then(Commands.literal("skills")
+								.executes(ModCommands::skills)
+								.then(Commands.literal("forget").executes(ctx -> {
+									Skills.forgetAll(ctx.getSource().getPlayerOrException());
+									return skills(ctx);
+								})))
 						.then(Commands.literal("soul")
 								.then(Commands.literal("max").then(Commands.argument("value", IntegerArgumentType.integer(InkData.SOUL_MIN, InkData.SOUL_START))
 										.executes(ctx -> change(ctx, d -> d.withSoulMax(IntegerArgumentType.getInteger(ctx, "value"))))))
@@ -61,6 +70,14 @@ public final class ModCommands {
 		ServerPlayer player = ctx.getSource().getPlayerOrException();
 		InkPowers.update(player, fn.apply(InkPowers.get(player)));
 		return powers(ctx);
+	}
+
+	private static int skills(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+		var learned = Skills.learned(ctx.getSource().getPlayerOrException());
+		ctx.getSource().sendSuccess(() -> learned.isEmpty()
+				? Component.literal("Навыков пока нет.")
+				: Component.literal("Выучено: " + String.join(", ", learned.stream().map(Object::toString).sorted().toList())), false);
+		return 1;
 	}
 
 	private static int powers(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {

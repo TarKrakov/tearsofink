@@ -4,7 +4,9 @@ import com.tarkrakov.tearsofink.TearsOfInk;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import com.tarkrakov.tearsofink.block.ModBlocks;
+import com.tarkrakov.tearsofink.skill.ModSkills;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Rarity;
 
 /** Предметы мода (не блоки). */
 public final class ModItems {
@@ -22,6 +24,11 @@ public final class ModItems {
 	public static final Item DUCKWEED_PODS = register("duckweed_pods", new Item(new Item.Properties()));
 	/** Трясинник (он же «кувшинка Трясинника») — ставится на воду. */
 	public static final Item BOGLEAF = ModBlocks.bogleafItem();
+
+	// ===== Книги навыков =====
+	/** Книга Рывка (название и текст — рабочие, автор придумает свои). */
+	public static final Item SKILL_BOOK_DASH = register("skill_book_dash",
+			new SkillBookItem(() -> ModSkills.DASH, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON)));
 
 	private ModItems() {}
 

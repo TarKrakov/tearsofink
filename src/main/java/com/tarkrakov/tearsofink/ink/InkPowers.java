@@ -127,7 +127,7 @@ public final class InkPowers {
 			Component message = inside
 					? Component.translatable("message.tears-of-ink.enter").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC)
 					: Component.translatable("message.tears-of-ink.leave").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC);
-			// в чат; строку над хотбаром рисует наш клиент (короче ванильной)
+			// только в чат
 			player.sendSystemMessage(message);
 		}
 	}
