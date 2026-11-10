@@ -114,6 +114,10 @@ public final class ModBlocks {
 	// ===== Багряное дерево (Кроволесье) и Смоляное дерево (Чернолесье) =====
 	public static final WoodSet SCARLET = woodSet("scarlet", MapColor.COLOR_RED,
 			props -> new DrippingLeavesBlock(() -> ModParticles.BLOOD_DRIP_HANG, props));
+	/** Вторая листва Багряного дерева: золотисто-оранжевая (растёт пятнами вместе с красной). */
+	public static final Block GOLDEN_SCARLET_LEAVES = register("golden_scarlet_leaves", new DrippingLeavesBlock(
+			() -> ModParticles.BLOOD_DRIP_HANG,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_LEAVES).mapColor(MapColor.GOLD)));
 	public static final WoodSet INK = woodSet("ink", MapColor.COLOR_BLACK,
 			props -> new DrippingLeavesBlock(() -> ModParticles.INK_DRIP_HANG, props));
 
@@ -232,6 +236,8 @@ public final class ModBlocks {
 		CompostingChanceRegistry.INSTANCE.add(PALE_SAPLING, 0.3f);
 		CompostingChanceRegistry.INSTANCE.add(TEARBLOOM, 0.65f);
 		woodSetBehaviour(SCARLET);
+		FlammableBlockRegistry.getDefaultInstance().add(GOLDEN_SCARLET_LEAVES, 30, 60);
+		CompostingChanceRegistry.INSTANCE.add(GOLDEN_SCARLET_LEAVES, 0.3f);
 		woodSetBehaviour(INK);
 	}
 }

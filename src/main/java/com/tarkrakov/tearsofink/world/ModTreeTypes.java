@@ -13,6 +13,11 @@ public final class ModTreeTypes {
 			BuiltInRegistries.TRUNK_PLACER_TYPE, TearsOfInk.id("pale_trunk_placer"),
 			new TrunkPlacerType<>(PaleTrunkPlacer.CODEC));
 
+	public static final TrunkPlacerType<ScarletTrunkPlacer> SCARLET_TRUNK_PLACER = Registry.register(
+			BuiltInRegistries.TRUNK_PLACER_TYPE, TearsOfInk.id("scarlet_trunk_placer"), new TrunkPlacerType<>(ScarletTrunkPlacer.CODEC));
+	public static final TrunkPlacerType<InkTrunkPlacer> INK_TRUNK_PLACER = Registry.register(
+			BuiltInRegistries.TRUNK_PLACER_TYPE, TearsOfInk.id("ink_trunk_placer"), new TrunkPlacerType<>(InkTrunkPlacer.CODEC));
+
 	/** Магистральные дороги Чернильных Земель. */
 	public static final Feature<NoneFeatureConfiguration> INK_ROADS = Registry.register(
 			BuiltInRegistries.FEATURE, TearsOfInk.id("ink_roads"), new InkRoadsFeature(NoneFeatureConfiguration.CODEC));
