@@ -106,14 +106,17 @@ public final class ModBlocks {
 	public static final Block POTTED_TEARBLOOM = registerNoItem("potted_tearbloom", new FlowerPotBlock(TEARBLOOM,
 			BlockBehaviour.Properties.ofFullCopy(Blocks.POTTED_LILY_OF_THE_VALLEY).lightLevel(s -> 3)));
 
+	/** Насколько ярко светится Асфоделит (0–15; факел = 14, светокамень = 15). */
+	private static final int ASPHODELITE_LIGHT = 5;
+
 	/** Асфоделитовая порода: камень под Чернильными пустошами (вместо обычного камня выше y=0). */
 	public static final Block ASPHODELITE_ROCK = register("asphodelite_rock", new Block(
 			BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
 	/** Асфоделит: руда в асфоделитовой породе и глубинном сланце. Роняет Асфоду — материал для снаряжения. */
 	public static final Block ASPHODELITE_ORE = register("asphodelite_ore", new DropExperienceBlock(UniformInt.of(2, 5),
-			BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+			BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE).lightLevel(s -> ASPHODELITE_LIGHT)));
 	public static final Block DEEPSLATE_ASPHODELITE_ORE = register("deepslate_asphodelite_ore", new DropExperienceBlock(UniformInt.of(2, 5),
-			BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE_IRON_ORE)));
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE_IRON_ORE).lightLevel(s -> ASPHODELITE_LIGHT)));
 
 	/** Чернильная лужа: тонкий слой чернил, замедляет. */
 	public static final Block INK_PUDDLE = register("ink_puddle", new InkPuddleBlock(
