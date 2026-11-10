@@ -84,5 +84,13 @@
   "item.tears-of-ink.tarweed_extract": "Tarweed Extract",
   "item.tears-of-ink.waterbloom_juice": "Waterbloom Juice",
   "item.tears-of-ink.duckweed_pods": "Dry Duckweed Pods",
-  "item.tears-of-ink.bogleaf": "Bogleaf"
+  "item.tears-of-ink.bogleaf": "Bogleaf",
+  "block.tears-of-ink.pale_grass": "Pale Grass",
+  "block.tears-of-ink.tall_pale_grass": "Tall Pale Grass",
+  "block.tears-of-ink.scarlet_grass": "Scarlet Grass",
+  "block.tears-of-ink.tall_scarlet_grass": "Tall Scarlet Grass",
+  "block.tears-of-ink.ink_grass": "Tar Sedge",
+  "block.tears-of-ink.tall_ink_grass": "Tall Tar Sedge",
+  "block.tears-of-ink.shore_reed": "Shore Reed",
+  "block.tears-of-ink.tall_shore_reed": "Tall Shore Reed"
 }

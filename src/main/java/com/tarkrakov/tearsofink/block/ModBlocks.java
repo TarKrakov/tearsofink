@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.ButtonBlock;
 import net.minecraft.world.level.block.DropExperienceBlock;
 import net.minecraft.world.level.block.FlowerBlock;
 import net.minecraft.world.level.block.FlowerPotBlock;
+import net.minecraft.world.level.block.DoublePlantBlock;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.tags.BlockTags;
@@ -50,11 +51,11 @@ import net.minecraft.world.level.material.MapColor;
 /** Все блоки мода. */
 public final class ModBlocks {
 	/** Пепельная земля: верхний слой Чернильных пустошей (как трава, но мёртвая). */
-	public static final Block ASHEN_SOIL = register("ashen_soil", new Block(
+	public static final Block ASHEN_SOIL = register("ashen_soil", new ZoneSoilBlock(
 			BlockBehaviour.Properties.of()
 					.mapColor(MapColor.COLOR_GRAY)
 					.strength(0.6f)
-					.sound(SoundType.GRAVEL)));
+					.sound(SoundType.GRAVEL), () -> ModBlocks.PALE_GRASS, () -> ModBlocks.TALL_PALE_GRASS));
 
 	/** Пепельная дорога: утоптанный пепел магистралей. */
 	public static final Block ASHEN_PATH = register("ashen_path", new Block(
@@ -64,11 +65,13 @@ public final class ModBlocks {
 					.sound(SoundType.GRAVEL)));
 
 	/** Земля Кроволесья — пропитана кровью. */
-	public static final Block BLOOD_SOIL = register("blood_soil", new Block(
-			BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_RED).strength(0.6f).sound(SoundType.GRAVEL)));
+	public static final Block BLOOD_SOIL = register("blood_soil", new ZoneSoilBlock(
+			BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_RED).strength(0.6f).sound(SoundType.GRAVEL),
+			() -> ModBlocks.SCARLET_GRASS, () -> ModBlocks.TALL_SCARLET_GRASS));
 	/** Земля Чернолесья — смоляная. */
-	public static final Block TAR_SOIL = register("tar_soil", new Block(
-			BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLACK).strength(0.6f).sound(SoundType.GRAVEL)));
+	public static final Block TAR_SOIL = register("tar_soil", new ZoneSoilBlock(
+			BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLACK).strength(0.6f).sound(SoundType.GRAVEL),
+			() -> ModBlocks.INK_GRASS, () -> ModBlocks.TALL_INK_GRASS));
 
 	/** Пепел: сыпучий, падает как песок. */
 	public static final Block ASH = register("ash", new ColoredFallingBlock(
@@ -143,6 +146,25 @@ public final class ModBlocks {
 
 	/** Насколько ярко светится Асфоделит (0–15; факел = 14, светокамень = 15). */
 	private static final int ASPHODELITE_LIGHT = 5;
+
+	// ===== Трава зон (короткая + высокая) =====
+	public static final Block TALL_PALE_GRASS = register("tall_pale_grass", tallGrass(MapColor.COLOR_CYAN));
+	public static final Block PALE_GRASS = register("pale_grass", grass(MapColor.COLOR_CYAN, () -> ModBlocks.TALL_PALE_GRASS));
+	public static final Block TALL_SCARLET_GRASS = register("tall_scarlet_grass", tallGrass(MapColor.COLOR_RED));
+	public static final Block SCARLET_GRASS = register("scarlet_grass", grass(MapColor.COLOR_RED, () -> ModBlocks.TALL_SCARLET_GRASS));
+	public static final Block TALL_INK_GRASS = register("tall_ink_grass", tallGrass(MapColor.COLOR_PURPLE));
+	public static final Block INK_GRASS = register("ink_grass", grass(MapColor.COLOR_PURPLE, () -> ModBlocks.TALL_INK_GRASS));
+	/** Тростник берегов (растёт только у воды). */
+	public static final Block TALL_SHORE_REED = register("tall_shore_reed", tallGrass(MapColor.COLOR_GRAY));
+	public static final Block SHORE_REED = register("shore_reed", grass(MapColor.COLOR_GRAY, () -> ModBlocks.TALL_SHORE_REED));
+
+	private static Block grass(MapColor color, java.util.function.Supplier<Block> tall) {
+		return new ZoneGrassBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.SHORT_GRASS).mapColor(color), tall);
+	}
+
+	private static Block tallGrass(MapColor color) {
+		return new DoublePlantBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.TALL_GRASS).mapColor(color));
+	}
 
 	// ===== Травы Чернильных Земель =====
 	/** Где ещё может расти Смолька (кроме земли): камень и кладка руин. */
@@ -283,5 +305,9 @@ public final class ModBlocks {
 			CompostingChanceRegistry.INSTANCE.add(herb, 0.65f);
 		}
 		FlammableBlockRegistry.getDefaultInstance().add(DUCKWEED, 15, 100);
+		for (Block g : new Block[]{PALE_GRASS, TALL_PALE_GRASS, SCARLET_GRASS, TALL_SCARLET_GRASS, INK_GRASS, TALL_INK_GRASS, SHORE_REED, TALL_SHORE_REED}) {
+			FlammableBlockRegistry.getDefaultInstance().add(g, 60, 100);
+			CompostingChanceRegistry.INSTANCE.add(g, 0.3f);
+		}
 	}
 }

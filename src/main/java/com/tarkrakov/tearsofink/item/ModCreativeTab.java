@@ -24,6 +24,14 @@ public final class ModCreativeTab {
 						output.accept(ModBlocks.INK_PUDDLE);
 						output.accept(ModBlocks.BLOOD_SOIL);
 						output.accept(ModBlocks.TAR_SOIL);
+						output.accept(ModBlocks.PALE_GRASS);
+						output.accept(ModBlocks.TALL_PALE_GRASS);
+						output.accept(ModBlocks.SCARLET_GRASS);
+						output.accept(ModBlocks.TALL_SCARLET_GRASS);
+						output.accept(ModBlocks.INK_GRASS);
+						output.accept(ModBlocks.TALL_INK_GRASS);
+						output.accept(ModBlocks.SHORE_REED);
+						output.accept(ModBlocks.TALL_SHORE_REED);
 						output.accept(ModBlocks.TEARBLOOM);
 						output.accept(ModBlocks.BLOODROOT);
 						output.accept(ModItems.BLOODROOT_CLOT);

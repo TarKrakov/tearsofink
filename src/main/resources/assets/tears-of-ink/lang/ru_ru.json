@@ -84,5 +84,13 @@
   "item.tears-of-ink.tarweed_extract": "Экстракт Смольки",
   "item.tears-of-ink.waterbloom_juice": "Выжимка Водяницы",
   "item.tears-of-ink.duckweed_pods": "Сухие стручки Ряски",
-  "item.tears-of-ink.bogleaf": "Кувшинка Трясинника"
+  "item.tears-of-ink.bogleaf": "Кувшинка Трясинника",
+  "block.tears-of-ink.pale_grass": "Бледная трава",
+  "block.tears-of-ink.tall_pale_grass": "Высокая бледная трава",
+  "block.tears-of-ink.scarlet_grass": "Багряная трава",
+  "block.tears-of-ink.tall_scarlet_grass": "Высокая багряная трава",
+  "block.tears-of-ink.ink_grass": "Смоляная осока",
+  "block.tears-of-ink.tall_ink_grass": "Высокая смоляная осока",
+  "block.tears-of-ink.shore_reed": "Тростник",
+  "block.tears-of-ink.tall_shore_reed": "Высокий тростник"
 }

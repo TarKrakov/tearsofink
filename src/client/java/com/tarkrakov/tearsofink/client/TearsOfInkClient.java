@@ -34,7 +34,9 @@ public class TearsOfInkClient implements ClientModInitializer {
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.TEARBLOOM, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.GOLDEN_SCARLET_LEAVES, RenderType.cutoutMipped());
 		BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.cutout(), ModBlocks.BLOODROOT, ModBlocks.FLESHBERRY,
-				ModBlocks.INKROOT, ModBlocks.TARWEED, ModBlocks.WATERBLOOM, ModBlocks.BOGLEAF, ModBlocks.DUCKWEED);
+				ModBlocks.INKROOT, ModBlocks.TARWEED, ModBlocks.WATERBLOOM, ModBlocks.BOGLEAF, ModBlocks.DUCKWEED,
+				ModBlocks.PALE_GRASS, ModBlocks.TALL_PALE_GRASS, ModBlocks.SCARLET_GRASS, ModBlocks.TALL_SCARLET_GRASS,
+				ModBlocks.INK_GRASS, ModBlocks.TALL_INK_GRASS, ModBlocks.SHORE_REED, ModBlocks.TALL_SHORE_REED);
 		for (WoodSet set : new WoodSet[]{ModBlocks.SCARLET, ModBlocks.INK}) {
 			BlockRenderLayerMap.INSTANCE.putBlock(set.leaves(), RenderType.cutoutMipped());
 			BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.cutout(), set.sapling(), set.door(), set.trapdoor());

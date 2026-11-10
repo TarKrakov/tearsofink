@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "half=lower": {
+      "model": "tears-of-ink:block/tall_scarlet_grass_bottom"
+    },
+    "half=upper": {
+      "model": "tears-of-ink:block/tall_scarlet_grass_top"
+    }
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "tears-of-ink:block/tall_shore_reed_top"
+  }
+}
