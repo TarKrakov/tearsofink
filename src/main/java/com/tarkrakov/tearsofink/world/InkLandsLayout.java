@@ -62,11 +62,15 @@ public final class InkLandsLayout {
 	/** Дороги начинаются чуть за краем области и доходят почти до центра. */
 	public static final double ROAD_START_FRACTION = 1.08;
 	public static final int ROAD_END_RADIUS = 30;
-	/** Насколько дорога может отходить от рельефа вверх/вниз (срез холмов и насыпь над ямами). */
-	public static final int ROAD_MAX_CUT_FILL = 5;
+	/** Насколько дорога может подниматься над рельефом насыпью (вниз — режет без ограничений). */
+	public static final int ROAD_MAX_FILL = 6;
+	/** Максимальный уклон дороги: подъём в блоках на 1 блок пути. */
+	public static final double ROAD_MAX_GRADE = 0.2;
+	/** Мост идёт на столько блоков выше воды. */
+	public static final int BRIDGE_CLEARANCE = 2;
 	/** Шаг выборки высоты вдоль дороги и ширина сглаживания (в шагах). */
 	public static final int ROAD_PROFILE_STEP = 8;
-	public static final int ROAD_SMOOTHING = 5;
+	public static final int ROAD_SMOOTHING = 8;
 
 	private final Climate.Sampler sampler;
 	private final BlockPos center;
@@ -220,7 +224,7 @@ public final class InkLandsLayout {
 		return roadAt(x, z) != null;
 	}
 
-	/** Если точка на дороге — {номер дороги, расстояние до центра}, иначе null. */
+	/** Если точка на дороге — {номер дороги, расстояние вдоль дороги от центра, расстояние до осевой}, иначе null. */
 	public double[] roadAt(int x, int z) {
 		double dx = x - center.getX();
 		double dz = z - center.getZ();
@@ -229,22 +233,36 @@ public final class InkLandsLayout {
 		double angle = Math.atan2(dz, dx);
 		for (int i = 0; i < ROADS; i++) {
 			double diff = Mth.wrapDegrees((angle - roadAngle(i, d)) * Mth.RAD_TO_DEG) * Mth.DEG_TO_RAD;
-			if (Math.abs(diff) < Math.PI / 2 && Math.abs(Math.sin(diff)) * d < ROAD_HALF_WIDTH) return new double[]{i, d};
+			if (Math.abs(diff) > Math.PI / 2 || Math.abs(Math.sin(diff)) * d > ROAD_HALF_WIDTH + 14) continue;
+			// настоящее расстояние до осевой линии (с учётом изгибов)
+			double best = Double.MAX_VALUE, bestT = d;
+			for (double t = d - 10; t <= d + 10; t += 1.0) {
+				if (t < ROAD_END_RADIUS) continue;
+				double a = roadAngle(i, t);
+				double cx = center.getX() + Math.cos(a) * t - x;
+				double cz = center.getZ() + Math.sin(a) * t - z;
+				double dist2 = cx * cx + cz * cz;
+				if (dist2 < best) { best = dist2; bestT = t; }
+			}
+			double dist = Math.sqrt(best);
+			if (dist <= ROAD_HALF_WIDTH) return new double[]{i, bestT, dist};
 		}
 		return null;
 	}
 
 	/**
-	 * Высота полотна дороги в этом месте: сглаженный рельеф вдоль дороги.
-	 * @param baseHeight высота рельефа (x, z) → y, без построек
+	 * Высота полотна дороги в этом месте.
+	 * @param surface высота поверхности (с водой) (x, z) → y
+	 * @param floor высота дна/твёрдой земли (x, z) → y
+	 * @param seaLevel уровень моря
 	 */
-	public double roadHeight(int road, double d, IntBinaryOperator baseHeight) {
+	public double roadHeight(int road, double d, IntBinaryOperator surface, IntBinaryOperator floor, int seaLevel) {
 		double[][] profiles = roadProfiles;
 		if (profiles == null) {
 			synchronized (this) {
 				profiles = roadProfiles;
 				if (profiles == null) {
-					profiles = buildRoadProfiles(baseHeight);
+					profiles = buildRoadProfiles(surface, floor);
 					roadProfiles = profiles;
 				}
 			}
@@ -255,19 +273,25 @@ public final class InkLandsLayout {
 		return Mth.lerp(Mth.clamp(t - i, 0, 1), profile[i], profile[i + 1]);
 	}
 
-	private double[][] buildRoadProfiles(IntBinaryOperator baseHeight) {
+	private double[][] buildRoadProfiles(IntBinaryOperator surface, IntBinaryOperator floor) {
 		int samples = (int) Math.ceil((RADIUS * ROAD_START_FRACTION - ROAD_END_RADIUS) / ROAD_PROFILE_STEP) + 2;
+		double maxStep = ROAD_MAX_GRADE * ROAD_PROFILE_STEP;
 		double[][] result = new double[ROADS][];
 		for (int road = 0; road < ROADS; road++) {
 			double[] raw = new double[samples];
+			boolean[] water = new boolean[samples];
 			for (int i = 0; i < samples; i++) {
 				double d = ROAD_END_RADIUS + i * ROAD_PROFILE_STEP;
 				double a = roadAngle(road, d);
 				int px = center.getX() + (int) Math.round(Math.cos(a) * d);
 				int pz = center.getZ() + (int) Math.round(Math.sin(a) * d);
-				raw[i] = valleyHeight(px, pz, baseHeight.applyAsInt(px, pz), baseHeight);
+				int top = surface.applyAsInt(px, pz);
+				int ground = floor.applyAsInt(px, pz);
+				water[i] = top > ground;
+				raw[i] = water[i] ? top + BRIDGE_CLEARANCE : valleyHeight(px, pz, top, surface);
 			}
-			double[] smooth = new double[samples];
+			// сглаживание
+			double[] p = new double[samples];
 			for (int i = 0; i < samples; i++) {
 				double sum = 0;
 				int n = 0;
@@ -277,11 +301,35 @@ public final class InkLandsLayout {
 					sum += raw[j];
 					n++;
 				}
-				smooth[i] = sum / n;
+				p[i] = water[i] ? Math.max(sum / n, raw[i]) : Math.min(sum / n, raw[i] + ROAD_MAX_FILL);
 			}
-			result[road] = smooth;
+			// пологий уклон: срезаем слишком крутые подъёмы (дорога режет горы)
+			for (int pass = 0; pass < 2; pass++) {
+				for (int i = 1; i < samples; i++) if (!water[i]) p[i] = Math.min(p[i], p[i - 1] + maxStep);
+				for (int i = samples - 2; i >= 0; i--) if (!water[i]) p[i] = Math.min(p[i], p[i + 1] + maxStep);
+			}
+			// плавный подъём к мостам
+			for (int i = 1; i < samples; i++) p[i] = Math.max(p[i], p[i - 1] - maxStep);
+			for (int i = samples - 2; i >= 0; i--) p[i] = Math.max(p[i], p[i + 1] - maxStep);
+			result[road] = p;
 		}
 		return result;
+	}
+
+	/** Ближайшее к точке пятно Кроволесья: {x, z, радиус} или null. */
+	public long[] nearestBloodBlob(int x, int z) {
+		int cellX = Math.floorDiv(x, BLOOD_CELL), cellZ = Math.floorDiv(z, BLOOD_CELL);
+		long[] best = null;
+		double bestD = Double.MAX_VALUE;
+		for (int i = -6; i <= 6; i++) {
+			for (int j = -6; j <= 6; j++) {
+				long[] blob = bloodBlob(cellX + i, cellZ + j);
+				if (blob == null) continue;
+				double dd = (blob[0] - x) * (double) (blob[0] - x) + (blob[1] - z) * (double) (blob[1] - z);
+				if (dd < bestD) { bestD = dd; best = blob; }
+			}
+		}
+		return best;
 	}
 
 	private static boolean isWater(Holder<Biome> biome) {

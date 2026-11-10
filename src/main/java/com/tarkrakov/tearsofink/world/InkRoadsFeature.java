@@ -3,7 +3,6 @@ package com.tarkrakov.tearsofink.world;
 import com.mojang.serialization.Codec;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.WorldGenLevel;
 import net.minecraft.world.level.block.Blocks;
@@ -16,12 +15,15 @@ import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 
 /**
- * Прокладывает магистральные дороги Чернильных Земель.
- * Полотно идёт по сглаженному рельефу: холмы до 5 блоков срезаются, ямы до 5 блоков засыпаются.
+ * Магистральные дороги Чернильных Земель.
+ * Полотно идёт пологим профилем: горы прорезаются выемкой, ямы засыпаются (до 6 блоков),
+ * над водой строится мост из бледного дерева с опорами и перилами.
  */
 public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
-	/** Сколько блоков воздуха оставить над дорогой (чтобы не упираться головой). */
-	private static final int HEADROOM = 3;
+	/** Сколько блоков воздуха оставить над дорогой. */
+	private static final int HEADROOM = 4;
+	/** Опора моста — каждые столько блоков вдоль дороги. */
+	private static final int PILLAR_SPACING = 7;
 
 	public InkRoadsFeature(Codec<NoneFeatureConfiguration> codec) {
 		super(codec);
@@ -32,15 +34,18 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 		WorldGenLevel level = context.level();
 		ChunkGenerator generator = context.chunkGenerator();
 		if (!(generator.getBiomeSource() instanceof InkLandsAccess access)) return false;
-		ServerLevel server = level.getLevel();
-		RandomState randomState = server.getChunkSource().randomState();
+		RandomState randomState = level.getLevel().getChunkSource().randomState();
 		InkLandsLayout layout = access.tearsofink$layout(randomState.sampler());
 		if (layout == null) return false;
 
 		BlockPos origin = context.origin();
 		int minX = origin.getX() & ~15, minZ = origin.getZ() & ~15;
+		int seaLevel = generator.getSeaLevel();
 		BlockState road = ModBlocks.ASHEN_PATH.defaultBlockState();
 		BlockState fill = ModBlocks.ASPHODELITE_ROCK.defaultBlockState();
+		BlockState deck = ModBlocks.PALE_PLANKS.defaultBlockState();
+		BlockState pillar = ModBlocks.PALE_LOG.defaultBlockState();
+		BlockState rail = ModBlocks.PALE_FENCE.defaultBlockState();
 		BlockState air = Blocks.AIR.defaultBlockState();
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		boolean placed = false;
@@ -50,34 +55,47 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 				int x = minX + dx, z = minZ + dz;
 				double[] hit = layout.roadAt(x, z);
 				if (hit == null) continue;
+				int roadIndex = (int) hit[0];
+				double along = hit[1], fromAxis = hit[2];
 
 				int surface = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z) - 1;
-				pos.set(x, surface, z);
-				if (!level.getBlockState(pos).getFluidState().isEmpty()) continue; // через воду не идём
+				int ground = level.getHeight(Heightmap.Types.OCEAN_FLOOR_WG, x, z) - 1;
+				boolean overWater = surface > ground;
+				double profile = layout.roadHeight(roadIndex, along,
+						(bx, bz) -> generator.getBaseHeight(bx, bz, Heightmap.Types.WORLD_SURFACE_WG, level, randomState) - 1,
+						(bx, bz) -> generator.getBaseHeight(bx, bz, Heightmap.Types.OCEAN_FLOOR_WG, level, randomState) - 1,
+						seaLevel);
 
-				double profile = layout.roadHeight((int) hit[0], hit[1],
-						(bx, bz) -> generator.getBaseHeight(bx, bz, Heightmap.Types.WORLD_SURFACE_WG, level, randomState) - 1);
-				int target = Mth.clamp((int) Math.round(profile),
-						surface - InkLandsLayout.ROAD_MAX_CUT_FILL, surface + InkLandsLayout.ROAD_MAX_CUT_FILL);
-
-				// Насыпь: заполняем от земли до полотна
-				for (int y = surface + 1; y < target; y++) {
-					pos.setY(y);
-					level.setBlock(pos, fill, 2);
-				}
-				// Полотно
-				pos.setY(target);
-				level.setBlock(pos, road, 2);
-				// Срез холма и место над головой
-				int clearTo = Math.max(surface, target + HEADROOM);
-				for (int y = target + 1; y <= clearTo; y++) {
-					pos.setY(y);
-					BlockState state = level.getBlockState(pos);
-					if (!state.isAir() && state.getFluidState().isEmpty()) level.setBlock(pos, air, 2);
+				if (overWater) {
+					// ----- Мост -----
+					int y = Math.max((int) Math.round(profile), surface + 1);
+					pos.set(x, y, z);
+					level.setBlock(pos, deck, 2);
+					clearAbove(level, pos, y, y + HEADROOM, air);
+					if (fromAxis > InkLandsLayout.ROAD_HALF_WIDTH - 1.0 && ((int) along) % 2 == 0) {
+						level.setBlock(pos.setY(y + 1), rail, 2);
+					}
+					if (fromAxis < 1.0 && ((int) along) % PILLAR_SPACING == 0) {
+						for (int yy = y - 1; yy > ground; yy--) level.setBlock(pos.setY(yy), pillar, 2);
+					}
+				} else {
+					// ----- Дорога по земле -----
+					int y = Math.min((int) Math.round(profile), surface + InkLandsLayout.ROAD_MAX_FILL);
+					for (int yy = surface + 1; yy < y; yy++) level.setBlock(pos.set(x, yy, z), fill, 2);
+					level.setBlock(pos.set(x, y, z), road, 2);
+					clearAbove(level, pos, y, Math.max(surface, y + HEADROOM), air);
 				}
 				placed = true;
 			}
 		}
 		return placed;
+	}
+
+	private static void clearAbove(WorldGenLevel level, BlockPos.MutableBlockPos pos, int from, int to, BlockState air) {
+		for (int y = from + 1; y <= to; y++) {
+			pos.setY(y);
+			BlockState state = level.getBlockState(pos);
+			if (!state.isAir() && state.getFluidState().isEmpty()) level.setBlock(pos, air, 2);
+		}
 	}
 }

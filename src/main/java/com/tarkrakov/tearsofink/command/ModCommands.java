@@ -18,6 +18,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
  * /tearsofink where  — где центр Чернильных Земель и сколько до него
  * /tearsofink center — телепорт в центр
  * /tearsofink edge [1-5] — телепорт к краю, в начало одной из дорог (смотришь в сторону центра)
+ * /tearsofink blood — телепорт в центр ближайшего пятна Кроволесья + проверка высот низины
  */
 public final class ModCommands {
 	private ModCommands() {}
@@ -28,6 +29,7 @@ public final class ModCommands {
 						.requires(source -> source.hasPermission(2))
 						.then(Commands.literal("where").executes(ModCommands::where))
 						.then(Commands.literal("center").executes(ModCommands::center))
+						.then(Commands.literal("blood").executes(ModCommands::blood))
 						.then(Commands.literal("edge")
 								.executes(ctx -> edge(ctx, 1))
 								.then(Commands.argument("road", IntegerArgumentType.integer(1, InkLandsLayout.ROADS))
@@ -57,6 +59,41 @@ public final class ModCommands {
 		float yaw = (float) (Math.atan2(c.getZ() - start.getZ(), c.getX() - start.getX()) * 180.0 / Math.PI) - 90f;
 		player.teleportTo(overworld, start.getX() + 0.5, y, start.getZ() + 0.5, yaw, 0f);
 		ctx.getSource().sendSuccess(() -> Component.literal("Край Чернильных Земель, дорога " + road + ". Центр — прямо перед тобой."), false);
+		return 1;
+	}
+
+	private static int blood(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+		InkLandsLayout layout = findLayout(ctx.getSource());
+		if (layout == null) {
+			ctx.getSource().sendFailure(Component.literal("В этом мире нет Чернильных Земель."));
+			return 0;
+		}
+		ServerPlayer player = ctx.getSource().getPlayerOrException();
+		long[] blob = layout.nearestBloodBlob(player.getBlockX(), player.getBlockZ());
+		if (blob == null) {
+			ctx.getSource().sendFailure(Component.literal("Рядом нет пятен Кроволесья."));
+			return 0;
+		}
+		ServerLevel overworld = ctx.getSource().getServer().overworld();
+		int bx = (int) blob[0], bz = (int) blob[1];
+		var generator = overworld.getChunkSource().getGenerator();
+		var randomState = overworld.getChunkSource().randomState();
+		java.util.function.IntBinaryOperator base = (x, z) ->
+				generator.getBaseHeight(x, z, Heightmap.Types.WORLD_SURFACE_WG, overworld, randomState) - 1;
+		int natural = base.applyAsInt(bx, bz);
+		int valley = (int) Math.floor(layout.valleyHeight(bx, bz, natural, base));
+		overworld.getChunk(bx >> 4, bz >> 4);
+		int actual = overworld.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz) - 1;
+		// для сравнения — земля за краем склона
+		int outX = bx + (int) blob[2] + InkLandsLayout.VALLEY_SLOPE + 5;
+		overworld.getChunk(outX >> 4, bz >> 4);
+		int outside = overworld.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, outX, bz) - 1;
+		player.teleportTo(overworld, bx + 0.5, actual + 1, bz + 0.5, player.getYRot(), player.getXRot());
+		ctx.getSource().sendSuccess(() -> Component.literal("Кроволесье: центр X " + bx + ", Z " + bz + ", радиус " + blob[2]
+				+ "\nВысота рельефа без низины: " + natural
+				+ "\nВысота, которую задаёт низина: " + valley
+				+ "\nРеальная земля в центре: " + actual
+				+ "\nЗемля за краем склона: " + outside), false);
 		return 1;
 	}
 
