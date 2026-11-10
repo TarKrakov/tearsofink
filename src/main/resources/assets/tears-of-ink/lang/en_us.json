@@ -68,5 +68,21 @@
   "block.tears-of-ink.ink_trapdoor": "Tar Trapdoor",
   "block.tears-of-ink.ink_button": "Tar Button",
   "block.tears-of-ink.ink_pressure_plate": "Tar Pressure Plate",
-  "block.tears-of-ink.golden_scarlet_leaves": "Golden Scarlet Leaves"
+  "block.tears-of-ink.golden_scarlet_leaves": "Golden Scarlet Leaves",
+  "block.tears-of-ink.blood_soil": "Blood Soil",
+  "block.tears-of-ink.tar_soil": "Tar Soil",
+  "block.tears-of-ink.bloodroot": "Bloodroot",
+  "block.tears-of-ink.fleshberry": "Fleshberry",
+  "block.tears-of-ink.inkroot": "Inkroot",
+  "block.tears-of-ink.tarweed": "Tarweed",
+  "block.tears-of-ink.waterbloom": "Waterbloom",
+  "block.tears-of-ink.bogleaf": "Bogleaf",
+  "block.tears-of-ink.duckweed": "Duckweed",
+  "item.tears-of-ink.bloodroot_clot": "Bloodroot Clot",
+  "item.tears-of-ink.fleshberry_pulp": "Fleshberry Pulp",
+  "item.tears-of-ink.inkroot_root": "Inkroot Root",
+  "item.tears-of-ink.tarweed_extract": "Tarweed Extract",
+  "item.tears-of-ink.waterbloom_juice": "Waterbloom Juice",
+  "item.tears-of-ink.duckweed_pods": "Dry Duckweed Pods",
+  "item.tears-of-ink.bogleaf": "Bogleaf"
 }

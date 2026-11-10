@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/lily_pad",
+  "textures": {
+    "texture": "tears-of-ink:block/bogleaf",
+    "particle": "tears-of-ink:block/bogleaf"
+  }
+}

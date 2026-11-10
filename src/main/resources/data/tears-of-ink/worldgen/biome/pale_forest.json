@@ -110,7 +110,8 @@
     [
       "tears-of-ink:ink_roads",
       "tears-of-ink:patch_ink_puddle",
-      "tears-of-ink:patch_tearbloom",
+      "tears-of-ink:tearbloom_circle",
+      "tears-of-ink:patch_waterbloom",
       "tears-of-ink:trees_pale_dense",
       "minecraft:glow_lichen"
     ],

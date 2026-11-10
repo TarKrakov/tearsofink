@@ -110,7 +110,9 @@
     [
       "tears-of-ink:ink_roads",
       "tears-of-ink:patch_ink_puddle",
-      "tears-of-ink:patch_tearbloom",
+      "tears-of-ink:patch_bloodroot",
+      "tears-of-ink:patch_fleshberry",
+      "tears-of-ink:patch_waterbloom",
       "tears-of-ink:trees_bloodwood",
       "minecraft:glow_lichen"
     ],

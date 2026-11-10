@@ -1,0 +1,52 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "north": "true"
+      },
+      "apply": {
+        "model": "tears-of-ink:block/duckweed"
+      }
+    },
+    {
+      "when": {
+        "east": "true"
+      },
+      "apply": {
+        "model": "tears-of-ink:block/duckweed",
+        "y": 90,
+        "uvlock": true
+      }
+    },
+    {
+      "when": {
+        "south": "true"
+      },
+      "apply": {
+        "model": "tears-of-ink:block/duckweed",
+        "y": 180,
+        "uvlock": true
+      }
+    },
+    {
+      "when": {
+        "west": "true"
+      },
+      "apply": {
+        "model": "tears-of-ink:block/duckweed",
+        "y": 270,
+        "uvlock": true
+      }
+    },
+    {
+      "when": {
+        "up": "true"
+      },
+      "apply": {
+        "model": "tears-of-ink:block/duckweed",
+        "x": 270,
+        "uvlock": true
+      }
+    }
+  ]
+}

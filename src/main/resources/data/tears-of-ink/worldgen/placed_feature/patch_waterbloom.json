@@ -1,9 +1,9 @@
 {
-  "feature": "tears-of-ink:patch_tearbloom",
+  "feature": "tears-of-ink:patch_waterbloom",
   "placement": [
     {
-      "type": "minecraft:rarity_filter",
-      "chance": 6
+      "type": "minecraft:count",
+      "count": 2
     },
     {
       "type": "minecraft:in_square"

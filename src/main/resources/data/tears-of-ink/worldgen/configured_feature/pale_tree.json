@@ -51,6 +51,11 @@
       "offset": 0,
       "height": 2
     },
-    "decorators": []
+    "decorators": [
+      {
+        "type": "tears-of-ink:duckweed",
+        "probability": 0.06
+      }
+    ]
   }
 }

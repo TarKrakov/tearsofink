@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/vine",
+  "textures": {
+    "vine": "tears-of-ink:block/duckweed_vine",
+    "particle": "tears-of-ink:block/duckweed_vine"
+  }
+}

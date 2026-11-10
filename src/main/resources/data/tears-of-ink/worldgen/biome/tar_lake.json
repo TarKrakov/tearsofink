@@ -108,6 +108,8 @@
       "minecraft:spring_lava"
     ],
     [
+      "tears-of-ink:patch_waterbloom",
+      "tears-of-ink:patch_bogleaf",
       "minecraft:glow_lichen"
     ],
     [

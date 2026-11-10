@@ -21,6 +21,9 @@ import net.minecraft.world.level.block.FlowerBlock;
 import net.minecraft.world.level.block.FlowerPotBlock;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.material.PushReaction;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.PlaceOnWaterBlockItem;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
@@ -59,6 +62,13 @@ public final class ModBlocks {
 					.mapColor(MapColor.COLOR_GRAY)
 					.strength(0.7f)
 					.sound(SoundType.GRAVEL)));
+
+	/** Земля Кроволесья — пропитана кровью. */
+	public static final Block BLOOD_SOIL = register("blood_soil", new Block(
+			BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_RED).strength(0.6f).sound(SoundType.GRAVEL)));
+	/** Земля Чернолесья — смоляная. */
+	public static final Block TAR_SOIL = register("tar_soil", new Block(
+			BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_BLACK).strength(0.6f).sound(SoundType.GRAVEL)));
 
 	/** Пепел: сыпучий, падает как песок. */
 	public static final Block ASH = register("ash", new ColoredFallingBlock(
@@ -133,6 +143,31 @@ public final class ModBlocks {
 
 	/** Насколько ярко светится Асфоделит (0–15; факел = 14, светокамень = 15). */
 	private static final int ASPHODELITE_LIGHT = 5;
+
+	// ===== Травы Чернильных Земель =====
+	/** Где ещё может расти Смолька (кроме земли): камень и кладка руин. */
+	public static final TagKey<Block> TARWEED_GROWS_ON = TagKey.create(Registries.BLOCK, TearsOfInk.id("tarweed_grows_on"));
+
+	/** Кровавик — Кроволесье: низкий круглый алый цветок на местах старых битв. */
+	public static final Block BLOODROOT = register("bloodroot", herb(MobEffects.DAMAGE_BOOST, MapColor.COLOR_RED, 0, null));
+	/** Плотеягода — Кроволесье: куст с большой круглой ягодой. */
+	public static final Block FLESHBERRY = register("fleshberry", herb(MobEffects.SATURATION, MapColor.COLOR_RED, 0, null));
+	/** Чернильник — у корней смоляных деревьев. */
+	public static final Block INKROOT = register("inkroot", herb(MobEffects.BLINDNESS, MapColor.COLOR_BLACK, 0, null));
+	/** Смолька — растёт в старых зданиях, на камне и кладке. */
+	public static final Block TARWEED = register("tarweed", herb(MobEffects.POISON, MapColor.COLOR_BLACK, 0, TARWEED_GROWS_ON));
+	/** Водяница — кустик с бледным светлым плодом на берегах. Плод слабо светится. */
+	public static final Block WATERBLOOM = register("waterbloom", herb(MobEffects.WATER_BREATHING, MapColor.COLOR_LIGHT_BLUE, 4, null));
+	/** Трясинник — плавает на воде Смоляного озера. Сам блок и есть материал («кувшинка Трясинника»). */
+	public static final Block BOGLEAF = registerNoItem("bogleaf", new BogleafBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.LILY_PAD).mapColor(MapColor.COLOR_GREEN)));
+	/** Ряска — лоза на деревьях и постройках. */
+	public static final Block DUCKWEED = register("duckweed", new DuckweedVineBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.VINE).mapColor(MapColor.COLOR_CYAN)));
+
+	private static Block herb(net.minecraft.core.Holder<net.minecraft.world.effect.MobEffect> effect, MapColor color, int light, TagKey<Block> extraSoil) {
+		return new HerbBlock(effect, 5f, BlockBehaviour.Properties.ofFullCopy(Blocks.POPPY).mapColor(color).lightLevel(s -> light), extraSoil);
+	}
 
 	/** Асфоделитовая порода: камень под Чернильными пустошами (вместо обычного камня выше y=0). */
 	public static final Block ASPHODELITE_ROCK = register("asphodelite_rock", new Block(
@@ -210,6 +245,11 @@ public final class ModBlocks {
 		CompostingChanceRegistry.INSTANCE.add(set.sapling(), 0.3f);
 	}
 
+	/** Предмет-блок для Трясинника (ставится на воду, как кувшинка). Вызывается из ModItems. */
+	public static Item bogleafItem() {
+		return Registry.register(BuiltInRegistries.ITEM, TearsOfInk.id("bogleaf"), new PlaceOnWaterBlockItem(BOGLEAF, new Item.Properties()));
+	}
+
 	private static Block registerNoItem(String name, Block block) {
 		return Registry.register(BuiltInRegistries.BLOCK, TearsOfInk.id(name), block);
 	}
@@ -239,5 +279,9 @@ public final class ModBlocks {
 		FlammableBlockRegistry.getDefaultInstance().add(GOLDEN_SCARLET_LEAVES, 30, 60);
 		CompostingChanceRegistry.INSTANCE.add(GOLDEN_SCARLET_LEAVES, 0.3f);
 		woodSetBehaviour(INK);
+		for (Block herb : new Block[]{BLOODROOT, FLESHBERRY, INKROOT, TARWEED, WATERBLOOM, BOGLEAF, DUCKWEED}) {
+			CompostingChanceRegistry.INSTANCE.add(herb, 0.65f);
+		}
+		FlammableBlockRegistry.getDefaultInstance().add(DUCKWEED, 15, 100);
 	}
 }

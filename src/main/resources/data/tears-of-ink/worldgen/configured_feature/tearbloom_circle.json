@@ -1,0 +1,11 @@
+{
+  "type": "tears-of-ink:herb_circle",
+  "config": {
+    "to_place": {
+      "type": "minecraft:simple_state_provider",
+      "state": {
+        "Name": "tears-of-ink:tearbloom"
+      }
+    }
+  }
+}

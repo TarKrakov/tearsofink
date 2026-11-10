@@ -9,6 +9,8 @@ import net.minecraft.world.level.levelgen.SurfaceRules;
 /** Из каких блоков состоит поверхность наших биомов. */
 public final class ModSurfaceRules {
 	private static final SurfaceRules.RuleSource ASHEN_SOIL = SurfaceRules.state(ModBlocks.ASHEN_SOIL.defaultBlockState());
+	private static final SurfaceRules.RuleSource BLOOD_SOIL = SurfaceRules.state(ModBlocks.BLOOD_SOIL.defaultBlockState());
+	private static final SurfaceRules.RuleSource TAR_SOIL = SurfaceRules.state(ModBlocks.TAR_SOIL.defaultBlockState());
 	private static final SurfaceRules.RuleSource ASH = SurfaceRules.state(ModBlocks.ASH.defaultBlockState());
 	/** Под «потолками» (над пещерами) — туф, чтобы пепел не осыпался в пещеры. */
 	private static final SurfaceRules.RuleSource ASPHODELITE_ROCK = SurfaceRules.state(ModBlocks.ASPHODELITE_ROCK.defaultBlockState());
@@ -22,7 +24,10 @@ public final class ModSurfaceRules {
 		SurfaceRules.RuleSource inkWastes = SurfaceRules.sequence(
 				// Самый верхний блок: пепельная земля (под водой — просто пепел)
 				SurfaceRules.ifTrue(SurfaceRules.ON_FLOOR, SurfaceRules.sequence(
-						SurfaceRules.ifTrue(aboveWater, ASHEN_SOIL),
+						SurfaceRules.ifTrue(aboveWater, SurfaceRules.sequence(
+								SurfaceRules.ifTrue(SurfaceRules.isBiome(ModBiomes.BLOODWOOD), BLOOD_SOIL),
+								SurfaceRules.ifTrue(SurfaceRules.isBiome(ModBiomes.INKWOOD), TAR_SOIL),
+								ASHEN_SOIL)),
 						ASH)),
 				// Несколько блоков под ним: пепел
 				SurfaceRules.ifTrue(SurfaceRules.UNDER_FLOOR, SurfaceRules.sequence(

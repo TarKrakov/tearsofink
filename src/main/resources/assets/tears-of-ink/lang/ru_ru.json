@@ -68,5 +68,21 @@
   "block.tears-of-ink.ink_trapdoor": "Смоляный люк",
   "block.tears-of-ink.ink_button": "Смоляная кнопка",
   "block.tears-of-ink.ink_pressure_plate": "Смоляная нажимная плита",
-  "block.tears-of-ink.golden_scarlet_leaves": "Золотая багряная листва"
+  "block.tears-of-ink.golden_scarlet_leaves": "Золотая багряная листва",
+  "block.tears-of-ink.blood_soil": "Кровавая земля",
+  "block.tears-of-ink.tar_soil": "Смоляная земля",
+  "block.tears-of-ink.bloodroot": "Кровавик",
+  "block.tears-of-ink.fleshberry": "Плотеягода",
+  "block.tears-of-ink.inkroot": "Чернильник",
+  "block.tears-of-ink.tarweed": "Смолька",
+  "block.tears-of-ink.waterbloom": "Водяница",
+  "block.tears-of-ink.bogleaf": "Трясинник",
+  "block.tears-of-ink.duckweed": "Ряска",
+  "item.tears-of-ink.bloodroot_clot": "Сгусток кровавика",
+  "item.tears-of-ink.fleshberry_pulp": "Мякоть Плотеягоды",
+  "item.tears-of-ink.inkroot_root": "Корень Чернильника",
+  "item.tears-of-ink.tarweed_extract": "Экстракт Смольки",
+  "item.tears-of-ink.waterbloom_juice": "Выжимка Водяницы",
+  "item.tears-of-ink.duckweed_pods": "Сухие стручки Ряски",
+  "item.tears-of-ink.bogleaf": "Кувшинка Трясинника"
 }

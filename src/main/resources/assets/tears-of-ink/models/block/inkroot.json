@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/cross",
+  "textures": {
+    "cross": "tears-of-ink:block/inkroot"
+  }
+}

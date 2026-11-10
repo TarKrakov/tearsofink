@@ -1,0 +1,21 @@
+{
+  "variants": {
+    "": [
+      {
+        "model": "tears-of-ink:block/bogleaf"
+      },
+      {
+        "model": "tears-of-ink:block/bogleaf",
+        "y": 90
+      },
+      {
+        "model": "tears-of-ink:block/bogleaf",
+        "y": 180
+      },
+      {
+        "model": "tears-of-ink:block/bogleaf",
+        "y": 270
+      }
+    ]
+  }
+}

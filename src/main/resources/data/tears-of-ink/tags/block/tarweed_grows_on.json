@@ -1,0 +1,13 @@
+{
+  "replace": false,
+  "values": [
+    "#minecraft:base_stone_overworld",
+    "#minecraft:stone_bricks",
+    "minecraft:cobblestone",
+    "minecraft:mossy_cobblestone",
+    "tears-of-ink:asphodelite_rock",
+    "tears-of-ink:ashen_path",
+    "minecraft:stone_brick_slab",
+    "minecraft:cobblestone_slab"
+  ]
+}

@@ -46,6 +46,17 @@
       "radius": 2,
       "offset": 0
     },
-    "decorators": []
+    "decorators": [
+      {
+        "type": "tears-of-ink:root_herb",
+        "probability": 0.6,
+        "plant": {
+          "type": "minecraft:simple_state_provider",
+          "state": {
+            "Name": "tears-of-ink:inkroot"
+          }
+        }
+      }
+    ]
   }
 }

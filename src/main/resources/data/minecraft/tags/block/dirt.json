@@ -1,6 +1,8 @@
 {
   "replace": false,
   "values": [
-    "tears-of-ink:ashen_soil"
+    "tears-of-ink:ashen_soil",
+    "tears-of-ink:blood_soil",
+    "tears-of-ink:tar_soil"
   ]
 }
