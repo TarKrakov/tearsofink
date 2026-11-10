@@ -7,7 +7,12 @@ import com.tarkrakov.tearsofink.client.particle.DripParticle;
 import com.tarkrakov.tearsofink.client.particle.FogBankParticle;
 import com.tarkrakov.tearsofink.client.particle.TearGlintParticle;
 import com.tarkrakov.tearsofink.particle.ModParticles;
+import com.tarkrakov.tearsofink.client.hud.InkHud;
+import com.tarkrakov.tearsofink.ink.InkSyncPayload;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.particle.v1.ParticleFactoryRegistry;
@@ -26,6 +31,12 @@ public class TearsOfInkClient implements ClientModInitializer {
 		particles.register(ModParticles.INK_DRIP_FALL, s -> new DripParticle.Provider(s, DripParticle.Phase.FALL, ModParticles.INK_DRIP_LAND));
 		particles.register(ModParticles.INK_DRIP_LAND, s -> new DripParticle.Provider(s, DripParticle.Phase.LAND, null));
 		ClientTickEvents.END_CLIENT_TICK.register(FogBankSpawner::tick);
+
+		// Душа и Чернила: полоски и надпись при входе/выходе
+		ClientPlayNetworking.registerGlobalReceiver(InkSyncPayload.TYPE, (payload, context) -> context.client().execute(() -> InkHud.receive(payload)));
+		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> InkHud.reset());
+		ClientTickEvents.END_CLIENT_TICK.register(client -> InkHud.clientTick());
+		HudRenderCallback.EVENT.register(InkHud::render);
 
 		// Блоки с прозрачными пикселями (листва, саженец)
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.PALE_LEAVES, RenderType.cutoutMipped());

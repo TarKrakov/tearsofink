@@ -92,5 +92,7 @@
   "block.tears-of-ink.ink_grass": "Смоляная осока",
   "block.tears-of-ink.tall_ink_grass": "Высокая смоляная осока",
   "block.tears-of-ink.shore_reed": "Тростник",
-  "block.tears-of-ink.tall_shore_reed": "Высокий тростник"
+  "block.tears-of-ink.tall_shore_reed": "Высокий тростник",
+  "message.tears-of-ink.enter": "Ваши вены наполняются чернилами…",
+  "message.tears-of-ink.leave": "Хватка чернильной крови ослабевает…"
 }

@@ -1,5 +1,7 @@
 package com.tarkrakov.tearsofink.command;
 
+import com.tarkrakov.tearsofink.ink.InkData;
+import com.tarkrakov.tearsofink.ink.InkPowers;
 import com.tarkrakov.tearsofink.world.InkLandsAccess;
 import com.tarkrakov.tearsofink.world.InkLandsLayout;
 import com.mojang.brigadier.context.CommandContext;
@@ -19,6 +21,12 @@ import net.minecraft.world.level.levelgen.Heightmap;
  * /tearsofink center — телепорт в центр
  * /tearsofink edge [1-5] — телепорт к краю, в начало одной из дорог (смотришь в сторону центра)
  * /tearsofink blood — телепорт в центр ближайшего пятна Кроволесья + проверка высот низины
+ * /tearsofink powers — показать Душу и Чернила
+ * /tearsofink powers reset — вернуть стартовые значения
+ * /tearsofink soul max <50-100> — максимум Души (как будто продал душу)
+ * /tearsofink soul set <число> — текущая Душа
+ * /tearsofink ink bonus <число> — прибавка к запасу Чернил (как от фонтанов и сердец)
+ * /tearsofink ink set <число> — текущие Чернила
  */
 public final class ModCommands {
 	private ModCommands() {}
@@ -33,7 +41,36 @@ public final class ModCommands {
 						.then(Commands.literal("edge")
 								.executes(ctx -> edge(ctx, 1))
 								.then(Commands.argument("road", IntegerArgumentType.integer(1, InkLandsLayout.ROADS))
-										.executes(ctx -> edge(ctx, IntegerArgumentType.getInteger(ctx, "road")))))));
+										.executes(ctx -> edge(ctx, IntegerArgumentType.getInteger(ctx, "road")))))
+						.then(Commands.literal("powers")
+								.executes(ModCommands::powers)
+								.then(Commands.literal("reset").executes(ctx -> change(ctx, d -> InkData.fresh().withInside(d.inside())))))
+						.then(Commands.literal("soul")
+								.then(Commands.literal("max").then(Commands.argument("value", IntegerArgumentType.integer(InkData.SOUL_MIN, InkData.SOUL_START))
+										.executes(ctx -> change(ctx, d -> d.withSoulMax(IntegerArgumentType.getInteger(ctx, "value"))))))
+								.then(Commands.literal("set").then(Commands.argument("value", IntegerArgumentType.integer(0, InkData.SOUL_START))
+										.executes(ctx -> change(ctx, d -> d.withSoul(IntegerArgumentType.getInteger(ctx, "value")))))))
+						.then(Commands.literal("ink")
+								.then(Commands.literal("bonus").then(Commands.argument("value", IntegerArgumentType.integer(0, InkData.INK_CAP))
+										.executes(ctx -> change(ctx, d -> d.withInkBonus(IntegerArgumentType.getInteger(ctx, "value"))))))
+								.then(Commands.literal("set").then(Commands.argument("value", IntegerArgumentType.integer(0, InkData.INK_CAP))
+										.executes(ctx -> change(ctx, d -> d.withInk(IntegerArgumentType.getInteger(ctx, "value")))))))));
+	}
+
+	private static int change(CommandContext<CommandSourceStack> ctx, java.util.function.UnaryOperator<InkData> fn) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+		ServerPlayer player = ctx.getSource().getPlayerOrException();
+		InkPowers.update(player, fn.apply(InkPowers.get(player)));
+		return powers(ctx);
+	}
+
+	private static int powers(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+		InkData d = InkPowers.get(ctx.getSource().getPlayerOrException());
+		ctx.getSource().sendSuccess(() -> Component.literal("Душа: " + (int) d.soul() + " / " + d.soulMax()
+				+ " (продано шагов: " + d.soldSteps() + ")"
+				+ "\nЧернила: " + (int) d.ink() + " / " + d.inkMax()
+				+ " (прибавка от фонтанов/сердец: " + d.inkBonus() + ", потолок " + InkData.INK_CAP + ")"
+				+ "\nСилы чернил: " + (d.inside() ? "пробуждены (ты в Чернильных Землях)" : "спят (ты снаружи)")), false);
+		return 1;
 	}
 
 	private static InkLandsLayout findLayout(CommandSourceStack source) {
