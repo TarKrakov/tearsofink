@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "PIP",
+    "ATA",
+    "PIP"
+  ],
+  "key": {
+    "P": {
+      "item": "tears-of-ink:pigment"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "A": {
+      "item": "tears-of-ink:asphoda"
+    },
+    "T": {
+      "item": "tears-of-ink:tearbloom"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:ink_lantern",
+    "count": 1
+  }
+}

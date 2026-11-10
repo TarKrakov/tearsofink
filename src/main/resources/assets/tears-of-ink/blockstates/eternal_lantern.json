@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "hanging=false": {
+      "model": "tears-of-ink:block/eternal_lantern"
+    },
+    "hanging=true": {
+      "model": "tears-of-ink:block/eternal_lantern_hanging"
+    }
+  }
+}

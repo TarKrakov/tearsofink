@@ -43,6 +43,10 @@ public final class InkFog {
 	private static float strength = 0f;
 	private static float fullEnd = FOG_END_PALE;
 	private static float fullEndTarget = FOG_END_PALE;
+	/** Видимость от фонарей (мировых и ручного), плавно догоняет нужную. */
+	private static float clearEnd = 0f;
+	/** Как быстро туман расступается у фонаря (доля в секунду). */
+	public static final float CLEAR_SMOOTHING_PER_SECOND = 1.5f;
 	private static float target = 0f;
 	private static long lastNanos = 0L;
 	private static long lastSampleNanos = 0L;
@@ -67,7 +71,10 @@ public final class InkFog {
 				Float end = zoneFogEnd(level.getBiome(camera.getBlockPosition()));
 				if (end != null) fullEndTarget = end;
 			}
+			LanternClarity.sample(level, camera.getPosition());
 		}
+		float clearTarget = LanternClarity.targetFogEnd(fullEnd);
+		clearEnd += (clearTarget - clearEnd) * Math.min(1f, dt * CLEAR_SMOOTHING_PER_SECOND);
 		float endStep = dt * FOG_END_CHANGE_PER_SECOND;
 		if (fullEnd < fullEndTarget) fullEnd = Math.min(fullEndTarget, fullEnd + endStep);
 		else if (fullEnd > fullEndTarget) fullEnd = Math.max(fullEndTarget, fullEnd - endStep);
@@ -91,7 +98,7 @@ public final class InkFog {
 
 	/** Дальность видимости для данной силы тумана: плавно от ванильной до нашей. */
 	public static float fogEnd(float vanillaEnd, float renderDistance) {
-		float full = Math.min(renderDistance, fullEnd);
+		float full = Math.min(renderDistance, Math.max(fullEnd, clearEnd));
 		if (vanillaEnd <= full) return vanillaEnd;
 		// Экспоненциальная интерполяция: туман на глаз сгущается равномерно.
 		return (float) (vanillaEnd * Math.pow(full / vanillaEnd, strength));

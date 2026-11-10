@@ -47,6 +47,9 @@ import net.minecraft.world.level.block.ColoredFallingBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
+import com.tarkrakov.tearsofink.block.lantern.BrazierBlock;
+import com.tarkrakov.tearsofink.block.lantern.FogClearing;
+import com.tarkrakov.tearsofink.block.lantern.InkLanternBlock;
 
 /** Все блоки мода. */
 public final class ModBlocks {
@@ -266,6 +269,26 @@ public final class ModBlocks {
 		CompostingChanceRegistry.INSTANCE.add(set.leaves(), 0.3f);
 		CompostingChanceRegistry.INSTANCE.add(set.sapling(), 0.3f);
 	}
+
+	// ===== Фонари: разгоняют мглу, светят, не дают появляться нашим врагам =====
+	/** Радиус ясности (блоков) у каждого вида фонаря. */
+	public static final int INK_LANTERN_RADIUS = 10, BRAZIER_RADIUS = 18, ETERNAL_LANTERN_RADIUS = 14;
+
+	private static BlockBehaviour.Properties lanternProps(int light) {
+		return BlockBehaviour.Properties.ofFullCopy(Blocks.LANTERN)
+				.lightLevel(s -> !s.hasProperty(FogClearing.LIT) || s.getValue(FogClearing.LIT) ? light : 0)
+				.explosionResistance(1200f)
+				.pushReaction(PushReaction.BLOCK);
+	}
+
+	/** Чернильный фонарь: малый, ставится на землю/забор или подвешивается. Можно скрафтить. */
+	public static final Block INK_LANTERN = register("ink_lantern", new InkLanternBlock(INK_LANTERN_RADIUS, false, lanternProps(14)));
+	/** Жаровня: большой огонь поселений. Можно скрафтить. */
+	public static final Block BRAZIER = register("brazier", new BrazierBlock(BRAZIER_RADIUS,
+			lanternProps(15).sound(SoundType.METAL).noOcclusion()));
+	/** Вечный фонарь: сюжетные места; горит всегда, не ломается, не крафтится. */
+	public static final Block ETERNAL_LANTERN = register("eternal_lantern", new InkLanternBlock(ETERNAL_LANTERN_RADIUS, true,
+			lanternProps(15).strength(-1f, 3600000f)));
 
 	/** Предмет-блок для Трясинника (ставится на воду, как кувшинка). Вызывается из ModItems. */
 	public static Item bogleafItem() {

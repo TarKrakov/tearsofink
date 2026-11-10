@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/template_lantern",
+  "textures": {
+    "lantern": "tears-of-ink:block/eternal_lantern"
+  }
+}

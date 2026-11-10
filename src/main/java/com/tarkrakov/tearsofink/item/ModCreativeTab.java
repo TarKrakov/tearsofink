@@ -77,6 +77,11 @@ public final class ModCreativeTab {
 						ModBlocks.INK.all().forEach(output::accept);
 						output.accept(ModBlocks.PALE_LEAVES);
 						output.accept(ModBlocks.PALE_SAPLING);
+						output.accept(ModBlocks.INK_LANTERN);
+						output.accept(ModBlocks.BRAZIER);
+						output.accept(ModBlocks.ETERNAL_LANTERN);
+						output.accept(ModItems.HAND_LANTERN);
+						output.accept(ModItems.BRIGHT_HAND_LANTERN);
 						output.accept(ModItems.SKILL_BOOK_DASH);
 					})
 					.build());
