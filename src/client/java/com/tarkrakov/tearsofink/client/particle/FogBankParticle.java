@@ -1,5 +1,7 @@
 package com.tarkrakov.tearsofink.client.particle;
 
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleProvider;
@@ -8,6 +10,7 @@ import net.minecraft.client.particle.SpriteSet;
 import net.minecraft.client.particle.TextureSheetParticle;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.util.Mth;
+import net.minecraft.world.phys.Vec3;
 
 /** Клуб тумана: большой, полупрозрачный, медленно дрейфует, плавно появляется и тает. */
 public class FogBankParticle extends TextureSheetParticle {
@@ -17,6 +20,10 @@ public class FogBankParticle extends TextureSheetParticle {
 	/** Размер клуба (половина стороны, в блоках). */
 	public static final float MIN_SIZE = 2.5f, MAX_SIZE = 5.0f;
 	/** Время жизни в тиках (20 тиков = 1 секунда). */
+	/** Ближе этого расстояния (в блоках) клуб начинает растворяться. */
+	public static final float NEAR_FADE_START = 6.0f;
+	/** На этом расстоянии клуб полностью невидим. */
+	public static final float NEAR_FADE_END = 1.5f;
 	public static final int MIN_LIFETIME = 200, MAX_LIFETIME = 360;
 
 	protected FogBankParticle(ClientLevel level, double x, double y, double z, SpriteSet sprites) {
@@ -41,6 +48,23 @@ public class FogBankParticle extends TextureSheetParticle {
 		float t = (float) this.age / this.lifetime;
 		float fade = t < 0.2f ? t / 0.2f : (t > 0.7f ? (1f - t) / 0.3f : 1f);
 		this.alpha = MAX_ALPHA * Mth.clamp(fade, 0f, 1f);
+	}
+
+	@Override
+	public void render(VertexConsumer buffer, Camera camera, float partialTick) {
+		// Чем ближе клуб к камере, тем он прозрачнее — чтобы не упираться в туман лицом.
+		Vec3 cam = camera.getPosition();
+		double dx = Mth.lerp(partialTick, this.xo, this.x) - cam.x;
+		double dy = Mth.lerp(partialTick, this.yo, this.y) - cam.y;
+		double dz = Mth.lerp(partialTick, this.zo, this.z) - cam.z;
+		float distance = (float) Math.sqrt(dx * dx + dy * dy + dz * dz);
+		float near = Mth.clamp((distance - NEAR_FADE_END) / (NEAR_FADE_START - NEAR_FADE_END), 0f, 1f);
+		if (near <= 0f) return;
+
+		float baseAlpha = this.alpha;
+		this.alpha = baseAlpha * near * near; // мягкое, а не линейное растворение
+		super.render(buffer, camera, partialTick);
+		this.alpha = baseAlpha;
 	}
 
 	@Override
