@@ -16,6 +16,18 @@ public final class ModParticles {
 	public static final SimpleParticleType TEAR_GLINT = Registry.register(
 			BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id("tear_glint"), FabricParticleTypes.simple());
 
+	/** Капли крови (Багряное дерево) и чернил (Смоляное дерево): висит → падает → брызги. */
+	public static final SimpleParticleType BLOOD_DRIP_HANG = simple("blood_drip_hang");
+	public static final SimpleParticleType BLOOD_DRIP_FALL = simple("blood_drip_fall");
+	public static final SimpleParticleType BLOOD_DRIP_LAND = simple("blood_drip_land");
+	public static final SimpleParticleType INK_DRIP_HANG = simple("ink_drip_hang");
+	public static final SimpleParticleType INK_DRIP_FALL = simple("ink_drip_fall");
+	public static final SimpleParticleType INK_DRIP_LAND = simple("ink_drip_land");
+
+	private static SimpleParticleType simple(String name) {
+		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id(name), FabricParticleTypes.simple());
+	}
+
 	private ModParticles() {}
 
 	public static void init() {}

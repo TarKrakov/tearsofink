@@ -1,5 +1,5 @@
 {
-  "feature": "tears-of-ink:pale_tree",
+  "feature": "tears-of-ink:ink_tree",
   "placement": [
     {
       "type": "minecraft:count",
@@ -7,19 +7,15 @@
         "type": "minecraft:weighted_list",
         "distribution": [
           {
-            "data": 0,
-            "weight": 1
-          },
-          {
-            "data": 1,
-            "weight": 3
-          },
-          {
             "data": 2,
-            "weight": 4
+            "weight": 2
           },
           {
             "data": 3,
+            "weight": 4
+          },
+          {
+            "data": 4,
             "weight": 2
           }
         ]
@@ -44,7 +40,7 @@
       "predicate": {
         "type": "minecraft:would_survive",
         "state": {
-          "Name": "tears-of-ink:pale_sapling",
+          "Name": "tears-of-ink:ink_sapling",
           "Properties": {
             "stage": "0"
           }

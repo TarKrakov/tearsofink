@@ -49,6 +49,8 @@ public final class ModCreativeTab {
 						output.accept(ModBlocks.PALE_TRAPDOOR);
 						output.accept(ModBlocks.PALE_PRESSURE_PLATE);
 						output.accept(ModBlocks.PALE_BUTTON);
+						ModBlocks.SCARLET.all().forEach(output::accept);
+						ModBlocks.INK.all().forEach(output::accept);
 						output.accept(ModBlocks.PALE_LEAVES);
 						output.accept(ModBlocks.PALE_SAPLING);
 					})

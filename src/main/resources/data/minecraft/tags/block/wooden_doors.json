@@ -1,6 +1,8 @@
 {
   "replace": false,
   "values": [
-    "tears-of-ink:pale_door"
+    "tears-of-ink:pale_door",
+    "tears-of-ink:scarlet_door",
+    "tears-of-ink:ink_door"
   ]
 }

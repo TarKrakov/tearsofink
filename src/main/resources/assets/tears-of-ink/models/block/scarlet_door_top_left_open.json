@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/door_top_left_open",
+  "textures": {
+    "bottom": "tears-of-ink:block/scarlet_door_bottom",
+    "top": "tears-of-ink:block/scarlet_door_top"
+  }
+}

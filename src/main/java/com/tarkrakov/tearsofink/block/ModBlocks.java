@@ -37,6 +37,8 @@ import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.grower.TreeGrower;
 import net.minecraft.world.level.levelgen.feature.ConfiguredFeature;
 import java.util.Optional;
+import java.util.function.Function;
+import com.tarkrakov.tearsofink.particle.ModParticles;
 import net.minecraft.world.level.block.ColoredFallingBlock;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
@@ -109,6 +111,12 @@ public final class ModBlocks {
 	public static final Block PALE_PRESSURE_PLATE = register("pale_pressure_plate", new PressurePlateBlock(PALE_SET,
 			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_PRESSURE_PLATE).mapColor(MapColor.COLOR_CYAN)));
 
+	// ===== Багряное дерево (Кроволесье) и Смоляное дерево (Чернолесье) =====
+	public static final WoodSet SCARLET = woodSet("scarlet", MapColor.COLOR_RED,
+			props -> new DrippingLeavesBlock(() -> ModParticles.BLOOD_DRIP_HANG, props));
+	public static final WoodSet INK = woodSet("ink", MapColor.COLOR_BLACK,
+			props -> new DrippingLeavesBlock(() -> ModParticles.INK_DRIP_HANG, props));
+
 	// ===== Растения и руды пустошей =====
 	/** Яркость Слёзницы (0–15, факел = 14). */
 	private static final int TEARBLOOM_LIGHT = 10;
@@ -164,6 +172,40 @@ public final class ModBlocks {
 
 	private ModBlocks() {}
 
+	/** Создаёт и регистрирует полный набор блоков дерева с префиксом name (бревно, доски, дверь…). */
+	private static WoodSet woodSet(String name, MapColor color, Function<BlockBehaviour.Properties, Block> leaves) {
+		ResourceKey<ConfiguredFeature<?, ?>> tree = ResourceKey.create(Registries.CONFIGURED_FEATURE, TearsOfInk.id(name + "_tree"));
+		Block planks = register(name + "_planks", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_PLANKS).mapColor(color)));
+		return new WoodSet(
+				register(name + "_log", new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_LOG).mapColor(color))),
+				register("stripped_" + name + "_log", new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STRIPPED_DARK_OAK_LOG).mapColor(color))),
+				register(name + "_wood", new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_WOOD).mapColor(color))),
+				register("stripped_" + name + "_wood", new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STRIPPED_DARK_OAK_WOOD).mapColor(color))),
+				planks,
+				register(name + "_leaves", leaves.apply(BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_LEAVES).mapColor(color))),
+				register(name + "_sapling", new SaplingBlock(new TreeGrower(name, Optional.empty(), Optional.of(tree), Optional.empty()),
+						BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_SAPLING))),
+				register(name + "_stairs", new StairBlock(planks.defaultBlockState(), BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_STAIRS).mapColor(color))),
+				register(name + "_slab", new SlabBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_SLAB).mapColor(color))),
+				register(name + "_fence", new FenceBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_FENCE).mapColor(color))),
+				register(name + "_fence_gate", new FenceGateBlock(WoodType.DARK_OAK, BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_FENCE_GATE).mapColor(color))),
+				register(name + "_door", new DoorBlock(BlockSetType.DARK_OAK, BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_DOOR).mapColor(color))),
+				register(name + "_trapdoor", new TrapDoorBlock(BlockSetType.DARK_OAK, BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_TRAPDOOR).mapColor(color))),
+				register(name + "_button", new ButtonBlock(BlockSetType.DARK_OAK, 30, BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_BUTTON))),
+				register(name + "_pressure_plate", new PressurePlateBlock(BlockSetType.DARK_OAK, BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_PRESSURE_PLATE).mapColor(color))));
+	}
+
+	private static void woodSetBehaviour(WoodSet set) {
+		StrippableBlockRegistry.register(set.log(), set.strippedLog());
+		StrippableBlockRegistry.register(set.wood(), set.strippedWood());
+		FlammableBlockRegistry fire = FlammableBlockRegistry.getDefaultInstance();
+		for (Block log : new Block[]{set.log(), set.strippedLog(), set.wood(), set.strippedWood()}) fire.add(log, 5, 5);
+		for (Block b : new Block[]{set.planks(), set.stairs(), set.slab(), set.fence(), set.fenceGate()}) fire.add(b, 5, 20);
+		fire.add(set.leaves(), 30, 60);
+		CompostingChanceRegistry.INSTANCE.add(set.leaves(), 0.3f);
+		CompostingChanceRegistry.INSTANCE.add(set.sapling(), 0.3f);
+	}
+
 	private static Block registerNoItem(String name, Block block) {
 		return Registry.register(BuiltInRegistries.BLOCK, TearsOfInk.id(name), block);
 	}
@@ -189,5 +231,7 @@ public final class ModBlocks {
 		CompostingChanceRegistry.INSTANCE.add(PALE_LEAVES, 0.3f);
 		CompostingChanceRegistry.INSTANCE.add(PALE_SAPLING, 0.3f);
 		CompostingChanceRegistry.INSTANCE.add(TEARBLOOM, 0.65f);
+		woodSetBehaviour(SCARLET);
+		woodSetBehaviour(INK);
 	}
 }

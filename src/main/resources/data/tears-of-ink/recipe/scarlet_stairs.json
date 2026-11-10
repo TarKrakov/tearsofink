@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "#  ",
+    "## ",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "tears-of-ink:scarlet_planks"
+    }
+  },
+  "result": {
+    "count": 4,
+    "id": "tears-of-ink:scarlet_stairs"
+  },
+  "group": "wooden_stairs"
+}

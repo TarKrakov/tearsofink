@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "building",
+  "group": "planks",
+  "ingredients": [
+    {
+      "tag": "tears-of-ink:ink_logs"
+    }
+  ],
+  "result": {
+    "count": 4,
+    "id": "tears-of-ink:ink_planks"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": [
+    "###",
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "tears-of-ink:scarlet_planks"
+    }
+  },
+  "result": {
+    "count": 2,
+    "id": "tears-of-ink:scarlet_trapdoor"
+  },
+  "group": "wooden_trapdoor"
+}
