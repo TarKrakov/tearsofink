@@ -23,7 +23,7 @@ public final class InkHud {
 	/** Размер заполнения внутри рамки. */
 	public static final int FILL_W = FRAME_W - BORDER * 2, FILL_H = FRAME_H - BORDER * 2;
 	/** Отступ первого столбика от правого края хотбара и промежуток между столбиками. */
-	public static final int SIDE_GAP = 5, BAR_GAP = 2;
+	public static final int SIDE_GAP = 5, BAR_GAP = 10;
 	/** Нижний край столбиков — на столько выше низа экрана (вровень с низом хотбара). */
 	public static final int BOTTOM_OFFSET = 1;
 	/**
@@ -31,6 +31,8 @@ public final class InkHud {
 	 * индикатор атаки в режиме «у хотбара») — столбики отодвигаются на столько.
 	 */
 	public static final int MAKE_ROOM_SHIFT = 29;
+	/** Цвета чисел над столбиками (RGB) и отступ чисел от верха рамки. */
+	public static final int SOUL_TEXT_COLOR = 0xE6F0EE, INK_TEXT_COLOR = 0xB79BD6, TEXT_GAP = 2;
 	/** Как быстро полоски проявляются/растворяются (доля в секунду). */
 	public static final float FADE_PER_SECOND = 2.5f;
 	/** Вспышка столбика Чернил при трате и пульсация, когда чернил не хватило (в секундах). */
@@ -130,6 +132,13 @@ public final class InkHud {
 			}
 
 			g.setColor(1f, 1f, 1f, 1f);
+
+			// числа над столбиками
+			if (alpha > 0.05f) {
+				int a = (int) (alpha * 255) << 24;
+				drawNumber(g, mc, Math.round(soul), soulX, y, a | SOUL_TEXT_COLOR);
+				drawNumber(g, mc, Math.round(ink), inkX, y, a | INK_TEXT_COLOR);
+			}
 		}
 		RenderSystem.disableBlend();
 	}
@@ -139,6 +148,13 @@ public final class InkHud {
 		boolean offhandOnRight = mc.options.mainHand().get() == HumanoidArm.LEFT && !mc.player.getOffhandItem().isEmpty();
 		boolean attackAtHotbar = mc.options.attackIndicator().get() == AttackIndicatorStatus.HOTBAR;
 		return offhandOnRight || attackAtHotbar;
+	}
+
+	/** Число по центру над рамкой. */
+	private static void drawNumber(GuiGraphics g, Minecraft mc, int value, int frameX, int frameY, int color) {
+		String text = Integer.toString(value);
+		int textX = frameX + (FRAME_W - mc.font.width(text) + 1) / 2;
+		g.drawString(mc.font, text, textX, frameY - mc.font.lineHeight - TEXT_GAP + 1, color, true);
 	}
 
 	private static void drawFrame(GuiGraphics g, int x, int y) {
