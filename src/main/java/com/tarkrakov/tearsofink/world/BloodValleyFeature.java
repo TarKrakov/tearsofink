@@ -22,12 +22,31 @@ public class BloodValleyFeature extends Feature<NoneFeatureConfiguration> {
 	/** Сколько блоков пепла под верхним слоем почвы. */
 	private static final int ASH_LAYERS = 3;
 
+	// ===== Диагностика (показывается в /tearsofink blood) =====
+	public static final java.util.concurrent.atomic.AtomicLong CALLS = new java.util.concurrent.atomic.AtomicLong();
+	public static final java.util.concurrent.atomic.AtomicLong CHUNKS_WITH_VALLEY = new java.util.concurrent.atomic.AtomicLong();
+	public static final java.util.concurrent.atomic.AtomicLong COLUMNS_LOWERED = new java.util.concurrent.atomic.AtomicLong();
+	public static final java.util.concurrent.atomic.AtomicLong COLUMNS_SKIPPED_WATER = new java.util.concurrent.atomic.AtomicLong();
+	public static volatile String lastError = "нет";
+	public static volatile String lastSample = "нет";
+
 	public BloodValleyFeature(Codec<NoneFeatureConfiguration> codec) {
 		super(codec);
 	}
 
 	@Override
 	public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> context) {
+		CALLS.incrementAndGet();
+		try {
+			return placeInner(context);
+		} catch (Throwable t) {
+			lastError = t.toString();
+			com.tarkrakov.tearsofink.TearsOfInk.LOGGER.error("Ошибка в низине Кроволесья", t);
+			return false;
+		}
+	}
+
+	private boolean placeInner(FeaturePlaceContext<NoneFeatureConfiguration> context) {
 		WorldGenLevel level = context.level();
 		ChunkGenerator generator = context.chunkGenerator();
 		if (!(generator.getBiomeSource() instanceof InkLandsAccess access)) return false;
@@ -47,11 +66,13 @@ public class BloodValleyFeature extends Feature<NoneFeatureConfiguration> {
 				int x = minX + dx, z = minZ + dz;
 				int surface = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z) - 1;
 				pos.set(x, surface, z);
-				if (!level.getBlockState(pos).getFluidState().isEmpty()) continue;
+				if (!level.getBlockState(pos).getFluidState().isEmpty()) { COLUMNS_SKIPPED_WATER.incrementAndGet(); continue; }
 				double target = layout.valleyHeight(x, z, surface,
 						(bx, bz) -> generator.getBaseHeight(bx, bz, Heightmap.Types.WORLD_SURFACE_WG, level, randomState) - 1);
 				int y = Mth.floor(target);
+				if (dx == 8 && dz == 8) lastSample = "x" + x + " z" + z + ": поверхность " + surface + " → цель " + y;
 				if (y == surface) continue;
+				if (y < surface) COLUMNS_LOWERED.incrementAndGet();
 
 				BlockState top = topSoil(level, pos.set(x, y, z));
 				if (y < surface) {
@@ -77,6 +98,7 @@ public class BloodValleyFeature extends Feature<NoneFeatureConfiguration> {
 				changed = true;
 			}
 		}
+		if (changed) CHUNKS_WITH_VALLEY.incrementAndGet();
 		return changed;
 	}
 

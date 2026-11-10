@@ -93,7 +93,13 @@ public final class ModCommands {
 				+ "\nВысота рельефа без низины: " + natural
 				+ "\nВысота, которую задаёт низина: " + valley
 				+ "\nРеальная земля в центре: " + actual
-				+ "\nЗемля за краем склона: " + outside), false);
+				+ "\nЗемля за краем склона: " + outside
+				+ "\n[диагностика] запусков низины: " + com.tarkrakov.tearsofink.world.BloodValleyFeature.CALLS.get()
+				+ ", чанков с низиной: " + com.tarkrakov.tearsofink.world.BloodValleyFeature.CHUNKS_WITH_VALLEY.get()
+				+ ", столбцов срезано: " + com.tarkrakov.tearsofink.world.BloodValleyFeature.COLUMNS_LOWERED.get()
+				+ ", пропущено (вода): " + com.tarkrakov.tearsofink.world.BloodValleyFeature.COLUMNS_SKIPPED_WATER.get()
+				+ "\n[диагностика] последний замер: " + com.tarkrakov.tearsofink.world.BloodValleyFeature.lastSample
+				+ "\n[диагностика] ошибка: " + com.tarkrakov.tearsofink.world.BloodValleyFeature.lastError), false);
 		return 1;
 	}
 
