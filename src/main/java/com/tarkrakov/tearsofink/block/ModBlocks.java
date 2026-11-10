@@ -51,6 +51,13 @@ public final class ModBlocks {
 					.strength(0.6f)
 					.sound(SoundType.GRAVEL)));
 
+	/** Пепельная дорога: утоптанный пепел магистралей. */
+	public static final Block ASHEN_PATH = register("ashen_path", new Block(
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.COLOR_GRAY)
+					.strength(0.7f)
+					.sound(SoundType.GRAVEL)));
+
 	/** Пепел: сыпучий, падает как песок. */
 	public static final Block ASH = register("ash", new ColoredFallingBlock(
 			new ColorRGBA(0x4A4652FF),

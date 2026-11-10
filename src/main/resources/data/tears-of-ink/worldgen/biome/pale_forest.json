@@ -120,9 +120,10 @@
       "minecraft:spring_lava"
     ],
     [
+      "tears-of-ink:ink_roads",
       "tears-of-ink:patch_ink_puddle",
       "tears-of-ink:patch_tearbloom",
-      "tears-of-ink:trees_ink_wastes",
+      "tears-of-ink:trees_pale_dense",
       "minecraft:glow_lichen"
     ],
     [

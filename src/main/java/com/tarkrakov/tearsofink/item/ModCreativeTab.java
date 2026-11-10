@@ -20,6 +20,7 @@ public final class ModCreativeTab {
 					.displayItems((params, output) -> {
 						output.accept(ModBlocks.ASHEN_SOIL);
 						output.accept(ModBlocks.ASH);
+						output.accept(ModBlocks.ASHEN_PATH);
 						output.accept(ModBlocks.INK_PUDDLE);
 						output.accept(ModBlocks.TEARBLOOM);
 						output.accept(ModBlocks.ASPHODELITE_ROCK);

@@ -23,8 +23,8 @@ public final class InkFog {
 	/** Дальность видимости (в блоках) при полной силе — для каждой зоны своя. */
 	public static final float FOG_END_PALE = 10.0f;
 	public static final float FOG_END_BLOOD = 12.0f;
-	public static final float FOG_END_INK = 6.5f;
-	public static final float FOG_END_LAKE = 9.0f;
+	public static final float FOG_END_INK = 8.0f;
+	public static final float FOG_END_LAKE = 10.0f;
 	/** Как быстро меняется дальность при переходе между зонами (блоков в секунду). */
 	public static final float FOG_END_CHANGE_PER_SECOND = 2.0f;
 	/** За сколько блоков ДО границы туман начинает сгущаться. */
