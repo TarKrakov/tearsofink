@@ -60,9 +60,7 @@
     ]
   },
   "features": [
-    [
-      "tears-of-ink:blood_valley"
-    ],
+    [],
     [
       "minecraft:lake_lava_underground",
       "minecraft:lake_lava_surface"
@@ -110,6 +108,7 @@
       "minecraft:spring_lava"
     ],
     [
+      "tears-of-ink:blood_valley",
       "tears-of-ink:ink_roads",
       "tears-of-ink:patch_ink_puddle",
       "tears-of-ink:tearbloom_circle",
