@@ -21,16 +21,20 @@ import net.minecraft.world.phys.Vec3;
 public class FlameDanceParticle extends TextureSheetParticle {
 	// ===== Настройки — крутить здесь =====
 	/** Размер огонька (половина стороны квадрата, в блоках). */
-	public static final float SIZE = 0.2f;
+	public static final float SIZE = 0.8f;
+	/** Сколько пустых пикселей под пламенем в кадре автора (из 64) — чтобы низ огня стоял на полу камеры. */
+	public static final float EMPTY_BELOW = 13f / 64f;
 	/** Сколько тиков показывается каждый кадр (20 тиков = 1 секунда). */
 	public static final int TICKS_PER_FRAME = 3;
 	/** Насколько огонёк колышется (в блоках). */
-	public static final double SWAY = 0.012;
+	public static final double SWAY = 0.02;
 
 	private final SpriteSet sprites;
 	private final BlockPos anchor;
 	private final double baseX, baseY, baseZ;
 	private final float phase;
+	/** Подъём частицы, чтобы её низ (без пустоты) совпал с точкой огня. */
+	private final double lift;
 
 	protected FlameDanceParticle(ClientLevel level, double x, double y, double z, SpriteSet sprites) {
 		super(level, x, y, z);
@@ -41,6 +45,8 @@ public class FlameDanceParticle extends TextureSheetParticle {
 		this.baseZ = z;
 		this.phase = this.random.nextFloat() * 100f;
 		this.quadSize = SIZE;
+		this.lift = SIZE - 2 * SIZE * EMPTY_BELOW;
+		this.setPos(x, y + lift, z);
 		this.lifetime = Integer.MAX_VALUE;
 		this.gravity = 0f;
 		this.hasPhysics = false;
@@ -74,7 +80,7 @@ public class FlameDanceParticle extends TextureSheetParticle {
 			return;
 		}
 		float t = this.age + phase;
-		this.setPos(baseX + Mth.sin(t * 0.13f) * SWAY, baseY, baseZ + Mth.cos(t * 0.11f) * SWAY);
+		this.setPos(baseX + Mth.sin(t * 0.13f) * SWAY, baseY + lift, baseZ + Mth.cos(t * 0.11f) * SWAY);
 		// 8 кадров по кругу
 		int frames = 8;
 		int frame = (this.age / TICKS_PER_FRAME) % frames;

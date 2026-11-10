@@ -34,8 +34,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 public class StoneLanternBlock extends Block implements EntityBlock, FogClearing, FlameAnchor {
 	public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
 
-	/** Где горит огонёк — центр камеры (в блоках от угла нижнего блока). */
-	private static final Vec3 FLAME = new Vec3(8 / 16.0, 18 / 16.0, 8 / 16.0);
+	/** Где стоит огонёк — пол камеры, по центру (в блоках от угла нижнего блока). */
+	private static final Vec3 FLAME = new Vec3(8 / 16.0, 17 / 16.0, 8 / 16.0);
 
 	private static final VoxelShape LOWER = Shapes.or(
 			Block.box(3, 0, 3, 13, 2, 13),   // основание
