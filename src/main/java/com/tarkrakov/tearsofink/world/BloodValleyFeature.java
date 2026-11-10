@@ -69,6 +69,7 @@ public class BloodValleyFeature extends Feature<NoneFeatureConfiguration> {
 						pos.setY(yy);
 						if (level.getBlockState(pos).getFluidState().isEmpty()) level.setBlock(pos, air, 2);
 					}
+					WorldgenCleanup.removeFloatingPlants(level, x, surface + 1, z);
 				} else {
 					// засыпаем ямку до нового уровня
 					for (int yy = surface + 1; yy < y; yy++) {

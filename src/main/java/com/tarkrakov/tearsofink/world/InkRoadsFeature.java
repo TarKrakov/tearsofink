@@ -85,6 +85,7 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 					for (int yy = surface + 1; yy < y; yy++) level.setBlock(pos.set(x, yy, z), fill, 2);
 					level.setBlock(pos.set(x, y, z), road, 2);
 					clearAbove(level, pos, y, Math.max(surface, y + HEADROOM), air);
+					if (surface > y) WorldgenCleanup.removeFloatingPlants(level, x, surface + 1, z);
 				}
 				placed = true;
 			}
