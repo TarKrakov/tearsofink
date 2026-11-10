@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "lit=true": {
+      "model": "tears-of-ink:block/brazier"
+    },
+    "lit=false": {
+      "model": "tears-of-ink:block/brazier_off"
+    }
+  }
+}

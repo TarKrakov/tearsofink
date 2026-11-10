@@ -71,6 +71,8 @@ public final class InkLandsLayout {
 	/** Шаг выборки высоты вдоль дороги и ширина сглаживания (в шагах). */
 	public static final int ROAD_PROFILE_STEP = 8;
 	public static final int ROAD_SMOOTHING = 8;
+	/** Фонарные столбы вдоль дорог — каждые столько блоков, по очереди слева и справа. */
+	public static final int ROAD_LANTERN_SPACING = 64;
 
 	private final Climate.Sampler sampler;
 	private final BlockPos center;
@@ -225,6 +227,22 @@ public final class InkLandsLayout {
 
 	private double roadAngle(int road, double d) {
 		return roadAngles[road] + roadNoise.getValue(d / ROAD_MEANDER_SCALE, road * 10.0) * ROAD_MEANDER;
+	}
+
+	/**
+	 * Где стоит k-й фонарный столб дороги (на краю полотна).
+	 * @return {x, z} или null, если столб вне Чернильных Земель
+	 */
+	public int[] roadLanternPost(int road, int k) {
+		double t = (double) k * ROAD_LANTERN_SPACING;
+		if (t < ROAD_END_RADIUS + 10 || t > RADIUS * ROAD_START_FRACTION) return null;
+		double a = roadAngle(road, t);
+		double side = (k % 2 == 0) ? 1 : -1;
+		double offset = ROAD_HALF_WIDTH - 0.6;
+		int x = (int) Math.floor(center.getX() + Math.cos(a) * t - Math.sin(a) * offset * side);
+		int z = (int) Math.floor(center.getZ() + Math.sin(a) * t + Math.cos(a) * offset * side);
+		if (depthInside(x, z) < 0) return null;
+		return new int[]{x, z};
 	}
 
 	/** Лежит ли точка на одной из магистралей. */

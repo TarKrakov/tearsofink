@@ -57,6 +57,8 @@ public final class FogBankSpawner {
 			int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
 			if (ground <= level.getMinBuildHeight() + 1) continue;
 			double y = ground + 0.5 + random.nextDouble() * MAX_HEIGHT_ABOVE_GROUND;
+			// у горящих фонарей клубы не появляются
+			if (LanternClarity.inBubble(x + 0.5, y, z + 0.5, 3)) continue;
 
 			// Цвет клуба зависит от зоны (передаём через «скорость» — частица её не использует)
 			float[] tint = tint(level.getBiome(pos));

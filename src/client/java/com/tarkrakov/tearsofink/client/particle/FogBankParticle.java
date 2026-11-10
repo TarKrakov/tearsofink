@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.client.particle;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.tarkrakov.tearsofink.client.fog.InkFog;
+import com.tarkrakov.tearsofink.client.fog.LanternClarity;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
@@ -28,6 +29,12 @@ public class FogBankParticle extends TextureSheetParticle {
 	/** На этом расстоянии клуб полностью невидим. */
 	public static final float NEAR_FADE_END = 1.0f;
 	public static final int MIN_LIFETIME = 200, MAX_LIFETIME = 360;
+	/** Как быстро клуб тает, попав в круг фонаря (доля за тик). */
+	public static final float LANTERN_DISSOLVE_PER_TICK = 0.04f;
+
+	/** 1 — клуб целый, 0 — растаял у фонаря. */
+	private float lanternFade = 1f;
+	private boolean nearLantern = false;
 
 	protected FogBankParticle(ClientLevel level, double x, double y, double z, SpriteSet sprites) {
 		super(level, x, y, z);
@@ -50,7 +57,12 @@ public class FogBankParticle extends TextureSheetParticle {
 		this.zd *= 1.0;
 		float t = (float) this.age / this.lifetime;
 		float fade = t < 0.2f ? t / 0.2f : (t > 0.7f ? (1f - t) / 0.3f : 1f);
-		this.alpha = Mth.clamp(fade, 0f, 1f); // множитель появления/угасания; итоговая прозрачность — в render()
+		if (this.age % 5 == 0) nearLantern = LanternClarity.inBubble(this.x, this.y, this.z, 1);
+		if (nearLantern) {
+			lanternFade -= LANTERN_DISSOLVE_PER_TICK;
+			if (lanternFade <= 0f) this.remove();
+		}
+		this.alpha = Mth.clamp(fade, 0f, 1f) * Math.max(0f, lanternFade); // итоговая прозрачность — в render()
 	}
 
 	@Override

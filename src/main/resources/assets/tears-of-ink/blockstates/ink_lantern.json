@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "hanging=false,lit=true": {
+      "model": "tears-of-ink:block/ink_lantern"
+    },
+    "hanging=true,lit=true": {
+      "model": "tears-of-ink:block/ink_lantern_hanging"
+    },
+    "hanging=false,lit=false": {
+      "model": "tears-of-ink:block/ink_lantern_off"
+    },
+    "hanging=true,lit=false": {
+      "model": "tears-of-ink:block/ink_lantern_hanging_off"
+    }
+  }
+}

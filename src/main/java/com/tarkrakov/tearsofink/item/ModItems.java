@@ -25,6 +25,13 @@ public final class ModItems {
 	/** Трясинник (он же «кувшинка Трясинника») — ставится на воду. */
 	public static final Item BOGLEAF = ModBlocks.bogleafItem();
 
+	// ===== Ручные фонари (не светят — только рассеивают мглу) =====
+	/** Видимость в тумане с фонарём в левой руке (в хотбаре — на 20% меньше). */
+	public static final Item HAND_LANTERN = register("hand_lantern",
+			new HandLanternItem(26f, new Item.Properties().stacksTo(1)));
+	public static final Item BRIGHT_HAND_LANTERN = register("bright_hand_lantern",
+			new HandLanternItem(44f, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON)));
+
 	// ===== Книги навыков =====
 	/** Книга Рывка (название и текст — рабочие, автор придумает свои). */
 	public static final Item SKILL_BOOK_DASH = register("skill_book_dash",

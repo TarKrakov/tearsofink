@@ -58,5 +58,6 @@ public class TearsOfInkClient implements ClientModInitializer {
 		}
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.POTTED_TEARBLOOM, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.PALE_TRAPDOOR, RenderType.cutout());
+		BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.cutout(), ModBlocks.INK_LANTERN, ModBlocks.BRAZIER, ModBlocks.ETERNAL_LANTERN);
 	}
 }

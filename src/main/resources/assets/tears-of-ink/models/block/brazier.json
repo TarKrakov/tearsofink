@@ -1,0 +1,157 @@
+{
+  "textures": {
+    "particle": "tears-of-ink:block/brazier_side",
+    "side": "tears-of-ink:block/brazier_side",
+    "top": "tears-of-ink:block/brazier_top",
+    "fire": "tears-of-ink:block/brazier_fire"
+  },
+  "elements": [
+    {
+      "from": [
+        5,
+        0,
+        5
+      ],
+      "to": [
+        11,
+        4,
+        11
+      ],
+      "faces": {
+        "north": {
+          "texture": "#side"
+        },
+        "south": {
+          "texture": "#side"
+        },
+        "east": {
+          "texture": "#side"
+        },
+        "west": {
+          "texture": "#side"
+        },
+        "down": {
+          "texture": "#side"
+        }
+      }
+    },
+    {
+      "from": [
+        2,
+        4,
+        2
+      ],
+      "to": [
+        14,
+        8,
+        14
+      ],
+      "faces": {
+        "north": {
+          "texture": "#side"
+        },
+        "south": {
+          "texture": "#side"
+        },
+        "east": {
+          "texture": "#side"
+        },
+        "west": {
+          "texture": "#side"
+        },
+        "down": {
+          "texture": "#side"
+        },
+        "up": {
+          "texture": "#top"
+        }
+      }
+    },
+    {
+      "from": [
+        3,
+        8,
+        8
+      ],
+      "to": [
+        13,
+        16,
+        8
+      ],
+      "rotation": {
+        "origin": [
+          8,
+          8,
+          8
+        ],
+        "axis": "y",
+        "angle": 45,
+        "rescale": true
+      },
+      "shade": false,
+      "faces": {
+        "north": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#fire"
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#fire"
+        }
+      }
+    },
+    {
+      "from": [
+        8,
+        8,
+        3
+      ],
+      "to": [
+        8,
+        16,
+        13
+      ],
+      "rotation": {
+        "origin": [
+          8,
+          8,
+          8
+        ],
+        "axis": "y",
+        "angle": 45,
+        "rescale": true
+      },
+      "shade": false,
+      "faces": {
+        "east": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#fire"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#fire"
+        }
+      }
+    }
+  ]
+}

@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.world;
 
 import com.mojang.serialization.Codec;
 import com.tarkrakov.tearsofink.block.ModBlocks;
+import com.tarkrakov.tearsofink.block.lantern.FogClearing;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.WorldGenLevel;
@@ -88,7 +89,46 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 				placed = true;
 			}
 		}
+		if (placed) placeLanternPosts(level, layout, minX, minZ, rail);
 		return placed;
+	}
+
+	/**
+	 * Фонарные столбы: забор в 2 блока + Чернильный фонарь сверху.
+	 * В Бледнолесье и Кроволесье горят, в Чернолесье потухшие, на Смоляном озере — вперемешку.
+	 */
+	private static void placeLanternPosts(WorldGenLevel level, InkLandsLayout layout, int minX, int minZ, BlockState post) {
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		int maxK = (int) (InkLandsLayout.RADIUS * InkLandsLayout.ROAD_START_FRACTION / InkLandsLayout.ROAD_LANTERN_SPACING) + 1;
+		for (int road = 0; road < InkLandsLayout.ROADS; road++) {
+			for (int k = 1; k <= maxK; k++) {
+				int[] p = layout.roadLanternPost(road, k);
+				if (p == null || p[0] < minX || p[0] >= minX + 16 || p[1] < minZ || p[1] >= minZ + 16) continue;
+				int top = roadTop(level, pos, p[0], p[1]);
+				if (top == Integer.MIN_VALUE) continue;
+
+				var biome = level.getBiome(pos.set(p[0], top + 1, p[1]));
+				boolean lit;
+				if (biome.is(ModBiomes.INKWOOD)) lit = false;
+				else if (biome.is(ModBiomes.TAR_LAKE)) lit = Math.floorMod(road * 31 + k * 17, 2) == 0;
+				else lit = true;
+
+				level.setBlock(pos.set(p[0], top + 1, p[1]), post, 2);
+				level.setBlock(pos.set(p[0], top + 2, p[1]), post, 2);
+				level.setBlock(pos.set(p[0], top + 3, p[1]), ModBlocks.INK_LANTERN.defaultBlockState()
+						.setValue(FogClearing.LIT, lit).setValue(FogClearing.PLAYER_MADE, false), 2);
+			}
+		}
+	}
+
+	/** Высота верхнего блока полотна (тропа или настил моста) или MIN_VALUE, если не нашли. */
+	private static int roadTop(WorldGenLevel level, BlockPos.MutableBlockPos pos, int x, int z) {
+		int from = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z) + 20;
+		for (int y = from; y > from - 60 && y > level.getMinBuildHeight(); y--) {
+			BlockState s = level.getBlockState(pos.set(x, y, z));
+			if (s.is(ModBlocks.ASHEN_PATH) || s.is(ModBlocks.PALE_PLANKS)) return y;
+		}
+		return Integer.MIN_VALUE;
 	}
 
 	private static void clearAbove(WorldGenLevel level, BlockPos.MutableBlockPos pos, int from, int to, BlockState air) {
