@@ -48,6 +48,7 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import com.tarkrakov.tearsofink.block.lantern.StoneLanternBlock;
+import com.tarkrakov.tearsofink.block.fountain.InkFountainBlock;
 import com.tarkrakov.tearsofink.block.lantern.FogClearing;
 import com.tarkrakov.tearsofink.block.lantern.InkLanternBlock;
 
@@ -291,6 +292,11 @@ public final class ModBlocks {
 	/** Вечный фонарь: сюжетные места; горит всегда, не ломается, не крафтится. */
 	public static final Block ETERNAL_LANTERN = register("eternal_lantern", new InkLanternBlock(ETERNAL_LANTERN_RADIUS, true,
 			lanternProps(15).strength(-1f, 3600000f)));
+
+	/** Малый чернильный фонтан: новый фонтан навсегда даёт +5 к запасу Чернил. Мировой, не ломается. */
+	public static final Block INK_FOUNTAIN = register("ink_fountain", new InkFountainBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).mapColor(MapColor.COLOR_BLACK)
+					.strength(-1f, 3600000f).noOcclusion().lightLevel(s -> 5).pushReaction(PushReaction.BLOCK)));
 
 	/** Предмет-блок для Трясинника (ставится на воду, как кувшинка). Вызывается из ModItems. */
 	public static Item bogleafItem() {

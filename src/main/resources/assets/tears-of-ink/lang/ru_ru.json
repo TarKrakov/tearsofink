@@ -108,5 +108,9 @@
   "item.tears-of-ink.hand_lantern": "Ручной фонарь",
   "item.tears-of-ink.bright_hand_lantern": "Яркий ручной фонарь",
   "message.tears-of-ink.too_many_flames": "Лес не позволит вам зажечь больше Пламени.",
-  "block.tears-of-ink.stone_lantern": "Каменный фонарь"
+  "block.tears-of-ink.stone_lantern": "Каменный фонарь",
+  "block.tears-of-ink.ink_fountain": "Малый чернильный фонтан",
+  "message.tears-of-ink.fountain_drink": "Чернила источника вливаются в ваши вены. Запас Чернил +%s.",
+  "message.tears-of-ink.fountain_used": "Этот источник уже отдал вам свою силу.",
+  "message.tears-of-ink.veins_full": "Ваши вены полны."
 }

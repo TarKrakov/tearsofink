@@ -1,5 +1,6 @@
 package com.tarkrakov.tearsofink.command;
 
+import com.tarkrakov.tearsofink.block.fountain.InkFountainBlock;
 import com.tarkrakov.tearsofink.ink.InkData;
 import com.tarkrakov.tearsofink.ink.InkPowers;
 import com.tarkrakov.tearsofink.skill.Skills;
@@ -29,6 +30,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
  * /tearsofink ink bonus <число> — прибавка к запасу Чернил (как от фонтанов и сердец)
  * /tearsofink ink set <число> — текущие Чернила
  * /tearsofink skills — какие навыки выучены
+ * /tearsofink fountains forget — забыть испитые фонтаны (запас Чернил не меняется)
  * /tearsofink skills forget — забыть все навыки (чтобы снова проверить книги)
  */
 public final class ModCommands {
@@ -48,6 +50,11 @@ public final class ModCommands {
 						.then(Commands.literal("powers")
 								.executes(ModCommands::powers)
 								.then(Commands.literal("reset").executes(ctx -> change(ctx, d -> InkData.fresh().withInside(d.inside())))))
+						.then(Commands.literal("fountains").then(Commands.literal("forget").executes(ctx -> {
+							ctx.getSource().getPlayerOrException().setAttached(InkFountainBlock.VISITED, java.util.Set.of());
+							ctx.getSource().sendSuccess(() -> Component.literal("Фонтаны забыты — их снова можно испить."), false);
+							return 1;
+						})))
 						.then(Commands.literal("skills")
 								.executes(ModCommands::skills)
 								.then(Commands.literal("forget").executes(ctx -> {

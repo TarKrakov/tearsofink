@@ -108,5 +108,9 @@
   "item.tears-of-ink.hand_lantern": "Hand Lantern",
   "item.tears-of-ink.bright_hand_lantern": "Bright Hand Lantern",
   "message.tears-of-ink.too_many_flames": "The forest will not let you kindle another Flame.",
-  "block.tears-of-ink.stone_lantern": "Stone Lantern"
+  "block.tears-of-ink.stone_lantern": "Stone Lantern",
+  "block.tears-of-ink.ink_fountain": "Lesser Ink Fountain",
+  "message.tears-of-ink.fountain_drink": "The fountain's ink flows into your veins. Ink reserve +%s.",
+  "message.tears-of-ink.fountain_used": "This spring has already given you its strength.",
+  "message.tears-of-ink.veins_full": "Your veins are full."
 }
