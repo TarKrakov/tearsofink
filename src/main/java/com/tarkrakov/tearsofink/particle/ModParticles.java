@@ -12,6 +12,10 @@ public final class ModParticles {
 	public static final SimpleParticleType FOG_BANK = Registry.register(
 			BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id("fog_bank"), FabricParticleTypes.simple(true));
 
+	/** Холодные искорки вокруг Слёзницы. */
+	public static final SimpleParticleType TEAR_GLINT = Registry.register(
+			BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id("tear_glint"), FabricParticleTypes.simple());
+
 	private ModParticles() {}
 
 	public static void init() {}

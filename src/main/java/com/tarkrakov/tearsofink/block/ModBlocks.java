@@ -102,11 +102,14 @@ public final class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_PRESSURE_PLATE).mapColor(MapColor.COLOR_CYAN)));
 
 	// ===== Растения и руды пустошей =====
+	/** Яркость Слёзницы (0–15, факел = 14). */
+	private static final int TEARBLOOM_LIGHT = 10;
+
 	/** Слёзница: бледный цветок, выросший из слёз святой. Слабо светится. */
-	public static final Block TEARBLOOM = register("tearbloom", new FlowerBlock(MobEffects.REGENERATION, 5f,
-			BlockBehaviour.Properties.ofFullCopy(Blocks.LILY_OF_THE_VALLEY).mapColor(MapColor.SNOW).lightLevel(s -> 3)));
+	public static final Block TEARBLOOM = register("tearbloom", new TearbloomBlock(MobEffects.REGENERATION, 5f,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.LILY_OF_THE_VALLEY).mapColor(MapColor.SNOW).lightLevel(s -> TEARBLOOM_LIGHT)));
 	public static final Block POTTED_TEARBLOOM = registerNoItem("potted_tearbloom", new FlowerPotBlock(TEARBLOOM,
-			BlockBehaviour.Properties.ofFullCopy(Blocks.POTTED_LILY_OF_THE_VALLEY).lightLevel(s -> 3)));
+			BlockBehaviour.Properties.ofFullCopy(Blocks.POTTED_LILY_OF_THE_VALLEY).lightLevel(s -> TEARBLOOM_LIGHT)));
 
 	/** Насколько ярко светится Асфоделит (0–15; факел = 14, светокамень = 15). */
 	private static final int ASPHODELITE_LIGHT = 5;

@@ -3,6 +3,7 @@ package com.tarkrakov.tearsofink.client;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.client.fog.FogBankSpawner;
 import com.tarkrakov.tearsofink.client.particle.FogBankParticle;
+import com.tarkrakov.tearsofink.client.particle.TearGlintParticle;
 import com.tarkrakov.tearsofink.particle.ModParticles;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.blockrenderlayer.v1.BlockRenderLayerMap;
@@ -14,6 +15,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
 		ParticleFactoryRegistry.getInstance().register(ModParticles.FOG_BANK, FogBankParticle.Provider::new);
+		ParticleFactoryRegistry.getInstance().register(ModParticles.TEAR_GLINT, TearGlintParticle.Provider::new);
 		ClientTickEvents.END_CLIENT_TICK.register(FogBankSpawner::tick);
 
 		// Блоки с прозрачными пикселями (листва, саженец)
