@@ -2,5 +2,12 @@
   "biome.tears-of-ink.ink_wastes": "Чернильные пустоши",
   "block.tears-of-ink.ashen_soil": "Пепельная земля",
   "block.tears-of-ink.ash": "Пепел",
-  "itemGroup.tears-of-ink.main": "Tears of Ink"
+  "itemGroup.tears-of-ink.main": "Tears of Ink",
+  "block.tears-of-ink.ink_log": "Чернильное бревно",
+  "block.tears-of-ink.stripped_ink_log": "Обтёсанное чернильное бревно",
+  "block.tears-of-ink.ink_wood": "Чернильная древесина",
+  "block.tears-of-ink.stripped_ink_wood": "Обтёсанная чернильная древесина",
+  "block.tears-of-ink.ink_planks": "Чернильные доски",
+  "block.tears-of-ink.ink_leaves": "Чернильная листва",
+  "block.tears-of-ink.ink_sapling": "Чернильный саженец"
 }

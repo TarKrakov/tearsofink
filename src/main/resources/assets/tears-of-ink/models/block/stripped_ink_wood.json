@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "tears-of-ink:block/stripped_ink_log",
+    "side": "tears-of-ink:block/stripped_ink_log"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/leaves",
+  "textures": {
+    "all": "tears-of-ink:block/ink_leaves"
+  }
+}
