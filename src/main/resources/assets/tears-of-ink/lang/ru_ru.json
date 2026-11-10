@@ -9,5 +9,13 @@
   "block.tears-of-ink.stripped_ink_wood": "Обтёсанная чернильная древесина",
   "block.tears-of-ink.ink_planks": "Чернильные доски",
   "block.tears-of-ink.ink_leaves": "Чернильная листва",
-  "block.tears-of-ink.ink_sapling": "Чернильный саженец"
+  "block.tears-of-ink.ink_sapling": "Чернильный саженец",
+  "block.tears-of-ink.ink_stairs": "Чернильные ступеньки",
+  "block.tears-of-ink.ink_slab": "Чернильная плита",
+  "block.tears-of-ink.ink_fence": "Чернильный забор",
+  "block.tears-of-ink.ink_fence_gate": "Чернильная калитка",
+  "block.tears-of-ink.ink_door": "Чернильная дверь",
+  "block.tears-of-ink.ink_trapdoor": "Чернильный люк",
+  "block.tears-of-ink.ink_button": "Чернильная кнопка",
+  "block.tears-of-ink.ink_pressure_plate": "Чернильная нажимная плита"
 }

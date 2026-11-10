@@ -13,6 +13,16 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.ButtonBlock;
+import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.FenceBlock;
+import net.minecraft.world.level.block.FenceGateBlock;
+import net.minecraft.world.level.block.PressurePlateBlock;
+import net.minecraft.world.level.block.SlabBlock;
+import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.TrapDoorBlock;
+import net.minecraft.world.level.block.state.properties.BlockSetType;
+import net.minecraft.world.level.block.state.properties.WoodType;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.SaplingBlock;
 import net.minecraft.world.level.block.grower.TreeGrower;
@@ -61,6 +71,28 @@ public final class ModBlocks {
 			new TreeGrower("ink", Optional.empty(), Optional.of(INK_TREE_FEATURE), Optional.empty()),
 			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_SAPLING)));
 
+	// ===== Столярка из чернильного дерева =====
+	/** Звуки дверей/кнопок и т. п. — как у тёмного дуба. */
+	private static final BlockSetType INK_SET = BlockSetType.DARK_OAK;
+	private static final WoodType INK_WOOD_TYPE = WoodType.DARK_OAK;
+
+	public static final Block INK_STAIRS = register("ink_stairs", new StairBlock(INK_PLANKS.defaultBlockState(),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_STAIRS).mapColor(MapColor.COLOR_BLACK)));
+	public static final Block INK_SLAB = register("ink_slab", new SlabBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_SLAB).mapColor(MapColor.COLOR_BLACK)));
+	public static final Block INK_FENCE = register("ink_fence", new FenceBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_FENCE).mapColor(MapColor.COLOR_BLACK)));
+	public static final Block INK_FENCE_GATE = register("ink_fence_gate", new FenceGateBlock(INK_WOOD_TYPE,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_FENCE_GATE).mapColor(MapColor.COLOR_BLACK)));
+	public static final Block INK_DOOR = register("ink_door", new DoorBlock(INK_SET,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_DOOR).mapColor(MapColor.COLOR_BLACK)));
+	public static final Block INK_TRAPDOOR = register("ink_trapdoor", new TrapDoorBlock(INK_SET,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_TRAPDOOR).mapColor(MapColor.COLOR_BLACK)));
+	public static final Block INK_BUTTON = register("ink_button", new ButtonBlock(INK_SET, 30,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_BUTTON)));
+	public static final Block INK_PRESSURE_PLATE = register("ink_pressure_plate", new PressurePlateBlock(INK_SET,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_PRESSURE_PLATE).mapColor(MapColor.COLOR_BLACK)));
+
 	private ModBlocks() {}
 
 	private static Block register(String name, Block block) {
@@ -78,6 +110,7 @@ public final class ModBlocks {
 		FlammableBlockRegistry fire = FlammableBlockRegistry.getDefaultInstance();
 		for (Block log : new Block[]{INK_LOG, STRIPPED_INK_LOG, INK_WOOD, STRIPPED_INK_WOOD}) fire.add(log, 5, 5);
 		fire.add(INK_PLANKS, 5, 20);
+		for (Block b : new Block[]{INK_STAIRS, INK_SLAB, INK_FENCE, INK_FENCE_GATE}) fire.add(b, 5, 20);
 		fire.add(INK_LEAVES, 30, 60);
 		// Компостер
 		CompostingChanceRegistry.INSTANCE.add(INK_LEAVES, 0.3f);

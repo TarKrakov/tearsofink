@@ -19,5 +19,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 		// Блоки с прозрачными пикселями (листва, саженец)
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.INK_LEAVES, RenderType.cutoutMipped());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.INK_SAPLING, RenderType.cutout());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.INK_DOOR, RenderType.cutout());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.INK_TRAPDOOR, RenderType.cutout());
 	}
 }
