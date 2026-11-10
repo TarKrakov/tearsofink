@@ -50,48 +50,48 @@ public final class ModBlocks {
 					.strength(0.5f)
 					.sound(SoundType.SAND)));
 
-	// ===== Чернильное дерево =====
-	public static final Block INK_LOG = register("ink_log", new RotatedPillarBlock(
-			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_LOG).mapColor(MapColor.COLOR_BLACK)));
-	public static final Block STRIPPED_INK_LOG = register("stripped_ink_log", new RotatedPillarBlock(
-			BlockBehaviour.Properties.ofFullCopy(Blocks.STRIPPED_DARK_OAK_LOG).mapColor(MapColor.COLOR_BLACK)));
-	public static final Block INK_WOOD = register("ink_wood", new RotatedPillarBlock(
-			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_WOOD).mapColor(MapColor.COLOR_BLACK)));
-	public static final Block STRIPPED_INK_WOOD = register("stripped_ink_wood", new RotatedPillarBlock(
-			BlockBehaviour.Properties.ofFullCopy(Blocks.STRIPPED_DARK_OAK_WOOD).mapColor(MapColor.COLOR_BLACK)));
-	public static final Block INK_PLANKS = register("ink_planks", new Block(
-			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_PLANKS).mapColor(MapColor.COLOR_BLACK)));
-	public static final Block INK_LEAVES = register("ink_leaves", new InkLeavesBlock(
-			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_LEAVES).mapColor(MapColor.COLOR_PURPLE)));
+	// ===== Бледное дерево =====
+	public static final Block PALE_LOG = register("pale_log", new RotatedPillarBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_LOG).mapColor(MapColor.COLOR_CYAN)));
+	public static final Block STRIPPED_PALE_LOG = register("stripped_pale_log", new RotatedPillarBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.STRIPPED_DARK_OAK_LOG).mapColor(MapColor.COLOR_CYAN)));
+	public static final Block PALE_WOOD = register("pale_wood", new RotatedPillarBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_WOOD).mapColor(MapColor.COLOR_CYAN)));
+	public static final Block STRIPPED_PALE_WOOD = register("stripped_pale_wood", new RotatedPillarBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.STRIPPED_DARK_OAK_WOOD).mapColor(MapColor.COLOR_CYAN)));
+	public static final Block PALE_PLANKS = register("pale_planks", new Block(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_PLANKS).mapColor(MapColor.COLOR_CYAN)));
+	public static final Block PALE_LEAVES = register("pale_leaves", new PaleLeavesBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_LEAVES).mapColor(MapColor.COLOR_CYAN)));
 
-	/** Как растёт саженец: описание дерева лежит в data/tears-of-ink/worldgen/configured_feature/ink_tree.json */
-	public static final ResourceKey<ConfiguredFeature<?, ?>> INK_TREE_FEATURE =
-			ResourceKey.create(Registries.CONFIGURED_FEATURE, TearsOfInk.id("ink_tree"));
-	public static final Block INK_SAPLING = register("ink_sapling", new SaplingBlock(
-			new TreeGrower("ink", Optional.empty(), Optional.of(INK_TREE_FEATURE), Optional.empty()),
+	/** Как растёт саженец: описание дерева лежит в data/tears-of-ink/worldgen/configured_feature/pale_tree.json */
+	public static final ResourceKey<ConfiguredFeature<?, ?>> PALE_TREE_FEATURE =
+			ResourceKey.create(Registries.CONFIGURED_FEATURE, TearsOfInk.id("pale_tree"));
+	public static final Block PALE_SAPLING = register("pale_sapling", new SaplingBlock(
+			new TreeGrower("pale", Optional.empty(), Optional.of(PALE_TREE_FEATURE), Optional.empty()),
 			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_SAPLING)));
 
-	// ===== Столярка из чернильного дерева =====
+	// ===== Столярка из бледного дерева =====
 	/** Звуки дверей/кнопок и т. п. — как у тёмного дуба. */
-	private static final BlockSetType INK_SET = BlockSetType.DARK_OAK;
-	private static final WoodType INK_WOOD_TYPE = WoodType.DARK_OAK;
+	private static final BlockSetType PALE_SET = BlockSetType.DARK_OAK;
+	private static final WoodType PALE_WOOD_TYPE = WoodType.DARK_OAK;
 
-	public static final Block INK_STAIRS = register("ink_stairs", new StairBlock(INK_PLANKS.defaultBlockState(),
-			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_STAIRS).mapColor(MapColor.COLOR_BLACK)));
-	public static final Block INK_SLAB = register("ink_slab", new SlabBlock(
-			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_SLAB).mapColor(MapColor.COLOR_BLACK)));
-	public static final Block INK_FENCE = register("ink_fence", new FenceBlock(
-			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_FENCE).mapColor(MapColor.COLOR_BLACK)));
-	public static final Block INK_FENCE_GATE = register("ink_fence_gate", new FenceGateBlock(INK_WOOD_TYPE,
-			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_FENCE_GATE).mapColor(MapColor.COLOR_BLACK)));
-	public static final Block INK_DOOR = register("ink_door", new DoorBlock(INK_SET,
-			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_DOOR).mapColor(MapColor.COLOR_BLACK)));
-	public static final Block INK_TRAPDOOR = register("ink_trapdoor", new TrapDoorBlock(INK_SET,
-			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_TRAPDOOR).mapColor(MapColor.COLOR_BLACK)));
-	public static final Block INK_BUTTON = register("ink_button", new ButtonBlock(INK_SET, 30,
+	public static final Block PALE_STAIRS = register("pale_stairs", new StairBlock(PALE_PLANKS.defaultBlockState(),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_STAIRS).mapColor(MapColor.COLOR_CYAN)));
+	public static final Block PALE_SLAB = register("pale_slab", new SlabBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_SLAB).mapColor(MapColor.COLOR_CYAN)));
+	public static final Block PALE_FENCE = register("pale_fence", new FenceBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_FENCE).mapColor(MapColor.COLOR_CYAN)));
+	public static final Block PALE_FENCE_GATE = register("pale_fence_gate", new FenceGateBlock(PALE_WOOD_TYPE,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_FENCE_GATE).mapColor(MapColor.COLOR_CYAN)));
+	public static final Block PALE_DOOR = register("pale_door", new DoorBlock(PALE_SET,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_DOOR).mapColor(MapColor.COLOR_CYAN)));
+	public static final Block PALE_TRAPDOOR = register("pale_trapdoor", new TrapDoorBlock(PALE_SET,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_TRAPDOOR).mapColor(MapColor.COLOR_CYAN)));
+	public static final Block PALE_BUTTON = register("pale_button", new ButtonBlock(PALE_SET, 30,
 			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_BUTTON)));
-	public static final Block INK_PRESSURE_PLATE = register("ink_pressure_plate", new PressurePlateBlock(INK_SET,
-			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_PRESSURE_PLATE).mapColor(MapColor.COLOR_BLACK)));
+	public static final Block PALE_PRESSURE_PLATE = register("pale_pressure_plate", new PressurePlateBlock(PALE_SET,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_PRESSURE_PLATE).mapColor(MapColor.COLOR_CYAN)));
 
 	private ModBlocks() {}
 
@@ -104,16 +104,16 @@ public final class ModBlocks {
 	/** Вызывается при запуске мода, чтобы блоки зарегистрировались. */
 	public static void init() {
 		// Обтёсывание топором
-		StrippableBlockRegistry.register(INK_LOG, STRIPPED_INK_LOG);
-		StrippableBlockRegistry.register(INK_WOOD, STRIPPED_INK_WOOD);
+		StrippableBlockRegistry.register(PALE_LOG, STRIPPED_PALE_LOG);
+		StrippableBlockRegistry.register(PALE_WOOD, STRIPPED_PALE_WOOD);
 		// Горючесть (как у обычного дерева)
 		FlammableBlockRegistry fire = FlammableBlockRegistry.getDefaultInstance();
-		for (Block log : new Block[]{INK_LOG, STRIPPED_INK_LOG, INK_WOOD, STRIPPED_INK_WOOD}) fire.add(log, 5, 5);
-		fire.add(INK_PLANKS, 5, 20);
-		for (Block b : new Block[]{INK_STAIRS, INK_SLAB, INK_FENCE, INK_FENCE_GATE}) fire.add(b, 5, 20);
-		fire.add(INK_LEAVES, 30, 60);
+		for (Block log : new Block[]{PALE_LOG, STRIPPED_PALE_LOG, PALE_WOOD, STRIPPED_PALE_WOOD}) fire.add(log, 5, 5);
+		fire.add(PALE_PLANKS, 5, 20);
+		for (Block b : new Block[]{PALE_STAIRS, PALE_SLAB, PALE_FENCE, PALE_FENCE_GATE}) fire.add(b, 5, 20);
+		fire.add(PALE_LEAVES, 30, 60);
 		// Компостер
-		CompostingChanceRegistry.INSTANCE.add(INK_LEAVES, 0.3f);
-		CompostingChanceRegistry.INSTANCE.add(INK_SAPLING, 0.3f);
+		CompostingChanceRegistry.INSTANCE.add(PALE_LEAVES, 0.3f);
+		CompostingChanceRegistry.INSTANCE.add(PALE_SAPLING, 0.3f);
 	}
 }

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "redstone",
+  "pattern": [
+    "##"
+  ],
+  "key": {
+    "#": {
+      "item": "tears-of-ink:pale_planks"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "tears-of-ink:pale_pressure_plate"
+  },
+  "group": "wooden_pressure_plate"
+}

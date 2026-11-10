@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "pattern": [
+    "###"
+  ],
+  "key": {
+    "#": {
+      "item": "tears-of-ink:pale_planks"
+    }
+  },
+  "result": {
+    "count": 6,
+    "id": "tears-of-ink:pale_slab"
+  },
+  "group": "wooden_slab"
+}

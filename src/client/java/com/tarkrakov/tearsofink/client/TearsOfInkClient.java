@@ -17,9 +17,9 @@ public class TearsOfInkClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(FogBankSpawner::tick);
 
 		// Блоки с прозрачными пикселями (листва, саженец)
-		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.INK_LEAVES, RenderType.cutoutMipped());
-		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.INK_SAPLING, RenderType.cutout());
-		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.INK_DOOR, RenderType.cutout());
-		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.INK_TRAPDOOR, RenderType.cutout());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.PALE_LEAVES, RenderType.cutoutMipped());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.PALE_SAPLING, RenderType.cutout());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.PALE_DOOR, RenderType.cutout());
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.PALE_TRAPDOOR, RenderType.cutout());
 	}
 }

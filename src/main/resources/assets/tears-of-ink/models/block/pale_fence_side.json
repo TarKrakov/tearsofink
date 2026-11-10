@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/fence_side",
+  "textures": {
+    "texture": "tears-of-ink:block/pale_planks"
+  }
+}

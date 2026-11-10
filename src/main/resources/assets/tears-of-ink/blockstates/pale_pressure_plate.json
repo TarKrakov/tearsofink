@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "powered=false": {
+      "model": "tears-of-ink:block/pale_pressure_plate"
+    },
+    "powered=true": {
+      "model": "tears-of-ink:block/pale_pressure_plate_down"
+    }
+  }
+}

@@ -20,21 +20,21 @@ public final class ModCreativeTab {
 					.displayItems((params, output) -> {
 						output.accept(ModBlocks.ASHEN_SOIL);
 						output.accept(ModBlocks.ASH);
-						output.accept(ModBlocks.INK_LOG);
-						output.accept(ModBlocks.STRIPPED_INK_LOG);
-						output.accept(ModBlocks.INK_WOOD);
-						output.accept(ModBlocks.STRIPPED_INK_WOOD);
-						output.accept(ModBlocks.INK_PLANKS);
-						output.accept(ModBlocks.INK_STAIRS);
-						output.accept(ModBlocks.INK_SLAB);
-						output.accept(ModBlocks.INK_FENCE);
-						output.accept(ModBlocks.INK_FENCE_GATE);
-						output.accept(ModBlocks.INK_DOOR);
-						output.accept(ModBlocks.INK_TRAPDOOR);
-						output.accept(ModBlocks.INK_PRESSURE_PLATE);
-						output.accept(ModBlocks.INK_BUTTON);
-						output.accept(ModBlocks.INK_LEAVES);
-						output.accept(ModBlocks.INK_SAPLING);
+						output.accept(ModBlocks.PALE_LOG);
+						output.accept(ModBlocks.STRIPPED_PALE_LOG);
+						output.accept(ModBlocks.PALE_WOOD);
+						output.accept(ModBlocks.STRIPPED_PALE_WOOD);
+						output.accept(ModBlocks.PALE_PLANKS);
+						output.accept(ModBlocks.PALE_STAIRS);
+						output.accept(ModBlocks.PALE_SLAB);
+						output.accept(ModBlocks.PALE_FENCE);
+						output.accept(ModBlocks.PALE_FENCE_GATE);
+						output.accept(ModBlocks.PALE_DOOR);
+						output.accept(ModBlocks.PALE_TRAPDOOR);
+						output.accept(ModBlocks.PALE_PRESSURE_PLATE);
+						output.accept(ModBlocks.PALE_BUTTON);
+						output.accept(ModBlocks.PALE_LEAVES);
+						output.accept(ModBlocks.PALE_SAPLING);
 					})
 					.build());
 

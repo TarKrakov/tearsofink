@@ -1,7 +1,0 @@
-{
-  "parent": "minecraft:block/door_top_right",
-  "textures": {
-    "bottom": "tears-of-ink:block/ink_door_bottom",
-    "top": "tears-of-ink:block/ink_door_top"
-  }
-}

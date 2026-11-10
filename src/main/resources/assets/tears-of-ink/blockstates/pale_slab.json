@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "tears-of-ink:block/pale_slab"
+    },
+    "type=double": {
+      "model": "tears-of-ink:block/pale_planks"
+    },
+    "type=top": {
+      "model": "tears-of-ink:block/pale_slab_top"
+    }
+  }
+}

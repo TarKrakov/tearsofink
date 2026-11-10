@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/outer_stairs",
+  "textures": {
+    "bottom": "tears-of-ink:block/pale_planks",
+    "top": "tears-of-ink:block/pale_planks",
+    "side": "tears-of-ink:block/pale_planks"
+  }
+}

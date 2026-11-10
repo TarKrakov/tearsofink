@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "tears-of-ink:block/stripped_pale_log_horizontal",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "tears-of-ink:block/stripped_pale_log"
+    },
+    "axis=z": {
+      "model": "tears-of-ink:block/stripped_pale_log_horizontal",
+      "x": 90
+    }
+  }
+}
