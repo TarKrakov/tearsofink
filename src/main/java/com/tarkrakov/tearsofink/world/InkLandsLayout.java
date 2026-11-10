@@ -47,9 +47,9 @@ public final class InkLandsLayout {
 
 	// ===== Низина Кроволесья =====
 	/** Насколько дно долины ниже окружающей земли. */
-	public static final int VALLEY_DEPTH = 7;
+	public static final int VALLEY_DEPTH = 11;
 	/** Ширина плавного склона вокруг пятна (за его краем). */
-	public static final int VALLEY_SLOPE = 30;
+	public static final int VALLEY_SLOPE = 36;
 
 	// ===== Дороги =====
 	/** Сколько магистралей ведёт к центру. */

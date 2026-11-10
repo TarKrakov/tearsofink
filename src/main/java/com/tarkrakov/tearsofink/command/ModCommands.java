@@ -83,11 +83,11 @@ public final class ModCommands {
 		int natural = base.applyAsInt(bx, bz);
 		int valley = (int) Math.floor(layout.valleyHeight(bx, bz, natural, base));
 		overworld.getChunk(bx >> 4, bz >> 4);
-		int actual = overworld.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, bx, bz) - 1;
+		int actual = groundY(overworld, bx, bz);
 		// для сравнения — земля за краем склона
 		int outX = bx + (int) blob[2] + InkLandsLayout.VALLEY_SLOPE + 5;
 		overworld.getChunk(outX >> 4, bz >> 4);
-		int outside = overworld.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, outX, bz) - 1;
+		int outside = groundY(overworld, outX, bz);
 		player.teleportTo(overworld, bx + 0.5, actual + 1, bz + 0.5, player.getYRot(), player.getXRot());
 		ctx.getSource().sendSuccess(() -> Component.literal("Кроволесье: центр X " + bx + ", Z " + bz + ", радиус " + blob[2]
 				+ "\nВысота рельефа без низины: " + natural
@@ -95,6 +95,21 @@ public final class ModCommands {
 				+ "\nРеальная земля в центре: " + actual
 				+ "\nЗемля за краем склона: " + outside), false);
 		return 1;
+	}
+
+	/** Высота настоящей земли: пропускаем стволы, листву, траву и прочее сверху. */
+	private static int groundY(ServerLevel level, int x, int z) {
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos(x, level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z), z);
+		while (pos.getY() > level.getMinBuildHeight()) {
+			pos.move(0, -1, 0);
+			var state = level.getBlockState(pos);
+			if (state.is(net.minecraft.tags.BlockTags.DIRT) || state.is(com.tarkrakov.tearsofink.block.ModBlocks.ASH)
+					|| state.is(com.tarkrakov.tearsofink.block.ModBlocks.ASPHODELITE_ROCK)
+					|| state.is(com.tarkrakov.tearsofink.block.ModBlocks.ASHEN_PATH) || !state.getFluidState().isEmpty()) {
+				return pos.getY();
+			}
+		}
+		return pos.getY();
 	}
 
 	private static BlockPos findCenter(CommandSourceStack source) {
