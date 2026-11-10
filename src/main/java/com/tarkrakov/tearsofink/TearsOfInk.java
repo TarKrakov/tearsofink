@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink;
 
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.item.ModCreativeTab;
+import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.particle.ModParticles;
 import com.tarkrakov.tearsofink.world.ModTreeTypes;
 import net.fabricmc.api.ModInitializer;
@@ -27,6 +28,7 @@ public class TearsOfInk implements ModInitializer {
 
 		ModTreeTypes.init();
 		ModBlocks.init();
+		ModItems.init();
 		ModCreativeTab.init();
 		ModParticles.init();
 		LOGGER.info("Tears of Ink: чернила проливаются в мир.");

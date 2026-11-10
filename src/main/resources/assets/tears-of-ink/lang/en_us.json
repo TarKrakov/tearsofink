@@ -17,5 +17,11 @@
   "block.tears-of-ink.pale_door": "Pale Door",
   "block.tears-of-ink.pale_trapdoor": "Pale Trapdoor",
   "block.tears-of-ink.pale_button": "Pale Button",
-  "block.tears-of-ink.pale_pressure_plate": "Pale Pressure Plate"
+  "block.tears-of-ink.pale_pressure_plate": "Pale Pressure Plate",
+  "block.tears-of-ink.tearbloom": "Tearbloom",
+  "block.tears-of-ink.potted_tearbloom": "Potted Tearbloom",
+  "block.tears-of-ink.pigment_ore": "Pigment Ore",
+  "block.tears-of-ink.deepslate_pigment_ore": "Deepslate Pigment Ore",
+  "block.tears-of-ink.ink_puddle": "Ink Puddle",
+  "item.tears-of-ink.pigment": "Pigment"
 }

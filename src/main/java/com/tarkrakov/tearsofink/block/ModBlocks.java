@@ -13,7 +13,13 @@ import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.util.valueproviders.UniformInt;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.level.block.ButtonBlock;
+import net.minecraft.world.level.block.DropExperienceBlock;
+import net.minecraft.world.level.block.FlowerBlock;
+import net.minecraft.world.level.block.FlowerPotBlock;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceBlock;
 import net.minecraft.world.level.block.FenceGateBlock;
@@ -93,7 +99,37 @@ public final class ModBlocks {
 	public static final Block PALE_PRESSURE_PLATE = register("pale_pressure_plate", new PressurePlateBlock(PALE_SET,
 			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_PRESSURE_PLATE).mapColor(MapColor.COLOR_CYAN)));
 
+	// ===== Растения и руды пустошей =====
+	/** Слёзница: бледный цветок, выросший из слёз святой. Слабо светится. */
+	public static final Block TEARBLOOM = register("tearbloom", new FlowerBlock(MobEffects.REGENERATION, 5f,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.LILY_OF_THE_VALLEY).mapColor(MapColor.SNOW).lightLevel(s -> 3)));
+	public static final Block POTTED_TEARBLOOM = registerNoItem("potted_tearbloom", new FlowerPotBlock(TEARBLOOM,
+			BlockBehaviour.Properties.ofFullCopy(Blocks.POTTED_LILY_OF_THE_VALLEY).lightLevel(s -> 3)));
+
+	/** Пигментная руда (камень и глубинный сланец). */
+	public static final Block PIGMENT_ORE = register("pigment_ore", new DropExperienceBlock(UniformInt.of(1, 3),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.COAL_ORE)));
+	public static final Block DEEPSLATE_PIGMENT_ORE = register("deepslate_pigment_ore", new DropExperienceBlock(UniformInt.of(1, 3),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE_COAL_ORE)));
+
+	/** Чернильная лужа: тонкий слой чернил, замедляет. */
+	public static final Block INK_PUDDLE = register("ink_puddle", new InkPuddleBlock(
+			BlockBehaviour.Properties.of()
+					.mapColor(MapColor.COLOR_BLACK)
+					.strength(0.2f)
+					.noCollission()
+					.noOcclusion()
+					.replaceable()
+					.speedFactor(0.55f)
+					.jumpFactor(0.7f)
+					.sound(SoundType.HONEY_BLOCK)
+					.pushReaction(PushReaction.DESTROY)));
+
 	private ModBlocks() {}
+
+	private static Block registerNoItem(String name, Block block) {
+		return Registry.register(BuiltInRegistries.BLOCK, TearsOfInk.id(name), block);
+	}
 
 	private static Block register(String name, Block block) {
 		Block registered = Registry.register(BuiltInRegistries.BLOCK, TearsOfInk.id(name), block);
@@ -115,5 +151,6 @@ public final class ModBlocks {
 		// Компостер
 		CompostingChanceRegistry.INSTANCE.add(PALE_LEAVES, 0.3f);
 		CompostingChanceRegistry.INSTANCE.add(PALE_SAPLING, 0.3f);
+		CompostingChanceRegistry.INSTANCE.add(TEARBLOOM, 0.65f);
 	}
 }

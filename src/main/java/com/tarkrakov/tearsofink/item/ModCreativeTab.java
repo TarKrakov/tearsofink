@@ -20,6 +20,11 @@ public final class ModCreativeTab {
 					.displayItems((params, output) -> {
 						output.accept(ModBlocks.ASHEN_SOIL);
 						output.accept(ModBlocks.ASH);
+						output.accept(ModBlocks.INK_PUDDLE);
+						output.accept(ModBlocks.TEARBLOOM);
+						output.accept(ModBlocks.PIGMENT_ORE);
+						output.accept(ModBlocks.DEEPSLATE_PIGMENT_ORE);
+						output.accept(ModItems.PIGMENT);
 						output.accept(ModBlocks.PALE_LOG);
 						output.accept(ModBlocks.STRIPPED_PALE_LOG);
 						output.accept(ModBlocks.PALE_WOOD);

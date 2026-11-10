@@ -103,7 +103,8 @@
       "minecraft:underwater_magma",
       "minecraft:disk_sand",
       "minecraft:disk_clay",
-      "minecraft:disk_gravel"
+      "minecraft:disk_gravel",
+      "tears-of-ink:ore_pigment"
     ],
     [],
     [
@@ -111,6 +112,8 @@
       "minecraft:spring_lava"
     ],
     [
+      "tears-of-ink:patch_ink_puddle",
+      "tears-of-ink:patch_tearbloom",
       "tears-of-ink:trees_ink_wastes",
       "minecraft:glow_lichen"
     ],

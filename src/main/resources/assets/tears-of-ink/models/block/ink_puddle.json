@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/carpet",
+  "textures": {
+    "wool": "tears-of-ink:block/ink_puddle"
+  }
+}
