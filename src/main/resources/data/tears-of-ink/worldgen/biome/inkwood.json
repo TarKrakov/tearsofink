@@ -1,0 +1,132 @@
+{
+  "has_precipitation": false,
+  "temperature": 0.8,
+  "downfall": 0.0,
+  "effects": {
+    "sky_color": 1314840,
+    "fog_color": 920338,
+    "water_color": 460042,
+    "water_fog_color": 197125,
+    "grass_color": 2235686,
+    "foliage_color": 1709600,
+    "particle": {
+      "options": {
+        "type": "minecraft:ash"
+      },
+      "probability": 0.06
+    },
+    "mood_sound": {
+      "sound": "minecraft:ambient.cave",
+      "tick_delay": 6000,
+      "block_search_extent": 8,
+      "offset": 2.0
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "minecraft:zombie",
+        "weight": 95,
+        "minCount": 4,
+        "maxCount": 4
+      },
+      {
+        "type": "minecraft:skeleton",
+        "weight": 100,
+        "minCount": 4,
+        "maxCount": 4
+      },
+      {
+        "type": "minecraft:spider",
+        "weight": 100,
+        "minCount": 4,
+        "maxCount": 4
+      }
+    ],
+    "creature": [],
+    "ambient": [],
+    "axolotls": [],
+    "underground_water_creature": [],
+    "water_creature": [],
+    "water_ambient": [],
+    "misc": []
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": [
+      "minecraft:cave",
+      "minecraft:cave_extra_underground",
+      "minecraft:canyon"
+    ]
+  },
+  "features": [
+    [],
+    [
+      "minecraft:lake_lava_underground",
+      "minecraft:lake_lava_surface"
+    ],
+    [
+      "minecraft:amethyst_geode"
+    ],
+    [
+      "minecraft:monster_room",
+      "minecraft:monster_room_deep"
+    ],
+    [],
+    [],
+    [
+      "minecraft:ore_dirt",
+      "minecraft:ore_gravel",
+      "minecraft:ore_granite_upper",
+      "minecraft:ore_granite_lower",
+      "minecraft:ore_diorite_upper",
+      "minecraft:ore_diorite_lower",
+      "minecraft:ore_andesite_upper",
+      "minecraft:ore_andesite_lower",
+      "minecraft:ore_tuff",
+      "minecraft:ore_coal_upper",
+      "minecraft:ore_coal_lower",
+      "minecraft:ore_iron_upper",
+      "minecraft:ore_iron_middle",
+      "minecraft:ore_iron_small",
+      "minecraft:ore_gold",
+      "minecraft:ore_gold_lower",
+      "minecraft:ore_redstone",
+      "minecraft:ore_redstone_lower",
+      "minecraft:ore_diamond",
+      "minecraft:ore_diamond_medium",
+      "minecraft:ore_diamond_large",
+      "minecraft:ore_diamond_buried",
+      "minecraft:ore_lapis",
+      "minecraft:ore_lapis_buried",
+      "minecraft:ore_copper",
+      "minecraft:underwater_magma",
+      "minecraft:disk_sand",
+      "minecraft:disk_clay",
+      "minecraft:disk_gravel",
+      "tears-of-ink:ore_asphodelite",
+      "tears-of-ink:ore_asphodelite_coal_ore",
+      "tears-of-ink:ore_asphodelite_iron_ore",
+      "tears-of-ink:ore_asphodelite_copper_ore",
+      "tears-of-ink:ore_asphodelite_gold_ore",
+      "tears-of-ink:ore_asphodelite_redstone_ore",
+      "tears-of-ink:ore_asphodelite_lapis_ore",
+      "tears-of-ink:ore_asphodelite_diamond_ore",
+      "tears-of-ink:ore_asphodelite_emerald_ore"
+    ],
+    [],
+    [
+      "minecraft:spring_water",
+      "minecraft:spring_lava"
+    ],
+    [
+      "tears-of-ink:patch_ink_puddle",
+      "tears-of-ink:patch_tearbloom",
+      "tears-of-ink:trees_ink_wastes",
+      "minecraft:glow_lichen"
+    ],
+    [
+      "minecraft:freeze_top_layer"
+    ]
+  ]
+}

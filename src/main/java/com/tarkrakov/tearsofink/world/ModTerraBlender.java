@@ -5,14 +5,11 @@ import terrablender.api.Regions;
 import terrablender.api.SurfaceRuleManager;
 import terrablender.api.TerraBlenderApi;
 
-/** Точка входа TerraBlender: встраиваем наши биомы в обычный мир. */
+/** Точка входа TerraBlender: регистрируем наши биомы и правила поверхности. */
 public class ModTerraBlender implements TerraBlenderApi {
-	/** Частота появления Чернильных пустошей. Ванильный регион имеет вес 10. */
-	public static final int INK_WASTES_WEIGHT = 3;
-
 	@Override
 	public void onTerraBlenderInitialized() {
-		Regions.register(new InkWastesRegion(TearsOfInk.id("overworld"), INK_WASTES_WEIGHT));
+		Regions.register(new InkLandsRegion(TearsOfInk.id("ink_lands"), 1));
 		SurfaceRuleManager.addSurfaceRules(SurfaceRuleManager.RuleCategory.OVERWORLD, TearsOfInk.MOD_ID,
 				ModSurfaceRules.makeRules());
 	}

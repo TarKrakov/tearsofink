@@ -2,7 +2,9 @@
 	"required": true,
 	"package": "com.tarkrakov.tearsofink.mixin",
 	"compatibilityLevel": "JAVA_21",
-	"mixins": [],
+	"mixins": [
+		"MultiNoiseBiomeSourceMixin"
+	],
 	"injectors": {
 		"defaultRequire": 1
 	},

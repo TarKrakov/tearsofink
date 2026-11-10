@@ -51,7 +51,7 @@ public abstract class LevelRendererMixin {
 	}
 
 	@Inject(method = "renderClouds", at = @At("HEAD"), cancellable = true)
-	private void tearsofink$noCloudsInInkWastes(CallbackInfo ci) {
+	private void tearsofink$noCloudsInInkLands(CallbackInfo ci) {
 		if (InkFog.strength() >= 0.5f) ci.cancel();
 	}
 }

@@ -1,5 +1,4 @@
 {
-  "biome.tears-of-ink.ink_wastes": "Чернильные пустоши",
   "block.tears-of-ink.ashen_soil": "Пепельная земля",
   "block.tears-of-ink.ash": "Пепел",
   "itemGroup.tears-of-ink.main": "Tears of Ink",
@@ -33,5 +32,9 @@
   "block.tears-of-ink.asphodelite_redstone_ore": "Асфоделитовая редстоуновая руда",
   "block.tears-of-ink.asphodelite_lapis_ore": "Асфоделитовая лазуритовая руда",
   "block.tears-of-ink.asphodelite_diamond_ore": "Асфоделитовая алмазная руда",
-  "block.tears-of-ink.asphodelite_emerald_ore": "Асфоделитовая изумрудная руда"
+  "block.tears-of-ink.asphodelite_emerald_ore": "Асфоделитовая изумрудная руда",
+  "biome.tears-of-ink.pale_forest": "Бледнолесье",
+  "biome.tears-of-ink.bloodwood": "Кроволесье",
+  "biome.tears-of-ink.inkwood": "Чернолесье",
+  "biome.tears-of-ink.tar_lake": "Смоляное озеро"
 }

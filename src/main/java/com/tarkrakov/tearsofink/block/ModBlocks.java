@@ -19,6 +19,7 @@ import net.minecraft.world.level.block.ButtonBlock;
 import net.minecraft.world.level.block.DropExperienceBlock;
 import net.minecraft.world.level.block.FlowerBlock;
 import net.minecraft.world.level.block.FlowerPotBlock;
+import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.level.block.DoorBlock;
 import net.minecraft.world.level.block.FenceBlock;
@@ -69,7 +70,7 @@ public final class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.STRIPPED_DARK_OAK_WOOD).mapColor(MapColor.COLOR_CYAN)));
 	public static final Block PALE_PLANKS = register("pale_planks", new Block(
 			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_PLANKS).mapColor(MapColor.COLOR_CYAN)));
-	public static final Block PALE_LEAVES = register("pale_leaves", new PaleLeavesBlock(
+	public static final Block PALE_LEAVES = register("pale_leaves", new LeavesBlock(
 			BlockBehaviour.Properties.ofFullCopy(Blocks.DARK_OAK_LEAVES).mapColor(MapColor.COLOR_CYAN)));
 
 	/** Как растёт саженец: описание дерева лежит в data/tears-of-ink/worldgen/configured_feature/pale_tree.json */

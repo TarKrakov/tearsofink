@@ -1,5 +1,4 @@
 {
-  "biome.tears-of-ink.ink_wastes": "Ink Wastes",
   "block.tears-of-ink.ashen_soil": "Ashen Soil",
   "block.tears-of-ink.ash": "Ash",
   "itemGroup.tears-of-ink.main": "Tears of Ink",
@@ -33,5 +32,9 @@
   "block.tears-of-ink.asphodelite_redstone_ore": "Asphodelite Redstone Ore",
   "block.tears-of-ink.asphodelite_lapis_ore": "Asphodelite Lapis Ore",
   "block.tears-of-ink.asphodelite_diamond_ore": "Asphodelite Diamond Ore",
-  "block.tears-of-ink.asphodelite_emerald_ore": "Asphodelite Emerald Ore"
+  "block.tears-of-ink.asphodelite_emerald_ore": "Asphodelite Emerald Ore",
+  "biome.tears-of-ink.pale_forest": "Pale Forest",
+  "biome.tears-of-ink.bloodwood": "Bloodwood",
+  "biome.tears-of-ink.inkwood": "Inkwood",
+  "biome.tears-of-ink.tar_lake": "Tar Lake"
 }

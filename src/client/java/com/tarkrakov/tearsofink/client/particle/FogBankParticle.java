@@ -82,7 +82,10 @@ public class FogBankParticle extends TextureSheetParticle {
 		@Override
 		public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z,
 									   double xd, double yd, double zd) {
-			return new FogBankParticle(level, x, y, z, this.sprites);
+			FogBankParticle particle = new FogBankParticle(level, x, y, z, this.sprites);
+			// xd/yd/zd здесь — не скорость, а оттенок клуба (см. FogBankSpawner)
+			if (xd > 0 || yd > 0 || zd > 0) particle.setColor((float) xd, (float) yd, (float) zd);
+			return particle;
 		}
 	}
 }

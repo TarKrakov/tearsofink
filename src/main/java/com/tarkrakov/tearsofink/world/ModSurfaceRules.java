@@ -30,14 +30,14 @@ public final class ModSurfaceRules {
 						ASH))
 		);
 
-		// Вся толща камня под пустошами выше y≈0 — асфоделитовая порода
+		// Вся толща камня под Чернильными Землями выше y≈0 — асфоделитовая порода
 		// (ниже, как и в ванилле, начинается глубинный сланец — с плавным переходом 0..8).
 		SurfaceRules.RuleSource rock = SurfaceRules.ifTrue(
 				SurfaceRules.not(SurfaceRules.verticalGradient(TearsOfInk.MOD_ID + ":asphodelite_rock",
 						VerticalAnchor.absolute(0), VerticalAnchor.absolute(8))),
 				ASPHODELITE_ROCK);
 
-		return SurfaceRules.ifTrue(SurfaceRules.isBiome(ModBiomes.INK_WASTES), SurfaceRules.sequence(
+		return SurfaceRules.ifTrue(SurfaceRules.isBiome(ModBiomes.PALE_FOREST, ModBiomes.BLOODWOOD, ModBiomes.INKWOOD, ModBiomes.TAR_LAKE), SurfaceRules.sequence(
 				SurfaceRules.ifTrue(SurfaceRules.abovePreliminarySurface(), inkWastes),
 				rock));
 	}

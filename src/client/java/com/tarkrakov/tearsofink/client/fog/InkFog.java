@@ -5,6 +5,8 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.material.FogType;
@@ -18,8 +20,13 @@ public final class InkFog {
 	// ===== Настройки — крутить здесь =====
 	/** Где туман начинается (в блоках) при полной силе. */
 	public static final float FOG_START = 1.5f;
-	/** Дальность видимости (в блоках) при полной силе. */
-	public static final float FOG_END = 10.0f;
+	/** Дальность видимости (в блоках) при полной силе — для каждой зоны своя. */
+	public static final float FOG_END_PALE = 10.0f;
+	public static final float FOG_END_BLOOD = 12.0f;
+	public static final float FOG_END_INK = 6.5f;
+	public static final float FOG_END_LAKE = 9.0f;
+	/** Как быстро меняется дальность при переходе между зонами (блоков в секунду). */
+	public static final float FOG_END_CHANGE_PER_SECOND = 2.0f;
 	/** За сколько блоков ДО границы туман начинает сгущаться. */
 	public static final int OUTSIDE_RAMP = 40;
 	/** Сколько блоков ВНУТРИ биома нужно пройти до полной силы тумана. */
@@ -34,6 +41,8 @@ public final class InkFog {
 
 	/** 0 = тумана нет, 1 = туман в полную силу. */
 	private static float strength = 0f;
+	private static float fullEnd = FOG_END_PALE;
+	private static float fullEndTarget = FOG_END_PALE;
 	private static float target = 0f;
 	private static long lastNanos = 0L;
 	private static long lastSampleNanos = 0L;
@@ -54,7 +63,14 @@ public final class InkFog {
 		if (now - lastSampleNanos > SAMPLE_INTERVAL_NANOS) {
 			lastSampleNanos = now;
 			target = computeTarget(level, camera.getBlockPosition());
+			if (level.hasChunkAt(camera.getBlockPosition())) {
+				Float end = zoneFogEnd(level.getBiome(camera.getBlockPosition()));
+				if (end != null) fullEndTarget = end;
+			}
 		}
+		float endStep = dt * FOG_END_CHANGE_PER_SECOND;
+		if (fullEnd < fullEndTarget) fullEnd = Math.min(fullEndTarget, fullEnd + endStep);
+		else if (fullEnd > fullEndTarget) fullEnd = Math.max(fullEndTarget, fullEnd - endStep);
 
 		float step = dt * SMOOTHING_PER_SECOND;
 		if (strength < target) strength = Math.min(target, strength + step);
@@ -75,14 +91,23 @@ public final class InkFog {
 
 	/** Дальность видимости для данной силы тумана: плавно от ванильной до нашей. */
 	public static float fogEnd(float vanillaEnd, float renderDistance) {
-		float full = Math.min(renderDistance, FOG_END);
+		float full = Math.min(renderDistance, fullEnd);
 		if (vanillaEnd <= full) return vanillaEnd;
 		// Экспоненциальная интерполяция: туман на глаз сгущается равномерно.
 		return (float) (vanillaEnd * Math.pow(full / vanillaEnd, strength));
 	}
 
 	public static boolean isInk(ClientLevel level, BlockPos pos) {
-		return level.hasChunkAt(pos) && level.getBiome(pos).is(ModBiomes.INK_WASTES);
+		return level.hasChunkAt(pos) && level.getBiome(pos).is(ModBiomes.INK_LANDS);
+	}
+
+	/** Дальность тумана для зоны или null, если это не Чернильные Земли. */
+	public static Float zoneFogEnd(Holder<Biome> biome) {
+		if (biome.is(ModBiomes.INKWOOD)) return FOG_END_INK;
+		if (biome.is(ModBiomes.BLOODWOOD)) return FOG_END_BLOOD;
+		if (biome.is(ModBiomes.TAR_LAKE)) return FOG_END_LAKE;
+		if (biome.is(ModBiomes.PALE_FOREST)) return FOG_END_PALE;
+		return null;
 	}
 
 	private static float computeTarget(ClientLevel level, BlockPos center) {

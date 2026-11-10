@@ -1,6 +1,9 @@
 package com.tarkrakov.tearsofink.client.fog;
 
 import com.tarkrakov.tearsofink.particle.ModParticles;
+import com.tarkrakov.tearsofink.world.ModBiomes;
+import net.minecraft.core.Holder;
+import net.minecraft.world.level.biome.Biome;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
@@ -25,6 +28,14 @@ public final class FogBankSpawner {
 
 	private FogBankSpawner() {}
 
+	/** Оттенок клубов тумана по зонам (множитель цвета текстуры). */
+	private static float[] tint(Holder<Biome> biome) {
+		if (biome.is(ModBiomes.BLOODWOOD)) return new float[]{1.0f, 0.62f, 0.5f};
+		if (biome.is(ModBiomes.INKWOOD)) return new float[]{0.42f, 0.38f, 0.5f};
+		if (biome.is(ModBiomes.TAR_LAKE)) return new float[]{0.6f, 0.58f, 0.66f};
+		return new float[]{1f, 1f, 1f};
+	}
+
 	public static void tick(Minecraft mc) {
 		ClientLevel level = mc.level;
 		Player player = mc.player;
@@ -47,8 +58,10 @@ public final class FogBankSpawner {
 			if (ground <= level.getMinBuildHeight() + 1) continue;
 			double y = ground + 0.5 + random.nextDouble() * MAX_HEIGHT_ABOVE_GROUND;
 
+			// Цвет клуба зависит от зоны (передаём через «скорость» — частица её не использует)
+			float[] tint = tint(level.getBiome(pos));
 			level.addAlwaysVisibleParticle(ModParticles.FOG_BANK, true,
-					x + random.nextDouble(), y, z + random.nextDouble(), 0, 0, 0);
+					x + random.nextDouble(), y, z + random.nextDouble(), tint[0], tint[1], tint[2]);
 		}
 	}
 }
