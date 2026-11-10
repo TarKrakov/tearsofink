@@ -39,6 +39,10 @@ public class InkLanternBlock extends LanternBlock implements EntityBlock, FogCle
 		builder.add(LIT, PLAYER_MADE);
 	}
 
+	public boolean isEternal() {
+		return eternal;
+	}
+
 	@Override
 	public int clearRadius() {
 		return clearRadius;

@@ -12,7 +12,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
@@ -127,6 +130,30 @@ public final class Lanterns {
 		server.sendParticles(ParticleTypes.SQUID_INK, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 6, 0.2, 0.2, 0.2, 0.02);
 		server.sendParticles(ParticleTypes.SMALL_FLAME, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 6, 0.15, 0.15, 0.15, 0.01);
 		return InteractionResult.SUCCESS;
+	}
+
+	/**
+	 * Shift+ПКМ по горящему фонарю с чем-то в руках. Игра в таком случае не спрашивает блок,
+	 * поэтому ловим нажатие раньше и гасим сами. Иначе — PASS (обычное поведение).
+	 */
+	public static void registerSneakDouse() {
+		UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
+			if (hand != InteractionHand.MAIN_HAND || !player.isShiftKeyDown() || player.isSpectator()) return InteractionResult.PASS;
+			BlockPos pos = hit.getBlockPos();
+			BlockState state = level.getBlockState(pos);
+			if (!(state.getBlock() instanceof FogClearing)) return InteractionResult.PASS;
+			// у каменного фонаря «горит» хранит нижняя половина
+			if (state.hasProperty(StoneLanternBlock.HALF) && state.getValue(StoneLanternBlock.HALF) == DoubleBlockHalf.UPPER) {
+				pos = pos.below();
+				state = level.getBlockState(pos);
+				if (!(state.getBlock() instanceof FogClearing)) return InteractionResult.PASS;
+			}
+			if (!state.hasProperty(FogClearing.LIT) || !state.getValue(FogClearing.LIT)) return InteractionResult.PASS;
+			boolean playerMade = state.hasProperty(FogClearing.PLAYER_MADE) && state.getValue(FogClearing.PLAYER_MADE);
+			if (!playerMade && !player.getAbilities().instabuild) return InteractionResult.PASS;
+			if (state.getBlock() instanceof InkLanternBlock lantern && lantern.isEternal()) return InteractionResult.PASS;
+			return use(state, level, pos, player);
+		});
 	}
 
 	private static void fizzle(ServerPlayer player) {
