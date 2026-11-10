@@ -5,7 +5,9 @@ import com.tarkrakov.tearsofink.ink.InkData;
 import com.tarkrakov.tearsofink.ink.InkSyncPayload;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.DeltaTracker;
+import net.minecraft.client.AttackIndicatorStatus;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
@@ -21,9 +23,14 @@ public final class InkHud {
 	/** Размер заполнения внутри рамки. */
 	public static final int FILL_W = FRAME_W - BORDER * 2, FILL_H = FRAME_H - BORDER * 2;
 	/** Отступ первого столбика от правого края хотбара и промежуток между столбиками. */
-	public static final int SIDE_GAP = 13, BAR_GAP = 2;
-	/** Нижний край столбиков — на столько выше низа экрана (над слотом второй руки). */
-	public static final int BOTTOM_OFFSET = 25;
+	public static final int SIDE_GAP = 5, BAR_GAP = 2;
+	/** Нижний край столбиков — на столько выше низа экрана (вровень с низом хотбара). */
+	public static final int BOTTOM_OFFSET = 1;
+	/**
+	 * Если справа от хотбара что-то уже стоит (слот второй руки у левшей или
+	 * индикатор атаки в режиме «у хотбара») — столбики отодвигаются на столько.
+	 */
+	public static final int MAKE_ROOM_SHIFT = 29;
 	/** Как быстро полоски проявляются/растворяются (доля в секунду). */
 	public static final float FADE_PER_SECOND = 2.5f;
 	/** Вспышка столбика Чернил при трате и пульсация, когда чернил не хватило (в секундах). */
@@ -95,7 +102,7 @@ public final class InkHud {
 		RenderSystem.enableBlend();
 		if (alpha > 0f && survival) {
 			int y = h - BOTTOM_OFFSET - FRAME_H;
-			int soulX = w / 2 + 91 + SIDE_GAP;
+			int soulX = w / 2 + 91 + SIDE_GAP + (rightSideBusy(mc) ? MAKE_ROOM_SHIFT : 0);
 			int inkX = soulX + FRAME_W + BAR_GAP;
 			g.setColor(1f, 1f, 1f, alpha);
 
@@ -125,6 +132,13 @@ public final class InkHud {
 			g.setColor(1f, 1f, 1f, 1f);
 		}
 		RenderSystem.disableBlend();
+	}
+
+	/** Занято ли место справа от хотбара ванильными элементами. */
+	private static boolean rightSideBusy(Minecraft mc) {
+		boolean offhandOnRight = mc.options.mainHand().get() == HumanoidArm.LEFT && !mc.player.getOffhandItem().isEmpty();
+		boolean attackAtHotbar = mc.options.attackIndicator().get() == AttackIndicatorStatus.HOTBAR;
+		return offhandOnRight || attackAtHotbar;
 	}
 
 	private static void drawFrame(GuiGraphics g, int x, int y) {
