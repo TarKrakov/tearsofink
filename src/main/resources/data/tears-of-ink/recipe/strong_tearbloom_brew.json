@@ -1,0 +1,18 @@
+{
+  "type": "tears-of-ink:alchemy",
+  "ingredients": [
+    {
+      "item": "tears-of-ink:tearbloom"
+    },
+    {
+      "item": "tears-of-ink:tearbloom"
+    },
+    {
+      "item": "tears-of-ink:waterbloom_juice"
+    }
+  ],
+  "result": {
+    "id": "tears-of-ink:strong_tearbloom_brew",
+    "count": 1
+  }
+}

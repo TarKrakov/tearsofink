@@ -13,6 +13,9 @@ import com.tarkrakov.tearsofink.client.hud.InkHud;
 import com.tarkrakov.tearsofink.ink.InkSyncPayload;
 import com.tarkrakov.tearsofink.skill.SkillPayloads;
 import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.alchemy.ModAlchemy;
+import com.tarkrakov.tearsofink.client.alchemy.AlchemyScreen;
+import net.minecraft.client.gui.screens.MenuScreens;
 import com.tarkrakov.tearsofink.effect.ModEffects;
 import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.weapon.ModEntities;
@@ -54,6 +57,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 
 		// Навыки: клавиши
 		SkillKeys.init();
+		MenuScreens.register(ModAlchemy.MENU, AlchemyScreen::new);
 
 		// Оружие: волна без модели (видна по брызгам); щиты — модель «в блоке» и «сияет»
 		EntityRendererRegistry.register(ModEntities.INK_WAVE, NoopRenderer::new);

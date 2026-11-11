@@ -8,19 +8,10 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
-import com.tarkrakov.tearsofink.effect.ModEffects;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.item.CreativeModeTabs;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.Items;
-import net.minecraft.world.item.alchemy.Potion;
-import net.minecraft.world.item.alchemy.PotionContents;
 
 /**
  * Своя вкладка «Tears of Ink» в творческом инвентаре.
- * Правило автора: всё из мода — только здесь (зелья мода убираем из ванильных вкладок).
+ * Правило автора: всё из мода — только здесь.
  */
 public final class ModCreativeTab {
 	public static final CreativeModeTab TAB = Registry.register(
@@ -102,11 +93,10 @@ public final class ModCreativeTab {
 						output.accept(ModItems.WAVE_GREATSWORD);
 						output.accept(ModItems.CLEAVE_GREATSWORD);
 						output.accept(ModItems.ATONEMENT);
-						for (Holder<Potion> potion : ModEffects.POTIONS) {
-							for (Item kind : new Item[]{Items.POTION, Items.SPLASH_POTION, Items.LINGERING_POTION, Items.TIPPED_ARROW}) {
-								output.accept(PotionContents.createItemStack(kind, potion));
-							}
-						}
+						output.accept(ModBlocks.ALCHEMY_TABLE);
+						output.accept(ModItems.EMPTY_FLASK);
+						output.accept(ModItems.TEARBLOOM_BREW);
+						output.accept(ModItems.STRONG_TEARBLOOM_BREW);
 						output.accept(ModItems.SKILL_BOOK_DASH);
 					})
 					.build());
@@ -114,17 +104,6 @@ public final class ModCreativeTab {
 	private ModCreativeTab() {}
 
 	public static void init() {
-		// зелья мода игра сама кладёт в «Еда и напитки» и «Бой» — убираем оттуда
-		for (var tab : java.util.List.of(CreativeModeTabs.FOOD_AND_DRINKS, CreativeModeTabs.COMBAT)) {
-			ItemGroupEvents.modifyEntriesEvent(tab).register(entries -> {
-				entries.getDisplayStacks().removeIf(ModCreativeTab::isModPotion);
-				entries.getSearchTabStacks().removeIf(ModCreativeTab::isModPotion);
-			});
-		}
 	}
 
-	private static boolean isModPotion(ItemStack stack) {
-		PotionContents contents = stack.get(DataComponents.POTION_CONTENTS);
-		return contents != null && contents.potion().isPresent() && ModEffects.POTIONS.contains(contents.potion().get());
-	}
 }

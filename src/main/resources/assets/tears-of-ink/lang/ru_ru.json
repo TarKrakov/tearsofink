@@ -118,10 +118,6 @@
   "message.tears-of-ink.atonement": "Ваша душа очищается от чернильной крови...",
   "message.tears-of-ink.soul_whole": "Ваша душа цела.",
   "effect.tears-of-ink.tear_solace": "Утешение Слёзницы",
-  "item.minecraft.potion.effect.tearbloom_brew": "Отвар Слёзницы",
-  "item.minecraft.splash_potion.effect.tearbloom_brew": "Взрывной отвар Слёзницы",
-  "item.minecraft.lingering_potion.effect.tearbloom_brew": "Оседающий отвар Слёзницы",
-  "item.minecraft.tipped_arrow.effect.tearbloom_brew": "Стрела Утешения",
   "item.tears-of-ink.ram_shield": "Щит-таран",
   "item.tears-of-ink.ram_shield.desc1": "Оружие Души.",
   "item.tears-of-ink.ram_shield.desc2": "Абилка — Таран: рывок со щитом, отбрасывает врагов. 15 Души.",
@@ -146,5 +142,12 @@
   "item.tears-of-ink.ram_shield.desc3": "R — в правой руке, Shift+R — в левой.",
   "item.tears-of-ink.radiant_shield.desc3": "R — в правой руке, Shift+R — в левой.",
   "item.tears-of-ink.repel_shield.desc3": "R — в правой руке, Shift+R — в левой.",
-  "effect.tears-of-ink.mercy": "Милосердие"
+  "effect.tears-of-ink.mercy": "Милосердие",
+  "block.tears-of-ink.alchemy_table": "Алхимический стол",
+  "container.tears-of-ink.alchemy_table": "Алхимический стол",
+  "item.tears-of-ink.empty_flask": "Пустой флакон",
+  "item.tears-of-ink.tearbloom_brew": "Отвар Слёзницы",
+  "item.tears-of-ink.strong_tearbloom_brew": "Крепкий отвар Слёзницы",
+  "item.tears-of-ink.tearbloom_brew.desc1": "Штраф за проданную душу вдвое слабее.",
+  "item.tears-of-ink.strong_tearbloom_brew.desc1": "Штраф за проданную душу вдвое слабее."
 }

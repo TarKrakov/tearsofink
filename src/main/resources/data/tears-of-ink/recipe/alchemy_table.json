@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "AFA",
+    "PPP",
+    "PPP"
+  ],
+  "key": {
+    "A": {
+      "item": "tears-of-ink:asphoda"
+    },
+    "F": {
+      "item": "tears-of-ink:empty_flask"
+    },
+    "P": {
+      "item": "tears-of-ink:pale_planks"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:alchemy_table",
+    "count": 1
+  }
+}

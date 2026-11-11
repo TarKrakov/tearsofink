@@ -118,10 +118,6 @@
   "message.tears-of-ink.atonement": "Your soul is cleansed of inked blood...",
   "message.tears-of-ink.soul_whole": "Your soul is whole.",
   "effect.tears-of-ink.tear_solace": "Tearbloom Solace",
-  "item.minecraft.potion.effect.tearbloom_brew": "Tearbloom Brew",
-  "item.minecraft.splash_potion.effect.tearbloom_brew": "Splash Tearbloom Brew",
-  "item.minecraft.lingering_potion.effect.tearbloom_brew": "Lingering Tearbloom Brew",
-  "item.minecraft.tipped_arrow.effect.tearbloom_brew": "Arrow of Solace",
   "item.tears-of-ink.ram_shield": "Ram Shield",
   "item.tears-of-ink.radiant_shield": "Radiant Shield",
   "item.tears-of-ink.wave_greatsword": "Wave Greatsword",
@@ -130,5 +126,10 @@
   "key.tears-of-ink.weapon_ability": "Weapon ability (Shift — off hand)",
   "item.tears-of-ink.mercy_shield": "Shield of Mercy",
   "item.tears-of-ink.repel_shield": "Shield of Repulsion",
-  "effect.tears-of-ink.mercy": "Mercy"
+  "effect.tears-of-ink.mercy": "Mercy",
+  "block.tears-of-ink.alchemy_table": "Alchemy Table",
+  "container.tears-of-ink.alchemy_table": "Alchemy Table",
+  "item.tears-of-ink.empty_flask": "Empty Flask",
+  "item.tears-of-ink.tearbloom_brew": "Tearbloom Brew",
+  "item.tears-of-ink.strong_tearbloom_brew": "Strong Tearbloom Brew"
 }

@@ -49,6 +49,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import com.tarkrakov.tearsofink.block.lantern.StoneLanternBlock;
 import com.tarkrakov.tearsofink.block.fountain.InkFountainBlock;
+import com.tarkrakov.tearsofink.alchemy.AlchemyTableBlock;
 import com.tarkrakov.tearsofink.block.lantern.FogClearing;
 import com.tarkrakov.tearsofink.block.lantern.InkLanternBlock;
 
@@ -297,6 +298,10 @@ public final class ModBlocks {
 	public static final Block INK_FOUNTAIN = register("ink_fountain", new InkFountainBlock(
 			BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).mapColor(MapColor.COLOR_BLACK)
 					.strength(-1f, 3600000f).noOcclusion().lightLevel(s -> 5).pushReaction(PushReaction.BLOCK)));
+
+	/** Алхимический стол: варка зелий мода (модель автора — позже). */
+	public static final Block ALCHEMY_TABLE = register("alchemy_table", new AlchemyTableBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.CRAFTING_TABLE).mapColor(MapColor.COLOR_GRAY)));
 
 	/** Предмет-блок для Трясинника (ставится на воду, как кувшинка). Вызывается из ModItems. */
 	public static Item bogleafItem() {

@@ -1,0 +1,12 @@
+{
+  "type": "tears-of-ink:alchemy",
+  "ingredients": [
+    {
+      "item": "tears-of-ink:tearbloom"
+    }
+  ],
+  "result": {
+    "id": "tears-of-ink:tearbloom_brew",
+    "count": 1
+  }
+}

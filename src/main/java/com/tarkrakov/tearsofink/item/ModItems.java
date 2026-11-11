@@ -5,6 +5,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.skill.ModSkills;
+import com.tarkrakov.tearsofink.effect.ModEffects;
 import com.tarkrakov.tearsofink.weapon.InkGreatswordItem;
 import com.tarkrakov.tearsofink.weapon.SoulShieldItem;
 import com.tarkrakov.tearsofink.weapon.WeaponAbilities;
@@ -34,6 +35,16 @@ public final class ModItems {
 			new HandLanternItem(26f, new Item.Properties().stacksTo(1)));
 	public static final Item BRIGHT_HAND_LANTERN = register("bright_hand_lantern",
 			new HandLanternItem(44f, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON)));
+
+	// ===== Алхимия (Алхимический стол) =====
+	/** Пустой флакон — сосуд для зелий мода. */
+	public static final Item EMPTY_FLASK = register("empty_flask", new Item(new Item.Properties()));
+	/** Отвар Слёзницы: 3 минуты «Утешения Слёзницы» (штраф за душу вдвое слабее). */
+	public static final Item TEARBLOOM_BREW = register("tearbloom_brew",
+			new BrewItem(() -> ModEffects.TEAR_SOLACE, 3 * 60 * 20, new Item.Properties().stacksTo(16)));
+	/** Крепкий отвар Слёзницы: 8 минут. */
+	public static final Item STRONG_TEARBLOOM_BREW = register("strong_tearbloom_brew",
+			new BrewItem(() -> ModEffects.TEAR_SOLACE, 8 * 60 * 20, new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON)));
 
 	/** Искупление — венок-крест с сердцем: +10 Души. */
 	public static final Item ATONEMENT = register("atonement",

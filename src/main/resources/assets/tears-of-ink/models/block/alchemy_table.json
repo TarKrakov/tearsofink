@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "tears-of-ink:block/alchemy_table_top",
+    "side": "tears-of-ink:block/alchemy_table_side",
+    "bottom": "tears-of-ink:block/alchemy_table_bottom"
+  }
+}
