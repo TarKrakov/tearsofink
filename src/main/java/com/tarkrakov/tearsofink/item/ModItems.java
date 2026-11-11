@@ -70,6 +70,13 @@ public final class ModItems {
 	public static final Item CLEAVE_GREATSWORD = register("cleave_greatsword",
 			new InkGreatswordItem(() -> WeaponAbilities.CLEAVE, new Item.Properties()));
 
+	// ===== Иконки достижений (не добываются, во вкладке не лежат) =====
+	public static final Item ICON_INK_LANDS = register("icon_ink_lands", new Item(new Item.Properties()));
+	public static final Item ICON_FIRST_FLAME = register("icon_first_flame", new Item(new Item.Properties()));
+	public static final Item ICON_CURSED_VESSEL = register("icon_cursed_vessel", new Item(new Item.Properties()));
+	public static final Item ICON_CURSE_ESSENCE = register("icon_curse_essence", new Item(new Item.Properties()));
+	public static final Item ICON_ATONEMENT = register("icon_atonement", new Item(new Item.Properties()));
+
 	// ===== Книги навыков =====
 	/** Книга Рывка (название и текст — рабочие, автор придумает свои). */
 	public static final Item SKILL_BOOK_DASH = register("skill_book_dash",

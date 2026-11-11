@@ -131,5 +131,20 @@
   "container.tears-of-ink.alchemy_table": "Alchemy Table",
   "item.tears-of-ink.empty_flask": "Empty Flask",
   "item.tears-of-ink.tearbloom_brew": "Tearbloom Brew",
-  "item.tears-of-ink.strong_tearbloom_brew": "Strong Tearbloom Brew"
+  "item.tears-of-ink.strong_tearbloom_brew": "Strong Tearbloom Brew",
+  "advancements.tears-of-ink.ink_lands.title": "Kingdom of Despair",
+  "advancements.tears-of-ink.ink_lands.description": "Enter the Ink Lands",
+  "item.tears-of-ink.icon_ink_lands": "Kingdom of Despair",
+  "advancements.tears-of-ink.first_flame.title": "Flame of Hope",
+  "advancements.tears-of-ink.first_flame.description": "Light your first Lantern",
+  "item.tears-of-ink.icon_first_flame": "Flame of Hope",
+  "advancements.tears-of-ink.cursed_vessel.title": "Cursed Vessel",
+  "advancements.tears-of-ink.cursed_vessel.description": "Drink from an Ink Fountain",
+  "item.tears-of-ink.icon_cursed_vessel": "Cursed Vessel",
+  "advancements.tears-of-ink.curse_essence.title": "Essence of the Curse",
+  "advancements.tears-of-ink.curse_essence.description": "Sell a piece of your soul",
+  "item.tears-of-ink.icon_curse_essence": "Essence of the Curse",
+  "advancements.tears-of-ink.atonement.title": "Atonement",
+  "advancements.tears-of-ink.atonement.description": "Cleanse part of your soul of the curse",
+  "item.tears-of-ink.icon_atonement": "Atonement"
 }

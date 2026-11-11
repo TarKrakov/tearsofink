@@ -1,0 +1,23 @@
+{
+  "parent": "tears-of-ink:ink_lands",
+  "display": {
+    "icon": {
+      "id": "tears-of-ink:icon_cursed_vessel"
+    },
+    "title": {
+      "translate": "advancements.tears-of-ink.cursed_vessel.title"
+    },
+    "description": {
+      "translate": "advancements.tears-of-ink.cursed_vessel.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

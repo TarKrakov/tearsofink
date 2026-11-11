@@ -84,6 +84,7 @@ public class InkFountainBlock extends Block {
 		sp.setAttached(VISITED, Set.copyOf(copy));
 		InkData after = data.withInkBonus(data.inkBonus() + INK_BONUS);
 		InkPowers.update(sp, after.withInk(after.ink() + INK_BONUS));
+		com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(sp, com.tarkrakov.tearsofink.advancement.ModAdvancements.CURSED_VESSEL);
 
 		sp.sendSystemMessage(Component.translatable("message.tears-of-ink.fountain_drink", INK_BONUS).withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 		level.playSound(null, pos, SoundEvents.BREWING_STAND_BREW, SoundSource.BLOCKS, 0.8f, 0.6f);

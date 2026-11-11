@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "id": "tears-of-ink:icon_ink_lands"
+    },
+    "title": {
+      "translate": "advancements.tears-of-ink.ink_lands.title"
+    },
+    "description": {
+      "translate": "advancements.tears-of-ink.ink_lands.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false,
+    "background": "tears-of-ink:textures/gui/advancements/background.png"
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

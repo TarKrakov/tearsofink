@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.ink;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.advancement.ModAdvancements;
 import com.tarkrakov.tearsofink.world.InkLandsAccess;
 import com.tarkrakov.tearsofink.world.InkLandsLayout;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
@@ -63,7 +64,14 @@ public final class InkPowers {
 	}
 
 	public static void set(ServerPlayer player, InkData data) {
-		player.setAttached(DATA, data.clamped());
+		InkData old = player.getAttached(DATA);
+		InkData fresh = data.clamped();
+		player.setAttached(DATA, fresh);
+		if (old != null) {
+			if (fresh.inside() && !old.inside()) ModAdvancements.grant(player, ModAdvancements.INK_LANDS);
+			if (fresh.soulMax() < old.soulMax()) ModAdvancements.grant(player, ModAdvancements.CURSE_ESSENCE);
+			if (fresh.soulMax() > old.soulMax()) ModAdvancements.grant(player, ModAdvancements.ATONEMENT);
+		}
 	}
 
 	/** Отправить значения игроку (для полосок). */

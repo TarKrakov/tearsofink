@@ -149,5 +149,20 @@
   "item.tears-of-ink.tearbloom_brew": "Отвар Слёзницы",
   "item.tears-of-ink.strong_tearbloom_brew": "Крепкий отвар Слёзницы",
   "item.tears-of-ink.tearbloom_brew.desc1": "Штраф за проданную душу вдвое слабее.",
-  "item.tears-of-ink.strong_tearbloom_brew.desc1": "Штраф за проданную душу вдвое слабее."
+  "item.tears-of-ink.strong_tearbloom_brew.desc1": "Штраф за проданную душу вдвое слабее.",
+  "advancements.tears-of-ink.ink_lands.title": "Королевство Отчаяния",
+  "advancements.tears-of-ink.ink_lands.description": "Войдите в Чернильные Земли",
+  "item.tears-of-ink.icon_ink_lands": "Королевство Отчаяния",
+  "advancements.tears-of-ink.first_flame.title": "Пламя Надежды",
+  "advancements.tears-of-ink.first_flame.description": "Зажгите первый Фонарь",
+  "item.tears-of-ink.icon_first_flame": "Пламя Надежды",
+  "advancements.tears-of-ink.cursed_vessel.title": "Проклятый Сосуд",
+  "advancements.tears-of-ink.cursed_vessel.description": "Испейте из Фонтана Чернил",
+  "item.tears-of-ink.icon_cursed_vessel": "Проклятый Сосуд",
+  "advancements.tears-of-ink.curse_essence.title": "Суть Проклятья",
+  "advancements.tears-of-ink.curse_essence.description": "Продайте частичку своей души",
+  "item.tears-of-ink.icon_curse_essence": "Суть Проклятья",
+  "advancements.tears-of-ink.atonement.title": "Искупление",
+  "advancements.tears-of-ink.atonement.description": "Очистите часть души от проклятия",
+  "item.tears-of-ink.icon_atonement": "Искупление"
 }

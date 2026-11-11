@@ -1,0 +1,23 @@
+{
+  "parent": "tears-of-ink:curse_essence",
+  "display": {
+    "icon": {
+      "id": "tears-of-ink:icon_atonement"
+    },
+    "title": {
+      "translate": "advancements.tears-of-ink.atonement.title"
+    },
+    "description": {
+      "translate": "advancements.tears-of-ink.atonement.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}
