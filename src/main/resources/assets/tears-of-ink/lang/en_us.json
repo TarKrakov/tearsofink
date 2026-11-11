@@ -110,7 +110,8 @@
   "message.tears-of-ink.too_many_flames": "The forest will not let you kindle another Flame.",
   "block.tears-of-ink.stone_lantern": "Stone Lantern",
   "block.tears-of-ink.ink_fountain": "Lesser Ink Fountain",
-  "message.tears-of-ink.fountain_drink": "The fountain's ink flows into your veins. Ink reserve +%s.",
+  "message.tears-of-ink.fountain_drink": "Your heart fills with Ink...",
   "message.tears-of-ink.fountain_used": "This spring has already given you its strength.",
-  "message.tears-of-ink.veins_full": "Your veins are full."
+  "message.tears-of-ink.veins_full": "Your veins are full.",
+  "effect.tears-of-ink.soul_loss": "Soul Loss"
 }

@@ -4,6 +4,7 @@ import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.block.lantern.ModBlockEntities;
 import com.tarkrakov.tearsofink.command.ModCommands;
 import com.tarkrakov.tearsofink.ink.InkPowers;
+import com.tarkrakov.tearsofink.effect.ModEffects;
 import com.tarkrakov.tearsofink.skill.Skills;
 import com.tarkrakov.tearsofink.item.ModCreativeTab;
 import com.tarkrakov.tearsofink.item.ModItems;
@@ -36,6 +37,7 @@ public class TearsOfInk implements ModInitializer {
 		ModItems.init();
 		ModCreativeTab.init();
 		ModParticles.init();
+		ModEffects.init();
 		InkPowers.init();
 		Skills.init();
 		ModCommands.init();

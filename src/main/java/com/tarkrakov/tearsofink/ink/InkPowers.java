@@ -16,6 +16,8 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.effect.MobEffectInstance;
+import com.tarkrakov.tearsofink.effect.ModEffects;
 
 /**
  * Силы чернил: Душа и Чернила игрока, вход/выход из Чернильных Земель, восстановление и синхронизация.
@@ -79,6 +81,7 @@ public final class InkPowers {
 		for (ServerPlayer player : server.getPlayerList().getPlayers()) {
 			if (player.tickCount % ZONE_CHECK_INTERVAL == 0) {
 				updateZone(player, true);
+				updateSoulLossIcon(player);
 			}
 			InkData data = get(player);
 			if (!data.inside() || !player.isAlive()) continue;
@@ -92,6 +95,24 @@ public final class InkPowers {
 					sync(player);
 				}
 			}
+		}
+	}
+
+	/**
+	 * Значок «Утрата души»: виден, пока игрок внутри области и продал хоть часть души.
+	 * Уровень = сколько шагов по 5 продано. Ставится заново, даже если его сняли молоком.
+	 */
+	private static void updateSoulLossIcon(ServerPlayer player) {
+		InkData data = get(player);
+		int level = data.inside() ? data.soldSteps() : 0;
+		MobEffectInstance current = player.getEffect(ModEffects.SOUL_LOSS);
+		if (level <= 0) {
+			if (current != null) player.removeEffect(ModEffects.SOUL_LOSS);
+			return;
+		}
+		if (current == null || current.getAmplifier() != level - 1) {
+			if (current != null) player.removeEffect(ModEffects.SOUL_LOSS);
+			player.addEffect(new MobEffectInstance(ModEffects.SOUL_LOSS, MobEffectInstance.INFINITE_DURATION, level - 1, true, false, true));
 		}
 	}
 
