@@ -26,7 +26,7 @@ public class InkWaveEntity extends Entity {
 	// ===== Настройки — крутить здесь =====
 	public static final double SPEED = 0.9;
 	public static final double MAX_DISTANCE = 12;
-	public static final float DAMAGE = 7f;
+	public static final float DAMAGE = 6f;
 
 	/** Светлая волна (щит Отпора) — другие частицы, свой урон и отбрасывание. */
 	private static final EntityDataAccessor<Boolean> LIGHT = SynchedEntityData.defineId(InkWaveEntity.class, EntityDataSerializers.BOOLEAN);

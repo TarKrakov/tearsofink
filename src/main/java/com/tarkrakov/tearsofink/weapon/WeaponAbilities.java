@@ -192,7 +192,7 @@ public final class WeaponAbilities {
 	/** Меч Волны: взмах — вперёд летит чёрная волна, проходит сквозь врагов. */
 	public static class WaveAbility extends Skill {
 		WaveAbility() {
-			super(TearsOfInk.id("ink_wave"), 10, 0, 40);
+			super(TearsOfInk.id("ink_wave"), 8, 0, 40);
 		}
 
 		@Override
@@ -215,7 +215,7 @@ public final class WeaponAbilities {
 		public static final float DAMAGE = 12f;
 		public static final double KNOCKBACK = 1.0;
 		/** Центр удара — на столько блоков перед игроком. */
-		public static final double REACH = 2.2;
+		public static final double REACH = 2.75;
 
 		private final Map<UUID, Integer> pending = new HashMap<>();
 
@@ -278,7 +278,7 @@ public final class WeaponAbilities {
 	public static class MercyAbility extends Skill {
 		public static final double RADIUS = 5;
 		/** Лечение раз в секунду (2 = одно сердце). */
-		public static final float HEAL_PER_SECOND = 2f;
+		public static final float HEAL_PER_SECOND = 1f;
 		/** Сколько Души в секунду тянет аура (своё восстановление ~1/с продолжает идти). */
 		public static final float SOUL_PER_SECOND = 4f;
 		/** Через сколько тиков после конца ауры её можно включить снова. */
@@ -369,7 +369,7 @@ public final class WeaponAbilities {
 	/** Щит Отпора: светлая волна — слабее Волны меча, зато сильно расталкивает. Дешёвая. */
 	public static class RepelAbility extends Skill {
 		public static final float DAMAGE = 4f;
-		public static final double KNOCKBACK = 1.4;
+		public static final double KNOCKBACK = 0.77;
 
 		RepelAbility() {
 			super(TearsOfInk.id("repel"), 0, 8, 60);
