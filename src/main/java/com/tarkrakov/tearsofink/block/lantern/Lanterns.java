@@ -6,7 +6,7 @@ import com.tarkrakov.tearsofink.skill.SkillPayloads;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
+import com.tarkrakov.tearsofink.particle.ModParticles;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -99,7 +99,7 @@ public final class Lanterns {
 			if (level instanceof ServerLevel server) {
 				level.setBlock(pos, state.setValue(FogClearing.LIT, false), Block.UPDATE_ALL);
 				level.playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.6f, 1.2f);
-				server.sendParticles(ParticleTypes.SMOKE, pos.getX() + 0.5, pos.getY() + 0.6, pos.getZ() + 0.5, 8, 0.15, 0.15, 0.15, 0.01);
+				server.sendParticles(ModParticles.INK_SMOKE, pos.getX() + 0.5, pos.getY() + 0.7, pos.getZ() + 0.5, 6, 0.15, 0.1, 0.15, 0.0);
 			}
 			return InteractionResult.sidedSuccess(level.isClientSide);
 		}
@@ -127,8 +127,8 @@ public final class Lanterns {
 		}
 		level.setBlock(pos, state.setValue(FogClearing.LIT, true), Block.UPDATE_ALL);
 		level.playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 0.5f, 1.4f);
-		server.sendParticles(ParticleTypes.SQUID_INK, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 6, 0.2, 0.2, 0.2, 0.02);
-		server.sendParticles(ParticleTypes.SMALL_FLAME, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, 6, 0.15, 0.15, 0.15, 0.01);
+		server.sendParticles(ModParticles.SPARK_BURST, pos.getX() + 0.5, pos.getY() + 0.6, pos.getZ() + 0.5, 1, 0, 0, 0, 0);
+		server.sendParticles(ModParticles.SPARK_BURST, pos.getX() + 0.5, pos.getY() + 0.6, pos.getZ() + 0.5, 2, 0.25, 0.2, 0.25, 0);
 		return InteractionResult.SUCCESS;
 	}
 

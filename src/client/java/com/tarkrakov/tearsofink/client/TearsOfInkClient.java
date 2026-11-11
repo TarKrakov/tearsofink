@@ -4,6 +4,7 @@ import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.client.fog.FogBankSpawner;
 import com.tarkrakov.tearsofink.client.fog.FlameDanceSpawner;
 import com.tarkrakov.tearsofink.client.particle.FlameDanceParticle;
+import com.tarkrakov.tearsofink.client.particle.SheetParticles;
 import com.tarkrakov.tearsofink.block.WoodSet;
 import com.tarkrakov.tearsofink.client.particle.DripParticle;
 import com.tarkrakov.tearsofink.client.particle.FogBankParticle;
@@ -47,6 +48,9 @@ public class TearsOfInkClient implements ClientModInitializer {
 		particles.register(ModParticles.INK_DRIP_LAND, s -> new DripParticle.Provider(s, DripParticle.Phase.LAND, null));
 		ClientTickEvents.END_CLIENT_TICK.register(FogBankSpawner::tick);
 		ParticleFactoryRegistry.getInstance().register(ModParticles.FLAME_DANCE, FlameDanceParticle.Provider::new);
+		ParticleFactoryRegistry.getInstance().register(ModParticles.INK_SMOKE, SheetParticles.SmokeProvider::new);
+		ParticleFactoryRegistry.getInstance().register(ModParticles.SPARK_BURST, SheetParticles.SparkProvider::new);
+		ParticleFactoryRegistry.getInstance().register(ModParticles.PAPER_SCRAP, SheetParticles.PaperProvider::new);
 		ClientTickEvents.END_CLIENT_TICK.register(FlameDanceSpawner::tick);
 
 		// Душа и Чернила: полоски и надпись при входе/выходе

@@ -28,6 +28,11 @@ public final class ModParticles {
 	public static final SimpleParticleType FLAME_DANCE = Registry.register(
 			BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id("flame_dance"), FabricParticleTypes.simple(true));
 
+	/** Частицы из листов автора: дым (рывок, гашение фонаря), искры (зажигание), клочки пергамента (книга навыка). */
+	public static final SimpleParticleType INK_SMOKE = simple("ink_smoke");
+	public static final SimpleParticleType SPARK_BURST = simple("spark_burst");
+	public static final SimpleParticleType PAPER_SCRAP = simple("paper_scrap");
+
 	private static SimpleParticleType simple(String name) {
 		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id(name), FabricParticleTypes.simple());
 	}

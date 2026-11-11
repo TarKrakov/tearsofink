@@ -2,7 +2,7 @@ package com.tarkrakov.tearsofink.skill;
 
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.minecraft.core.particles.ParticleTypes;
+import com.tarkrakov.tearsofink.particle.ModParticles;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -75,7 +75,7 @@ public class DashSkill extends Skill {
 
 		ServerLevel level = player.serverLevel();
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SQUID_SQUIRT, SoundSource.PLAYERS, 0.7f, 1.3f);
-		level.sendParticles(ParticleTypes.SQUID_INK, player.getX(), player.getY() + 0.8, player.getZ(), 14, 0.3, 0.4, 0.3, 0.03);
+		level.sendParticles(ModParticles.INK_SMOKE, player.getX(), player.getY() + 0.8, player.getZ(), 10, 0.3, 0.4, 0.3, 0.02);
 		return true;
 	}
 
@@ -99,7 +99,7 @@ public class DashSkill extends Skill {
 			int inv = d.invulnerableLeft() - 1;
 			if (left > 0) {
 				push(player, d.dx(), d.dz());
-				player.serverLevel().sendParticles(ParticleTypes.SQUID_INK, player.getX(), player.getY() + 0.6, player.getZ(), 3, 0.2, 0.3, 0.2, 0.01);
+				player.serverLevel().sendParticles(ModParticles.INK_SMOKE, player.getX(), player.getY() + 0.6, player.getZ(), 2, 0.2, 0.3, 0.2, 0.0);
 			} else if (left == 0) {
 				Vec3 v = player.getDeltaMovement();
 				player.setDeltaMovement(v.x * END_SLOWDOWN, v.y, v.z * END_SLOWDOWN);

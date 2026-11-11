@@ -53,6 +53,17 @@ public class SkillBookItem extends Item {
 		serverPlayer.sendSystemMessage(Component.translatable("message.tears-of-ink.skill_learned", name).withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1f, 0.8f);
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.6f, 0.7f);
+		if (level instanceof net.minecraft.server.level.ServerLevel server) {
+			// книга рассыпается страницами — знание ушло в тебя
+			var random = player.getRandom();
+			for (int i = 0; i < 16; i++) {
+				double a = random.nextDouble() * Math.PI * 2;
+				double speed = 0.08 + random.nextDouble() * 0.1;
+				server.sendParticles(com.tarkrakov.tearsofink.particle.ModParticles.PAPER_SCRAP,
+						player.getX(), player.getY() + 1.2, player.getZ(), 0,
+						Math.cos(a) * speed, 0.12 + random.nextDouble() * 0.1, Math.sin(a) * speed, 1.0);
+			}
+		}
 		stack.consume(1, player);
 		return InteractionResultHolder.consume(stack);
 	}
