@@ -16,8 +16,8 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.DifficultyInstance;
-import net.minecraft.world.InteractionHand;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.AnimationState;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
@@ -71,6 +71,15 @@ public class CaterpillarEntity extends PathfinderMob {
 	}
 
 	private static final EntityDataAccessor<Integer> VARIANT = SynchedEntityData.defineId(CaterpillarEntity.class, EntityDataSerializers.INT);
+	/** Событие «укусила» — сервер шлёт клиентам, те запускают анимацию bite. */
+	private static final byte BITE_EVENT = 4;
+	/** Длина анимации bite из Blockbench, в тиках (2 с). */
+	private static final int BITE_TICKS = 40;
+
+	// Анимации (только на клиенте)
+	public final AnimationState idleState = new AnimationState();
+	public final AnimationState biteState = new AnimationState();
+	private int biteTicksLeft;
 
 	public CaterpillarEntity(EntityType<? extends PathfinderMob> type, Level level) {
 		super(type, level);
@@ -212,9 +221,29 @@ public class CaterpillarEntity extends PathfinderMob {
 		return false;
 	}
 
-	/** Укус по цветку — взмах «головой». */
+	/** Укус по цветку — анимация bite у всех, кто видит. */
 	public void bite() {
-		this.swing(InteractionHand.MAIN_HAND);
+		this.level().broadcastEntityEvent(this, BITE_EVENT);
+	}
+
+	@Override
+	public void handleEntityEvent(byte id) {
+		if (id == BITE_EVENT) {
+			biteTicksLeft = BITE_TICKS;
+			biteState.start(this.tickCount);
+		} else {
+			super.handleEntityEvent(id);
+		}
+	}
+
+	@Override
+	public void tick() {
+		super.tick();
+		if (this.level().isClientSide) {
+			if (biteTicksLeft > 0 && --biteTicksLeft == 0) biteState.stop();
+			// стоит и не ест — дышит
+			idleState.animateWhen(!this.walkAnimation.isMoving() && biteTicksLeft == 0, this.tickCount);
+		}
 	}
 
 	/** Сервер: поел. */
