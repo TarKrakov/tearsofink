@@ -33,6 +33,9 @@ public final class ModEffects {
 	public static final Holder<Potion> LONG_TEARBLOOM_BREW = Registry.registerForHolder(BuiltInRegistries.POTION,
 			TearsOfInk.id("long_tearbloom_brew"), new Potion("tearbloom_brew", new MobEffectInstance(TEAR_SOLACE, 8 * 60 * 20)));
 
+	/** Все зелья мода (для своей вкладки). */
+	public static final java.util.List<Holder<Potion>> POTIONS = java.util.List.of(TEARBLOOM_BREW, LONG_TEARBLOOM_BREW);
+
 	private ModEffects() {}
 
 	public static void init() {
