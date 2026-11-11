@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "SS ",
+    "SB ",
+    "  S"
+  ],
+  "key": {
+    "S": {
+      "item": "tears-of-ink:silk_thread"
+    },
+    "B": {
+      "item": "minecraft:slime_ball"
+    }
+  },
+  "result": {
+    "id": "minecraft:lead",
+    "count": 2
+  }
+}

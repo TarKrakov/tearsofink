@@ -164,5 +164,13 @@
   "item.tears-of-ink.icon_curse_essence": "Суть Проклятья",
   "advancements.tears-of-ink.atonement.title": "Искупление",
   "advancements.tears-of-ink.atonement.description": "Очистите часть души от проклятия",
-  "item.tears-of-ink.icon_atonement": "Искупление"
+  "item.tears-of-ink.icon_atonement": "Искупление",
+  "entity.tears-of-ink.caterpillar": "Гусеница",
+  "item.tears-of-ink.caterpillar_spawn_egg": "Яйцо призыва гусеницы",
+  "item.tears-of-ink.silk_thread": "Шёлковая нить",
+  "item.tears-of-ink.blood_clot": "Сгусток крови",
+  "item.tears-of-ink.ink": "Чернила",
+  "item.tears-of-ink.raw_caterpillar_meat": "Сырое мясо гусеницы",
+  "item.tears-of-ink.cooked_caterpillar_meat": "Жареное мясо гусеницы",
+  "block.tears-of-ink.drying_ink_puddle": "Высыхающая лужица"
 }

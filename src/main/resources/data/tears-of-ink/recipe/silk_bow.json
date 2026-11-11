@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    " TS",
+    "T S",
+    " TS"
+  ],
+  "key": {
+    "T": {
+      "item": "minecraft:stick"
+    },
+    "S": {
+      "item": "tears-of-ink:silk_thread"
+    }
+  },
+  "result": {
+    "id": "minecraft:bow",
+    "count": 1
+  }
+}

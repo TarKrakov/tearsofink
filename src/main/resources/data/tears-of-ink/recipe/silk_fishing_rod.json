@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "  T",
+    " TS",
+    "T S"
+  ],
+  "key": {
+    "T": {
+      "item": "minecraft:stick"
+    },
+    "S": {
+      "item": "tears-of-ink:silk_thread"
+    }
+  },
+  "result": {
+    "id": "minecraft:fishing_rod",
+    "count": 1
+  }
+}

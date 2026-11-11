@@ -235,6 +235,9 @@ public final class ModBlocks {
 					.jumpFactor(0.7f)
 					.sound(SoundType.HONEY_BLOCK)
 					.pushReaction(PushReaction.DESTROY)));
+	/** Лужица из следа чернильной гусеницы — высыхает через 1–2 минуты (без предмета, в инвентаре не бывает). */
+	public static final Block DRYING_INK_PUDDLE = Registry.register(BuiltInRegistries.BLOCK, TearsOfInk.id("drying_ink_puddle"),
+			new DryingInkPuddleBlock(BlockBehaviour.Properties.ofFullCopy(INK_PUDDLE).noLootTable()));
 
 	private ModBlocks() {}
 

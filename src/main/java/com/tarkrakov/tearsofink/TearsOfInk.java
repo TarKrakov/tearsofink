@@ -8,6 +8,7 @@ import com.tarkrakov.tearsofink.effect.ModEffects;
 import com.tarkrakov.tearsofink.alchemy.ModAlchemy;
 import com.tarkrakov.tearsofink.skill.Skills;
 import com.tarkrakov.tearsofink.weapon.ModEntities;
+import com.tarkrakov.tearsofink.entity.ModMobs;
 import com.tarkrakov.tearsofink.weapon.WeaponAbilities;
 import com.tarkrakov.tearsofink.item.ModCreativeTab;
 import com.tarkrakov.tearsofink.item.ModItems;
@@ -45,6 +46,7 @@ public class TearsOfInk implements ModInitializer {
 		InkPowers.init();
 		Skills.init();
 		ModEntities.init();
+		ModMobs.init();
 		WeaponAbilities.init();
 		ModCommands.init();
 		LOGGER.info("Tears of Ink: чернила проливаются в мир.");

@@ -17,6 +17,19 @@ public final class SoulPenalty {
 
 	private SoulPenalty() {}
 
+	/** С этой стадии (максимум Души ≤ этого) сырое мясо гусеницы насыщает лучше жареного. */
+	public static final int RAW_MEAT_STAGE = 70;
+
+	/** Сырое мясо гусеницы на стадии «Порченый» и ниже: как жареное и даже лучше. */
+	public static net.minecraft.world.food.FoodProperties rawMeatBonus(net.minecraft.world.entity.player.Player entity,
+			net.minecraft.world.item.ItemStack stack, net.minecraft.world.food.FoodProperties food) {
+		if (!(entity instanceof ServerPlayer player) || !stack.is(com.tarkrakov.tearsofink.item.ModItems.RAW_CATERPILLAR_MEAT)) return food;
+		InkData data = InkPowers.get(player);
+		if (!data.inside() || data.soulMax() > RAW_MEAT_STAGE) return food;
+		return new net.minecraft.world.food.FoodProperties(8, 9.6f, food.canAlwaysEat(), food.eatSeconds(),
+				food.usingConvertsTo(), food.effects());
+	}
+
 	/** Множитель еды и лечения для этого существа: 1 — без штрафа, 0.6 — при 50 душах. */
 	public static float multiplier(LivingEntity entity) {
 		if (!(entity instanceof ServerPlayer player)) return 1f;

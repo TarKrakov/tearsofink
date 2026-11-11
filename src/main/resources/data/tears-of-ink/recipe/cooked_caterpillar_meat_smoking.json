@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smoking",
+  "category": "food",
+  "ingredient": {
+    "item": "tears-of-ink:raw_caterpillar_meat"
+  },
+  "result": {
+    "id": "tears-of-ink:cooked_caterpillar_meat"
+  },
+  "experience": 0.35,
+  "cookingtime": 100
+}

@@ -146,5 +146,13 @@
   "item.tears-of-ink.icon_curse_essence": "Essence of the Curse",
   "advancements.tears-of-ink.atonement.title": "Atonement",
   "advancements.tears-of-ink.atonement.description": "Cleanse part of your soul of the curse",
-  "item.tears-of-ink.icon_atonement": "Atonement"
+  "item.tears-of-ink.icon_atonement": "Atonement",
+  "entity.tears-of-ink.caterpillar": "Caterpillar",
+  "item.tears-of-ink.caterpillar_spawn_egg": "Caterpillar Spawn Egg",
+  "item.tears-of-ink.silk_thread": "Silk Thread",
+  "item.tears-of-ink.blood_clot": "Blood Clot",
+  "item.tears-of-ink.ink": "Ink",
+  "item.tears-of-ink.raw_caterpillar_meat": "Raw Caterpillar Meat",
+  "item.tears-of-ink.cooked_caterpillar_meat": "Cooked Caterpillar Meat",
+  "block.tears-of-ink.drying_ink_puddle": "Drying Puddle"
 }

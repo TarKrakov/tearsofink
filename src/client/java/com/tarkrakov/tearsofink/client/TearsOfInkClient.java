@@ -20,6 +20,10 @@ import net.minecraft.client.gui.screens.MenuScreens;
 import com.tarkrakov.tearsofink.effect.ModEffects;
 import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.weapon.ModEntities;
+import com.tarkrakov.tearsofink.entity.ModMobs;
+import com.tarkrakov.tearsofink.client.entity.CaterpillarModel;
+import com.tarkrakov.tearsofink.client.entity.CaterpillarRenderer;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.client.renderer.item.ItemProperties;
@@ -66,6 +70,11 @@ public class TearsOfInkClient implements ClientModInitializer {
 
 		// Оружие: волна без модели (видна по брызгам); щиты — модель «в блоке» и «сияет»
 		EntityRendererRegistry.register(ModEntities.INK_WAVE, NoopRenderer::new);
+
+		// Фауна
+		EntityModelLayerRegistry.registerModelLayer(CaterpillarModel.LAYER, CaterpillarModel::createBodyLayer);
+		EntityRendererRegistry.register(ModMobs.CATERPILLAR, CaterpillarRenderer::new);
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.DRYING_INK_PUDDLE, RenderType.cutout());
 		for (Item shield : new Item[]{ModItems.RAM_SHIELD, ModItems.RADIANT_SHIELD, ModItems.MERCY_SHIELD, ModItems.REPEL_SHIELD}) {
 			ItemProperties.register(shield, ResourceLocation.withDefaultNamespace("blocking"),
 					(stack, level, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1f : 0f);

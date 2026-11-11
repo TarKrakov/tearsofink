@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "TIT",
+    "STS",
+    " T "
+  ],
+  "key": {
+    "T": {
+      "item": "minecraft:stick"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "S": {
+      "item": "tears-of-ink:silk_thread"
+    }
+  },
+  "result": {
+    "id": "minecraft:crossbow",
+    "count": 1
+  }
+}

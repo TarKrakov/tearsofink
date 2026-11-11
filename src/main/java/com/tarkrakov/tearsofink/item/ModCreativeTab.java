@@ -93,6 +93,12 @@ public final class ModCreativeTab {
 						output.accept(ModItems.WAVE_GREATSWORD);
 						output.accept(ModItems.CLEAVE_GREATSWORD);
 						output.accept(ModItems.ATONEMENT);
+						output.accept(ModItems.CATERPILLAR_SPAWN_EGG);
+						output.accept(ModItems.SILK_THREAD);
+						output.accept(ModItems.BLOOD_CLOT);
+						output.accept(ModItems.INK);
+						output.accept(ModItems.RAW_CATERPILLAR_MEAT);
+						output.accept(ModItems.COOKED_CATERPILLAR_MEAT);
 						output.accept(ModBlocks.ALCHEMY_TABLE);
 						output.accept(ModItems.EMPTY_FLASK);
 						output.accept(ModItems.TEARBLOOM_BREW);

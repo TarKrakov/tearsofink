@@ -10,6 +10,8 @@ import com.tarkrakov.tearsofink.weapon.InkGreatswordItem;
 import com.tarkrakov.tearsofink.weapon.SoulShieldItem;
 import com.tarkrakov.tearsofink.weapon.WeaponAbilities;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.SpawnEggItem;
+import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.Rarity;
 
 /** Предметы мода (не блоки). */
@@ -69,6 +71,22 @@ public final class ModItems {
 	/** Двуручник Чернил: Рассечение (R). */
 	public static final Item CLEAVE_GREATSWORD = register("cleave_greatsword",
 			new InkGreatswordItem(() -> WeaponAbilities.CLEAVE, new Item.Properties()));
+
+	// ===== Добыча с фауны =====
+	/** Шёлковая нить (бледные гусеницы) — работает в рецептах вместо ванильной нити. */
+	public static final Item SILK_THREAD = register("silk_thread", new Item(new Item.Properties()));
+	/** Сгусток крови (кровавые гусеницы, Кровосборник). */
+	public static final Item BLOOD_CLOT = register("blood_clot", new Item(new Item.Properties()));
+	/** Чернила (чернильные гусеницы). */
+	public static final Item INK = register("ink", new Item(new Item.Properties()));
+	/** Мясо гусеницы: сырое хуже — но на стадии «Порченый» и ниже насыщает лучше жареного. */
+	public static final Item RAW_CATERPILLAR_MEAT = register("raw_caterpillar_meat", new Item(new Item.Properties()
+			.food(new FoodProperties.Builder().nutrition(2).saturationModifier(0.15f).build())));
+	public static final Item COOKED_CATERPILLAR_MEAT = register("cooked_caterpillar_meat", new Item(new Item.Properties()
+			.food(new FoodProperties.Builder().nutrition(6).saturationModifier(0.6f).build())));
+	/** Яйцо призыва гусеницы (для креатива; вариант — по зоне, где выпустили). */
+	public static final Item CATERPILLAR_SPAWN_EGG = register("caterpillar_spawn_egg",
+			new SpawnEggItem(com.tarkrakov.tearsofink.entity.ModMobs.CATERPILLAR, 0x7FD8C9, 0x2E4B52, new Item.Properties()));
 
 	// ===== Иконки достижений (не добываются, во вкладке не лежат) =====
 	public static final Item ICON_INK_LANDS = register("icon_ink_lands", new Item(new Item.Properties()));

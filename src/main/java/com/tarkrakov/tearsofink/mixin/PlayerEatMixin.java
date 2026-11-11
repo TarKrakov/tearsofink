@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import com.tarkrakov.tearsofink.ink.SoulPenalty;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.food.FoodData;
@@ -16,8 +17,11 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class PlayerEatMixin {
 	@WrapOperation(method = "eat(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/food/FoodProperties;)Lnet/minecraft/world/item/ItemStack;",
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/world/food/FoodData;eat(Lnet/minecraft/world/food/FoodProperties;)V"))
-	private void tearsofink$soulPenalty(FoodData foodData, FoodProperties food, Operation<Void> original) {
-		float m = SoulPenalty.multiplier((Player) (Object) this);
+	private void tearsofink$soulPenalty(FoodData foodData, FoodProperties food, Operation<Void> original,
+										 @Local(argsOnly = true) ItemStack stack) {
+		Player self = (Player) (Object) this;
+		food = SoulPenalty.rawMeatBonus(self, stack, food);
+		float m = SoulPenalty.multiplier(self);
 		if (m >= 1f) {
 			original.call(foodData, food);
 			return;
