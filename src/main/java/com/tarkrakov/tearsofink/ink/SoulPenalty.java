@@ -1,5 +1,6 @@
 package com.tarkrakov.tearsofink.ink;
 
+import com.tarkrakov.tearsofink.effect.ModEffects;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -11,6 +12,8 @@ public final class SoulPenalty {
 	// ===== Настройки — крутить здесь =====
 	/** На сколько слабее еда и лечение за каждый проданный шаг души (0.04 = 4%). */
 	public static final float PER_STEP = 0.04f;
+	/** Во сколько раз слабее штраф под Отваром Слёзницы. */
+	public static final float SOLACE_FACTOR = 0.5f;
 
 	private SoulPenalty() {}
 
@@ -19,6 +22,9 @@ public final class SoulPenalty {
 		if (!(entity instanceof ServerPlayer player)) return 1f;
 		InkData data = InkPowers.get(player);
 		if (!data.inside() || data.soldSteps() <= 0) return 1f;
-		return Math.max(0f, 1f - PER_STEP * data.soldSteps());
+		float penalty = PER_STEP * data.soldSteps();
+		// Отвар Слёзницы — штраф вдвое слабее
+		if (player.hasEffect(ModEffects.TEAR_SOLACE)) penalty *= SOLACE_FACTOR;
+		return Math.max(0f, 1f - penalty);
 	}
 }

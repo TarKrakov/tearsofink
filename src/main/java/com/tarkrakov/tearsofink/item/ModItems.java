@@ -32,6 +32,10 @@ public final class ModItems {
 	public static final Item BRIGHT_HAND_LANTERN = register("bright_hand_lantern",
 			new HandLanternItem(44f, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON)));
 
+	/** Искупление — венок-крест с сердцем: +10 Души. */
+	public static final Item ATONEMENT = register("atonement",
+			new AtonementItem(new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON)));
+
 	// ===== Книги навыков =====
 	/** Книга Рывка (название и текст — рабочие, автор придумает свои). */
 	public static final Item SKILL_BOOK_DASH = register("skill_book_dash",

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "RSR",
+    "SHS",
+    "RSR"
+  ],
+  "key": {
+    "R": {
+      "item": "tears-of-ink:duckweed_pods"
+    },
+    "S": {
+      "item": "tears-of-ink:tearbloom"
+    },
+    "H": {
+      "item": "tears-of-ink:fleshberry_pulp"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:atonement",
+    "count": 1
+  }
+}

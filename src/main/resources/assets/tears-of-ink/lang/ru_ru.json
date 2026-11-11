@@ -113,5 +113,13 @@
   "message.tears-of-ink.fountain_drink": "Ваше сердце наполняется Чернилами...",
   "message.tears-of-ink.fountain_used": "Этот источник уже отдал вам свою силу.",
   "message.tears-of-ink.veins_full": "Ваши вены полны.",
-  "effect.tears-of-ink.soul_loss": "Утрата души"
+  "effect.tears-of-ink.soul_loss": "Утрата души",
+  "item.tears-of-ink.atonement": "Искупление",
+  "message.tears-of-ink.atonement": "Ваша душа очищается от чернильной крови...",
+  "message.tears-of-ink.soul_whole": "Ваша душа цела.",
+  "effect.tears-of-ink.tear_solace": "Утешение Слёзницы",
+  "item.minecraft.potion.effect.tearbloom_brew": "Отвар Слёзницы",
+  "item.minecraft.splash_potion.effect.tearbloom_brew": "Взрывной отвар Слёзницы",
+  "item.minecraft.lingering_potion.effect.tearbloom_brew": "Оседающий отвар Слёзницы",
+  "item.minecraft.tipped_arrow.effect.tearbloom_brew": "Стрела Утешения"
 }

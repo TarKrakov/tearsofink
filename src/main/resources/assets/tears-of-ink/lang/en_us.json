@@ -113,5 +113,13 @@
   "message.tears-of-ink.fountain_drink": "Your heart fills with Ink...",
   "message.tears-of-ink.fountain_used": "This spring has already given you its strength.",
   "message.tears-of-ink.veins_full": "Your veins are full.",
-  "effect.tears-of-ink.soul_loss": "Soul Loss"
+  "effect.tears-of-ink.soul_loss": "Soul Loss",
+  "item.tears-of-ink.atonement": "Atonement",
+  "message.tears-of-ink.atonement": "Your soul is cleansed of inked blood...",
+  "message.tears-of-ink.soul_whole": "Your soul is whole.",
+  "effect.tears-of-ink.tear_solace": "Tearbloom Solace",
+  "item.minecraft.potion.effect.tearbloom_brew": "Tearbloom Brew",
+  "item.minecraft.splash_potion.effect.tearbloom_brew": "Splash Tearbloom Brew",
+  "item.minecraft.lingering_potion.effect.tearbloom_brew": "Lingering Tearbloom Brew",
+  "item.minecraft.tipped_arrow.effect.tearbloom_brew": "Arrow of Solace"
 }
