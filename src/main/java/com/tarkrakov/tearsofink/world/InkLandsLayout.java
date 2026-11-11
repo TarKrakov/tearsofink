@@ -24,9 +24,9 @@ public final class InkLandsLayout {
 	/** На каком расстоянии от точки 0,0 ищем место для центра. */
 	public static final int[] CENTER_DISTANCES = {1400, 1200, 1700};
 	/** Радиус всей области. */
-	public static final int RADIUS = 900;
+	public static final int RADIUS = 700;
 	/** Радиус ядра — Чернолесья. */
-	public static final int CORE_RADIUS = 300;
+	public static final int CORE_RADIUS = 240;
 	/** Насколько рвутся края области (±). */
 	public static final int EDGE_WOBBLE = 110;
 	/** Масштаб «рваности» краёв: больше — плавнее изгибы. */

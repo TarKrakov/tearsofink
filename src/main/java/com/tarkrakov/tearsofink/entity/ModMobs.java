@@ -31,9 +31,9 @@ public final class ModMobs {
 					return level.getBlockState(below).isFaceSturdy(level, below, net.minecraft.core.Direction.UP);
 				});
 		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(ModBiomes.PALE_FOREST), MobCategory.CREATURE,
-				CATERPILLAR, EntityTuning.PALE_WEIGHT, 1, 3);
+				CATERPILLAR, EntityTuning.PALE_WEIGHT, 2, 4);
 		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(ModBiomes.INKWOOD), MobCategory.CREATURE,
-				CATERPILLAR, EntityTuning.INK_WEIGHT, 1, 3);
+				CATERPILLAR, EntityTuning.INK_WEIGHT, 2, 4);
 		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(ModBiomes.BLOODWOOD), MobCategory.CREATURE,
 				CATERPILLAR, EntityTuning.BLOOD_WEIGHT, 1, 2);
 	}
