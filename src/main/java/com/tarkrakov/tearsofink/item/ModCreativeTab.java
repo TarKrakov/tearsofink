@@ -97,6 +97,8 @@ public final class ModCreativeTab {
 						output.accept(ModItems.BRIGHT_HAND_LANTERN);
 						output.accept(ModItems.RAM_SHIELD);
 						output.accept(ModItems.RADIANT_SHIELD);
+						output.accept(ModItems.MERCY_SHIELD);
+						output.accept(ModItems.REPEL_SHIELD);
 						output.accept(ModItems.WAVE_GREATSWORD);
 						output.accept(ModItems.CLEAVE_GREATSWORD);
 						output.accept(ModItems.ATONEMENT);

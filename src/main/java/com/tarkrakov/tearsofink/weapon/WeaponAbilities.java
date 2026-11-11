@@ -38,6 +38,8 @@ public final class WeaponAbilities {
 	public static final RadianceAbility RADIANCE = new RadianceAbility();
 	public static final WaveAbility WAVE = new WaveAbility();
 	public static final CleaveAbility CLEAVE = new CleaveAbility();
+	public static final MercyAbility MERCY = new MercyAbility();
+	public static final RepelAbility REPEL = new RepelAbility();
 
 	private WeaponAbilities() {}
 
@@ -49,6 +51,7 @@ public final class WeaponAbilities {
 			RAM.tick(server);
 			RADIANCE.tick(server);
 			CLEAVE.tick(server);
+			MERCY.tick(server);
 		});
 	}
 
@@ -58,6 +61,11 @@ public final class WeaponAbilities {
 		if (!(stack.getItem() instanceof AbilityWeapon weapon)) return;
 		// двуручник занимает обе руки: щит в левой молчит
 		if (payload.offhand() && player.getMainHandItem().getItem() instanceof InkGreatswordItem) return;
+		// аура Милосердия гасится повторным нажатием — бесплатно и без проверок
+		if (weapon.ability() == MERCY && MERCY.isActive(player)) {
+			MERCY.stop(player);
+			return;
+		}
 		SkillInput input = new SkillInput(payload.strafe(), payload.forward(), payload.offhand());
 		if (Skills.activate(player, weapon.ability(), input) && stack.getItem() instanceof InkGreatswordItem) {
 			// белая «шторка» перезарядки на иконке меча
@@ -259,6 +267,122 @@ public final class WeaponAbilities {
 			level.sendParticles(ParticleTypes.SWEEP_ATTACK, center.x, center.y + 0.8, center.z, 3, 0.8, 0.1, 0.8, 0.0);
 			level.playSound(null, center.x, center.y, center.z, SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 1.2f, 0.5f);
 			level.playSound(null, center.x, center.y, center.z, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.4f, 1.6f);
+		}
+	}
+
+	// ======================================================================
+	/**
+	 * Щит Милосердия: аура лечения. Нажал — игрок замедлен, ты и игроки рядом лечатся каждую секунду,
+	 * аура тянет Душу. Гаснет: повторное нажатие, кончилась Душа, щит убран, вышел из области, 0 Души.
+	 */
+	public static class MercyAbility extends Skill {
+		public static final double RADIUS = 5;
+		/** Лечение раз в секунду (2 = одно сердце). */
+		public static final float HEAL_PER_SECOND = 2f;
+		/** Сколько Души в секунду тянет аура (своё восстановление ~1/с продолжает идти). */
+		public static final float SOUL_PER_SECOND = 4f;
+		/** Через сколько тиков после конца ауры её можно включить снова. */
+		public static final int LOCKOUT_TICKS = 6 * 20;
+
+		private final Map<UUID, Integer> active = new HashMap<>();
+		private final Map<UUID, Integer> lockedUntil = new HashMap<>();
+
+		MercyAbility() {
+			// 5 Души — за включение; перезарядка короткая, чтобы повторное нажатие гасило ауру
+			super(TearsOfInk.id("mercy"), 0, 5, 10);
+		}
+
+		@Override
+		public boolean activate(ServerPlayer player, SkillInput input) {
+			UUID id = player.getUUID();
+			if (active.containsKey(id)) {
+				stop(player);
+				return false; // выключение бесплатное
+			}
+			if (lockedUntil.getOrDefault(id, 0) > player.server.getTickCount()) return false;
+			active.put(id, 0);
+			player.addEffect(new MobEffectInstance(ModEffects.MERCY, MobEffectInstance.INFINITE_DURATION, 0, false, false, true));
+			player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, MobEffectInstance.INFINITE_DURATION, 1, false, false, false));
+			player.serverLevel().playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1f, 1.2f);
+			return true;
+		}
+
+		public boolean isActive(ServerPlayer player) {
+			return active.containsKey(player.getUUID());
+		}
+
+		void stop(ServerPlayer player) {
+			active.remove(player.getUUID());
+			lockedUntil.put(player.getUUID(), player.server.getTickCount() + LOCKOUT_TICKS);
+			player.removeEffect(ModEffects.MERCY);
+			player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+			player.serverLevel().playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.PLAYERS, 0.8f, 1.4f);
+		}
+
+		private static boolean holdsMercyShield(ServerPlayer player) {
+			return isMercy(player.getMainHandItem()) || isMercy(player.getOffhandItem());
+		}
+
+		private static boolean isMercy(ItemStack stack) {
+			return stack.getItem() instanceof AbilityWeapon w && w.ability() == MERCY;
+		}
+
+		void tick(MinecraftServer server) {
+			for (UUID id : new java.util.ArrayList<>(active.keySet())) {
+				ServerPlayer player = server.getPlayerList().getPlayer(id);
+				if (player == null) {
+					active.remove(id);
+					continue;
+				}
+				var data = com.tarkrakov.tearsofink.ink.InkPowers.get(player);
+				boolean creative = player.getAbilities().instabuild;
+				float drain = SOUL_PER_SECOND / 20f;
+				if (!player.isAlive() || !data.inside() || !holdsMercyShield(player) || (!creative && data.soul() < drain)) {
+					stop(player);
+					continue;
+				}
+				if (!creative) com.tarkrakov.tearsofink.ink.InkPowers.set(player, data.withSoul(data.soul() - drain));
+				int t = active.get(id) + 1;
+				active.put(id, t);
+				ServerLevel level = player.serverLevel();
+				// кольцо искорок по краю ауры
+				if (t % 4 == 0) {
+					for (int i = 0; i < 6; i++) {
+						double a = (t * 0.15) + i * Math.PI / 3;
+						level.sendParticles(com.tarkrakov.tearsofink.particle.ModParticles.TEAR_GLINT,
+								player.getX() + Math.cos(a) * RADIUS, player.getY() + 0.3, player.getZ() + Math.sin(a) * RADIUS, 1, 0, 0.1, 0, 0);
+					}
+				}
+				if (t % 20 == 0) {
+					for (ServerPlayer ally : level.getEntitiesOfClass(ServerPlayer.class, player.getBoundingBox().inflate(RADIUS),
+							p -> p.isAlive() && p.distanceToSqr(player) <= RADIUS * RADIUS)) {
+						ally.heal(HEAL_PER_SECOND * com.tarkrakov.tearsofink.ink.SoulPenalty.multiplier(ally));
+						level.sendParticles(ParticleTypes.HEART, ally.getX(), ally.getY() + 1.9, ally.getZ(), 1, 0.2, 0.1, 0.2, 0);
+					}
+					com.tarkrakov.tearsofink.ink.InkPowers.sync(player);
+				}
+			}
+		}
+	}
+
+	// ======================================================================
+	/** Щит Отпора: светлая волна — слабее Волны меча, зато сильно расталкивает. Дешёвая. */
+	public static class RepelAbility extends Skill {
+		public static final float DAMAGE = 4f;
+		public static final double KNOCKBACK = 1.4;
+
+		RepelAbility() {
+			super(TearsOfInk.id("repel"), 0, 8, 60);
+		}
+
+		@Override
+		public boolean activate(ServerPlayer player, SkillInput input) {
+			ServerLevel level = player.serverLevel();
+			Vec3 dir = flatLook(player);
+			level.addFreshEntity(new InkWaveEntity(level, player, dir, true, DAMAGE, KNOCKBACK));
+			player.swing(input.sneaking() ? net.minecraft.world.InteractionHand.OFF_HAND : net.minecraft.world.InteractionHand.MAIN_HAND, true);
+			level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1f, 1.5f);
+			return true;
 		}
 	}
 }

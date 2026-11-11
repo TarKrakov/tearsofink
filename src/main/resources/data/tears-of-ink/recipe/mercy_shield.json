@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "AWA",
+    "APA",
+    " A "
+  ],
+  "key": {
+    "A": {
+      "item": "tears-of-ink:asphoda"
+    },
+    "W": {
+      "item": "tears-of-ink:waterbloom_juice"
+    },
+    "P": {
+      "item": "tears-of-ink:pigment"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:mercy_shield",
+    "count": 1
+  }
+}

@@ -127,5 +127,8 @@
   "item.tears-of-ink.wave_greatsword": "Wave Greatsword",
   "item.tears-of-ink.cleave_greatsword": "Cleaving Greatsword",
   "effect.tears-of-ink.radiance": "Radiance",
-  "key.tears-of-ink.weapon_ability": "Weapon ability (Shift — off hand)"
+  "key.tears-of-ink.weapon_ability": "Weapon ability (Shift — off hand)",
+  "item.tears-of-ink.mercy_shield": "Shield of Mercy",
+  "item.tears-of-ink.repel_shield": "Shield of Repulsion",
+  "effect.tears-of-ink.mercy": "Mercy"
 }

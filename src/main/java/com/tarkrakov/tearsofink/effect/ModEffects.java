@@ -30,6 +30,10 @@ public final class ModEffects {
 	public static final Holder<MobEffect> RADIANCE = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
 			TearsOfInk.id("radiance"), new MarkerEffect(MobEffectCategory.BENEFICIAL, 0xF2F0D8));
 
+	/** «Милосердие» — аура Щита Милосердия включена. */
+	public static final Holder<MobEffect> MERCY = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+			TearsOfInk.id("mercy"), new MarkerEffect(MobEffectCategory.BENEFICIAL, 0xF4C9D6));
+
 	// ===== Зелья (варочная стойка) =====
 	/** Отвар Слёзницы: 3 минуты; с редстоуном — 8 минут. */
 	public static final Holder<Potion> TEARBLOOM_BREW = Registry.registerForHolder(BuiltInRegistries.POTION,

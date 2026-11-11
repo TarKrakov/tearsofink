@@ -46,6 +46,12 @@ public final class ModItems {
 	/** Щит Души: Сияние (Shift+R). */
 	public static final Item RADIANT_SHIELD = register("radiant_shield",
 			new SoulShieldItem(() -> WeaponAbilities.RADIANCE, new Item.Properties().durability(500)));
+	/** Щит Души: Милосердие — аура лечения (R / Shift+R). */
+	public static final Item MERCY_SHIELD = register("mercy_shield",
+			new SoulShieldItem(() -> WeaponAbilities.MERCY, new Item.Properties().durability(500)));
+	/** Щит Души: Отпор — светлая волна, расталкивает (R / Shift+R). */
+	public static final Item REPEL_SHIELD = register("repel_shield",
+			new SoulShieldItem(() -> WeaponAbilities.REPEL, new Item.Properties().durability(500)));
 	/** Двуручник Чернил: Волна (R). */
 	public static final Item WAVE_GREATSWORD = register("wave_greatsword",
 			new InkGreatswordItem(() -> WeaponAbilities.WAVE, new Item.Properties()));

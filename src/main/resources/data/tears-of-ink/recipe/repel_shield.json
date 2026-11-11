@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "AGA",
+    "APA",
+    " A "
+  ],
+  "key": {
+    "A": {
+      "item": "tears-of-ink:asphoda"
+    },
+    "G": {
+      "item": "minecraft:glowstone_dust"
+    },
+    "P": {
+      "item": "tears-of-ink:pigment"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:repel_shield",
+    "count": 1
+  }
+}
