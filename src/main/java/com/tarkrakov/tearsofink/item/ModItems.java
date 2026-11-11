@@ -5,6 +5,9 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.skill.ModSkills;
+import com.tarkrakov.tearsofink.weapon.InkGreatswordItem;
+import com.tarkrakov.tearsofink.weapon.SoulShieldItem;
+import com.tarkrakov.tearsofink.weapon.WeaponAbilities;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
 
@@ -35,6 +38,20 @@ public final class ModItems {
 	/** Искупление — венок-крест с сердцем: +10 Души. */
 	public static final Item ATONEMENT = register("atonement",
 			new AtonementItem(new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON)));
+
+	// ===== Оружие (названия — рабочие, автор меняет в ru_ru.json) =====
+	/** Щит Души: Таран (Shift+R). */
+	public static final Item RAM_SHIELD = register("ram_shield",
+			new SoulShieldItem(() -> WeaponAbilities.RAM, new Item.Properties().durability(500)));
+	/** Щит Души: Сияние (Shift+R). */
+	public static final Item RADIANT_SHIELD = register("radiant_shield",
+			new SoulShieldItem(() -> WeaponAbilities.RADIANCE, new Item.Properties().durability(500)));
+	/** Двуручник Чернил: Волна (R). */
+	public static final Item WAVE_GREATSWORD = register("wave_greatsword",
+			new InkGreatswordItem(() -> WeaponAbilities.WAVE, new Item.Properties()));
+	/** Двуручник Чернил: Рассечение (R). */
+	public static final Item CLEAVE_GREATSWORD = register("cleave_greatsword",
+			new InkGreatswordItem(() -> WeaponAbilities.CLEAVE, new Item.Properties()));
 
 	// ===== Книги навыков =====
 	/** Книга Рывка (название и текст — рабочие, автор придумает свои). */

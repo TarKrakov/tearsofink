@@ -22,11 +22,14 @@ import java.util.Map;
 public final class SkillKeys {
 	public static final String CATEGORY = "key.categories.tears-of-ink";
 	private static final Map<KeyMapping, Skill> KEYS = new LinkedHashMap<>();
+	/** Абилка оружия: R — правая рука, Shift+R — левая (щит). */
+	private static KeyMapping WEAPON_KEY;
 
 	private SkillKeys() {}
 
 	public static void init() {
 		bind(ModSkills.DASH, "key.tears-of-ink.dash", GLFW.GLFW_KEY_LEFT_ALT);
+		WEAPON_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tears-of-ink.weapon_ability", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, CATEGORY));
 		ClientTickEvents.END_CLIENT_TICK.register(SkillKeys::tick);
 	}
 
@@ -37,6 +40,11 @@ public final class SkillKeys {
 
 	private static void tick(Minecraft mc) {
 		LocalPlayer player = mc.player;
+		while (WEAPON_KEY.consumeClick()) {
+			if (player == null || mc.screen != null) continue;
+			ClientPlayNetworking.send(new SkillPayloads.UseWeapon(player.isShiftKeyDown(),
+					player.input.leftImpulse, player.input.forwardImpulse));
+		}
 		for (Map.Entry<KeyMapping, Skill> e : KEYS.entrySet()) {
 			while (e.getKey().consumeClick()) {
 				if (player == null || mc.screen != null) continue;

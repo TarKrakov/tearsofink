@@ -27,6 +27,21 @@ public final class SkillPayloads {
 		}
 	}
 
+	/** Клиент → сервер: игрок нажал клавишу абилки оружия (offhand — Shift: щит в левой руке). */
+	public record UseWeapon(boolean offhand, float strafe, float forward) implements CustomPacketPayload {
+		public static final Type<UseWeapon> TYPE = new Type<>(TearsOfInk.id("use_weapon"));
+		public static final StreamCodec<ByteBuf, UseWeapon> CODEC = StreamCodec.composite(
+				ByteBufCodecs.BOOL, UseWeapon::offhand,
+				ByteBufCodecs.FLOAT, UseWeapon::strafe,
+				ByteBufCodecs.FLOAT, UseWeapon::forward,
+				UseWeapon::new);
+
+		@Override
+		public Type<? extends CustomPacketPayload> type() {
+			return TYPE;
+		}
+	}
+
 	/** Сервер → клиент: на навык не хватило Чернил или Души — полоска пульсирует. */
 	public record NotEnough(boolean soul) implements CustomPacketPayload {
 		public static final Type<NotEnough> TYPE = new Type<>(TearsOfInk.id("not_enough"));

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "ATA",
+    "APA",
+    " A "
+  ],
+  "key": {
+    "A": {
+      "item": "tears-of-ink:asphoda"
+    },
+    "T": {
+      "item": "tears-of-ink:tearbloom"
+    },
+    "P": {
+      "item": "tears-of-ink:pigment"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:radiant_shield",
+    "count": 1
+  }
+}

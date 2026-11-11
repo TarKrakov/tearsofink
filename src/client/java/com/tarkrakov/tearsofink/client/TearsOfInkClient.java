@@ -12,6 +12,15 @@ import com.tarkrakov.tearsofink.particle.ModParticles;
 import com.tarkrakov.tearsofink.client.hud.InkHud;
 import com.tarkrakov.tearsofink.ink.InkSyncPayload;
 import com.tarkrakov.tearsofink.skill.SkillPayloads;
+import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.effect.ModEffects;
+import com.tarkrakov.tearsofink.item.ModItems;
+import com.tarkrakov.tearsofink.weapon.ModEntities;
+import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
+import net.minecraft.client.renderer.entity.NoopRenderer;
+import net.minecraft.client.renderer.item.ItemProperties;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.Item;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -41,10 +50,19 @@ public class TearsOfInkClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(InkSyncPayload.TYPE, (payload, context) -> context.client().execute(() -> InkHud.receive(payload)));
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> InkHud.reset());
 		HudRenderCallback.EVENT.register(InkHud::render);
-		ClientPlayNetworking.registerGlobalReceiver(SkillPayloads.NotEnough.TYPE, (payload, context) -> context.client().execute(InkHud::pulse));
+		ClientPlayNetworking.registerGlobalReceiver(SkillPayloads.NotEnough.TYPE, (payload, context) -> context.client().execute(() -> InkHud.pulse(payload.soul())));
 
 		// Навыки: клавиши
 		SkillKeys.init();
+
+		// Оружие: волна без модели (видна по брызгам); щиты — модель «в блоке» и «сияет»
+		EntityRendererRegistry.register(ModEntities.INK_WAVE, NoopRenderer::new);
+		for (Item shield : new Item[]{ModItems.RAM_SHIELD, ModItems.RADIANT_SHIELD}) {
+			ItemProperties.register(shield, ResourceLocation.withDefaultNamespace("blocking"),
+					(stack, level, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1f : 0f);
+		}
+		ItemProperties.register(ModItems.RADIANT_SHIELD, TearsOfInk.id("radiant"),
+				(stack, level, entity, seed) -> entity != null && entity.hasEffect(ModEffects.RADIANCE) ? 1f : 0f);
 
 		// Блоки с прозрачными пикселями (листва, саженец)
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.PALE_LEAVES, RenderType.cutoutMipped());

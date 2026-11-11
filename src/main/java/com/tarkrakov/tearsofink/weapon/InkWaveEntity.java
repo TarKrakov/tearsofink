@@ -1,0 +1,102 @@
+package com.tarkrakov.tearsofink.weapon;
+
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+
+/**
+ * Волна чернил: летит прямо, проходит сквозь врагов (каждого бьёт один раз), гаснет о стену
+ * или через ~12 блоков. Видна как поток чернильных брызг.
+ */
+public class InkWaveEntity extends Entity {
+	// ===== Настройки — крутить здесь =====
+	public static final double SPEED = 0.9;
+	public static final double MAX_DISTANCE = 12;
+	public static final float DAMAGE = 7f;
+
+	private UUID ownerId;
+	private double travelled = 0;
+	private final Set<UUID> hit = new HashSet<>();
+
+	public InkWaveEntity(EntityType<? extends InkWaveEntity> type, Level level) {
+		super(type, level);
+		this.noPhysics = true;
+	}
+
+	public InkWaveEntity(Level level, ServerPlayer owner, Vec3 dir) {
+		this(ModEntities.INK_WAVE, level);
+		this.ownerId = owner.getUUID();
+		this.setPos(owner.getX() + dir.x * 0.8, owner.getY() + 0.6, owner.getZ() + dir.z * 0.8);
+		this.setDeltaMovement(dir.scale(SPEED));
+		this.setYRot((float) (Math.atan2(-dir.x, dir.z) * 180 / Math.PI));
+	}
+
+	@Override
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
+	}
+
+	@Override
+	public void tick() {
+		super.tick();
+		Vec3 v = this.getDeltaMovement();
+		Vec3 next = this.position().add(v);
+
+		if (this.level().isClientSide) {
+			// поток брызг: широкая дуга поперёк движения
+			Vec3 side = new Vec3(-v.z, 0, v.x).normalize();
+			for (int i = -2; i <= 2; i++) {
+				Vec3 p = this.position().add(side.scale(i * 0.35));
+				this.level().addParticle(ParticleTypes.SQUID_INK, p.x, p.y + this.random.nextDouble() * 0.6, p.z, 0, 0.01, 0);
+			}
+			this.setPos(next);
+			return;
+		}
+
+		ServerLevel level = (ServerLevel) this.level();
+		BlockPos at = BlockPos.containing(next.x, next.y + 0.3, next.z);
+		if (!level.getBlockState(at).getCollisionShape(level, at).isEmpty() || travelled >= MAX_DISTANCE) {
+			level.sendParticles(ParticleTypes.SQUID_INK, getX(), getY() + 0.3, getZ(), 15, 0.4, 0.3, 0.4, 0.05);
+			this.discard();
+			return;
+		}
+		Entity owner = ownerId == null ? null : level.getEntity(ownerId);
+		for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(0.3),
+				t -> t != owner && t.isAlive())) {
+			if (!hit.add(target.getUUID())) continue;
+			if (owner instanceof ServerPlayer player) {
+				target.hurt(player.damageSources().playerAttack(player), DAMAGE);
+			} else {
+				target.hurt(level.damageSources().magic(), DAMAGE);
+			}
+			target.knockback(0.4, -v.x, -v.z);
+		}
+		this.setPos(next);
+		travelled += v.length();
+	}
+
+	@Override
+	protected void readAdditionalSaveData(CompoundTag tag) {
+		this.discard(); // волна не переживает сохранение мира
+	}
+
+	@Override
+	protected void addAdditionalSaveData(CompoundTag tag) {
+	}
+
+	@Override
+	public boolean isPickable() {
+		return false;
+	}
+}

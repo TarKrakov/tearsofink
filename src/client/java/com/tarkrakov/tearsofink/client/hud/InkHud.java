@@ -52,12 +52,14 @@ public final class InkHud {
 	private static float alpha = 0f;
 	private static long lastNanos = 0L;
 
-	private static float flash = 0f, pulse = 0f;
+	private static float flash = 0f, pulse = 0f, soulFlash = 0f;
+	private static boolean pulseSoul = false;
 
 	private InkHud() {}
 
 	public static void receive(InkSyncPayload p) {
 		if (known && p.ink() < ink - 0.5f) flash = FLASH_SECONDS;
+		if (known && p.soul() < soul - 0.5f) soulFlash = FLASH_SECONDS;
 		if (!known) {
 			soulShown = p.soul();
 			inkShown = p.ink();
@@ -78,7 +80,8 @@ public final class InkHud {
 	}
 
 	/** Чернил (или чего-то ещё) не хватило — столбик пульсирует. */
-	public static void pulse() {
+	public static void pulse(boolean soul) {
+		pulseSoul = soul;
 		pulse = PULSE_SECONDS;
 	}
 
@@ -93,6 +96,7 @@ public final class InkHud {
 		inkShown += (ink - inkShown) * Math.min(1f, dt * 10f);
 		flash = Math.max(0f, flash - dt);
 		pulse = Math.max(0f, pulse - dt);
+		soulFlash = Math.max(0f, soulFlash - dt);
 
 		if (mc.options.hideGui || mc.player == null) return;
 		if (mc.getDebugOverlay().showDebugScreen()) return;
@@ -125,10 +129,15 @@ public final class InkHud {
 				int a = (int) (alpha * 110 * flash / FLASH_SECONDS);
 				g.fill(inkX + BORDER, y + BORDER, inkX + BORDER + FILL_W, y + BORDER + FILL_H, (a << 24) | 0xD8CCF0);
 			}
+			if (soulFlash > 0f) {
+				int a = (int) (alpha * 110 * soulFlash / FLASH_SECONDS);
+				g.fill(soulX + BORDER, y + BORDER, soulX + BORDER + FILL_W, y + BORDER + FILL_H, (a << 24) | 0xE6F0EE);
+			}
 			if (pulse > 0f) {
 				float wave = (float) Math.abs(Math.sin(pulse / PULSE_SECONDS * Math.PI * 3));
 				int a = (int) (alpha * 150 * wave);
-				g.fill(inkX, y, inkX + FRAME_W, y + FRAME_H, (a << 24) | 0x8A1A2A);
+				int px = pulseSoul ? soulX : inkX;
+				g.fill(px, y, px + FRAME_W, y + FRAME_H, (a << 24) | 0x8A1A2A);
 			}
 
 			g.setColor(1f, 1f, 1f, 1f);

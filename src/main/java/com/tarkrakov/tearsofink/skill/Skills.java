@@ -93,30 +93,40 @@ public final class Skills {
 		if (skill == null || !skill.isActive() || !knows(player, skill)) return;
 		if (!player.isAlive() || player.isSpectator() || player.isPassenger() || player.isSleeping()) return;
 
+		activate(player, skill, new SkillInput(payload.strafe(), payload.forward(), payload.sneaking()));
+	}
+
+	/**
+	 * Запустить навык или абилку оружия со всеми проверками: внутри Чернильных Земель,
+	 * перезарядка, хватает ли Чернил/Души. Списывает цену и ставит перезарядку.
+	 * @return сработал ли
+	 */
+	public static boolean activate(ServerPlayer player, Skill skill, SkillInput input) {
 		InkData data = InkPowers.get(player);
 		if (!data.inside()) {
 			// снаружи силы спят — тихий «пшик»
 			player.playNotifySound(SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.25f, 1.8f);
-			return;
+			return false;
 		}
 
 		int now = player.server.getTickCount();
 		Map<ResourceLocation, Integer> cooldowns = COOLDOWNS.computeIfAbsent(player.getUUID(), k -> new HashMap<>());
-		if (cooldowns.getOrDefault(skill.id(), 0) > now) return;
+		if (cooldowns.getOrDefault(skill.id(), 0) > now) return false;
 
 		boolean creative = player.getAbilities().instabuild;
 		if (!creative && (data.ink() < skill.inkCost() || data.soul() < skill.soulCost())) {
 			ServerPlayNetworking.send(player, new SkillPayloads.NotEnough(data.soul() < skill.soulCost()));
 			player.playNotifySound(SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.25f, 1.8f);
-			return;
+			return false;
 		}
 
-		SkillInput input = new SkillInput(payload.strafe(), payload.forward(), payload.sneaking());
-		if (!skill.activate(player, input)) return;
+		if (!skill.activate(player, input)) return false;
 
 		cooldowns.put(skill.id(), now + skill.cooldownTicks());
 		if (!creative) {
-			InkPowers.update(player, data.withInk(data.ink() - skill.inkCost()).withSoul(data.soul() - skill.soulCost()));
+			InkData fresh = InkPowers.get(player);
+			InkPowers.update(player, fresh.withInk(fresh.ink() - skill.inkCost()).withSoul(fresh.soul() - skill.soulCost()));
 		}
+		return true;
 	}
 }

@@ -95,6 +95,10 @@ public final class ModCreativeTab {
 						output.accept(ModBlocks.INK_FOUNTAIN);
 						output.accept(ModItems.HAND_LANTERN);
 						output.accept(ModItems.BRIGHT_HAND_LANTERN);
+						output.accept(ModItems.RAM_SHIELD);
+						output.accept(ModItems.RADIANT_SHIELD);
+						output.accept(ModItems.WAVE_GREATSWORD);
+						output.accept(ModItems.CLEAVE_GREATSWORD);
 						output.accept(ModItems.ATONEMENT);
 						for (Holder<Potion> potion : ModEffects.POTIONS) {
 							for (Item kind : new Item[]{Items.POTION, Items.SPLASH_POTION, Items.LINGERING_POTION, Items.TIPPED_ARROW}) {

@@ -121,5 +121,19 @@
   "item.minecraft.potion.effect.tearbloom_brew": "Отвар Слёзницы",
   "item.minecraft.splash_potion.effect.tearbloom_brew": "Взрывной отвар Слёзницы",
   "item.minecraft.lingering_potion.effect.tearbloom_brew": "Оседающий отвар Слёзницы",
-  "item.minecraft.tipped_arrow.effect.tearbloom_brew": "Стрела Утешения"
+  "item.minecraft.tipped_arrow.effect.tearbloom_brew": "Стрела Утешения",
+  "item.tears-of-ink.ram_shield": "Щит-таран",
+  "item.tears-of-ink.ram_shield.desc1": "Оружие Души.",
+  "item.tears-of-ink.ram_shield.desc2": "Shift+R — Таран: рывок со щитом, отбрасывает врагов. 15 Души.",
+  "item.tears-of-ink.radiant_shield": "Светлый щит",
+  "item.tears-of-ink.radiant_shield.desc1": "Оружие Души.",
+  "item.tears-of-ink.radiant_shield.desc2": "Shift+R — Сияние: 6 с урон по вам меньше на 40%. 20 Души.",
+  "item.tears-of-ink.wave_greatsword": "Меч Волны",
+  "item.tears-of-ink.wave_greatsword.desc1": "Оружие Чернил. Двуручное.",
+  "item.tears-of-ink.wave_greatsword.desc2": "R — Волна: взмах шлёт чернильную волну сквозь врагов. 10 Чернил.",
+  "item.tears-of-ink.cleave_greatsword": "Меч Рассечения",
+  "item.tears-of-ink.cleave_greatsword.desc1": "Оружие Чернил. Двуручное.",
+  "item.tears-of-ink.cleave_greatsword.desc2": "R — Рассечение: медленный удар сверху, чернила бьют по площадке. 15 Чернил.",
+  "effect.tears-of-ink.radiance": "Сияние",
+  "key.tears-of-ink.weapon_ability": "Абилка оружия (Shift — левая рука)"
 }

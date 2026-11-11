@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "AIA",
+    "APA",
+    " A "
+  ],
+  "key": {
+    "A": {
+      "item": "tears-of-ink:asphoda"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "P": {
+      "item": "tears-of-ink:pigment"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:ram_shield",
+    "count": 1
+  }
+}

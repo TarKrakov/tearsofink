@@ -26,6 +26,10 @@ public final class ModEffects {
 	public static final Holder<MobEffect> TEAR_SOLACE = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
 			TearsOfInk.id("tear_solace"), new MarkerEffect(MobEffectCategory.BENEFICIAL, 0x9FE3E0));
 
+	/** «Сияние» — светлый щит активен: входящий урон меньше. Значок + щит светлеет. */
+	public static final Holder<MobEffect> RADIANCE = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+			TearsOfInk.id("radiance"), new MarkerEffect(MobEffectCategory.BENEFICIAL, 0xF2F0D8));
+
 	// ===== Зелья (варочная стойка) =====
 	/** Отвар Слёзницы: 3 минуты; с редстоуном — 8 минут. */
 	public static final Holder<Potion> TEARBLOOM_BREW = Registry.registerForHolder(BuiltInRegistries.POTION,
