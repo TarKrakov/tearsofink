@@ -74,6 +74,12 @@ public class TearsOfInkClient implements ClientModInitializer {
 		// Фауна
 		EntityModelLayerRegistry.registerModelLayer(CaterpillarModel.LAYER, CaterpillarModel::createBodyLayer);
 		EntityRendererRegistry.register(ModMobs.CATERPILLAR, CaterpillarRenderer::new);
+		// Кровосборник: помпа рисуется моделью с анимацией
+		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.blood.BloodPumpModel.LAYER,
+				com.tarkrakov.tearsofink.client.blood.BloodPumpModel::createBodyLayer);
+		net.minecraft.client.renderer.blockentity.BlockEntityRenderers.register(
+				com.tarkrakov.tearsofink.block.lantern.ModBlockEntities.BLOOD_PUMP,
+				com.tarkrakov.tearsofink.client.blood.BloodPumpRenderer::new);
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.DRYING_INK_PUDDLE, RenderType.cutout());
 		for (Item shield : new Item[]{ModItems.RAM_SHIELD, ModItems.RADIANT_SHIELD, ModItems.MERCY_SHIELD, ModItems.REPEL_SHIELD}) {
 			ItemProperties.register(shield, ResourceLocation.withDefaultNamespace("blocking"),

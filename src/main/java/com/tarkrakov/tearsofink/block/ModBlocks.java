@@ -306,6 +306,16 @@ public final class ModBlocks {
 	public static final Block ALCHEMY_TABLE = register("alchemy_table", new AlchemyTableBlock(
 			BlockBehaviour.Properties.ofFullCopy(Blocks.CRAFTING_TABLE).mapColor(MapColor.COLOR_GRAY)));
 
+	// ===== Кровосборник (у корней Багряного Вестника) =====
+	/** Помпа: два блока, модель автора с анимацией; качает кровь в Накопитель. Мировая, не ломается. */
+	public static final Block BLOOD_PUMP = register("blood_pump", new com.tarkrakov.tearsofink.block.blood.BloodPumpBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).mapColor(MapColor.COLOR_RED)
+					.strength(-1f, 3600000f).noOcclusion().pushReaction(PushReaction.BLOCK)));
+	/** Накопитель: копит кровь; ПКМ — забрать Сгустки. Мировой, не ломается. */
+	public static final Block BLOOD_TANK = register("blood_tank", new com.tarkrakov.tearsofink.block.blood.BloodTankBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).mapColor(MapColor.COLOR_RED)
+					.strength(-1f, 3600000f).noOcclusion().pushReaction(PushReaction.BLOCK)));
+
 	/** Предмет-блок для Трясинника (ставится на воду, как кувшинка). Вызывается из ModItems. */
 	public static Item bogleafItem() {
 		return Registry.register(BuiltInRegistries.ITEM, TearsOfInk.id("bogleaf"), new PlaceOnWaterBlockItem(BOGLEAF, new Item.Properties()));

@@ -1,5 +1,7 @@
 package com.tarkrakov.tearsofink.entity;
 
+import com.tarkrakov.tearsofink.block.blood.BloodTankBlockEntity;
+import com.tarkrakov.tearsofink.block.blood.BloodTuning;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -14,12 +16,15 @@ import java.util.List;
 /**
  * Гусеница ест растения: находит своё растение → подползает → кусает (растение падает предметом)
  * → подбирает и съедает. Раз в несколько минут, чтобы поляны не исчезали.
- * Если в мире выключено разрушение мобами (mobGriefing) — не ест.
+ * Если в мире выключено разрушение мобами (mobGriefing) — не ломает растения.
+ * Кровавые: чаще пьют из Накопителя Кровосборника (если там больше минимума), иначе — объедают
+ * Плотеягоду, не ломая куст.
  */
 public class EatPlantGoal extends Goal {
 	private final CaterpillarEntity mob;
 	private int cooldown;
 	private BlockPos plant;
+	private BlockPos tank;
 	private ItemEntity food;
 	private int ticks;
 
@@ -32,11 +37,20 @@ public class EatPlantGoal extends Goal {
 	@Override
 	public boolean canUse() {
 		if (--cooldown > 0) return false;
-		if (!(mob.level() instanceof ServerLevel level) || !level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
-			cooldown = 600;
-			return false;
+		if (!(mob.level() instanceof ServerLevel level)) return false;
+		tank = null;
+		plant = null;
+		// кровавые — сначала попить (иногда всё же идут за ягодой)
+		if (mob.variant() == CaterpillarEntity.Variant.BLOOD
+				&& mob.getRandom().nextInt(100) >= BloodTuning.BERRY_INSTEAD_PERCENT) {
+			tank = BloodTankBlockEntity.findSippable(level, mob.blockPosition(), BloodTuning.CATERPILLAR_SEARCH);
+			if (tank != null) return true;
 		}
 		plant = findPlant();
+		if (plant != null && !mob.nibbles(level.getBlockState(plant))
+				&& !level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
+			plant = null; // ломать растения нельзя
+		}
 		if (plant == null) {
 			cooldown = 400;
 			return false;
@@ -64,18 +78,35 @@ public class EatPlantGoal extends Goal {
 	public void start() {
 		ticks = 0;
 		food = null;
-		mob.getNavigation().moveTo(plant.getX() + 0.5, plant.getY(), plant.getZ() + 0.5, 1.0);
+		BlockPos target = tank != null ? tank : plant;
+		mob.getNavigation().moveTo(target.getX() + 0.5, target.getY(), target.getZ() + 0.5, 1.0);
 	}
 
 	@Override
 	public boolean canContinueToUse() {
-		return ticks < 400 && (plant != null || (food != null && food.isAlive()));
+		return ticks < 400 && (tank != null || plant != null || (food != null && food.isAlive()));
 	}
 
 	@Override
 	public void tick() {
 		ticks++;
 		ServerLevel level = (ServerLevel) mob.level();
+		if (tank != null) {
+			if (!(level.getBlockEntity(tank) instanceof BloodTankBlockEntity t) || !t.canSip()) {
+				tank = null; // выпили до нас — в следующий раз
+				return;
+			}
+			mob.getLookControl().setLookAt(tank.getX() + 0.5, tank.getY() + 0.5, tank.getZ() + 0.5);
+			if (mob.position().distanceToSqr(tank.getX() + 0.5, tank.getY(), tank.getZ() + 0.5) < 3.0) {
+				t.sip();
+				mob.bite();
+				mob.ate(level);
+				tank = null;
+			} else if (ticks % 20 == 0) {
+				mob.getNavigation().moveTo(tank.getX() + 0.5, tank.getY(), tank.getZ() + 0.5, 1.0);
+			}
+			return;
+		}
 		if (plant != null) {
 			if (!mob.isFood(level.getBlockState(plant))) {
 				plant = null;
@@ -84,6 +115,12 @@ public class EatPlantGoal extends Goal {
 			mob.getLookControl().setLookAt(plant.getX() + 0.5, plant.getY() + 0.3, plant.getZ() + 0.5);
 			if (mob.position().distanceToSqr(plant.getX() + 0.5, plant.getY(), plant.getZ() + 0.5) < 2.2) {
 				mob.bite();
+				if (mob.nibbles(level.getBlockState(plant))) {
+					// объела ягоды, куст остался
+					plant = null;
+					mob.ate(level);
+					return;
+				}
 				BlockPos at = plant;
 				plant = null;
 				level.destroyBlock(at, true, mob);
@@ -116,6 +153,7 @@ public class EatPlantGoal extends Goal {
 	@Override
 	public void stop() {
 		plant = null;
+		tank = null;
 		food = null;
 		mob.getNavigation().stop();
 		cooldown = EntityTuning.EAT_COOLDOWN_MIN + mob.getRandom().nextInt(EntityTuning.EAT_COOLDOWN_SPREAD);

@@ -154,5 +154,11 @@
   "item.tears-of-ink.ink": "Ink",
   "item.tears-of-ink.raw_caterpillar_meat": "Raw Caterpillar Meat",
   "item.tears-of-ink.cooked_caterpillar_meat": "Cooked Caterpillar Meat",
-  "block.tears-of-ink.drying_ink_puddle": "Drying Puddle"
+  "block.tears-of-ink.drying_ink_puddle": "Drying Puddle",
+  "block.tears-of-ink.blood_pump": "Blood Collector Pump",
+  "block.tears-of-ink.blood_tank": "Blood Tank",
+  "item.tears-of-ink.blood_crystal": "Blood Crystal",
+  "message.tears-of-ink.blood_collected": "You collected %s blood clots. Left in the tank: %s.",
+  "message.tears-of-ink.blood_level": "The tank holds %s blood. A clot forms at %s.",
+  "message.tears-of-ink.blood_crystal": "A Blood Crystal has set in the tank (%s)."
 }

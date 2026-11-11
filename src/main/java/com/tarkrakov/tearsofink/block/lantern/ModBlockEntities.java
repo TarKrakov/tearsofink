@@ -12,6 +12,13 @@ public final class ModBlockEntities {
 			BlockEntityType.Builder.of(LanternBeaconBlockEntity::new,
 					ModBlocks.INK_LANTERN, ModBlocks.STONE_LANTERN, ModBlocks.ETERNAL_LANTERN).build(null));
 
+	public static final BlockEntityType<com.tarkrakov.tearsofink.block.blood.BloodPumpBlockEntity> BLOOD_PUMP = Registry.register(
+			BuiltInRegistries.BLOCK_ENTITY_TYPE, TearsOfInk.id("blood_pump"),
+			BlockEntityType.Builder.of(com.tarkrakov.tearsofink.block.blood.BloodPumpBlockEntity::new, ModBlocks.BLOOD_PUMP).build(null));
+	public static final BlockEntityType<com.tarkrakov.tearsofink.block.blood.BloodTankBlockEntity> BLOOD_TANK = Registry.register(
+			BuiltInRegistries.BLOCK_ENTITY_TYPE, TearsOfInk.id("blood_tank"),
+			BlockEntityType.Builder.of(com.tarkrakov.tearsofink.block.blood.BloodTankBlockEntity::new, ModBlocks.BLOOD_TANK).build(null));
+
 	private ModBlockEntities() {}
 
 	public static void init() {

@@ -96,6 +96,9 @@ public final class ModCreativeTab {
 						output.accept(ModItems.CATERPILLAR_SPAWN_EGG);
 						output.accept(ModItems.SILK_THREAD);
 						output.accept(ModItems.BLOOD_CLOT);
+						output.accept(ModItems.BLOOD_CRYSTAL);
+						output.accept(ModBlocks.BLOOD_PUMP);
+						output.accept(ModBlocks.BLOOD_TANK);
 						output.accept(ModItems.INK);
 						output.accept(ModItems.RAW_CATERPILLAR_MEAT);
 						output.accept(ModItems.COOKED_CATERPILLAR_MEAT);

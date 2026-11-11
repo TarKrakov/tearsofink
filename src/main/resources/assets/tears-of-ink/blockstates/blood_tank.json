@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "tears-of-ink:block/blood_tank"
+    },
+    "facing=east": {
+      "model": "tears-of-ink:block/blood_tank",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "tears-of-ink:block/blood_tank",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "tears-of-ink:block/blood_tank",
+      "y": 270
+    }
+  }
+}

@@ -133,13 +133,18 @@ public class CaterpillarEntity extends PathfinderMob {
 		this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
 	}
 
-	/** Что гусеница ест: бледная — Слёзницу и бледную траву, чернильная — травы и осоку Чернолесья. */
+	/** Что гусеница ест: бледная — Слёзницу и бледную траву, чернильная — травы и осоку Чернолесья, кровавая — Плотеягоду (и пьёт кровь). */
 	public boolean isFood(BlockState state) {
 		return switch (variant()) {
 			case PALE -> state.is(ModBlocks.TEARBLOOM) || state.is(ModBlocks.PALE_GRASS);
 			case INK -> state.is(ModBlocks.INKROOT) || state.is(ModBlocks.TARWEED) || state.is(ModBlocks.INK_GRASS);
-			case BLOOD -> false; // кровавые пьют из Кровосборников (появятся вместе с ними)
+			case BLOOD -> state.is(ModBlocks.FLESHBERRY); // Кровавик ядовит — не трогают
 		};
+	}
+
+	/** Объедает, не ломая: кровавые едят ягоды Плотеягоды, куст остаётся. */
+	public boolean nibbles(BlockState state) {
+		return variant() == Variant.BLOOD && state.is(ModBlocks.FLESHBERRY);
 	}
 
 	// ----- Появление: вариант по зоне -----
