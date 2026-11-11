@@ -49,7 +49,8 @@ public class TearsOfInkClient implements ClientModInitializer {
 		ClientTickEvents.END_CLIENT_TICK.register(FogBankSpawner::tick);
 		ParticleFactoryRegistry.getInstance().register(ModParticles.FLAME_DANCE, FlameDanceParticle.Provider::new);
 		ParticleFactoryRegistry.getInstance().register(ModParticles.INK_SMOKE, SheetParticles.SmokeProvider::new);
-		ParticleFactoryRegistry.getInstance().register(ModParticles.SPARK_BURST, SheetParticles.SparkProvider::new);
+		ParticleFactoryRegistry.getInstance().register(ModParticles.EMBER, SheetParticles.EmberProvider::new);
+		ParticleFactoryRegistry.getInstance().register(ModParticles.INK_SPARK, SheetParticles.InkSparkProvider::new);
 		ParticleFactoryRegistry.getInstance().register(ModParticles.PAPER_SCRAP, SheetParticles.PaperProvider::new);
 		ClientTickEvents.END_CLIENT_TICK.register(FlameDanceSpawner::tick);
 

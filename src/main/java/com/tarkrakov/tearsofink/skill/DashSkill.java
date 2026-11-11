@@ -75,7 +75,11 @@ public class DashSkill extends Skill {
 
 		ServerLevel level = player.serverLevel();
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.SQUID_SQUIRT, SoundSource.PLAYERS, 0.7f, 1.3f);
-		level.sendParticles(ModParticles.INK_SMOKE, player.getX(), player.getY() + 0.8, player.getZ(), 10, 0.3, 0.4, 0.3, 0.02);
+		for (int i = 0; i < 16; i++) {
+			double a = player.getRandom().nextDouble() * Math.PI * 2;
+			level.sendParticles(ModParticles.INK_SPARK, player.getX(), player.getY() + 0.9, player.getZ(), 0,
+					Math.cos(a) * 0.15, 0.05 + player.getRandom().nextDouble() * 0.1, Math.sin(a) * 0.15, 1.0);
+		}
 		return true;
 	}
 
@@ -99,7 +103,7 @@ public class DashSkill extends Skill {
 			int inv = d.invulnerableLeft() - 1;
 			if (left > 0) {
 				push(player, d.dx(), d.dz());
-				player.serverLevel().sendParticles(ModParticles.INK_SMOKE, player.getX(), player.getY() + 0.6, player.getZ(), 2, 0.2, 0.3, 0.2, 0.0);
+				player.serverLevel().sendParticles(ModParticles.INK_SPARK, player.getX(), player.getY() + 0.7, player.getZ(), 4, 0.25, 0.4, 0.25, 0.02);
 			} else if (left == 0) {
 				Vec3 v = player.getDeltaMovement();
 				player.setDeltaMovement(v.x * END_SLOWDOWN, v.y, v.z * END_SLOWDOWN);

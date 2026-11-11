@@ -47,18 +47,34 @@ public final class SheetParticles {
 	}
 
 	// ======================================================================
-	/** Вспышка искр: на месте, светится сама. Зажигание фонаря. */
+	/**
+	 * Искорка (мелкие искорки автора, белые — красятся здесь): разлетается, чуть падает, тает.
+	 * ember — красно-оранжевая, светится сама; ink — чёрная.
+	 */
 	public static class Spark extends TextureSheetParticle {
 		private final SpriteSet sprites;
+		private final boolean glowing;
 
-		Spark(ClientLevel level, double x, double y, double z, SpriteSet sprites) {
-			super(level, x, y, z, 0, 0, 0);
+		Spark(ClientLevel level, double x, double y, double z, double xd, double yd, double zd, SpriteSet sprites, boolean ember) {
+			super(level, x, y, z, xd, yd, zd);
 			this.sprites = sprites;
-			this.xd = this.yd = this.zd = 0;
-			this.lifetime = 18;
-			this.quadSize = 0.45f;
-			this.gravity = 0f;
-			this.hasPhysics = false;
+			this.glowing = ember;
+			this.xd = xd + (random.nextDouble() - 0.5) * 0.02;
+			this.yd = yd + (random.nextDouble() - 0.5) * 0.02;
+			this.zd = zd + (random.nextDouble() - 0.5) * 0.02;
+			this.lifetime = 14 + random.nextInt(10);
+			this.quadSize = 0.06f + random.nextFloat() * 0.05f;
+			this.gravity = ember ? 0.04f : 0.08f;
+			this.friction = 0.9f;
+			this.hasPhysics = true;
+			if (ember) {
+				// от красного к оранжевому
+				float g = 0.2f + random.nextFloat() * 0.35f;
+				setColor(1f, g, 0.05f);
+			} else {
+				float v = 0.04f + random.nextFloat() * 0.08f;
+				setColor(v, v * 0.8f, v * 1.2f);
+			}
 			setSpriteFromAge(sprites);
 		}
 
@@ -66,11 +82,12 @@ public final class SheetParticles {
 		public void tick() {
 			super.tick();
 			if (!removed) setSpriteFromAge(sprites);
+			this.alpha = 1f - Math.max(0f, (age - lifetime * 0.6f) / (lifetime * 0.4f));
 		}
 
 		@Override
 		protected int getLightColor(float partialTick) {
-			return LightTexture.FULL_BRIGHT;
+			return glowing ? LightTexture.FULL_BRIGHT : super.getLightColor(partialTick);
 		}
 
 		@Override
@@ -127,10 +144,17 @@ public final class SheetParticles {
 		}
 	}
 
-	public record SparkProvider(SpriteSet sprites) implements ParticleProvider<SimpleParticleType> {
+	public record EmberProvider(SpriteSet sprites) implements ParticleProvider<SimpleParticleType> {
 		@Override
 		public Particle createParticle(SimpleParticleType t, ClientLevel l, double x, double y, double z, double xd, double yd, double zd) {
-			return new Spark(l, x, y, z, sprites);
+			return new Spark(l, x, y, z, xd, yd, zd, sprites, true);
+		}
+	}
+
+	public record InkSparkProvider(SpriteSet sprites) implements ParticleProvider<SimpleParticleType> {
+		@Override
+		public Particle createParticle(SimpleParticleType t, ClientLevel l, double x, double y, double z, double xd, double yd, double zd) {
+			return new Spark(l, x, y, z, xd, yd, zd, sprites, false);
 		}
 	}
 

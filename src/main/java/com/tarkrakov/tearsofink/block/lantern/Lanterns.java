@@ -127,8 +127,7 @@ public final class Lanterns {
 		}
 		level.setBlock(pos, state.setValue(FogClearing.LIT, true), Block.UPDATE_ALL);
 		level.playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 0.5f, 1.4f);
-		server.sendParticles(ModParticles.SPARK_BURST, pos.getX() + 0.5, pos.getY() + 0.6, pos.getZ() + 0.5, 1, 0, 0, 0, 0);
-		server.sendParticles(ModParticles.SPARK_BURST, pos.getX() + 0.5, pos.getY() + 0.6, pos.getZ() + 0.5, 2, 0.25, 0.2, 0.25, 0);
+		emberBurst(server, pos.getX() + 0.5, pos.getY() + 0.6, pos.getZ() + 0.5, 14);
 		return InteractionResult.SUCCESS;
 	}
 
@@ -154,6 +153,17 @@ public final class Lanterns {
 			if (state.getBlock() instanceof InkLanternBlock lantern && lantern.isEternal()) return InteractionResult.PASS;
 			return use(state, level, pos, player);
 		});
+	}
+
+	/** Искры разлетаются во все стороны и вверх. */
+	private static void emberBurst(ServerLevel server, double x, double y, double z, int count) {
+		var random = server.getRandom();
+		for (int i = 0; i < count; i++) {
+			double a = random.nextDouble() * Math.PI * 2;
+			double speed = 0.05 + random.nextDouble() * 0.1;
+			server.sendParticles(ModParticles.EMBER, x, y, z, 0,
+					Math.cos(a) * speed, 0.08 + random.nextDouble() * 0.12, Math.sin(a) * speed, 1.0);
+		}
 	}
 
 	private static void fizzle(ServerPlayer player) {
