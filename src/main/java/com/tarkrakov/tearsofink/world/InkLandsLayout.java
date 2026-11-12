@@ -21,8 +21,8 @@ import java.util.function.IntBinaryOperator;
  */
 public final class InkLandsLayout {
 	// ===== Размеры (в блоках) =====
-	/** На каком расстоянии от точки 0,0 ищем место для центра. */
-	public static final int[] CENTER_DISTANCES = {1400, 1200, 1700, 2100, 2600, 3200};
+	/** На каком расстоянии от точки 0,0 ищем место для центра (по очереди). 1150 = радиус 800 + ~350 до края. */
+	public static final int[] CENTER_DISTANCES = {1150, 1300, 1500, 1800, 2200, 2800};
 	/** Радиус всей области. */
 	public static final int RADIUS = 800;
 	/** Радиус ядра — Чернолесья. */
@@ -553,12 +553,15 @@ public final class InkLandsLayout {
 					best = new BlockPos(x, 0, z);
 				}
 			}
-			if (bestScore <= 0.0) break; // нашли место совсем без моря — дальше не ищем
+			if (bestScore <= ACCEPTABLE_SEA) break; // моря почти нет — берём это, ближе к спавну
 		}
 		if (best != null) return best;
 		return new BlockPos((int) (Math.cos(startAngle) * CENTER_DISTANCES[0]), 0,
 				(int) (Math.sin(startAngle) * CENTER_DISTANCES[0]));
 	}
+
+	/** Сколько моря внутри области ещё терпимо (доля), чтобы не уходить дальше от спавна. */
+	private static final double ACCEPTABLE_SEA = 0.04;
 
 	/** Доля моря и побережья внутри области с центром x, z (0 — сплошная суша). */
 	private static double seaFraction(Climate.Sampler sampler, int cx, int cz) {

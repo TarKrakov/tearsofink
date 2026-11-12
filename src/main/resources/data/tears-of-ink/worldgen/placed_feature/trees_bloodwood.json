@@ -30,7 +30,7 @@
     },
     {
       "type": "tears-of-ink:away_from_herald",
-      "radius": 75
+      "radius": 25
     },
     {
       "type": "minecraft:surface_water_depth_filter",

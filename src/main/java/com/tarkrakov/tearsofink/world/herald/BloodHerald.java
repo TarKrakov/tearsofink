@@ -33,7 +33,7 @@ public final class BloodHerald {
 	/** Отступ Кровосборника от последнего корня (блоков). */
 	public static final int COLLECTOR_GAP = 2;
 	/** В этом радиусе от ствола обычные деревья не растут (чтобы не врастали в Вестника). */
-	public static final int CLEAR_RADIUS = 75;
+	public static final int CLEAR_RADIUS = 25;
 	/** В этом радиусе от ствола ванильные монстры сами не появляются (тень кроны). */
 	public static final int NO_MONSTER_RADIUS = 90;
 	/** Дороги обходят ствол на таком расстоянии. */
