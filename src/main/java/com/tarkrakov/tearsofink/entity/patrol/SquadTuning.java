@@ -37,6 +37,14 @@ public final class SquadTuning {
 	public static final double ARCHER_DODGE_CLOSE = 3.5, ARCHER_DODGE_BACK = 0.8, ARCHER_DODGE_UP = 0.4;
 	public static final int ARCHER_DODGE_TICKS = 16, ARCHER_DODGE_PUSH_TICK = 4, ARCHER_DODGE_COOLDOWN = 40;
 
+	// ===== Против мобов (не игроков) =====
+	/** Множитель урона всех атак патруля по мобам (не по игрокам). */
+	public static final float VS_MOBS_DAMAGE = 2.0f;
+	/** Арбалетчик по мобам стреляет чаще: время прицела и перезарядки × это (0.5 = вдвое быстрее). */
+	public static final float VS_MOBS_FIRE_RATE = 0.5f;
+	/** Щитовик и копейщик бросаются на тех, кто напал на их арбалетчиков (в этом радиусе от стрелка). */
+	public static final double BODYGUARD_RADIUS = 7;
+
 	// ===== Отряды =====
 	/** Составы отрядов и их веса: T — щитовик, S — копейщик, C — арбалетчик. Порядок = строй (первый ведёт). */
 	public static final String[] SQUADS = {"TSCC", "TCCC", "SSCC", "TTC", "TSC", "S"};

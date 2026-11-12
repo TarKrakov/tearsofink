@@ -76,6 +76,11 @@ public class PaleSpearmanEntity extends com.tarkrakov.tearsofink.entity.patrol.P
 		addFactionTargets();
 	}
 
+	@Override
+	protected boolean guardsArchers() {
+		return true;
+	}
+
 	public boolean busy() {
 		return thrustTicks >= 0 || dodgeTicks >= 0;
 	}
@@ -165,7 +170,17 @@ public class PaleSpearmanEntity extends com.tarkrakov.tearsofink.entity.patrol.P
 		Vec3 flat = new Vec3(to.x, 0, to.z);
 		if (flat.lengthSqr() > 1.0E-4 && new Vec3(look.x, 0, look.z).normalize().dot(flat.normalize()) < 0.5) return;
 		if (!this.hasLineOfSight(target)) return;
-		this.doHurtTarget(target);
+		if (target instanceof net.minecraft.world.entity.player.Player) this.doHurtTarget(target);
+		else target.hurt(this.damageSources().mobAttack(this), damageVs(target, SpearmanTuning.DAMAGE));
+		// копьё пробивает: задевает и других врагов на линии удара
+		Vec3 dir = new Vec3(look.x, 0, look.z).normalize();
+		for (LivingEntity e : this.level().getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(SpearmanTuning.REACH + 1),
+				e -> e != target && isEnemy(e))) {
+			Vec3 d = e.position().subtract(this.position()).multiply(1, 0, 1);
+			if (d.length() > SpearmanTuning.REACH + e.getBbWidth() / 2 || d.lengthSqr() < 1.0E-4) continue;
+			if (dir.dot(d.normalize()) < 0.85) continue; // узкий конус вдоль копья
+			e.hurt(this.damageSources().mobAttack(this), damageVs(e, SpearmanTuning.DAMAGE));
+		}
 		this.playSound(SoundEvents.TRIDENT_HIT, 0.8f, 0.9f);
 	}
 

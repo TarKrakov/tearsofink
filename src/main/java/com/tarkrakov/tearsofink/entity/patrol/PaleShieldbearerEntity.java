@@ -47,6 +47,7 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 	int chargeTicks = -1, chargeCooldown;
 	int stun;
 	private Vec3 chargeDir = Vec3.ZERO;
+	private final java.util.Set<Integer> chargeHit = new java.util.HashSet<>();
 
 	public PaleShieldbearerEntity(EntityType<? extends Monster> type, Level level) {
 		super(type, level);
@@ -93,6 +94,11 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 		idleState.animateWhen(act == ACT_NONE && !moving, this.tickCount);
 	}
 
+	@Override
+	protected boolean guardsArchers() {
+		return true;
+	}
+
 	public boolean shieldRaised() {
 		return shieldUp > 0 && shieldDisabled <= 0;
 	}
@@ -132,12 +138,15 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 	private void tickBash() {
 		bashTicks++;
 		if (bashTicks == SquadTuning.BASH_HIT_TICK) {
-			LivingEntity t = this.getTarget();
-			if (t != null && t.isAlive() && this.distanceTo(t) <= SquadTuning.BASH_RANGE + 0.6 && inFront(t.position(), 0.3)) {
-				t.hurt(this.damageSources().mobAttack(this), (float) SquadTuning.BASH_DAMAGE);
-				t.knockback(SquadTuning.BASH_KNOCKBACK, this.getX() - t.getX(), this.getZ() - t.getZ());
-				this.playSound(SoundEvents.SHIELD_BLOCK, 1.0f, 0.6f);
+			// щит бьёт всех врагов перед собой (дугой)
+			boolean any = false;
+			for (LivingEntity e : this.level().getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(SquadTuning.BASH_RANGE + 1), this::isEnemy)) {
+				if (this.distanceTo(e) > SquadTuning.BASH_RANGE + 0.6 + e.getBbWidth() / 2 || !inFront(e.position(), 0.3)) continue;
+				e.hurt(this.damageSources().mobAttack(this), damageVs(e, SquadTuning.BASH_DAMAGE));
+				e.knockback(SquadTuning.BASH_KNOCKBACK, this.getX() - e.getX(), this.getZ() - e.getZ());
+				any = true;
 			}
+			if (any) this.playSound(SoundEvents.SHIELD_BLOCK, 1.0f, 0.6f);
 		}
 		if (bashTicks >= SquadTuning.BASH_TICKS) bashTicks = -1;
 	}
@@ -145,6 +154,7 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 	// ----- рывок -----
 	void startCharge(LivingEntity target) {
 		chargeTicks = 0;
+		chargeHit.clear();
 		chargeCooldown = SquadTuning.CHARGE_COOLDOWN;
 		Vec3 d = target.position().subtract(this.position()).multiply(1, 0, 1);
 		chargeDir = d.lengthSqr() < 1.0E-4 ? this.getLookAngle().multiply(1, 0, 1).normalize() : d.normalize();
@@ -174,10 +184,16 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 		this.setDeltaMovement(chargeDir.x * SquadTuning.CHARGE_SPEED, this.getDeltaMovement().y, chargeDir.z * SquadTuning.CHARGE_SPEED);
 		this.hasImpulse = true;
 
-		if (t != null && t.isAlive() && this.getBoundingBox().inflate(0.4).intersects(t.getBoundingBox())) {
-			t.hurt(this.damageSources().mobAttack(this), (float) SquadTuning.CHARGE_DAMAGE);
-			t.knockback(SquadTuning.CHARGE_KNOCKBACK, -chargeDir.x, -chargeDir.z);
+		// таранит всех врагов на пути; попал в цель — рывок окончен
+		boolean hitTarget = false;
+		for (LivingEntity e : this.level().getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(0.4), this::isEnemy)) {
+			if (!chargeHit.add(e.getId())) continue;
+			e.hurt(this.damageSources().mobAttack(this), damageVs(e, SquadTuning.CHARGE_DAMAGE));
+			e.knockback(SquadTuning.CHARGE_KNOCKBACK, -chargeDir.x, -chargeDir.z);
 			this.playSound(SoundEvents.SHIELD_BLOCK, 1.2f, 0.5f);
+			if (e == t) hitTarget = true;
+		}
+		if (hitTarget) {
 			endCharge(false);
 			return;
 		}

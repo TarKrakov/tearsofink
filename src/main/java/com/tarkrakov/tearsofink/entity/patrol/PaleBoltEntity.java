@@ -29,6 +29,14 @@ public class PaleBoltEntity extends AbstractArrow {
 	}
 
 	@Override
+	protected void onHitEntity(net.minecraft.world.phys.EntityHitResult hit) {
+		if (hit.getEntity() instanceof LivingEntity e && !(e instanceof net.minecraft.world.entity.player.Player)) {
+			this.setBaseDamage(SquadTuning.BOLT_DAMAGE * SquadTuning.VS_MOBS_DAMAGE / SquadTuning.BOLT_SPEED); // по мобам сильнее
+		}
+		super.onHitEntity(hit);
+	}
+
+	@Override
 	protected ItemStack getDefaultPickupItem() {
 		return new ItemStack(Items.ARROW);
 	}

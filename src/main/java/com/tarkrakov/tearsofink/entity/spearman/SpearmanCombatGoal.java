@@ -83,7 +83,7 @@ public class SpearmanCombatGoal extends Goal {
 		double dist = mob.distanceTo(target);
 
 		// ----- набеги, пока жив щитовик -----
-		if (!shieldbearerAlive()) {
+		if (!shieldbearerAlive() || !(target instanceof net.minecraft.world.entity.player.Player)) { // набеги — только против игрока
 			hitsLeft = -1;
 			retreatTicks = restTicks = -1;
 		} else {

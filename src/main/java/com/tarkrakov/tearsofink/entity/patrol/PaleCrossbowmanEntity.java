@@ -165,13 +165,14 @@ public class PaleCrossbowmanEntity extends PaleSoldier {
 				return;
 			}
 
-			// цикл выстрела
+			// цикл выстрела (по мобам — быстрее)
 			phaseTicks++;
+			float rate = t instanceof net.minecraft.world.entity.player.Player ? 1f : SquadTuning.VS_MOBS_FIRE_RATE;
 			switch (phase) {
 				case PHASE_AIM -> {
 					if (!sees || dist > SquadTuning.SHOOT_RANGE) {
 						phaseTicks = 0; // потерял — целится заново
-					} else if (phaseTicks >= SquadTuning.AIM_TICKS) {
+					} else if (phaseTicks >= SquadTuning.AIM_TICKS * rate) {
 						shoot(t);
 						phase = PHASE_SHOOT;
 						phaseTicks = 0;
@@ -184,7 +185,7 @@ public class PaleCrossbowmanEntity extends PaleSoldier {
 					}
 				}
 				default -> {
-					if (phaseTicks >= SquadTuning.RELOAD_TICKS) {
+					if (phaseTicks >= SquadTuning.RELOAD_TICKS * rate) {
 						phase = PHASE_AIM;
 						phaseTicks = 0;
 						dodgedThisCycle = false; // новый цикл — снова может отпрыгнуть

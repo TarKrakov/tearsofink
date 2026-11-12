@@ -75,6 +75,47 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 		return com.tarkrakov.tearsofink.entity.faction.Factions.allied(this, other);
 	}
 
+	// ===== Бой с несколькими врагами =====
+	/** Враг ли это для солдата: текущая цель, враг по таблице фракций или тот, кто нападает на него/своих. */
+	public boolean isEnemy(LivingEntity e) {
+		if (e == this || !e.isAlive() || isAlly(e)) return false;
+		if (e == this.getTarget()) return true;
+		if (e instanceof net.minecraft.world.entity.player.Player p) return !p.isCreative() && !p.isSpectator()
+				&& com.tarkrakov.tearsofink.entity.faction.Factions.wantsToAttack(this, e);
+		if (e instanceof net.minecraft.world.entity.Mob m && m.getTarget() != null && isAlly(m.getTarget()) || e instanceof net.minecraft.world.entity.Mob m2 && m2.getTarget() == this) return true;
+		return com.tarkrakov.tearsofink.entity.faction.Factions.wantsToAttack(this, e);
+	}
+
+	/** Урон по цели: по мобам ×VS_MOBS_DAMAGE, по игрокам как есть. */
+	public float damageVs(LivingEntity e, double base) {
+		return (float) (e instanceof net.minecraft.world.entity.player.Player ? base : base * SquadTuning.VS_MOBS_DAMAGE);
+	}
+
+	/** Телохранитель стрелков: щитовик и копейщик. */
+	protected boolean guardsArchers() {
+		return false;
+	}
+
+	private int guardScan;
+
+	/** Кто-то из мобов кидается на нашего арбалетчика — перехватить (если сейчас не дерёмся с игроком). */
+	private void guardArchers() {
+		if (++guardScan < 20) return;
+		guardScan = 0;
+		if (this.getTarget() instanceof net.minecraft.world.entity.player.Player p && p.isAlive()) return;
+		LivingEntity best = null;
+		double bestD = Double.MAX_VALUE;
+		for (PaleSoldier mate : squadmates(24)) {
+			if (!(mate instanceof PaleCrossbowmanEntity)) continue;
+			for (net.minecraft.world.entity.Mob m : this.level().getEntitiesOfClass(net.minecraft.world.entity.Mob.class,
+					mate.getBoundingBox().inflate(SquadTuning.BODYGUARD_RADIUS), m -> m.getTarget() == mate && !isAlly(m))) {
+				double d = this.distanceToSqr(m);
+				if (d < bestD) { bestD = d; best = m; }
+			}
+		}
+		if (best != null && best != this.getTarget()) this.setTarget(best);
+	}
+
 	/** Цели: кто ударил → игроки → враги по таблице фракций (ванильные монстры, другие фракции). */
 	protected void addFactionTargets() {
 		this.targetSelector.addGoal(1, new net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal(this));
@@ -107,6 +148,7 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 	public void aiStep() {
 		super.aiStep();
 		if (this.level().isClientSide) return;
+		if (guardsArchers()) guardArchers();
 		LivingEntity target = this.getTarget();
 		this.entityData.set(AGGRESSIVE, target != null && target.isAlive());
 		// общая цель: заметил/ударили — поднимаем весь отряд
