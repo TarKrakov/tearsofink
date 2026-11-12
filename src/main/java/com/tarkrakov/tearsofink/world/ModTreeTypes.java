@@ -36,6 +36,9 @@ public final class ModTreeTypes {
 	/** Магистральные дороги Чернильных Земель. */
 	public static final Feature<NoneFeatureConfiguration> INK_ROADS = Registry.register(
 			BuiltInRegistries.FEATURE, TearsOfInk.id("ink_roads"), new InkRoadsFeature(NoneFeatureConfiguration.CODEC));
+	/** Последняя уборка чанка: просвет над дорогами, висячий Трясинник. */
+	public static final Feature<NoneFeatureConfiguration> FINAL_CLEANUP = Registry.register(
+			BuiltInRegistries.FEATURE, TearsOfInk.id("final_cleanup"), new FinalCleanupFeature(NoneFeatureConfiguration.CODEC));
 
 	private ModTreeTypes() {}
 

@@ -118,7 +118,8 @@
       "tears-of-ink:patch_tall_pale_grass",
       "tears-of-ink:patch_shore_reed",
       "tears-of-ink:patch_tall_shore_reed",
-      "minecraft:glow_lichen"
+      "minecraft:glow_lichen",
+      "tears-of-ink:final_cleanup"
     ],
     [
       "minecraft:freeze_top_layer"

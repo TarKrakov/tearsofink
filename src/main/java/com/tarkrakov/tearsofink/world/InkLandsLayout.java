@@ -252,6 +252,15 @@ public final class InkLandsLayout {
 
 	/** Если точка на дороге — {номер дороги, расстояние вдоль дороги от центра, расстояние до осевой}, иначе null. */
 	public double[] roadAt(int x, int z) {
+		return roadAt(x, z, ROAD_HALF_WIDTH);
+	}
+
+	/** Ближе ли точка к осевой дороги, чем полуширина + extra (для запрета деревьев у обочины). */
+	public boolean nearRoad(int x, int z, double extra) {
+		return roadAt(x, z, ROAD_HALF_WIDTH + extra) != null;
+	}
+
+	private double[] roadAt(int x, int z, double halfWidth) {
 		double dx = x - center.getX();
 		double dz = z - center.getZ();
 		double d = Math.sqrt(dx * dx + dz * dz);
@@ -259,7 +268,7 @@ public final class InkLandsLayout {
 		double angle = Math.atan2(dz, dx);
 		for (int i = 0; i < ROADS; i++) {
 			double diff = Mth.wrapDegrees((angle - roadAngle(i, d)) * Mth.RAD_TO_DEG) * Mth.DEG_TO_RAD;
-			if (Math.abs(diff) > Math.PI / 2 || Math.abs(Math.sin(diff)) * d > ROAD_HALF_WIDTH + 14) continue;
+			if (Math.abs(diff) > Math.PI / 2 || Math.abs(Math.sin(diff)) * d > halfWidth + 14) continue;
 			// настоящее расстояние до осевой линии (с учётом изгибов)
 			double best = Double.MAX_VALUE, bestT = d;
 			for (double t = d - 10; t <= d + 10; t += 1.0) {
@@ -271,7 +280,7 @@ public final class InkLandsLayout {
 				if (dist2 < best) { best = dist2; bestT = t; }
 			}
 			double dist = Math.sqrt(best);
-			if (dist <= ROAD_HALF_WIDTH) return new double[]{i, bestT, dist};
+			if (dist <= halfWidth) return new double[]{i, bestT, dist};
 		}
 		return null;
 	}

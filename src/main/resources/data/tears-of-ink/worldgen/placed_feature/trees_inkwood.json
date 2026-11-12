@@ -25,6 +25,10 @@
       "type": "minecraft:in_square"
     },
     {
+      "type": "tears-of-ink:away_from_road",
+      "margin": 7
+    },
+    {
       "type": "minecraft:surface_water_depth_filter",
       "max_water_depth": 0
     },
