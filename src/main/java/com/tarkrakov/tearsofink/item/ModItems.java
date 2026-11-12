@@ -112,6 +112,10 @@ public final class ModItems {
 
 	private ModItems() {}
 
+	/** Тусклое зеркальце: переход между обычным миром и Землями. Неотделимо от игрока (вне творческого). */
+	public static final Item DIM_MIRROR = register("dim_mirror",
+			new com.tarkrakov.tearsofink.travel.DimMirrorItem(new Item.Properties().stacksTo(1).fireResistant().rarity(Rarity.UNCOMMON)));
+
 	private static Item register(String name, Item item) {
 		return Registry.register(BuiltInRegistries.ITEM, TearsOfInk.id(name), item);
 	}

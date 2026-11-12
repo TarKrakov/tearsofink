@@ -37,6 +37,7 @@ public class TearsOfInk implements ModInitializer {
 
 		ModTreeTypes.init();
 		com.tarkrakov.tearsofink.world.ModDimensions.init();
+		com.tarkrakov.tearsofink.travel.Travel.init();
 		com.tarkrakov.tearsofink.world.AwayFromRoadFilter.init();
 		com.tarkrakov.tearsofink.world.herald.BloodHerald.init();
 		com.tarkrakov.tearsofink.world.AwayFromHeraldFilter.init();

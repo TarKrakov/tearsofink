@@ -21,6 +21,7 @@ public final class ModCreativeTab {
 					.title(Component.translatable("itemGroup.tears-of-ink.main"))
 					.icon(() -> new ItemStack(ModBlocks.ASHEN_SOIL))
 					.displayItems((params, output) -> {
+						output.accept(ModItems.DIM_MIRROR);
 						output.accept(ModBlocks.ASHEN_SOIL);
 						output.accept(ModBlocks.ASH);
 						output.accept(ModBlocks.ASHEN_PATH);

@@ -170,5 +170,22 @@
   "entity.tears-of-ink.pale_crossbowman": "Pale Crossbowman",
   "entity.tears-of-ink.pale_bolt": "Crossbow Bolt",
   "item.tears-of-ink.pale_shieldbearer_spawn_egg": "Pale Shieldbearer Spawn Egg",
-  "item.tears-of-ink.pale_crossbowman_spawn_egg": "Pale Crossbowman Spawn Egg"
+  "item.tears-of-ink.pale_crossbowman_spawn_egg": "Pale Crossbowman Spawn Egg",
+  "item.tears-of-ink.dim_mirror": "Dim Mirror",
+  "message.tears-of-ink.mirror_busy": "The mirror clouds over. Not now.",
+  "message.tears-of-ink.mirror_riding": "You can't look into the mirror while riding.",
+  "message.tears-of-ink.mirror_no_home": "The mirror cannot find your home…",
+  "message.tears-of-ink.lands_bed": "No sleep here. But should you fall, you will wake here.",
+  "message.tears-of-ink.lands_bed_gone": "Your bed in the Lands is gone.",
+  "message.tears-of-ink.fountain_bound": "The spring remembers you.",
+  "guide.tears-of-ink.toss.1": "An unbreakable bond ties you to this mirror. Don't lose it, little one…",
+  "guide.tears-of-ink.toss.2": "Oh, my friend! Did you lose something?…",
+  "guide.tears-of-ink.toss.3": "You shouldn't throw such things around, little one…",
+  "guide.tears-of-ink.toss.4": "I told you: you will need it.",
+  "guide.tears-of-ink.toss.5": "What an absent-minded guest…",
+  "guide.tears-of-ink.toss.6": "No-no-no. That's not how it's done.",
+  "guide.tears-of-ink.toss.7": "A contract is a contract, my friend.",
+  "guide.tears-of-ink.toss.tired": "…Aren't you tired of this?",
+  "guide.tears-of-ink.stash": "Surely you didn't think the burden of a contract could simply be shelved?",
+  "dimension.tears-of-ink.ink_lands": "Ink Lands"
 }

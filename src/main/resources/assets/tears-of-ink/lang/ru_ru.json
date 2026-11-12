@@ -188,5 +188,22 @@
   "entity.tears-of-ink.pale_crossbowman": "Бледный арбалетчик",
   "entity.tears-of-ink.pale_bolt": "Арбалетный болт",
   "item.tears-of-ink.pale_shieldbearer_spawn_egg": "Яйцо призыва бледного щитовика",
-  "item.tears-of-ink.pale_crossbowman_spawn_egg": "Яйцо призыва бледного арбалетчика"
+  "item.tears-of-ink.pale_crossbowman_spawn_egg": "Яйцо призыва бледного арбалетчика",
+  "item.tears-of-ink.dim_mirror": "Тусклое зеркальце",
+  "message.tears-of-ink.mirror_busy": "Зеркало мутнеет. Сейчас не до него.",
+  "message.tears-of-ink.mirror_riding": "В седле в зеркало не заглянуть.",
+  "message.tears-of-ink.mirror_no_home": "Зеркало не находит вашего дома…",
+  "message.tears-of-ink.lands_bed": "Здесь не уснуть. Но если вы падёте — очнётесь здесь.",
+  "message.tears-of-ink.lands_bed_gone": "Ваше ложе в Землях исчезло.",
+  "message.tears-of-ink.fountain_bound": "Источник запомнил вас.",
+  "guide.tears-of-ink.toss.1": "Непреодолимая сила связывает тебя и это зеркальце. Не теряй его, малыш…",
+  "guide.tears-of-ink.toss.2": "О, дружочек! Кажется, ты кое-что потерял?…",
+  "guide.tears-of-ink.toss.3": "Не стоит разбрасываться такими вещами, малыш…",
+  "guide.tears-of-ink.toss.4": "Я ведь говорил: оно тебе понадобится.",
+  "guide.tears-of-ink.toss.5": "Какой рассеянный гость…",
+  "guide.tears-of-ink.toss.6": "Нет-нет-нет. Так дела не делаются.",
+  "guide.tears-of-ink.toss.7": "Контракт есть контракт, дружочек.",
+  "guide.tears-of-ink.toss.tired": "…Тебе не надоело?",
+  "guide.tears-of-ink.stash": "Ты же не думал, что бремя контракта можно просто отложить в долгий ящик?",
+  "dimension.tears-of-ink.ink_lands": "Чернильные Земли"
 }

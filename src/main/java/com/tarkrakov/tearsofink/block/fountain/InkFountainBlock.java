@@ -72,8 +72,15 @@ public class InkFountainBlock extends Block {
 		Set<Long> visited = sp.getAttachedOrCreate(VISITED);
 		long key = pos.asLong();
 		if (visited.contains(key)) {
-			sp.sendSystemMessage(Component.translatable("message.tears-of-ink.fountain_used").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
-			return InteractionResult.CONSUME;
+			// уже испит — теперь привязывает возрождение
+			var travel = com.tarkrakov.tearsofink.travel.Travel.get(sp);
+			if (!(travel.respawn().isPresent() && travel.respawn().get().equals(pos) && !travel.respawnBed())) {
+				com.tarkrakov.tearsofink.travel.Travel.set(sp, travel.withRespawn(pos.immutable(), false));
+				level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 0.8f, 0.7f);
+				server.sendParticles(ParticleTypes.SQUID_INK, pos.getX() + 0.5, pos.getY() + 0.9, pos.getZ() + 0.5, 12, 0.2, 0.3, 0.2, 0.02);
+			}
+			sp.sendSystemMessage(Component.translatable("message.tears-of-ink.fountain_bound").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
+			return InteractionResult.SUCCESS;
 		}
 		if (data.inkMax() >= InkData.INK_CAP) {
 			sp.sendSystemMessage(Component.translatable("message.tears-of-ink.veins_full").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));

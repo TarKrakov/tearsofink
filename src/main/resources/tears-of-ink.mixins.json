@@ -6,7 +6,9 @@
 		"NoiseGeneratorSettingsMixin",
 		"PlayerEatMixin",
 		"HealEffectsMixin",
-		"NaturalSpawnerMixin"
+		"NaturalSpawnerMixin",
+		"SlotMixin",
+		"ContainerMenuMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

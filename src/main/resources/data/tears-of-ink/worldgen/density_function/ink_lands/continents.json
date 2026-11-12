@@ -2,11 +2,11 @@
   "type": "minecraft:flat_cache",
   "argument": {
     "type": "minecraft:clamp",
-    "min": -0.05,
-    "max": 0.55,
+    "min": 0.05,
+    "max": 0.6,
     "input": {
       "type": "minecraft:add",
-      "argument1": 0.12,
+      "argument1": 0.22,
       "argument2": {
         "type": "minecraft:mul",
         "argument1": 0.45,

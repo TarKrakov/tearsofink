@@ -16,15 +16,15 @@ jobs:
       - name: run server and checks
         run: |
           mkdir -p run && echo "eula=true" > run/eula.txt
-          printf "online-mode=false\nspawn-protection=0\n" > run/server.properties
+          printf "online-mode=false\nspawn-protection=0\nmax-tick-time=-1\n" > run/server.properties
           {
             for i in $(seq 1 120); do
               sleep 5
               if grep -q "Done (" run/logs/latest.log 2>/dev/null; then break; fi
             done
             echo "tearsofink check terrain"
-            for r in 1 2 3 4 5; do echo "tearsofink check roads $r"; sleep 60; done
-            sleep 30
+            for r in 1 2 3 4 5; do echo "tearsofink check roads $r"; done
+            for i in $(seq 1 300); do sleep 5; if [ "$(grep -c "\[check\] Дорога" run/logs/latest.log 2>/dev/null)" -ge 5 ]; then break; fi; done
             echo "stop"
           } | ./gradlew runServer --console=plain 2>&1 | tee server.log | grep -E "\[check\]|ERROR|Exception|Caused by|Done \(" | head -400 || true
       - uses: actions/upload-artifact@v7
