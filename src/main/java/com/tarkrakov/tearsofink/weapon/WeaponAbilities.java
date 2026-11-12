@@ -40,6 +40,8 @@ public final class WeaponAbilities {
 	public static final CleaveAbility CLEAVE = new CleaveAbility();
 	public static final MercyAbility MERCY = new MercyAbility();
 	public static final RepelAbility REPEL = new RepelAbility();
+	public static final BlotAbility BLOT = new BlotAbility();
+	public static final SalvationAbility SALVATION = new SalvationAbility();
 
 	private WeaponAbilities() {}
 
@@ -382,6 +384,48 @@ public final class WeaponAbilities {
 			level.addFreshEntity(new InkWaveEntity(level, player, dir, true, DAMAGE, KNOCKBACK));
 			player.swing(input.sneaking() ? net.minecraft.world.InteractionHand.OFF_HAND : net.minecraft.world.InteractionHand.MAIN_HAND, true);
 			level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1f, 1.5f);
+			return true;
+		}
+	}
+
+	// ======================================================================
+	/** Длинный нож: Чернильная клякса — шарик чернил вперёд. Дёшево, часто. */
+	public static class BlotAbility extends Skill {
+		public static final float SPEED = 1.6f;
+
+		BlotAbility() {
+			super(TearsOfInk.id("ink_blot"), 3, 0, 16);
+		}
+
+		@Override
+		public boolean activate(ServerPlayer player, SkillInput input) {
+			ServerLevel level = player.serverLevel();
+			InkBlotEntity blot = new InkBlotEntity(level, player);
+			blot.shootFromRotation(player, player.getXRot(), player.getYRot(), 0f, SPEED, 1f);
+			level.addFreshEntity(blot);
+			player.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
+			level.playSound(null, player.blockPosition(), SoundEvents.SQUID_SQUIRT, SoundSource.PLAYERS, 0.7f, 1.3f);
+			return true;
+		}
+	}
+
+	// ======================================================================
+	/** Расколотая подвеска спасения: мгновенно лечит себя, несильно. */
+	public static class SalvationAbility extends Skill {
+		public static final float HEAL = 4f;
+
+		SalvationAbility() {
+			super(TearsOfInk.id("salvation"), 0, 10, 240);
+		}
+
+		@Override
+		public boolean activate(ServerPlayer player, SkillInput input) {
+			if (player.getHealth() >= player.getMaxHealth()) return false;
+			player.heal(HEAL);
+			ServerLevel level = player.serverLevel();
+			level.sendParticles(com.tarkrakov.tearsofink.particle.ModParticles.TEAR_GLINT, player.getX(), player.getY() + 1.0, player.getZ(), 18, 0.4, 0.6, 0.4, 0.02);
+			level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1f, 1.2f);
+			player.swing(net.minecraft.world.InteractionHand.OFF_HAND, true);
 			return true;
 		}
 	}

@@ -95,6 +95,8 @@ public final class ModItems {
 
 	public static final Item PALE_SHIELDBEARER_SPAWN_EGG = register("pale_shieldbearer_spawn_egg",
 			new SpawnEggItem(com.tarkrakov.tearsofink.entity.ModMobs.PALE_SHIELDBEARER, 0xC9CDD2, 0x5A4A3A, new Item.Properties()));
+	public static final Item GUIDE_SPAWN_EGG = register("guide_spawn_egg",
+			new SpawnEggItem(com.tarkrakov.tearsofink.entity.ModMobs.GUIDE, 0x1A1418, 0xB5475A, new Item.Properties()));
 	public static final Item PALE_CROSSBOWMAN_SPAWN_EGG = register("pale_crossbowman_spawn_egg",
 			new SpawnEggItem(com.tarkrakov.tearsofink.entity.ModMobs.PALE_CROSSBOWMAN, 0xE2E5E8, 0x6B3A2E, new Item.Properties()));
 
@@ -115,6 +117,24 @@ public final class ModItems {
 	/** Тусклое зеркальце: переход между обычным миром и Землями. Неотделимо от игрока (вне творческого). */
 	public static final Item DIM_MIRROR = register("dim_mirror",
 			new com.tarkrakov.tearsofink.travel.DimMirrorItem(new Item.Properties().stacksTo(1).fireResistant().rarity(Rarity.UNCOMMON)));
+
+	// ===== Пролог =====
+	public static final Item SEALED_LETTER = register("sealed_letter",
+			new com.tarkrakov.tearsofink.prologue.PrologueItems.SealedLetter(new Item.Properties().stacksTo(1)));
+	public static final Item INVITATION_LETTER = register("invitation_letter",
+			new com.tarkrakov.tearsofink.prologue.PrologueItems.Invitation(new Item.Properties().stacksTo(1)));
+	public static final Item WORN_SATCHEL = register("worn_satchel",
+			new com.tarkrakov.tearsofink.prologue.PrologueItems.Satchel(new Item.Properties().stacksTo(1)));
+	public static final Item DIARY = register("diary",
+			new com.tarkrakov.tearsofink.prologue.PrologueItems.Diary(new Item.Properties().stacksTo(1)));
+	/** Базовое оружие Чернил: Чернильная клякса (R). */
+	public static final Item INK_LONGKNIFE = register("ink_longknife",
+			new com.tarkrakov.tearsofink.weapon.InkLongknifeItem(new Item.Properties()));
+	/** Базовое оружие Души: лечение (Shift+R в левой руке). */
+	public static final Item SALVATION_PENDANT = register("salvation_pendant",
+			new com.tarkrakov.tearsofink.weapon.SalvationPendantItem(new Item.Properties().stacksTo(1)));
+	/** Только вид снаряда кляксы (во вкладке нет). */
+	public static final Item INK_BLOT = register("ink_blot", new Item(new Item.Properties()));
 
 	private static Item register(String name, Item item) {
 		return Registry.register(BuiltInRegistries.ITEM, TearsOfInk.id(name), item);

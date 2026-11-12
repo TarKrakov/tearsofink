@@ -79,6 +79,17 @@ public class TearsOfInkClient implements ClientModInitializer {
 
 		// Оружие: волна без модели (видна по брызгам); щиты — модель «в блоке» и «сияет»
 		EntityRendererRegistry.register(ModEntities.INK_WAVE, NoopRenderer::new);
+		EntityRendererRegistry.register(ModEntities.INK_BLOT, net.minecraft.client.renderer.entity.ThrownItemRenderer::new);
+		// ----- пролог -----
+		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.prologue.GuideModel.LAYER,
+				com.tarkrakov.tearsofink.client.prologue.GuideModel::createBodyLayer);
+		EntityRendererRegistry.register(ModMobs.GUIDE, com.tarkrakov.tearsofink.client.prologue.GuideRenderer::new);
+		com.tarkrakov.tearsofink.prologue.PrologueItems.openInvitation = p ->
+				net.minecraft.client.Minecraft.getInstance().setScreen(new com.tarkrakov.tearsofink.client.prologue.InvitationScreen());
+		com.tarkrakov.tearsofink.prologue.PrologueItems.openDiary = p ->
+				net.minecraft.client.Minecraft.getInstance().setScreen(new com.tarkrakov.tearsofink.client.prologue.DiaryScreen());
+		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.prologue.DiaryEntries.Sync.TYPE, (payload, context) ->
+				context.client().execute(() -> com.tarkrakov.tearsofink.client.prologue.DiaryScreen.entries = new java.util.ArrayList<>(payload.entries())));
 
 		// Фауна
 		EntityModelLayerRegistry.registerModelLayer(CaterpillarModel.LAYER, CaterpillarModel::createBodyLayer);

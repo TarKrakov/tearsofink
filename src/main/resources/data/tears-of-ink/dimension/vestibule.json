@@ -1,0 +1,13 @@
+{
+  "type": "tears-of-ink:vestibule",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "tears-of-ink:vestibule",
+      "layers": [],
+      "lakes": false,
+      "features": false,
+      "structure_overrides": []
+    }
+  }
+}

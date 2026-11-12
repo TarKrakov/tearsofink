@@ -29,6 +29,8 @@ public final class InkFog {
 	public static final float FOG_END_CHANGE_PER_SECOND = 2.0f;
 	/** Видимость в самой густой мгле за краем Земель. */
 	public static final float EDGE_FOG_END = 2.0f;
+	private static final net.minecraft.resources.ResourceKey<Biome> VESTIBULE = net.minecraft.resources.ResourceKey.create(
+			net.minecraft.core.registries.Registries.BIOME, com.tarkrakov.tearsofink.TearsOfInk.id("vestibule"));
 	/** За сколько блоков ДО границы туман начинает сгущаться. */
 	public static final int OUTSIDE_RAMP = 40;
 	/** Сколько блоков ВНУТРИ биома нужно пройти до полной силы тумана. */
@@ -123,6 +125,7 @@ public final class InkFog {
 
 	/** Дальность тумана для зоны или null, если это не Чернильные Земли. */
 	public static Float zoneFogEnd(Holder<Biome> biome) {
+		if (biome.is(VESTIBULE)) return 9f;
 		if (biome.is(ModBiomes.INKWOOD)) return FOG_END_INK;
 		if (biome.is(ModBiomes.BLOODWOOD)) return FOG_END_BLOOD;
 		if (biome.is(ModBiomes.TAR_LAKE)) return FOG_END_LAKE;
@@ -132,7 +135,7 @@ public final class InkFog {
 
 	private static float computeTarget(ClientLevel level, BlockPos center) {
 		// Земли — своё измерение: туман там везде
-		if (com.tarkrakov.tearsofink.world.ModDimensions.isLands(level)) return 1f;
+		if (com.tarkrakov.tearsofink.world.ModDimensions.isLands(level) || com.tarkrakov.tearsofink.prologue.Vestibule.is(level)) return 1f;
 		if (isInk(level, center)) {
 			// Внутри: как глубоко мы зашли (расстояние до ближайшей «не-пустоши»)
 			int depth = nearest(level, center, INSIDE_RAMP, 4, false);

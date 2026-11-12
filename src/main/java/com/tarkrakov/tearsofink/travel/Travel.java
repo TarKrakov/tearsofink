@@ -175,9 +175,19 @@ public final class Travel {
 
 	/** Переход через зеркальце: из Земель — домой, отовсюду ещё — в Земли. */
 	public static void mirrorTravel(ServerPlayer p) {
-		set(p, get(p).withTosses(0));
-		if (ModDimensions.isLands(p.level())) goHome(p);
-		else goLands(p);
+		LandsTravel t = get(p).withTosses(0);
+		set(p, t);
+		if (com.tarkrakov.tearsofink.prologue.Vestibule.is(p.level())) { // в Преддверии зеркало не нужно — ворота перед тобой
+			Guide.say(p, "mirror_vestibule");
+			return;
+		}
+		if (ModDimensions.isLands(p.level())) { goHome(p); return; }
+		if (t.stage() < LandsTravel.STAGE_SIGNED && !p.isCreative()) {
+			p.sendSystemMessage(Component.translatable("message.tears-of-ink.mirror_unsigned").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+			return;
+		}
+		if (t.stage() == LandsTravel.STAGE_SIGNED) { com.tarkrakov.tearsofink.prologue.Prologue.enterVestibule(p); return; }
+		goLands(p);
 	}
 
 	private static void goHome(ServerPlayer p) {
