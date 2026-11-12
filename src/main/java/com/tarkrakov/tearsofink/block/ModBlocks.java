@@ -318,7 +318,7 @@ public final class ModBlocks {
 
 	/** Сердце Багряного Вестника: невидимый маячок в стволе (туман реже, кровь с кроны). Ставит генерация. */
 	public static final Block HERALD_HEART = registerNoItem("herald_heart", new com.tarkrakov.tearsofink.world.herald.HeraldHeartBlock(
-			BlockBehaviour.Properties.of().strength(-1f, 3600000f).noCollission().noLootTable().air()
+			BlockBehaviour.Properties.of().strength(-1f, 3600000f).noCollission().noLootTable().noOcclusion()
 					.pushReaction(PushReaction.BLOCK)));
 
 	/** Предмет-блок для Трясинника (ставится на воду, как кувшинка). Вызывается из ModItems. */
