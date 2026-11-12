@@ -93,6 +93,11 @@ public final class ModItems {
 	public static final Item PALE_SPEARMAN_SPAWN_EGG = register("pale_spearman_spawn_egg",
 			new SpawnEggItem(com.tarkrakov.tearsofink.entity.ModMobs.PALE_SPEARMAN, 0xD8DCE0, 0x3A3F4A, new Item.Properties()));
 
+	public static final Item PALE_SHIELDBEARER_SPAWN_EGG = register("pale_shieldbearer_spawn_egg",
+			new SpawnEggItem(com.tarkrakov.tearsofink.entity.ModMobs.PALE_SHIELDBEARER, 0xC9CDD2, 0x5A4A3A, new Item.Properties()));
+	public static final Item PALE_CROSSBOWMAN_SPAWN_EGG = register("pale_crossbowman_spawn_egg",
+			new SpawnEggItem(com.tarkrakov.tearsofink.entity.ModMobs.PALE_CROSSBOWMAN, 0xE2E5E8, 0x6B3A2E, new Item.Properties()));
+
 	// ===== Иконки достижений (не добываются, во вкладке не лежат) =====
 	public static final Item ICON_INK_LANDS = register("icon_ink_lands", new Item(new Item.Properties()));
 	public static final Item ICON_FIRST_FLAME = register("icon_first_flame", new Item(new Item.Properties()));

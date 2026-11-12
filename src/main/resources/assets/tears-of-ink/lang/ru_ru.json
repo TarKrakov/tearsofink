@@ -183,5 +183,10 @@
   "message.tears-of-ink.fog_on": "Туман Чернильных Земель снова с вами.",
   "block.tears-of-ink.herald_heart": "Сердце Багряного Вестника",
   "entity.tears-of-ink.pale_spearman": "Бледный копейщик",
-  "item.tears-of-ink.pale_spearman_spawn_egg": "Яйцо призыва бледного копейщика"
+  "item.tears-of-ink.pale_spearman_spawn_egg": "Яйцо призыва бледного копейщика",
+  "entity.tears-of-ink.pale_shieldbearer": "Бледный щитовик",
+  "entity.tears-of-ink.pale_crossbowman": "Бледный арбалетчик",
+  "entity.tears-of-ink.pale_bolt": "Арбалетный болт",
+  "item.tears-of-ink.pale_shieldbearer_spawn_egg": "Яйцо призыва бледного щитовика",
+  "item.tears-of-ink.pale_crossbowman_spawn_egg": "Яйцо призыва бледного арбалетчика"
 }

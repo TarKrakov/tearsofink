@@ -27,8 +27,7 @@ import net.minecraft.world.phys.Vec3;
  * Спокоен: ходит по дороге между фонарями, копьё на плече. Заметил игрока: встаёт в стойку,
  * держит дистанцию копья, тычет (урон на 0,5 с анимации), отпрыгивает назад, если к нему лезут.
  */
-public class PaleSpearmanEntity extends Monster {
-	private static final EntityDataAccessor<Boolean> AGGRESSIVE = SynchedEntityData.defineId(PaleSpearmanEntity.class, EntityDataSerializers.BOOLEAN);
+public class PaleSpearmanEntity extends com.tarkrakov.tearsofink.entity.patrol.PaleSoldier {
 	private static final byte THRUST_EVENT = 4, DODGE_EVENT = 5;
 
 	// анимации (клиент)
@@ -52,10 +51,6 @@ public class PaleSpearmanEntity extends Monster {
 	/** Отпрыжка «спиной вперёд» к игроку: всё время прыжка смотрит в сторону от него. */
 	boolean reverseDodge;
 
-	// патруль
-	int patrolRoad = -1;
-	double patrolFrom, patrolTo;
-
 	public PaleSpearmanEntity(EntityType<? extends Monster> type, Level level) {
 		super(type, level);
 		this.xpReward = 6;
@@ -71,24 +66,15 @@ public class PaleSpearmanEntity extends Monster {
 	}
 
 	@Override
-	protected void defineSynchedData(SynchedEntityData.Builder builder) {
-		super.defineSynchedData(builder);
-		builder.define(AGGRESSIVE, false);
-	}
-
-	@Override
 	protected void registerGoals() {
 		this.goalSelector.addGoal(0, new FloatGoal(this));
 		this.goalSelector.addGoal(1, new SpearmanCombatGoal(this));
-		this.goalSelector.addGoal(5, new RoadPatrolGoal(this));
+		this.goalSelector.addGoal(4, new com.tarkrakov.tearsofink.entity.patrol.FollowLeaderGoal(this, 3.0));
+		this.goalSelector.addGoal(5, new com.tarkrakov.tearsofink.entity.patrol.RoadPatrolGoal(this));
 		this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8f));
 		this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 		this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
 		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
-	}
-
-	public boolean isAggressiveSynced() {
-		return this.entityData.get(AGGRESSIVE);
 	}
 
 	public boolean busy() {
@@ -142,7 +128,6 @@ public class PaleSpearmanEntity extends Monster {
 	public void aiStep() {
 		super.aiStep();
 		if (this.level().isClientSide) return;
-		this.entityData.set(AGGRESSIVE, this.getTarget() != null && this.getTarget().isAlive());
 		if (attackCooldown > 0) attackCooldown--;
 		if (dodgeCooldown > 0) dodgeCooldown--;
 		if (gapCooldown > 0) gapCooldown--;
@@ -225,31 +210,6 @@ public class PaleSpearmanEntity extends Monster {
 		return hurt;
 	}
 
-	@Override
-	public void addAdditionalSaveData(CompoundTag tag) {
-		super.addAdditionalSaveData(tag);
-		if (patrolRoad >= 0) {
-			tag.putInt("PatrolRoad", patrolRoad);
-			tag.putDouble("PatrolFrom", patrolFrom);
-			tag.putDouble("PatrolTo", patrolTo);
-		}
-	}
-
-	@Override
-	public void readAdditionalSaveData(CompoundTag tag) {
-		super.readAdditionalSaveData(tag);
-		if (tag.contains("PatrolRoad")) {
-			patrolRoad = tag.getInt("PatrolRoad");
-			patrolFrom = tag.getDouble("PatrolFrom");
-			patrolTo = tag.getDouble("PatrolTo");
-		}
-	}
-
-	public void setPatrol(int road, double from, double to) {
-		this.patrolRoad = road;
-		this.patrolFrom = from;
-		this.patrolTo = to;
-	}
 
 	// звуки-заглушки: глухие, «пустые» — скелет потише
 	@Override

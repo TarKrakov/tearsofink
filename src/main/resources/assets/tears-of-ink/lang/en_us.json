@@ -165,5 +165,10 @@
   "message.tears-of-ink.fog_on": "The Ink Lands fog is back.",
   "block.tears-of-ink.herald_heart": "Blood Herald Heart",
   "entity.tears-of-ink.pale_spearman": "Pale Spearman",
-  "item.tears-of-ink.pale_spearman_spawn_egg": "Pale Spearman Spawn Egg"
+  "item.tears-of-ink.pale_spearman_spawn_egg": "Pale Spearman Spawn Egg",
+  "entity.tears-of-ink.pale_shieldbearer": "Pale Shieldbearer",
+  "entity.tears-of-ink.pale_crossbowman": "Pale Crossbowman",
+  "entity.tears-of-ink.pale_bolt": "Crossbow Bolt",
+  "item.tears-of-ink.pale_shieldbearer_spawn_egg": "Pale Shieldbearer Spawn Egg",
+  "item.tears-of-ink.pale_crossbowman_spawn_egg": "Pale Crossbowman Spawn Egg"
 }
