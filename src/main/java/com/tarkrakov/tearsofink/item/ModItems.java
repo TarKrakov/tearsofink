@@ -90,6 +90,9 @@ public final class ModItems {
 	public static final Item CATERPILLAR_SPAWN_EGG = register("caterpillar_spawn_egg",
 			new SpawnEggItem(com.tarkrakov.tearsofink.entity.ModMobs.CATERPILLAR, 0x7FD8C9, 0x2E4B52, new Item.Properties()));
 
+	public static final Item PALE_SPEARMAN_SPAWN_EGG = register("pale_spearman_spawn_egg",
+			new SpawnEggItem(com.tarkrakov.tearsofink.entity.ModMobs.PALE_SPEARMAN, 0xD8DCE0, 0x3A3F4A, new Item.Properties()));
+
 	// ===== Иконки достижений (не добываются, во вкладке не лежат) =====
 	public static final Item ICON_INK_LANDS = register("icon_ink_lands", new Item(new Item.Properties()));
 	public static final Item ICON_FIRST_FLAME = register("icon_first_flame", new Item(new Item.Properties()));

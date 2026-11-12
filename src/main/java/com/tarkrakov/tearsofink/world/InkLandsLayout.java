@@ -393,6 +393,25 @@ public final class InkLandsLayout {
 		return new int[]{x, z};
 	}
 
+	/** Дорога рядом с точкой (полуширина + extra): {номер, расстояние от центра области вдоль дороги, до осевой} или null. */
+	public double[] roadNear(int x, int z, double extra) {
+		return roadAt(x, z, ROAD_HALF_WIDTH + extra);
+	}
+
+	/** Точка на осевой дороги road на расстоянии d от центра области: {x, z}. */
+	public double[] roadPoint(int road, double d) {
+		double a = roadAngle(road, d);
+		return new double[]{center.getX() + Math.cos(a) * d, center.getZ() + Math.sin(a) * d};
+	}
+
+	/** Раскладка Земель для мира (или null, если их нет). */
+	public static InkLandsLayout of(net.minecraft.server.level.ServerLevel level) {
+		if (level.getChunkSource().getGenerator().getBiomeSource() instanceof InkLandsAccess access) {
+			return access.tearsofink$layout(level.getChunkSource().randomState().sampler());
+		}
+		return null;
+	}
+
 	/** Лежит ли точка на одной из магистралей. */
 	public boolean isRoad(int x, int z) {
 		return roadAt(x, z) != null;

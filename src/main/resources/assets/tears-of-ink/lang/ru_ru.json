@@ -181,5 +181,7 @@
   "message.tears-of-ink.blood_crystal": "В накопителе застыл Кристалл крови (%s).",
   "message.tears-of-ink.fog_off": "Туман Чернильных Земель выключен (только у вас). /inkfog — вернуть.",
   "message.tears-of-ink.fog_on": "Туман Чернильных Земель снова с вами.",
-  "block.tears-of-ink.herald_heart": "Сердце Багряного Вестника"
+  "block.tears-of-ink.herald_heart": "Сердце Багряного Вестника",
+  "entity.tears-of-ink.pale_spearman": "Бледный копейщик",
+  "item.tears-of-ink.pale_spearman_spawn_egg": "Яйцо призыва бледного копейщика"
 }

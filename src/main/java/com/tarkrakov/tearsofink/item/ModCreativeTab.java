@@ -94,6 +94,7 @@ public final class ModCreativeTab {
 						output.accept(ModItems.CLEAVE_GREATSWORD);
 						output.accept(ModItems.ATONEMENT);
 						output.accept(ModItems.CATERPILLAR_SPAWN_EGG);
+						output.accept(ModItems.PALE_SPEARMAN_SPAWN_EGG);
 						output.accept(ModItems.SILK_THREAD);
 						output.accept(ModItems.BLOOD_CLOT);
 						output.accept(ModItems.BLOOD_CRYSTAL);

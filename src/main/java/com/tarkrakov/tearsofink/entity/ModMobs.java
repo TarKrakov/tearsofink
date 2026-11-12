@@ -21,10 +21,18 @@ public final class ModMobs {
 			EntityType.Builder.of(CaterpillarEntity::new, MobCategory.CREATURE)
 					.sized(0.45f, 0.3f).clientTrackingRange(8).build("caterpillar"));
 
+	/** Бледный копейщик — патруль дорог Бледнолесья. */
+	public static final EntityType<com.tarkrakov.tearsofink.entity.spearman.PaleSpearmanEntity> PALE_SPEARMAN = Registry.register(
+			BuiltInRegistries.ENTITY_TYPE, TearsOfInk.id("pale_spearman"),
+			EntityType.Builder.of(com.tarkrakov.tearsofink.entity.spearman.PaleSpearmanEntity::new, MobCategory.MONSTER)
+					.sized(0.6f, 1.7f).clientTrackingRange(10).build("pale_spearman"));
+
 	private ModMobs() {}
 
 	public static void init() {
 		FabricDefaultAttributeRegistry.register(CATERPILLAR, CaterpillarEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(PALE_SPEARMAN, com.tarkrakov.tearsofink.entity.spearman.PaleSpearmanEntity.createAttributes());
+		com.tarkrakov.tearsofink.entity.spearman.SpearmanPatrols.init();
 		SpawnPlacements.register(CATERPILLAR, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
 				(type, level, reason, pos, random) -> {
 					BlockPos below = pos.below();
