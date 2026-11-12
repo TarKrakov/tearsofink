@@ -50,6 +50,8 @@ public class FinalCleanupFeature extends Feature<NoneFeatureConfiguration> {
 		BlockState air = Blocks.AIR.defaultBlockState();
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		boolean changed = false;
+		// Трясинник растёт только у Озера — дальше его не ищем
+		boolean nearLake = layout.nearLake(minX + 8, minZ + 8, InkLandsLayout.LAKE_ZONE_RADIUS + 24);
 
 		for (int dx = 0; dx < 16; dx++) {
 			for (int dz = 0; dz < 16; dz++) {
@@ -57,7 +59,7 @@ public class FinalCleanupFeature extends Feature<NoneFeatureConfiguration> {
 				int top = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z);
 
 				// ----- висячий Трясинник -----
-				for (int y = top; y > top - 24 && y > level.getMinBuildHeight(); y--) {
+				for (int y = top; nearLake && y > top - 24 && y > level.getMinBuildHeight(); y--) {
 					if (level.getBlockState(pos.set(x, y, z)).is(ModBlocks.BOGLEAF)
 							&& !level.getFluidState(pos.set(x, y - 1, z)).is(net.minecraft.tags.FluidTags.WATER)) {
 						level.setBlock(pos.set(x, y, z), air, 2);

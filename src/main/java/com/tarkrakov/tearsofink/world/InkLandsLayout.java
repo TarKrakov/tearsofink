@@ -3,11 +3,9 @@ package com.tarkrakov.tearsofink.world;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.tags.BiomeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.biome.Biome;
-import net.minecraft.world.level.biome.Biomes;
 import net.minecraft.world.level.biome.Climate;
 import net.minecraft.world.level.levelgen.synth.SimplexNoise;
 
@@ -147,6 +145,13 @@ public final class InkLandsLayout {
 		return lakeCenter;
 	}
 
+	/** Быстрая проверка без шума: может ли точка быть ближе radius к Озеру (с учётом неровности берега). */
+	public boolean nearLake(int x, int z, double radius) {
+		double dx = x - lakeCenter.getX(), dz = z - lakeCenter.getZ();
+		double r = radius + LAKE_WOBBLE + 1;
+		return dx * dx + dz * dz < r * r;
+	}
+
 	/** Расстояние до центра Озера с учётом неровного берега. */
 	public double lakeDistance(int x, int z) {
 		double dx = x - lakeCenter.getX(), dz = z - lakeCenter.getZ();
@@ -235,7 +240,7 @@ public final class InkLandsLayout {
 		if (d > RADIUS) return null;
 
 		// Смоляное Озеро — одно, крупное; прочая вода внутри области — просто вода своей зоны
-		if (lakeDistance(x, z) < LAKE_ZONE_RADIUS) return ModBiomes.TAR_LAKE;
+		if (nearLake(x, z, LAKE_ZONE_RADIUS) && lakeDistance(x, z) < LAKE_ZONE_RADIUS) return ModBiomes.TAR_LAKE;
 		if (d < CORE_RADIUS) return ModBiomes.INKWOOD;
 		if (isBlood(x, z)) return ModBiomes.BLOODWOOD;
 		return ModBiomes.PALE_FOREST;
@@ -245,20 +250,35 @@ public final class InkLandsLayout {
 	private boolean isBlood(int x, int z) {
 		int cellX = Math.floorDiv(x, BLOOD_CELL);
 		int cellZ = Math.floorDiv(z, BLOOD_CELL);
+		double wobble = Double.NaN; // шум считаем, только если рядом есть пятно
 		for (int i = -1; i <= 1; i++) {
 			for (int j = -1; j <= 1; j++) {
 				long[] blob = bloodBlob(cellX + i, cellZ + j);
 				if (blob == null) continue;
 				double bx = x - blob[0], bz = z - blob[1];
-				double wobble = detailNoise.getValue(x / 30.0, z / 30.0) * BLOOD_WOBBLE;
-				if (Math.sqrt(bx * bx + bz * bz) + wobble < blob[2]) return true;
+				double dist = Math.sqrt(bx * bx + bz * bz);
+				if (dist - BLOOD_WOBBLE >= blob[2]) continue;
+				if (Double.isNaN(wobble)) wobble = detailNoise.getValue(x / 30.0, z / 30.0) * BLOOD_WOBBLE;
+				if (dist + wobble < blob[2]) return true;
 			}
 		}
 		return false;
 	}
 
+	/** Пятна по ячейкам (считаются один раз — выбор зоны спрашивает их очень часто). */
+	private final java.util.concurrent.ConcurrentHashMap<Long, long[]> bloodBlobs = new java.util.concurrent.ConcurrentHashMap<>();
+	private static final long[] NO_BLOB = new long[0];
+
 	/** Пятно в ячейке: {x, z, радиус} или null. */
 	private long[] bloodBlob(int cellX, int cellZ) {
+		long[] blob = bloodBlobs.computeIfAbsent(((long) cellX << 32) ^ (cellZ & 0xffffffffL), k -> {
+			long[] b = computeBloodBlob(cellX, cellZ);
+			return b == null ? NO_BLOB : b;
+		});
+		return blob == NO_BLOB ? null : blob;
+	}
+
+	private long[] computeBloodBlob(int cellX, int cellZ) {
 		RandomSource r = RandomSource.create(seed * 31 + cellX * 341873128712L + cellZ * 132897987541L);
 		if (r.nextDouble() > BLOOD_CHANCE) return null;
 		long bx = (long) ((cellX + 0.2 + r.nextDouble() * 0.6) * BLOOD_CELL);
@@ -479,11 +499,6 @@ public final class InkLandsLayout {
 			}
 		}
 		return best;
-	}
-
-	private static boolean isWater(Holder<Biome> biome) {
-		return biome.is(BiomeTags.IS_OCEAN) || biome.is(BiomeTags.IS_RIVER)
-				|| biome.is(Biomes.SWAMP) || biome.is(Biomes.MANGROVE_SWAMP);
 	}
 
 	/** Ищем точку на суше на кольце вокруг 0,0. Начальный угол зависит от сида мира. */
