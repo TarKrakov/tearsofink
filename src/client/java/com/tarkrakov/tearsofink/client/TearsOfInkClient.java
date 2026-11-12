@@ -80,6 +80,8 @@ public class TearsOfInkClient implements ClientModInitializer {
 		net.minecraft.client.renderer.blockentity.BlockEntityRenderers.register(
 				com.tarkrakov.tearsofink.block.lantern.ModBlockEntities.BLOOD_PUMP,
 				com.tarkrakov.tearsofink.client.blood.BloodPumpRenderer::new);
+		net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry.INSTANCE.register(
+				com.tarkrakov.tearsofink.block.ModBlocks.BLOOD_PUMP, new com.tarkrakov.tearsofink.client.blood.BloodPumpItemRenderer());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.DRYING_INK_PUDDLE, RenderType.cutout());
 		for (Item shield : new Item[]{ModItems.RAM_SHIELD, ModItems.RADIANT_SHIELD, ModItems.MERCY_SHIELD, ModItems.REPEL_SHIELD}) {
 			ItemProperties.register(shield, ResourceLocation.withDefaultNamespace("blocking"),

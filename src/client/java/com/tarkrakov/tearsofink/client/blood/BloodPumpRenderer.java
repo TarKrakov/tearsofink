@@ -39,6 +39,11 @@ public class BloodPumpRenderer implements BlockEntityRenderer<BloodPumpBlockEnti
 		long ms = (long) (phase * BloodPumpAnimations.PUMP.lengthInSeconds() * 1000f);
 		KeyframeAnimations.animate(model, BloodPumpAnimations.PUMP, ms, 1.0f, cache);
 
+		draw(model, pose, buffers, light, overlay, facing);
+	}
+
+	/** Нарисовать модель помпы, повернув лицом в facing (используется и в мире, и для иконки). */
+	public static void draw(BloodPumpModel model, PoseStack pose, MultiBufferSource buffers, int light, int overlay, Direction facing) {
 		pose.pushPose();
 		pose.translate(0.5, 0, 0.5);
 		pose.mulPose(Axis.YP.rotationDegrees(180f - facing.toYRot()));
