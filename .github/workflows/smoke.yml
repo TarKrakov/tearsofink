@@ -1,0 +1,36 @@
+# Ручной автотест: поднимает выделенный сервер, генерирует Чернильные Земли и проверяет дороги.
+name: smoke
+on: [workflow_dispatch]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'microsoft'
+      - run: chmod +x ./gradlew
+      - name: run server and checks
+        run: |
+          mkdir -p run && echo "eula=true" > run/eula.txt
+          printf "online-mode=false\nspawn-protection=0\n" > run/server.properties
+          {
+            for i in $(seq 1 120); do
+              sleep 5
+              if grep -q "Done (" run/logs/latest.log 2>/dev/null; then break; fi
+            done
+            echo "tearsofink check terrain"
+            for r in 1 2 3 4 5; do echo "tearsofink check roads $r"; sleep 60; done
+            sleep 30
+            echo "stop"
+          } | ./gradlew runServer --console=plain 2>&1 | tee server.log | grep -E "\[check\]|ERROR|Exception|Caused by|Done \(" | head -400 || true
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: server-log
+          path: |
+            server.log
+            run/logs/

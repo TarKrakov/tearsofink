@@ -53,6 +53,7 @@ public class TearsOfInk implements ModInitializer {
 		ModMobs.init();
 		WeaponAbilities.init();
 		ModCommands.init();
+		com.tarkrakov.tearsofink.command.DebugCommands.init();
 		com.tarkrakov.tearsofink.command.StructureCommands.init();
 		LOGGER.info("Tears of Ink: чернила проливаются в мир.");
 	}

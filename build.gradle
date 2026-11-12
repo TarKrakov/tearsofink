@@ -113,3 +113,8 @@ publishing {
 		// retrieving dependencies.
 	}
 }
+
+// Автотест на сервере (workflow smoke): команды консоли подаются через stdin
+tasks.matching { it.name == 'runServer' }.configureEach {
+	standardInput = System.in
+}
