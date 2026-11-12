@@ -162,5 +162,6 @@
   "message.tears-of-ink.blood_level": "The tank holds %s blood. A clot forms at %s.",
   "message.tears-of-ink.blood_crystal": "A Blood Crystal has set in the tank (%s).",
   "message.tears-of-ink.fog_off": "Ink Lands fog is off (for you only). /inkfog to restore.",
-  "message.tears-of-ink.fog_on": "The Ink Lands fog is back."
+  "message.tears-of-ink.fog_on": "The Ink Lands fog is back.",
+  "block.tears-of-ink.herald_heart": "Blood Herald Heart"
 }

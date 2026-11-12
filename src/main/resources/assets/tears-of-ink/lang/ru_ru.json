@@ -180,5 +180,6 @@
   "message.tears-of-ink.blood_level": "В накопителе %s крови. Сгусток соберётся с %s.",
   "message.tears-of-ink.blood_crystal": "В накопителе застыл Кристалл крови (%s).",
   "message.tears-of-ink.fog_off": "Туман Чернильных Земель выключен (только у вас). /inkfog — вернуть.",
-  "message.tears-of-ink.fog_on": "Туман Чернильных Земель снова с вами."
+  "message.tears-of-ink.fog_on": "Туман Чернильных Земель снова с вами.",
+  "block.tears-of-ink.herald_heart": "Сердце Багряного Вестника"
 }

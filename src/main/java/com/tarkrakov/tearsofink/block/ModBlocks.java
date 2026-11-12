@@ -316,6 +316,11 @@ public final class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_BLOCK).mapColor(MapColor.COLOR_RED)
 					.strength(-1f, 3600000f).noOcclusion().pushReaction(PushReaction.BLOCK)));
 
+	/** Сердце Багряного Вестника: невидимый маячок в стволе (туман реже, кровь с кроны). Ставит генерация. */
+	public static final Block HERALD_HEART = registerNoItem("herald_heart", new com.tarkrakov.tearsofink.world.herald.HeraldHeartBlock(
+			BlockBehaviour.Properties.of().strength(-1f, 3600000f).noCollission().noLootTable().air()
+					.pushReaction(PushReaction.BLOCK)));
+
 	/** Предмет-блок для Трясинника (ставится на воду, как кувшинка). Вызывается из ModItems. */
 	public static Item bogleafItem() {
 		return Registry.register(BuiltInRegistries.ITEM, TearsOfInk.id("bogleaf"), new PlaceOnWaterBlockItem(BOGLEAF, new Item.Properties()));

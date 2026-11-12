@@ -65,6 +65,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 		ParticleFactoryRegistry.getInstance().register(ModParticles.INK_SPARK, SheetParticles.InkSparkProvider::new);
 		ParticleFactoryRegistry.getInstance().register(ModParticles.PAPER_SCRAP, SheetParticles.PaperProvider::new);
 		ClientTickEvents.END_CLIENT_TICK.register(FlameDanceSpawner::tick);
+		ClientTickEvents.END_CLIENT_TICK.register(com.tarkrakov.tearsofink.client.fog.HeraldDrips::tick);
 
 		// Душа и Чернила: полоски и надпись при входе/выходе
 		ClientPlayNetworking.registerGlobalReceiver(InkSyncPayload.TYPE, (payload, context) -> context.client().execute(() -> InkHud.receive(payload)));

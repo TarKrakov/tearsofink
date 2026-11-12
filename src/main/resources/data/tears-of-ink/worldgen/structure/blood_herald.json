@@ -1,0 +1,7 @@
+{
+  "type": "tears-of-ink:blood_herald",
+  "biomes": "#tears-of-ink:has_blood_herald",
+  "step": "top_layer_modification",
+  "spawn_overrides": {},
+  "terrain_adaptation": "none"
+}

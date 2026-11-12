@@ -26,7 +26,10 @@ final class BloodFauna {
 		// только дно, с запасом от неровного края — чтобы точно попасть в Кроволесье
 		if (dist > blob[2] - 12) return;
 
-		boolean centre = Math.abs(blob[0] - cx) <= 8 && Math.abs(blob[1] - cz) <= 8;
+		// у ствола Вестника (корни) не селим — их бы замуровало деревом
+		if (dist < 36) return;
+		// «центральная» группа — в чанке чуть в стороне от ствола
+		boolean centre = Math.abs(blob[0] + 44 - cx) <= 8 && Math.abs(blob[1] - cz) <= 8;
 		int count;
 		if (centre) {
 			count = EntityTuning.BLOOD_CENTRE_GROUP;

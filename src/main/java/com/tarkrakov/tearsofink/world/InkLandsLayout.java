@@ -346,15 +346,29 @@ public final class InkLandsLayout {
 
 	private double roadAngle(int road, double d) {
 		double a = roadAngles[road] + roadNoise.getValue(d / ROAD_MEANDER_SCALE, road * 10.0) * ROAD_MEANDER;
-		return avoidLake(a, d);
+		a = avoidLake(a, d);
+		// и стволы Багряных Вестников (в центрах пятен Кроволесья)
+		int px = center.getX() + (int) Math.round(Math.cos(a) * d), pz = center.getZ() + (int) Math.round(Math.sin(a) * d);
+		int cellX = Math.floorDiv(px, BLOOD_CELL), cellZ = Math.floorDiv(pz, BLOOD_CELL);
+		for (int i = -1; i <= 1; i++) {
+			for (int j = -1; j <= 1; j++) {
+				long[] blob = bloodBlob(cellX + i, cellZ + j);
+				if (blob != null) a = avoidCircle(a, d, blob[0], blob[1], com.tarkrakov.tearsofink.world.herald.BloodHerald.ROAD_AVOID);
+			}
+		}
+		return a;
 	}
 
 	/** Если дорога на этом радиусе попадает в Озеро — сдвигаем её вбок, на берег (в ту сторону, где она и так шла). */
 	private double avoidLake(double a, double d) {
 		if (lakeCenter == null) return a;
-		double lx = lakeCenter.getX() - center.getX(), lz = lakeCenter.getZ() - center.getZ();
+		return avoidCircle(a, d, lakeCenter.getX(), lakeCenter.getZ(), LAKE_ROAD_AVOID);
+	}
+
+	/** Сдвинуть дорогу (угол a на радиусе d от центра области) так, чтобы она обошла круг (cx, cz, r). */
+	private double avoidCircle(double a, double d, double cx, double cz, double r) {
+		double lx = cx - center.getX(), lz = cz - center.getZ();
 		double dist = Math.sqrt(lx * lx + lz * lz), phi = Math.atan2(lz, lx);
-		double r = LAKE_ROAD_AVOID;
 		double c = (d * d + dist * dist - r * r) / (2 * d * dist);
 		if (c >= 1 || c <= -1) return a; // на этом радиусе круг Озера дорогу не задевает
 		double theta = Math.acos(c);
@@ -483,6 +497,20 @@ public final class InkLandsLayout {
 			result[road] = p;
 		}
 		return result;
+	}
+
+	/** Ближе ли точка radius блоков к центру какого-нибудь пятна (там стоит Багряный Вестник). */
+	public boolean nearHerald(int x, int z, double radius) {
+		int cellX = Math.floorDiv(x, BLOOD_CELL), cellZ = Math.floorDiv(z, BLOOD_CELL);
+		for (int i = -1; i <= 1; i++) {
+			for (int j = -1; j <= 1; j++) {
+				long[] blob = bloodBlob(cellX + i, cellZ + j);
+				if (blob == null) continue;
+				double dx = x - blob[0], dz = z - blob[1];
+				if (dx * dx + dz * dz < radius * radius) return true;
+			}
+		}
+		return false;
 	}
 
 	/** Ближайшее к точке пятно Кроволесья: {x, z, радиус} или null. */
