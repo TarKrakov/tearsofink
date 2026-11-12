@@ -57,7 +57,7 @@ public final class InkLandsLayout {
 	/** Зона «Смоляное озеро» (чёрная вода, туман Озера, без деревьев): вода + пляж + полоса берега. */
 	public static final int LAKE_ZONE_RADIUS = LAKE_WATER_RADIUS + LAKE_BEACH + 20;
 	/** Глубина у самого берега и наибольшая — в середине. */
-	public static final int LAKE_SHORE_DEPTH = 2, LAKE_DEPTH = 8;
+	public static final int LAKE_SHORE_DEPTH = 2, LAKE_DEPTH = 16;
 	/** Неровность берега (±) и её масштаб (больше — плавнее изгибы). */
 	public static final int LAKE_WOBBLE = 12;
 	public static final double LAKE_WOBBLE_SCALE = 90.0;
