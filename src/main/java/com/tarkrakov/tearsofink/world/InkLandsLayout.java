@@ -247,6 +247,7 @@ public final class InkLandsLayout {
 			if (depthInside((int) p[0], (int) p[1]) >= 24) return p;
 		}
 		return roadPoint(road, RADIUS * 0.9);
+	}
 
 	/**
 	 * Насколько глубоко точка внутри Чернильных Земель (в блоках, с учётом рваного края).
