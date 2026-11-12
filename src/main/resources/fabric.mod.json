@@ -22,9 +22,6 @@
 		],
 		"fabric-datagen": [
 			"com.tarkrakov.tearsofink.client.TearsOfInkDataGenerator"
-		],
-		"terrablender": [
-			"com.tarkrakov.tearsofink.world.ModTerraBlender"
 		]
 	},
 	"mixins": [
@@ -38,7 +35,6 @@
 		"fabricloader": ">=0.20.1",
 		"minecraft": "~1.21.1",
 		"java": ">=21",
-		"fabric-api": "*",
-		"terrablender": "*"
+		"fabric-api": "*"
 	}
 }

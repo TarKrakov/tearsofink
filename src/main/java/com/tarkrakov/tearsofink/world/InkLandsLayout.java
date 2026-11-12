@@ -12,7 +12,7 @@ import net.minecraft.world.level.levelgen.synth.SimplexNoise;
 import java.util.function.IntBinaryOperator;
 
 /**
- * Раскладка Чернильных Земель: одна область на мир.
+ * Раскладка Чернильных Земель — своё измерение (tears-of-ink:ink_lands), центр в 0,0.
  * От края к центру: Бледнолесье → (круглые пятна Кроволесья) → Чернолесье.
  * Одно крупное Смоляное Озеро на стыке Бледнолесья и Чернолесья: чёрная вода, глубже к середине,
  * пепельный пляж вокруг (деревня рыболюдов будет плавучей). Дороги его огибают.
@@ -21,12 +21,10 @@ import java.util.function.IntBinaryOperator;
  */
 public final class InkLandsLayout {
 	// ===== Размеры (в блоках) =====
-	/** На каком расстоянии от точки 0,0 ищем место для центра (по очереди). 1150 = радиус 800 + ~350 до края. */
-	public static final int[] CENTER_DISTANCES = {1150, 1300, 1500, 1800, 2200, 2800};
-	/** Радиус всей области. */
-	public static final int RADIUS = 800;
+	/** Радиус всей области (до края-петли). Каждая зона на +100 шире, чем было в обычном мире (800). */
+	public static final int RADIUS = 1100;
 	/** Радиус ядра — Чернолесья. */
-	public static final int CORE_RADIUS = 324;
+	public static final int CORE_RADIUS = 424;
 	/** Насколько рвутся края области (±). */
 	public static final int EDGE_WOBBLE = 110;
 	/** Масштаб «рваности» краёв: больше — плавнее изгибы. */
@@ -47,7 +45,7 @@ public final class InkLandsLayout {
 
 	// ===== Смоляное Озеро (одно на область) =====
 	/** Расстояние центра Озера от центра области: на стыке Бледнолесья и Чернолесья, ближе к Чернолесью. */
-	public static final int LAKE_DISTANCE = 400;
+	public static final int LAKE_DISTANCE = 500;
 	/** Радиус водной глади (до пляжа). */
 	public static final int LAKE_WATER_RADIUS = 130;
 	/** Ширина пляжа вокруг воды. */
@@ -100,7 +98,8 @@ public final class InkLandsLayout {
 	private final Climate.Sampler sampler;
 	private final BlockPos center;
 	private final long seed;
-	private final SimplexNoise edgeNoise;
+	/** Шум рваного края — один для всех миров, чтобы клиент сам знал, где край (туман сгущается). */
+	private static final SimplexNoise EDGE_NOISE = new SimplexNoise(RandomSource.create(0x7E4125L));
 	private final SimplexNoise detailNoise;
 	private final SimplexNoise roadNoise;
 	private final double[] roadAngles = new double[ROADS];
@@ -114,12 +113,11 @@ public final class InkLandsLayout {
 	/** Высота дна для каждого пятна Кроволесья (считается один раз на пятно). */
 	private final java.util.concurrent.ConcurrentHashMap<Long, Double> valleyFloors = new java.util.concurrent.ConcurrentHashMap<>();
 
-	private InkLandsLayout(Climate.Sampler sampler, BlockPos center) {
+	private InkLandsLayout(Climate.Sampler sampler, long seed) {
 		this.sampler = sampler;
-		this.center = center;
-		this.seed = center.asLong() ^ 0x7E4125L;
+		this.center = BlockPos.ZERO;
+		this.seed = seed;
 		RandomSource random = RandomSource.create(seed);
-		this.edgeNoise = new SimplexNoise(random);
 		this.detailNoise = new SimplexNoise(random);
 		this.roadNoise = new SimplexNoise(random);
 		double start = random.nextDouble() * Mth.TWO_PI;
@@ -207,7 +205,20 @@ public final class InkLandsLayout {
 	}
 
 	public static InkLandsLayout create(Climate.Sampler sampler) {
-		return new InkLandsLayout(sampler, findCenter(sampler));
+		return new InkLandsLayout(sampler, seedOf(sampler));
+	}
+
+	/** Сид раскладки из сида мира: берём климат в нескольких точках (он зависит только от сида). */
+	private static long seedOf(Climate.Sampler sampler) {
+		long h = 0x7E4125L;
+		for (int i = 0; i < 4; i++) {
+			Climate.TargetPoint p = sampler.sample(i * 97, 16, i * -131);
+			h = h * 31 + p.temperature();
+			h = h * 31 + p.humidity();
+			h = h * 31 + p.weirdness();
+			h = h * 31 + p.erosion();
+		}
+		return h;
 	}
 
 	public Climate.Sampler sampler() {
@@ -220,10 +231,22 @@ public final class InkLandsLayout {
 
 	/** Расстояние до центра с учётом рваного края. */
 	private double edgeDistance(int x, int z) {
-		double dx = x - center.getX();
-		double dz = z - center.getZ();
-		return Math.sqrt(dx * dx + dz * dz) + edgeNoise.getValue(x / EDGE_SCALE, z / EDGE_SCALE) * EDGE_WOBBLE;
+		return Math.sqrt((double) x * x + (double) z * z) + EDGE_NOISE.getValue(x / EDGE_SCALE, z / EDGE_SCALE) * EDGE_WOBBLE;
 	}
+
+	/** Глубина внутри Земель без раскладки (центр всегда 0,0) — для клиента: туман у края. */
+	public static double edgeDepth(double x, double z) {
+		return RADIUS - (Math.sqrt(x * x + z * z) + EDGE_NOISE.getValue(x / EDGE_SCALE, z / EDGE_SCALE) * EDGE_WOBBLE);
+	}
+
+	/** Где игрок попадает в Земли: на дороге road, чуть внутри края Бледнолесья. {x, z} */
+	public double[] arrivalPoint(int road) {
+		road = Math.floorMod(road, ROADS);
+		for (double d = RADIUS * ROAD_START_FRACTION; d > CORE_RADIUS; d -= 4) {
+			double[] p = roadPoint(road, d);
+			if (depthInside((int) p[0], (int) p[1]) >= 24) return p;
+		}
+		return roadPoint(road, RADIUS * 0.9);
 
 	/**
 	 * Насколько глубоко точка внутри Чернильных Земель (в блоках, с учётом рваного края).
@@ -582,55 +605,5 @@ public final class InkLandsLayout {
 			}
 		}
 		return best;
-	}
-
-	/** Ищем точку на суше на кольце вокруг 0,0. Начальный угол зависит от сида мира. */
-	/**
-	 * Где поставить центр: перебираем места на кольцах вокруг 0,0 и берём то, где внутри области
-	 * меньше всего моря (иначе море «вливается» в Земли и топит Бледнолесье). Ближайшее к спавну
-	 * место совсем без моря выигрывает сразу. Одинаково для одного сида мира.
-	 */
-	private static BlockPos findCenter(Climate.Sampler sampler) {
-		Climate.TargetPoint origin = sampler.sample(0, 16, 0);
-		long hash = origin.temperature() * 31L + origin.humidity() * 17L + origin.weirdness();
-		double startAngle = Math.floorMod(hash, 360L) * Math.PI / 180.0;
-		BlockPos best = null;
-		double bestScore = Double.MAX_VALUE;
-		for (int distance : CENTER_DISTANCES) {
-			for (int i = 0; i < 24; i++) {
-				double angle = startAngle + i * Math.PI / 12.0;
-				int x = (int) Math.round(Math.cos(angle) * distance);
-				int z = (int) Math.round(Math.sin(angle) * distance);
-				if (Climate.unquantizeCoord(sampler.sample(x >> 2, 16, z >> 2).continentalness()) < -0.11f) continue; // центр — не в море
-				double score = seaFraction(sampler, x, z);
-				if (score < bestScore) {
-					bestScore = score;
-					best = new BlockPos(x, 0, z);
-				}
-			}
-			if (bestScore <= ACCEPTABLE_SEA) break; // моря почти нет — берём это, ближе к спавну
-		}
-		if (best != null) return best;
-		return new BlockPos((int) (Math.cos(startAngle) * CENTER_DISTANCES[0]), 0,
-				(int) (Math.sin(startAngle) * CENTER_DISTANCES[0]));
-	}
-
-	/** Сколько моря внутри области ещё терпимо (доля), чтобы не уходить дальше от спавна. */
-	private static final double ACCEPTABLE_SEA = 0.25;
-
-	/** Доля моря и побережья внутри области с центром x, z (0 — сплошная суша). */
-	private static double seaFraction(Climate.Sampler sampler, int cx, int cz) {
-		int sea = 0, total = 0;
-		for (int ring = 1; ring <= 5; ring++) {
-			double r = (RADIUS + EDGE_WOBBLE) * ring / 5.0;
-			int points = 8 + ring * 6;
-			for (int k = 0; k < points; k++) {
-				double a = k * Math.PI * 2 / points;
-				int x = cx + (int) Math.round(Math.cos(a) * r), z = cz + (int) Math.round(Math.sin(a) * r);
-				if (Climate.unquantizeCoord(sampler.sample(x >> 2, 16, z >> 2).continentalness()) < -0.11f) sea++;
-				total++;
-			}
-		}
-		return (double) sea / total;
 	}
 }

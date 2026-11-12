@@ -52,8 +52,6 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 
-	// TerraBlender — встраивание биомов в мир (уже есть в сборке как зависимость Biomes O' Plenty)
-	modImplementation "com.github.glitchfiend:TerraBlender-fabric:${project.terrablender_version}"
 
 	// Только для запуска из IntelliJ: Sodium + Iris, как в общей сборке.
 	// В наш .jar и в зависимости мода они НЕ попадают.

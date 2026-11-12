@@ -27,6 +27,8 @@ public final class InkFog {
 	public static final float FOG_END_LAKE = 10.0f;
 	/** Как быстро меняется дальность при переходе между зонами (блоков в секунду). */
 	public static final float FOG_END_CHANGE_PER_SECOND = 2.0f;
+	/** Видимость в самой густой мгле за краем Земель. */
+	public static final float EDGE_FOG_END = 2.0f;
 	/** За сколько блоков ДО границы туман начинает сгущаться. */
 	public static final int OUTSIDE_RAMP = 40;
 	/** Сколько блоков ВНУТРИ биома нужно пройти до полной силы тумана. */
@@ -70,6 +72,14 @@ public final class InkFog {
 			if (level.hasChunkAt(camera.getBlockPosition())) {
 				Float end = zoneFogEnd(level.getBiome(camera.getBlockPosition()));
 				if (end != null) fullEndTarget = end;
+				// за краем Земель туман сгущается до непроглядного (дальше — петля назад)
+				if (com.tarkrakov.tearsofink.world.ModDimensions.isLands(level)) {
+					double depth = com.tarkrakov.tearsofink.world.InkLandsLayout.edgeDepth(camera.getPosition().x, camera.getPosition().z);
+					if (depth < 0) {
+						float t = (float) Math.min(1.0, -depth / (com.tarkrakov.tearsofink.world.InkLandsBorder.LOOP_DEPTH * 0.8));
+						fullEndTarget = net.minecraft.util.Mth.lerp(t, fullEndTarget, EDGE_FOG_END);
+					}
+				}
 			}
 			LanternClarity.sample(level, camera.getPosition());
 		}
@@ -121,6 +131,8 @@ public final class InkFog {
 	}
 
 	private static float computeTarget(ClientLevel level, BlockPos center) {
+		// Земли — своё измерение: туман там везде
+		if (com.tarkrakov.tearsofink.world.ModDimensions.isLands(level)) return 1f;
 		if (isInk(level, center)) {
 			// Внутри: как глубоко мы зашли (расстояние до ближайшей «не-пустоши»)
 			int depth = nearest(level, center, INSIDE_RAMP, 4, false);

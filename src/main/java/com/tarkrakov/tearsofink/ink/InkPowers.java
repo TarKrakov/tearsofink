@@ -126,12 +126,8 @@ public final class InkPowers {
 
 	/** Насколько глубоко игрок в Чернильных Землях; {@code null} — в этом измерении их нет. */
 	private static Double depth(ServerPlayer player) {
-		Level level = player.level();
-		if (level.dimension() != Level.OVERWORLD || !(level instanceof ServerLevel serverLevel)) return null;
-		if (!(serverLevel.getChunkSource().getGenerator().getBiomeSource() instanceof InkLandsAccess access)) return null;
-		InkLandsLayout layout = access.tearsofink$layout(serverLevel.getChunkSource().randomState().sampler());
-		if (layout == null) return null;
-		return layout.depthInside(player.getBlockX(), player.getBlockZ());
+		// Земли — своё измерение: внутри = в этом измерении (край там — туманная петля)
+		return com.tarkrakov.tearsofink.world.ModDimensions.isLands(player.level()) ? 1000.0 : null;
 	}
 
 	/**

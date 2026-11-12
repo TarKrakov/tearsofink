@@ -3,7 +3,6 @@
 	"package": "com.tarkrakov.tearsofink.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
-		"MultiNoiseBiomeSourceMixin",
 		"NoiseGeneratorSettingsMixin",
 		"PlayerEatMixin",
 		"HealEffectsMixin",

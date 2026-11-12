@@ -41,6 +41,20 @@ public final class ModCommands {
 				dispatcher.register(Commands.literal("tearsofink")
 						.requires(source -> source.hasPermission(2))
 						.then(Commands.literal("where").executes(ModCommands::where))
+						.then(Commands.literal("enter").executes(ctx -> {
+							ServerPlayer p = ctx.getSource().getPlayerOrException();
+							var lands = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());
+							var at = com.tarkrakov.tearsofink.world.ModDimensions.arrival(lands, p.getRandom().nextInt(InkLandsLayout.ROADS));
+							p.teleportTo(lands, at.x, at.y, at.z, p.getYRot(), 0f);
+							return 1;
+						}))
+						.then(Commands.literal("leave").executes(ctx -> {
+							ServerPlayer p = ctx.getSource().getPlayerOrException();
+							var ow = ctx.getSource().getServer().overworld();
+							var s = ow.getSharedSpawnPos();
+							p.teleportTo(ow, s.getX() + 0.5, ow.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, s.getX(), s.getZ()), s.getZ() + 0.5, p.getYRot(), 0f);
+							return 1;
+						}))
 						.then(Commands.literal("center").executes(ModCommands::center))
 						.then(Commands.literal("blood").executes(ModCommands::blood))
 						.then(Commands.literal("lake").executes(ModCommands::lake))
@@ -105,7 +119,7 @@ public final class ModCommands {
 	}
 
 	private static InkLandsLayout findLayout(CommandSourceStack source) {
-		ServerLevel overworld = source.getServer().overworld();
+		ServerLevel overworld = com.tarkrakov.tearsofink.world.ModDimensions.lands(source.getServer());
 		if (overworld.getChunkSource().getGenerator().getBiomeSource() instanceof InkLandsAccess access) {
 			return access.tearsofink$layout(overworld.getChunkSource().randomState().sampler());
 		}
@@ -118,10 +132,11 @@ public final class ModCommands {
 			ctx.getSource().sendFailure(Component.literal("В этом мире нет Чернильных Земель."));
 			return 0;
 		}
-		BlockPos start = layout.roadStart(road - 1);
+		double[] arr = layout.arrivalPoint(road - 1);
+		BlockPos start = BlockPos.containing(arr[0], 0, arr[1]);
 		BlockPos c = layout.center();
 		ServerPlayer player = ctx.getSource().getPlayerOrException();
-		ServerLevel overworld = ctx.getSource().getServer().overworld();
+		ServerLevel overworld = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());
 		overworld.getChunk(start.getX() >> 4, start.getZ() >> 4);
 		int y = overworld.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, start.getX(), start.getZ()) + 1;
 		float yaw = (float) (Math.atan2(c.getZ() - start.getZ(), c.getX() - start.getX()) * 180.0 / Math.PI) - 90f;
@@ -168,7 +183,7 @@ public final class ModCommands {
 			return 0;
 		}
 		ServerPlayer player = ctx.getSource().getPlayerOrException();
-		ServerLevel overworld = ctx.getSource().getServer().overworld();
+		ServerLevel overworld = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());
 		int lx = layout.lakeCenter().getX(), lz = layout.lakeCenter().getZ();
 		overworld.getChunk(lx >> 4, lz >> 4);
 		int y = groundY(overworld, lx, lz) + 1;
@@ -189,7 +204,7 @@ public final class ModCommands {
 			ctx.getSource().sendFailure(Component.literal("Рядом нет пятен Кроволесья."));
 			return 0;
 		}
-		ServerLevel overworld = ctx.getSource().getServer().overworld();
+		ServerLevel overworld = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());
 		int bx = (int) blob[0], bz = (int) blob[1];
 		var generator = overworld.getChunkSource().getGenerator();
 		var randomState = overworld.getChunkSource().randomState();
@@ -228,7 +243,7 @@ public final class ModCommands {
 	}
 
 	private static BlockPos findCenter(CommandSourceStack source) {
-		ServerLevel overworld = source.getServer().overworld();
+		ServerLevel overworld = com.tarkrakov.tearsofink.world.ModDimensions.lands(source.getServer());
 		if (overworld.getChunkSource().getGenerator().getBiomeSource() instanceof InkLandsAccess access) {
 			InkLandsLayout layout = access.tearsofink$layout(overworld.getChunkSource().randomState().sampler());
 			if (layout != null) return layout.center();
@@ -243,12 +258,11 @@ public final class ModCommands {
 			return 0;
 		}
 		double dist = Math.sqrt(ctx.getSource().getPosition().distanceToSqr(c.getX(), ctx.getSource().getPosition().y, c.getZ()));
-		BlockPos spawn = ctx.getSource().getServer().overworld().getSharedSpawnPos();
-		int fromSpawn = (int) Math.sqrt(spawn.distSqr(new BlockPos(c.getX(), spawn.getY(), c.getZ())));
-		ctx.getSource().sendSuccess(() -> Component.literal("Центр Чернильных Земель: X " + c.getX() + ", Z " + c.getZ()
-				+ " (до него ~" + (int) dist + " блоков, радиус области ~" + InkLandsLayout.RADIUS + ")"
-				+ "\nОт точки спавна до центра ~" + fromSpawn + ", до ближайшего края ~" + Math.max(0, fromSpawn - InkLandsLayout.RADIUS)
-				+ " (край рваный, ±" + InkLandsLayout.EDGE_WOBBLE + ")"), false);
+		var pos = ctx.getSource().getPosition();
+		int edge = (int) InkLandsLayout.edgeDepth(pos.x, pos.z);
+		ctx.getSource().sendSuccess(() -> Component.literal("Центр Чернильных Земель: X 0, Z 0 (до него ~" + (int) dist
+				+ " блоков, радиус области ~" + InkLandsLayout.RADIUS + ", край рваный ±" + InkLandsLayout.EDGE_WOBBLE + ")"
+				+ "\nДо края отсюда: " + (edge >= 0 ? "~" + edge + " блоков" : "ты за краем на " + (-edge) + " (петля на " + com.tarkrakov.tearsofink.world.InkLandsBorder.LOOP_DEPTH + ")")), false);
 		return 1;
 	}
 
@@ -259,7 +273,7 @@ public final class ModCommands {
 			return 0;
 		}
 		ServerPlayer player = ctx.getSource().getPlayerOrException();
-		ServerLevel overworld = ctx.getSource().getServer().overworld();
+		ServerLevel overworld = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());
 		overworld.getChunk(c.getX() >> 4, c.getZ() >> 4);
 		int y = overworld.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, c.getX(), c.getZ()) + 1;
 		player.teleportTo(overworld, c.getX() + 0.5, y, c.getZ() + 0.5, player.getYRot(), player.getXRot());

@@ -1,0 +1,10 @@
+{
+  "type": "tears-of-ink:ink_lands",
+  "generator": {
+    "type": "minecraft:noise",
+    "settings": "tears-of-ink:ink_lands",
+    "biome_source": {
+      "type": "tears-of-ink:ink_lands"
+    }
+  }
+}
