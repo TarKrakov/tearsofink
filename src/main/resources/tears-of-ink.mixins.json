@@ -6,7 +6,8 @@
 		"MultiNoiseBiomeSourceMixin",
 		"NoiseGeneratorSettingsMixin",
 		"PlayerEatMixin",
-		"HealEffectsMixin"
+		"HealEffectsMixin",
+		"NaturalSpawnerMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

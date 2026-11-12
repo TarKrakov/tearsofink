@@ -101,6 +101,12 @@ public class LakeBasinFeature extends Feature<NoneFeatureConfiguration> {
 					for (int yy = y + 1; yy <= water; yy++) level.setBlock(pos.set(x, yy, z), waterBlock, 2);
 				}
 				if (surface > y) WorldgenCleanup.removeFloatingPlants(level, x, Math.max(surface, water) + 2, z);
+				// открывшиеся подземные воды в стенках — заделать (кроме воды самого Озера)
+				WorldgenCleanup.sealFluidsAround(level, x, z, y - SUBSOIL_LAYERS, Math.max(surface, water) + 1, p -> {
+					if (p.getY() > water) return false;
+					double[] s = layout.lakeShape(p.getX(), p.getZ(), 0, waterLevel);
+					return s != null && s[1] > 0;
+				});
 				changed = true;
 			}
 		}

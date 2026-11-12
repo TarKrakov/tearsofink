@@ -13,6 +13,24 @@ final class WorldgenCleanup {
 	private WorldgenCleanup() {}
 
 	/**
+	 * Срезали землю в столбике (x, z) от fromY до toY — в стенках выемки могли открыться подземные воды
+	 * (водоносные слои, родники). Заделываем их породой, чтобы вода не залила всё вокруг.
+	 * @param keep что не трогать (например, воду самого Озера); может быть null
+	 */
+	static void sealFluidsAround(WorldGenLevel level, int x, int z, int fromY, int toY, java.util.function.Predicate<BlockPos> keep) {
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		BlockState rock = com.tarkrakov.tearsofink.block.ModBlocks.ASPHODELITE_ROCK.defaultBlockState();
+		for (int y = fromY; y <= toY; y++) {
+			for (net.minecraft.core.Direction dir : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+				pos.set(x + dir.getStepX(), y, z + dir.getStepZ());
+				if (level.getFluidState(pos).isEmpty()) continue;
+				if (keep != null && keep.test(pos)) continue;
+				level.setBlock(pos, rock, 2);
+			}
+		}
+	}
+
+	/**
 	 * Пепел — сыпучий, как песок: если под ним пусто или вода, он падает (тысячи падающих блоков = лаги).
 	 * Ставим пепел только туда, где под ним есть опора; иначе — асфоделитовую породу.
 	 */

@@ -133,10 +133,13 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 	}
 
 	private static void clearAbove(WorldGenLevel level, BlockPos.MutableBlockPos pos, int from, int to, BlockState air) {
+		int x = pos.getX(), z = pos.getZ();
 		for (int y = from + 1; y <= to; y++) {
 			pos.setY(y);
-			BlockState state = level.getBlockState(pos);
-			if (!state.isAir() && state.getFluidState().isEmpty()) level.setBlock(pos, air, 2);
+			if (!level.getBlockState(pos).isAir()) level.setBlock(pos, air, 2);
 		}
+		// в стенках выемки могли открыться подземные воды — заделать
+		WorldgenCleanup.sealFluidsAround(level, x, z, from, to, null);
+		pos.set(x, from, z);
 	}
 }

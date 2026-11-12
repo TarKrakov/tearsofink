@@ -70,6 +70,7 @@ public class BloodValleyFeature extends Feature<NoneFeatureConfiguration> {
 						level.setBlock(pos, air, 2);
 					}
 					WorldgenCleanup.removeFloatingPlants(level, x, surface + 1, z);
+					WorldgenCleanup.sealFluidsAround(level, x, z, y - 1, surface, null);
 				} else {
 					// засыпаем ямку до нового уровня (сплошной породой — она не сыплется)
 					for (int yy = surface + 1; yy < y; yy++) {
@@ -83,7 +84,7 @@ public class BloodValleyFeature extends Feature<NoneFeatureConfiguration> {
 				for (int k = ASH_LAYERS; k >= 1; k--) {
 					pos.setY(y - k);
 					BlockState under = level.getBlockState(pos);
-					if (under.isAir() || under.is(ModBlocks.ASPHODELITE_ROCK)) {
+					if (under.isAir() || !under.getFluidState().isEmpty() || under.is(ModBlocks.ASPHODELITE_ROCK)) {
 						level.setBlock(pos, WorldgenCleanup.supported(level, pos, ash), 2);
 					}
 				}
