@@ -44,6 +44,12 @@ public final class ModCommands {
 						.then(Commands.literal("center").executes(ModCommands::center))
 						.then(Commands.literal("blood").executes(ModCommands::blood))
 						.then(Commands.literal("lake").executes(ModCommands::lake))
+						.then(Commands.literal("replace")
+								.then(Commands.argument("from", net.minecraft.commands.arguments.coordinates.BlockPosArgument.blockPos())
+										.then(Commands.argument("to", net.minecraft.commands.arguments.coordinates.BlockPosArgument.blockPos())
+												.then(Commands.argument("old", net.minecraft.commands.arguments.blocks.BlockStateArgument.block(registryAccess))
+														.then(Commands.argument("new", net.minecraft.commands.arguments.blocks.BlockStateArgument.block(registryAccess))
+																.executes(ModCommands::replace))))))
 						.then(Commands.literal("edge")
 								.executes(ctx -> edge(ctx, 1))
 								.then(Commands.argument("road", IntegerArgumentType.integer(1, InkLandsLayout.ROADS))
@@ -122,6 +128,36 @@ public final class ModCommands {
 		player.teleportTo(overworld, start.getX() + 0.5, y, start.getZ() + 0.5, yaw, 0f);
 		ctx.getSource().sendSuccess(() -> Component.literal("Край Чернильных Земель, дорога " + road + ". Центр — прямо перед тобой."), false);
 		return 1;
+	}
+
+	/**
+	 * Замена одного блока на другой в коробке любого размера (для строительства; у /fill предел 32 768).
+	 * Поворот (ось бревна и т.п.) переносится, если у нового блока он тоже есть.
+	 */
+	private static int replace(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+		ServerLevel level = ctx.getSource().getLevel();
+		BlockPos a = net.minecraft.commands.arguments.coordinates.BlockPosArgument.getLoadedBlockPos(ctx, "from");
+		BlockPos b = net.minecraft.commands.arguments.coordinates.BlockPosArgument.getLoadedBlockPos(ctx, "to");
+		net.minecraft.world.level.block.Block oldBlock = net.minecraft.commands.arguments.blocks.BlockStateArgument.getBlock(ctx, "old").getState().getBlock();
+		net.minecraft.world.level.block.state.BlockState newState = net.minecraft.commands.arguments.blocks.BlockStateArgument.getBlock(ctx, "new").getState();
+		int count = 0;
+		for (BlockPos p : BlockPos.betweenClosed(a, b)) {
+			var state = level.getBlockState(p);
+			if (!state.is(oldBlock)) continue;
+			var placed = newState;
+			for (var prop : state.getProperties()) placed = copyProperty(state, placed, prop);
+			level.setBlock(p, placed, net.minecraft.world.level.block.Block.UPDATE_CLIENTS);
+			count++;
+		}
+		int done = count;
+		ctx.getSource().sendSuccess(() -> Component.literal("Заменено блоков: " + done), true);
+		return done;
+	}
+
+	private static <T extends Comparable<T>> net.minecraft.world.level.block.state.BlockState copyProperty(
+			net.minecraft.world.level.block.state.BlockState from, net.minecraft.world.level.block.state.BlockState to,
+			net.minecraft.world.level.block.state.properties.Property<T> prop) {
+		return to.hasProperty(prop) ? to.setValue(prop, from.getValue(prop)) : to;
 	}
 
 	/** Телепорт в центр Смоляного Озера (на воду). */
