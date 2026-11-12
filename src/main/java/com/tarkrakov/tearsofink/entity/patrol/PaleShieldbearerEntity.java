@@ -163,11 +163,18 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 	private void tickCharge() {
 		chargeTicks++;
 		faceCharge();
-		if (chargeTicks < SquadTuning.CHARGE_WINDUP) return; // замах: стоит, щит поднят
+		LivingEntity t = this.getTarget();
+		if (chargeTicks < SquadTuning.CHARGE_WINDUP) { // замах: стоит, щит поднят, целится
+			if (t != null && t.isAlive()) {
+				Vec3 d = t.position().subtract(this.position()).multiply(1, 0, 1);
+				if (d.lengthSqr() > 1.0E-4) chargeDir = d.normalize();
+			}
+			return;
+		}
+		if (t != null && t.isAlive()) steerToward(t);
 		this.setDeltaMovement(chargeDir.x * SquadTuning.CHARGE_SPEED, this.getDeltaMovement().y, chargeDir.z * SquadTuning.CHARGE_SPEED);
 		this.hasImpulse = true;
 
-		LivingEntity t = this.getTarget();
 		if (t != null && t.isAlive() && this.getBoundingBox().inflate(0.4).intersects(t.getBoundingBox())) {
 			t.hurt(this.damageSources().mobAttack(this), (float) SquadTuning.CHARGE_DAMAGE);
 			t.knockback(SquadTuning.CHARGE_KNOCKBACK, -chargeDir.x, -chargeDir.z);
@@ -182,6 +189,48 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 			return;
 		}
 		if (chargeTicks >= SquadTuning.CHARGE_WINDUP + SquadTuning.CHARGE_RUN) endCharge(true);
+	}
+
+	/** Чуть доворачивает бег за игроком (не больше CHARGE_TURN_DEG за тик). */
+	private void steerToward(LivingEntity t) {
+		Vec3 d = t.position().subtract(this.position()).multiply(1, 0, 1);
+		if (d.lengthSqr() < 1.0E-4) return;
+		double cur = Math.atan2(chargeDir.z, chargeDir.x), want = Math.atan2(d.z, d.x);
+		double diff = Math.atan2(Math.sin(want - cur), Math.cos(want - cur));
+		double max = Math.toRadians(SquadTuning.CHARGE_TURN_DEG);
+		if (Math.abs(diff) > Math.PI / 2) return; // игрок уже сбоку/позади — не крутится волчком
+		double a = cur + Math.max(-max, Math.min(max, diff));
+		chargeDir = new Vec3(Math.cos(a), 0, Math.sin(a));
+	}
+
+	/** Можно ли пробежать по прямой до цели: нет твёрдых стен (мягкие он снесёт), нет обрывов, цель примерно на одной высоте. */
+	boolean clearChargePath(LivingEntity t) {
+		if (Math.abs(t.getY() - this.getY()) > 1.5) return false;
+		Vec3 from = this.position(), to = t.position();
+		Vec3 d = to.subtract(from).multiply(1, 0, 1);
+		double len = d.length();
+		if (len < 1.0E-3) return true;
+		Vec3 dir = d.scale(1 / len), side = new Vec3(-dir.z, 0, dir.x);
+		boolean griefing = this.level().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING);
+		for (double s = 0.5; s < len; s += 0.5) {
+			for (int w = -1; w <= 1; w++) {
+				Vec3 p = from.add(dir.scale(s)).add(side.scale(w * 0.4));
+				BlockPos base = BlockPos.containing(p.x, from.y + 0.1, p.z);
+				for (int h = 0; h <= 2; h++) {
+					BlockPos pos = base.above(h);
+					BlockState st = this.level().getBlockState(pos);
+					if (st.getCollisionShape(this.level(), pos).isEmpty()) continue;
+					if (h == 0 && st.getCollisionShape(this.level(), pos).max(net.minecraft.core.Direction.Axis.Y) <= 0.5) continue; // плита/тропа — перешагнёт
+					if (!griefing || !isSoft(st, pos)) return false;
+				}
+				if (w == 0) { // пол: не дальше одного блока вниз
+					BlockPos below = base.below();
+					if (this.level().getBlockState(below).getCollisionShape(this.level(), below).isEmpty()
+							&& this.level().getBlockState(below.below()).getCollisionShape(this.level(), below.below()).isEmpty()) return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	private void endCharge(boolean missed) {
@@ -291,15 +340,15 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 		public void tick() {
 			LivingEntity t = getTarget();
 			if (t == null) return;
+			if (chargeTicks < 0) getLookControl().setLookAt(t, 30f, 30f); // во время удара/тупняка всё равно доворачивается к игроку
 			if (busy()) {
 				getNavigation().stop();
 				return;
 			}
-			getLookControl().setLookAt(t, 30f, 30f);
 			double dist = distanceTo(t);
 
 			if (dist >= SquadTuning.CHARGE_MIN && dist <= SquadTuning.CHARGE_MAX && chargeCooldown <= 0 && onGround()
-					&& hasLineOfSight(t) && getRandom().nextInt(10) == 0) {
+					&& hasLineOfSight(t) && getRandom().nextInt(10) == 0 && clearChargePath(t)) {
 				startCharge(t);
 				return;
 			}
@@ -312,8 +361,8 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 			}
 			if (dist > 1.8) {
 				if (--repath <= 0) {
-					repath = 8;
-					getNavigation().moveTo(t, shieldRaised() ? 0.55 : 1.0);
+					repath = 5;
+					getNavigation().moveTo(t, shieldRaised() ? SquadTuning.SHIELD_WALK : 1.0);
 				}
 			} else {
 				getNavigation().stop();

@@ -29,6 +29,12 @@ public final class SpearmanTuning {
 	public static final int DODGE_TICKS = 16, DODGE_PUSH_TICK = 4;
 	public static final double DODGE_BACK = 0.75, DODGE_UP = 0.38;
 
+	/** Набеги (пока жив щитовик отряда): 1–2 тычка, потом отходит к арбалетчикам и стоит там RAID_REST тиков, потом снова в бой.
+	 *  Щитовик погиб — дерётся без отходов. */
+	public static final int RAID_HITS_MIN = 1, RAID_HITS_MAX = 2, RAID_REST = 60, RAID_RETREAT_MAX = 100;
+	/** Если арбалетчиков нет — отходит от игрока на столько блоков. */
+	public static final double RAID_FALLBACK = 9;
+
 	/** Патрули: появляются у дорог в Бледнолесье, ходят между фонарными столбами. */
 	public static final int PATROL_SPAWN_INTERVAL = 200;
 	/** Сколько копейщиков максимум вокруг игрока (в радиусе PATROL_COUNT_RADIUS). */

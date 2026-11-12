@@ -3,31 +3,35 @@ package com.tarkrakov.tearsofink.entity.patrol;
 /** Цифры щитовика, арбалетчика и отрядов — крутить здесь (20 тиков = 1 с). */
 public final class SquadTuning {
 	// ===== Щитовик (танк) =====
-	public static final double TANK_HEALTH = 40, TANK_SPEED = 0.2, TANK_ARMOR = 4, TANK_KNOCKBACK_RES = 0.6;
+	public static final double TANK_HEALTH = 40, TANK_SPEED = 0.23, TANK_ARMOR = 4, TANK_KNOCKBACK_RES = 0.6;
 	/** Щит: держит до SHIELD_MAX тиков, потом опускает минимум на SHIELD_REST; поднимает, если игрок ближе SHIELD_RANGE. */
 	public static final int SHIELD_MAX = 100, SHIELD_REST = 60;
 	public static final double SHIELD_RANGE = 10;
 	/** Какая доля урона спереди проходит сквозь щит (0.2 = режет 80%). Снаряды спереди не проходят вовсе. */
 	public static final float SHIELD_PASS = 0.2f;
+	/** Скорость шага со щитом (доля обычной). */
+	public static final double SHIELD_WALK = 0.75;
 	/** Удар топором выбивает щит на столько тиков. */
 	public static final int SHIELD_AXE_DISABLE = 60;
 	/** Удар щитом: дистанция, урон, отброс, длина анимации и момент удара, перезарядка. */
 	public static final double BASH_RANGE = 2.6, BASH_DAMAGE = 8, BASH_KNOCKBACK = 1.4;
-	public static final int BASH_TICKS = 30, BASH_HIT_TICK = 14, BASH_COOLDOWN = 60; // анимация 1,5 с, удар на 0,7 с
+	public static final int BASH_TICKS = 24, BASH_HIT_TICK = 14, BASH_COOLDOWN = 50; // анимация 1,5 с, удар на 0,7 с; хвост анимации срезан — после 1,2 с уже ходит
 	/** Рывок: когда (дистанция), замах, бег, скорость, урон, отброс, тупит после промаха, перезарядка. */
 	public static final double CHARGE_MIN = 6, CHARGE_MAX = 14, CHARGE_SPEED = 0.55, CHARGE_DAMAGE = 10, CHARGE_KNOCKBACK = 2.0;
-	public static final int CHARGE_WINDUP = 24, CHARGE_RUN = 30, CHARGE_STUN = 40, CHARGE_COOLDOWN = 200; // замах = charge_start 1,2 с
+	public static final int CHARGE_WINDUP = 24, CHARGE_RUN = 30, CHARGE_STUN = 25, CHARGE_COOLDOWN = 160; // замах = charge_start 1,2 с
 	/** Рывок сносит «мягкие» блоки не твёрже этого (доски 2.0, земля 0.5, листья 0.2). Камень (1.5+) — см. правило в коде. */
 	public static final float CHARGE_BREAK_HARDNESS = 2.0f;
+	/** Во время бега чуть доворачивает за игроком: градусов за тик. */
+	public static final float CHARGE_TURN_DEG = 2.5f;
 
 	// ===== Арбалетчик =====
 	public static final double ARCHER_HEALTH = 16, ARCHER_SPEED = 0.25;
 	/** Держит дистанцию: отходит, если ближе KEEP_MIN, подходит, если дальше KEEP_MAX. */
 	public static final double KEEP_MIN = 8, KEEP_MAX = 14, SHOOT_RANGE = 24;
 	/** Цикл: прицел → выстрел → перезарядка (тики). */
-	public static final int AIM_TICKS = 20, SHOOT_TICKS = 6, RELOAD_TICKS = 30;
+	public static final int AIM_TICKS = 24, SHOOT_TICKS = 6, RELOAD_TICKS = 50; // выстрел раз в ~4 с (было ~2,8 с)
 	/** Болт: урон, скорость, разброс. */
-	public static final double BOLT_DAMAGE = 5, BOLT_SPEED = 2.6;
+	public static final double BOLT_DAMAGE = 4, BOLT_SPEED = 2.6;
 	public static final float BOLT_SPREAD = 3f;
 	/** Отпрыжка: если игрок ближе CLOSE; один раз за цикл выстрела (потом обязан выстрелить). */
 	public static final double ARCHER_DODGE_CLOSE = 3.5, ARCHER_DODGE_BACK = 0.8, ARCHER_DODGE_UP = 0.4;
