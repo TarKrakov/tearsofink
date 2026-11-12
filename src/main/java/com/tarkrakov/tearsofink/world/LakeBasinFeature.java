@@ -84,16 +84,19 @@ public class LakeBasinFeature extends Feature<NoneFeatureConfiguration> {
 					pos.set(x, yy, z);
 					if (!level.getBlockState(pos).isAir()) level.setBlock(pos, air, 2);
 				}
-				// засыпать, если было ниже
-				for (int yy = surface + 1; yy < y; yy++) level.setBlock(pos.set(x, yy, z), ash, 2);
-				level.setBlock(pos.set(x, y, z), top, 2);
-				for (int k = 1; k <= SUBSOIL_LAYERS; k++) {
+				// подложка снизу вверх — чтобы пепел всегда лежал на опоре и не сыпался
+				BlockState rock = ModBlocks.ASPHODELITE_ROCK.defaultBlockState();
+				for (int k = SUBSOIL_LAYERS; k >= 1; k--) {
 					pos.set(x, y - k, z);
 					BlockState under = level.getBlockState(pos);
-					if (under.isAir() || !under.getFluidState().isEmpty() || under.is(ModBlocks.ASPHODELITE_ROCK)) {
-						level.setBlock(pos, type == 0 ? tar : ash, 2);
+					if (under.isAir() || !under.getFluidState().isEmpty() || under.is(ModBlocks.ASPHODELITE_ROCK)
+							|| under.is(ModBlocks.ASH)) {
+						level.setBlock(pos, WorldgenCleanup.supported(level, pos, type == 0 ? tar : ash), 2);
 					}
 				}
+				// засыпать, если было ниже (сплошной породой — она не сыплется)
+				for (int yy = surface + 1; yy < y; yy++) level.setBlock(pos.set(x, yy, z), rock, 2);
+				level.setBlock(pos.set(x, y, z), WorldgenCleanup.supported(level, pos.set(x, y, z), top), 2);
 				if (underWater) {
 					for (int yy = y + 1; yy <= water; yy++) level.setBlock(pos.set(x, yy, z), waterBlock, 2);
 				}

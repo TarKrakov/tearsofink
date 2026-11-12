@@ -13,6 +13,19 @@ final class WorldgenCleanup {
 	private WorldgenCleanup() {}
 
 	/**
+	 * Пепел — сыпучий, как песок: если под ним пусто или вода, он падает (тысячи падающих блоков = лаги).
+	 * Ставим пепел только туда, где под ним есть опора; иначе — асфоделитовую породу.
+	 */
+	static BlockState supported(WorldGenLevel level, BlockPos pos, BlockState wanted) {
+		if (!(wanted.getBlock() instanceof net.minecraft.world.level.block.FallingBlock)) return wanted;
+		BlockPos below = pos.below();
+		BlockState under = level.getBlockState(below);
+		boolean solid = !under.isAir() && under.getFluidState().isEmpty()
+				&& !under.canBeReplaced() && under.isCollisionShapeFullBlock(level, below);
+		return solid ? wanted : com.tarkrakov.tearsofink.block.ModBlocks.ASPHODELITE_ROCK.defaultBlockState();
+	}
+
+	/**
 	 * Убирает растения, оставшиеся висеть над срезанной землёй. Их мог поставить соседний чанк
 	 * раньше, чем здесь срезали рельеф (круг Слёзницы, трава и т.п.).
 	 * @param fromY первый блок над тем местом, докуда срезали

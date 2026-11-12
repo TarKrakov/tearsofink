@@ -71,18 +71,21 @@ public class BloodValleyFeature extends Feature<NoneFeatureConfiguration> {
 					}
 					WorldgenCleanup.removeFloatingPlants(level, x, surface + 1, z);
 				} else {
-					// засыпаем ямку до нового уровня
+					// засыпаем ямку до нового уровня (сплошной породой — она не сыплется)
 					for (int yy = surface + 1; yy < y; yy++) {
 						pos.setY(yy);
-						level.setBlock(pos, ash, 2);
+						level.setBlock(pos, ModBlocks.ASPHODELITE_ROCK.defaultBlockState(), 2);
 					}
 				}
 				pos.setY(y);
 				level.setBlock(pos, top, 2);
-				for (int k = 1; k <= ASH_LAYERS; k++) {
+				// пепел под почвой — снизу вверх и только на опоре (иначе посыплется)
+				for (int k = ASH_LAYERS; k >= 1; k--) {
 					pos.setY(y - k);
 					BlockState under = level.getBlockState(pos);
-					if (under.isAir() || under.is(ModBlocks.ASPHODELITE_ROCK)) level.setBlock(pos, ash, 2);
+					if (under.isAir() || under.is(ModBlocks.ASPHODELITE_ROCK)) {
+						level.setBlock(pos, WorldgenCleanup.supported(level, pos, ash), 2);
+					}
 				}
 				changed = true;
 			}
