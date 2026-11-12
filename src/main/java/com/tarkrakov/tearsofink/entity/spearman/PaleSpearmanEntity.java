@@ -69,6 +69,7 @@ public class PaleSpearmanEntity extends com.tarkrakov.tearsofink.entity.patrol.P
 	protected void registerGoals() {
 		this.goalSelector.addGoal(0, new FloatGoal(this));
 		this.goalSelector.addGoal(1, new SpearmanCombatGoal(this));
+		this.goalSelector.addGoal(3, new com.tarkrakov.tearsofink.entity.patrol.DouseLanternGoal(this));
 		this.goalSelector.addGoal(4, new com.tarkrakov.tearsofink.entity.patrol.FollowLeaderGoal(this, 3.0));
 		this.goalSelector.addGoal(5, new com.tarkrakov.tearsofink.entity.patrol.RoadPatrolGoal(this));
 		this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8f));

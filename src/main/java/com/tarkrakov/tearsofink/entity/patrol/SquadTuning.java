@@ -45,6 +45,12 @@ public final class SquadTuning {
 	/** Щитовик и копейщик бросаются на тех, кто напал на их арбалетчиков (в этом радиусе от стрелка). */
 	public static final double BODYGUARD_RADIUS = 7;
 
+	// ===== Гашение фонарей =====
+	/** Вожак отряда замечает горящий фонарь в этом радиусе и идёт его гасить (Вечные не трогают). */
+	public static final int DOUSE_RADIUS = 14;
+	/** Как часто вожак осматривается (тики). */
+	public static final int DOUSE_SCAN = 40;
+
 	// ===== Отряды =====
 	/** Составы отрядов и их веса: T — щитовик, S — копейщик, C — арбалетчик. Порядок = строй (первый ведёт). */
 	public static final String[] SQUADS = {"TSCC", "TCCC", "SSCC", "TTC", "TSC", "S"};

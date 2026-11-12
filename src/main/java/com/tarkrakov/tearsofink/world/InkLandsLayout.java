@@ -90,6 +90,10 @@ public final class InkLandsLayout {
 	/** Шаг выборки высоты вдоль дороги и ширина сглаживания (в шагах). */
 	public static final int ROAD_PROFILE_STEP = 8;
 	public static final int ROAD_SMOOTHING = 8;
+	/** Если полотно выше земли больше чем на столько — вместо насыпи эстакада (мост на опорах). */
+	public static final int ROAD_VIADUCT_HEIGHT = 6;
+	/** Обочина за краем полотна: на ней перила мостов, фонарные столбы, откосы насыпи. */
+	public static final double ROAD_SHOULDER = 1.4;
 	/** Фонарные столбы вдоль дорог — каждые столько блоков, по очереди слева и справа. */
 	public static final int ROAD_LANTERN_SPACING = 64;
 
@@ -102,6 +106,7 @@ public final class InkLandsLayout {
 	private final double[] roadAngles = new double[ROADS];
 	/** Сглаженная высота каждой дороги вдоль её длины (считается один раз). */
 	private volatile double[][] roadProfiles;
+	private volatile boolean[][] roadBridges;
 	/** Центр Смоляного Озера. */
 	private final BlockPos lakeCenter;
 	/** Уровень воды Озера (считается один раз). */
@@ -386,7 +391,7 @@ public final class InkLandsLayout {
 		if (t < ROAD_END_RADIUS + 10 || t > RADIUS * ROAD_START_FRACTION) return null;
 		double a = roadAngle(road, t);
 		double side = (k % 2 == 0) ? 1 : -1;
-		double offset = ROAD_HALF_WIDTH - 0.6;
+		double offset = ROAD_HALF_WIDTH + 0.6; // на обочине, не на проходе
 		int x = (int) Math.floor(center.getX() + Math.cos(a) * t - Math.sin(a) * offset * side);
 		int z = (int) Math.floor(center.getZ() + Math.sin(a) * t + Math.cos(a) * offset * side);
 		if (depthInside(x, z) < 0) return null;
@@ -464,7 +469,9 @@ public final class InkLandsLayout {
 			synchronized (this) {
 				profiles = roadProfiles;
 				if (profiles == null) {
-					profiles = buildRoadProfiles(surface, floor);
+					boolean[][] bridges = new boolean[ROADS][];
+					profiles = buildRoadProfiles(surface, floor, bridges);
+					roadBridges = bridges;
 					roadProfiles = profiles;
 				}
 			}
@@ -475,7 +482,27 @@ public final class InkLandsLayout {
 		return Mth.lerp(Mth.clamp(t - i, 0, 1), profile[i], profile[i + 1]);
 	}
 
-	private double[][] buildRoadProfiles(IntBinaryOperator surface, IntBinaryOperator floor) {
+	/**
+	 * Идёт ли дорога здесь мостом (над водой или эстакадой над низиной). Решается целыми отрезками,
+	 * чтобы мост не рвался на куски. Вызывать после {@link #roadHeight}.
+	 */
+	public boolean roadBridge(int road, double d) {
+		boolean[][] bridges = roadBridges;
+		if (bridges == null) return false;
+		boolean[] b = bridges[road];
+		double t = (d - ROAD_END_RADIUS) / ROAD_PROFILE_STEP;
+		int i = Mth.clamp((int) Math.floor(t), 0, b.length - 2);
+		return b[i] || b[i + 1];
+	}
+
+	/** Направление дороги в этом месте: {dx, dz}, единичный вектор (от центра наружу). */
+	public double[] roadDirection(int road, double d) {
+		double[] a = roadPoint(road, d - 1), b = roadPoint(road, d + 1);
+		double dx = b[0] - a[0], dz = b[1] - a[1], len = Math.sqrt(dx * dx + dz * dz);
+		return len < 1.0E-6 ? new double[]{1, 0} : new double[]{dx / len, dz / len};
+	}
+
+	private double[][] buildRoadProfiles(IntBinaryOperator surface, IntBinaryOperator floor, boolean[][] bridgesOut) {
 		int samples = (int) Math.ceil((RADIUS * ROAD_START_FRACTION - ROAD_END_RADIUS) / ROAD_PROFILE_STEP) + 2;
 		double maxStep = ROAD_MAX_GRADE * ROAD_PROFILE_STEP;
 		double[][] result = new double[ROADS][];
@@ -514,6 +541,15 @@ public final class InkLandsLayout {
 			for (int i = 1; i < samples; i++) p[i] = Math.max(p[i], p[i - 1] - maxStep);
 			for (int i = samples - 2; i >= 0; i--) p[i] = Math.max(p[i], p[i + 1] - maxStep);
 			result[road] = p;
+			// где мост: вода или полотно высоко над землёй; + по отрезку с каждой стороны (заходы на берег)
+			boolean[] raw2 = new boolean[samples], br = new boolean[samples];
+			for (int i = 0; i < samples; i++) raw2[i] = water[i] || p[i] - raw[i] > ROAD_VIADUCT_HEIGHT;
+			for (int i = 0; i < samples; i++) br[i] = raw2[i] || (i > 0 && raw2[i - 1]) || (i + 1 < samples && raw2[i + 1]);
+			// короткие разрывы между мостами (1–2 отрезка земли) — тоже мост, без ступенек туда-сюда
+			for (int i = 1; i < samples - 2; i++) {
+				if (!br[i] && br[i - 1] && (br[i + 1] || br[i + 2])) br[i] = true;
+			}
+			bridgesOut[road] = br;
 		}
 		return result;
 	}

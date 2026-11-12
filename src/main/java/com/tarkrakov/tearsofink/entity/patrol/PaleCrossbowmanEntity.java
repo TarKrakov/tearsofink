@@ -50,6 +50,7 @@ public class PaleCrossbowmanEntity extends PaleSoldier {
 	protected void registerGoals() {
 		this.goalSelector.addGoal(0, new FloatGoal(this));
 		this.goalSelector.addGoal(1, new CombatGoal());
+		this.goalSelector.addGoal(3, new com.tarkrakov.tearsofink.entity.patrol.DouseLanternGoal(this));
 		this.goalSelector.addGoal(4, new FollowLeaderGoal(this, SquadTuning.FORMATION_STEP * 2));
 		this.goalSelector.addGoal(5, new RoadPatrolGoal(this));
 		this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8f));
