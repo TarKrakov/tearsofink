@@ -27,12 +27,30 @@ public final class ModMobs {
 			EntityType.Builder.of(com.tarkrakov.tearsofink.entity.spearman.PaleSpearmanEntity::new, MobCategory.MONSTER)
 					.sized(0.6f, 1.7f).clientTrackingRange(10).build("pale_spearman"));
 
+	/** Бледный щитовик — танк отряда. */
+	public static final EntityType<com.tarkrakov.tearsofink.entity.patrol.PaleShieldbearerEntity> PALE_SHIELDBEARER = Registry.register(
+			BuiltInRegistries.ENTITY_TYPE, TearsOfInk.id("pale_shieldbearer"),
+			EntityType.Builder.of(com.tarkrakov.tearsofink.entity.patrol.PaleShieldbearerEntity::new, MobCategory.MONSTER)
+					.sized(0.8f, 2.1f).clientTrackingRange(10).build("pale_shieldbearer"));
+	/** Бледный арбалетчик. */
+	public static final EntityType<com.tarkrakov.tearsofink.entity.patrol.PaleCrossbowmanEntity> PALE_CROSSBOWMAN = Registry.register(
+			BuiltInRegistries.ENTITY_TYPE, TearsOfInk.id("pale_crossbowman"),
+			EntityType.Builder.of(com.tarkrakov.tearsofink.entity.patrol.PaleCrossbowmanEntity::new, MobCategory.MONSTER)
+					.sized(0.6f, 1.7f).clientTrackingRange(10).build("pale_crossbowman"));
+	/** Арбалетный болт. */
+	public static final EntityType<com.tarkrakov.tearsofink.entity.patrol.PaleBoltEntity> PALE_BOLT = Registry.register(
+			BuiltInRegistries.ENTITY_TYPE, TearsOfInk.id("pale_bolt"),
+			EntityType.Builder.<com.tarkrakov.tearsofink.entity.patrol.PaleBoltEntity>of(com.tarkrakov.tearsofink.entity.patrol.PaleBoltEntity::new, MobCategory.MISC)
+					.sized(0.5f, 0.5f).clientTrackingRange(4).updateInterval(20).build("pale_bolt"));
+
 	private ModMobs() {}
 
 	public static void init() {
 		FabricDefaultAttributeRegistry.register(CATERPILLAR, CaterpillarEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_SPEARMAN, com.tarkrakov.tearsofink.entity.spearman.PaleSpearmanEntity.createAttributes());
-		com.tarkrakov.tearsofink.entity.spearman.SpearmanPatrols.init();
+		FabricDefaultAttributeRegistry.register(PALE_SHIELDBEARER, com.tarkrakov.tearsofink.entity.patrol.PaleShieldbearerEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(PALE_CROSSBOWMAN, com.tarkrakov.tearsofink.entity.patrol.PaleCrossbowmanEntity.createAttributes());
+		com.tarkrakov.tearsofink.entity.patrol.SquadPatrols.init();
 		SpawnPlacements.register(CATERPILLAR, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
 				(type, level, reason, pos, random) -> {
 					BlockPos below = pos.below();

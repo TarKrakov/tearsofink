@@ -1,0 +1,146 @@
+package com.tarkrakov.tearsofink.entity.patrol;
+
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Monster;
+import net.minecraft.world.level.Level;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.UUID;
+
+/**
+ * Солдат бледного патруля (копейщик, щитовик, арбалетчик). Общее: отряд (кто свои), лидер,
+ * отрезок дороги для патруля, общая цель (ударил одного — идут все), синхронное «действие» для анимаций.
+ */
+public abstract class PaleSoldier extends Monster {
+	private static final EntityDataAccessor<Integer> ACTION = SynchedEntityData.defineId(PaleSoldier.class, EntityDataSerializers.INT);
+	private static final EntityDataAccessor<Boolean> AGGRESSIVE = SynchedEntityData.defineId(PaleSoldier.class, EntityDataSerializers.BOOLEAN);
+
+	/** Действия для анимаций (у каждого свои значения). */
+	public static final int ACT_NONE = 0;
+
+	@Nullable UUID squad;
+	@Nullable UUID leader;
+	public int patrolRoad = -1;
+	public double patrolFrom, patrolTo;
+	private int alertCooldown;
+
+	protected PaleSoldier(EntityType<? extends Monster> type, Level level) {
+		super(type, level);
+	}
+
+	@Override
+	protected void defineSynchedData(SynchedEntityData.Builder builder) {
+		super.defineSynchedData(builder);
+		builder.define(ACTION, ACT_NONE);
+		builder.define(AGGRESSIVE, false);
+	}
+
+	public int action() {
+		return this.entityData.get(ACTION);
+	}
+
+	protected void setAction(int action) {
+		this.entityData.set(ACTION, action);
+	}
+
+	public boolean isAggressiveSynced() {
+		return this.entityData.get(AGGRESSIVE);
+	}
+
+	// ===== Отряд =====
+	public void joinSquad(UUID squad, @Nullable UUID leader) {
+		this.squad = squad;
+		this.leader = leader;
+	}
+
+	public boolean isLeader() {
+		return squad == null || leader == null || leader.equals(this.getUUID());
+	}
+
+	/** Свой ли это (тот же отряд или вообще бледный солдат). */
+	public boolean isAlly(Entity other) {
+		return other instanceof PaleSoldier;
+	}
+
+	@Override
+	public boolean isAlliedTo(Entity other) {
+		return isAlly(other) || super.isAlliedTo(other);
+	}
+
+	@Nullable
+	public PaleSoldier leaderEntity() {
+		if (leader == null || !(this.level() instanceof ServerLevel level)) return null;
+		return level.getEntity(leader) instanceof PaleSoldier p && p.isAlive() ? p : null;
+	}
+
+	/** Свои в радиусе. */
+	public List<PaleSoldier> squadmates(double radius) {
+		return this.level().getEntitiesOfClass(PaleSoldier.class, this.getBoundingBox().inflate(radius),
+				p -> p != this && p.isAlive() && squad != null && squad.equals(p.squad));
+	}
+
+	@Override
+	public void aiStep() {
+		super.aiStep();
+		if (this.level().isClientSide) return;
+		LivingEntity target = this.getTarget();
+		this.entityData.set(AGGRESSIVE, target != null && target.isAlive());
+		// общая цель: заметил/ударили — поднимаем весь отряд
+		if (alertCooldown > 0) alertCooldown--;
+		if (target != null && target.isAlive() && alertCooldown <= 0) {
+			alertCooldown = 40;
+			for (PaleSoldier mate : squadmates(32)) {
+				if (mate.getTarget() == null) mate.setTarget(target);
+			}
+		}
+	}
+
+	@Override
+	public void setTarget(@Nullable LivingEntity target) {
+		if (target instanceof PaleSoldier) return; // своих не бьём
+		super.setTarget(target);
+	}
+
+	@Override
+	public void addAdditionalSaveData(CompoundTag tag) {
+		super.addAdditionalSaveData(tag);
+		if (squad != null) tag.putUUID("Squad", squad);
+		if (leader != null) tag.putUUID("SquadLeader", leader);
+		if (patrolRoad >= 0) {
+			tag.putInt("PatrolRoad", patrolRoad);
+			tag.putDouble("PatrolFrom", patrolFrom);
+			tag.putDouble("PatrolTo", patrolTo);
+		}
+	}
+
+	@Override
+	public void readAdditionalSaveData(CompoundTag tag) {
+		super.readAdditionalSaveData(tag);
+		if (tag.hasUUID("Squad")) squad = tag.getUUID("Squad");
+		if (tag.hasUUID("SquadLeader")) leader = tag.getUUID("SquadLeader");
+		if (tag.contains("PatrolRoad")) {
+			patrolRoad = tag.getInt("PatrolRoad");
+			patrolFrom = tag.getDouble("PatrolFrom");
+			patrolTo = tag.getDouble("PatrolTo");
+		}
+	}
+
+	public void setPatrol(int road, double from, double to) {
+		this.patrolRoad = road;
+		this.patrolFrom = from;
+		this.patrolTo = to;
+	}
+
+	@Override
+	public boolean removeWhenFarAway(double distance) {
+		return distance > 128 * 128; // уходят, только когда игрок очень далеко
+	}
+}

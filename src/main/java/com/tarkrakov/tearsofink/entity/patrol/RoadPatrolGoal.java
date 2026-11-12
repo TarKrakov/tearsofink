@@ -1,26 +1,27 @@
-package com.tarkrakov.tearsofink.entity.spearman;
+package com.tarkrakov.tearsofink.entity.patrol;
 
 import com.tarkrakov.tearsofink.world.InkLandsLayout;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.EnumSet;
 
-/** Патруль: ходит туда-обратно по своему отрезку дороги (между фонарными столбами). */
+/** Патруль (лидер отряда или одиночка): ходит туда-обратно по своему отрезку дороги. */
 public class RoadPatrolGoal extends Goal {
-	private final PaleSpearmanEntity mob;
+	private final PaleSoldier mob;
 	private boolean forward = true;
 	private int pause;
 
-	public RoadPatrolGoal(PaleSpearmanEntity mob) {
+	public RoadPatrolGoal(PaleSoldier mob) {
 		this.mob = mob;
 		this.setFlags(EnumSet.of(Flag.MOVE));
 	}
 
 	@Override
 	public boolean canUse() {
-		if (mob.getTarget() != null || mob.patrolRoad < 0) return false;
+		if (mob.getTarget() != null || mob.patrolRoad < 0 || !mob.isLeader()) return false;
 		if (pause > 0) {
 			pause--;
 			return false;
@@ -42,13 +43,13 @@ public class RoadPatrolGoal extends Goal {
 		forward = !forward;
 		double[] p = layout.roadPoint(mob.patrolRoad, d);
 		int x = (int) Math.floor(p[0]), z = (int) Math.floor(p[1]);
-		if (!level.hasChunkAt(new net.minecraft.core.BlockPos(x, 0, z))) return;
+		if (!level.hasChunkAt(new BlockPos(x, 0, z))) return;
 		int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
 		mob.getNavigation().moveTo(x + 0.5, y, z + 0.5, 0.8);
 	}
 
 	@Override
 	public void stop() {
-		pause = 40 + mob.getRandom().nextInt(80); // постоял у столба, огляделся
+		pause = 40 + mob.getRandom().nextInt(80); // постоял, огляделся
 	}
 }
