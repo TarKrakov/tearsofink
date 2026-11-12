@@ -43,7 +43,14 @@ public class PaleSpearmanEntity extends Monster {
 	int thrustTicks = -1;
 	int dodgeCooldown;
 	int dodgeTicks = -1;
+	int gapCooldown;
+	/** Ударили — отпрыгнуть, как только встанет на ноги (тиков ожидания). */
+	int dodgeRequest;
+	private LivingEntity dodgeFrom;
 	private Vec3 dodgeAway = Vec3.ZERO;
+	private double dodgePush = SpearmanTuning.DODGE_BACK;
+	/** Отпрыжка «спиной вперёд» к игроку: всё время прыжка смотрит в сторону от него. */
+	boolean reverseDodge;
 
 	// патруль
 	int patrolRoad = -1;
@@ -98,12 +105,37 @@ public class PaleSpearmanEntity extends Monster {
 	/** Начать отпрыжку от цели (сервер). */
 	void startDodge(LivingEntity from) {
 		dodgeTicks = 0;
+		dodgeRequest = 0;
+		reverseDodge = false;
 		dodgeCooldown = SpearmanTuning.DODGE_COOLDOWN;
+		dodgePush = SpearmanTuning.DODGE_BACK;
 		Vec3 away = this.position().subtract(from.position());
 		away = new Vec3(away.x, 0, away.z);
 		dodgeAway = away.lengthSqr() < 1.0E-4 ? this.getLookAngle().reverse() : away.normalize();
 		this.getNavigation().stop();
 		this.level().broadcastEntityEvent(this, DODGE_EVENT);
+	}
+
+	/** «Спиной вперёд»: разворачивается от игрока и той же отпрыжкой летит к нему (сервер). */
+	void startGapClose(LivingEntity to) {
+		dodgeTicks = 0;
+		reverseDodge = true;
+		gapCooldown = SpearmanTuning.GAP_COOLDOWN;
+		dodgePush = SpearmanTuning.GAP_PUSH;
+		Vec3 toward = to.position().subtract(this.position());
+		toward = new Vec3(toward.x, 0, toward.z).normalize();
+		dodgeAway = toward;
+		faceAway(toward);
+		this.getNavigation().stop();
+		this.level().broadcastEntityEvent(this, DODGE_EVENT);
+	}
+
+	/** Повернуться спиной к направлению dir. */
+	private void faceAway(Vec3 dir) {
+		float yaw = (float) (Math.atan2(-dir.z, -dir.x) * 180.0 / Math.PI) - 90f;
+		this.setYRot(yaw);
+		this.yBodyRot = yaw;
+		this.yHeadRot = yaw;
 	}
 
 	@Override
@@ -113,6 +145,12 @@ public class PaleSpearmanEntity extends Monster {
 		this.entityData.set(AGGRESSIVE, this.getTarget() != null && this.getTarget().isAlive());
 		if (attackCooldown > 0) attackCooldown--;
 		if (dodgeCooldown > 0) dodgeCooldown--;
+		if (gapCooldown > 0) gapCooldown--;
+		// ударили, пока он был в воздухе (отбросило) — отпрыгнет, как только встанет
+		if (dodgeRequest > 0) {
+			dodgeRequest--;
+			if (this.onGround() && !busy() && dodgeFrom != null && dodgeFrom.isAlive()) startDodge(dodgeFrom);
+		}
 
 		if (thrustTicks >= 0) {
 			thrustTicks++;
@@ -121,12 +159,15 @@ public class PaleSpearmanEntity extends Monster {
 		}
 		if (dodgeTicks >= 0) {
 			dodgeTicks++;
-			if (dodgeTicks == SpearmanTuning.DODGE_PUSH_TICK && this.onGround()) {
-				this.setDeltaMovement(dodgeAway.x * SpearmanTuning.DODGE_BACK, SpearmanTuning.DODGE_UP,
-						dodgeAway.z * SpearmanTuning.DODGE_BACK);
+			if (reverseDodge) faceAway(dodgeAway);
+			if (dodgeTicks == SpearmanTuning.DODGE_PUSH_TICK) {
+				this.setDeltaMovement(dodgeAway.x * dodgePush, SpearmanTuning.DODGE_UP, dodgeAway.z * dodgePush);
 				this.hasImpulse = true;
 			}
-			if (dodgeTicks >= SpearmanTuning.DODGE_TICKS) dodgeTicks = -1;
+			if (dodgeTicks >= SpearmanTuning.DODGE_TICKS) {
+				dodgeTicks = -1;
+				reverseDodge = false;
+			}
 		}
 	}
 
@@ -177,9 +218,9 @@ public class PaleSpearmanEntity extends Monster {
 	public boolean hurt(DamageSource source, float amount) {
 		boolean hurt = super.hurt(source, amount);
 		if (hurt && !this.level().isClientSide && source.getEntity() instanceof LivingEntity attacker
-				&& dodgeCooldown <= 0 && thrustTicks < 0 && dodgeTicks < 0 && this.onGround()
-				&& this.distanceTo(attacker) < SpearmanTuning.REACH) {
-			startDodge(attacker);
+				&& dodgeCooldown <= 0 && dodgeTicks < 0 && this.distanceTo(attacker) < SpearmanTuning.REACH + 1) {
+			dodgeFrom = attacker;
+			dodgeRequest = 20; // отпрыгнет, как только приземлится после отбрасывания
 		}
 		return hurt;
 	}

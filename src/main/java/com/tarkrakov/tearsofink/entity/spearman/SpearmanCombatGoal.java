@@ -35,7 +35,7 @@ public class SpearmanCombatGoal extends Goal {
 	public void tick() {
 		LivingEntity target = mob.getTarget();
 		if (target == null) return;
-		mob.getLookControl().setLookAt(target, 30f, 30f);
+		if (!mob.reverseDodge) mob.getLookControl().setLookAt(target, 30f, 30f);
 		if (mob.busy()) {
 			mob.getNavigation().stop();
 			return;
@@ -45,6 +45,12 @@ public class SpearmanCombatGoal extends Goal {
 		// вплотную — отпрыгнуть
 		if (dist < SpearmanTuning.DODGE_CLOSE && mob.dodgeCooldown <= 0 && mob.onGround()) {
 			mob.startDodge(target);
+			return;
+		}
+		// игрок отошёл — «спиной вперёд» прыжком к нему
+		if (dist > SpearmanTuning.GAP_MIN && dist < SpearmanTuning.GAP_MAX && mob.gapCooldown <= 0
+				&& mob.onGround() && mob.hasLineOfSight(target)) {
+			mob.startGapClose(target);
 			return;
 		}
 		// на дистанции копья — тычок
@@ -57,7 +63,7 @@ public class SpearmanCombatGoal extends Goal {
 		if (dist > SpearmanTuning.KEEP_DISTANCE) {
 			if (--repath <= 0) {
 				repath = 8;
-				mob.getNavigation().moveTo(target, 1.0);
+				mob.getNavigation().moveTo(target, 1.15);
 			}
 		} else {
 			mob.getNavigation().stop();

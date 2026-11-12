@@ -32,7 +32,7 @@ public final class SpearmanPatrols {
 		InkLandsLayout layout = InkLandsLayout.of(level);
 		if (layout == null) return;
 		for (ServerPlayer player : level.players()) {
-			if (player.isSpectator() || player.isCreative()) continue;
+			if (player.isSpectator()) continue;
 			if (layout.depthInside(player.getBlockX(), player.getBlockZ()) < 0) continue;
 			trySpawnNear(level, layout, player);
 		}
@@ -42,13 +42,31 @@ public final class SpearmanPatrols {
 		int near = level.getEntities(ModMobs.PALE_SPEARMAN, player.getBoundingBox().inflate(SpearmanTuning.PATROL_COUNT_RADIUS),
 				e -> e.isAlive()).size();
 		if (near >= SpearmanTuning.PATROL_MAX_NEAR) return;
+
+		// ближайшая дорога: точка на каждой дороге на том же расстоянии от центра, что и игрок
+		BlockPos c = layout.center();
+		double px = player.getX(), pz = player.getZ();
+		double d = Math.sqrt((px - c.getX()) * (px - c.getX()) + (pz - c.getZ()) * (pz - c.getZ()));
+		int bestRoad = -1;
+		double bestDist = SpearmanTuning.PATROL_ROAD_REACH;
+		for (int road = 0; road < InkLandsLayout.ROADS; road++) {
+			double[] p = layout.roadPoint(road, d);
+			double dist = Math.hypot(p[0] - px, p[1] - pz);
+			if (dist < bestDist) {
+				bestDist = dist;
+				bestRoad = road;
+			}
+		}
+		if (bestRoad < 0) return;
+
 		RandomSource random = level.random;
-		for (int attempt = 0; attempt < 12; attempt++) {
-			double angle = random.nextDouble() * Math.PI * 2;
-			double dist = SpearmanTuning.PATROL_SPAWN_MIN + random.nextDouble() * (SpearmanTuning.PATROL_SPAWN_MAX - SpearmanTuning.PATROL_SPAWN_MIN);
-			int x = player.getBlockX() + (int) (Math.cos(angle) * dist), z = player.getBlockZ() + (int) (Math.sin(angle) * dist);
-			double[] road = layout.roadNear(x, z, 0);
-			if (road == null) continue;
+		for (int attempt = 0; attempt < 8; attempt++) {
+			double along = (random.nextBoolean() ? 1 : -1) * (SpearmanTuning.PATROL_SPAWN_MIN
+					+ random.nextDouble() * (SpearmanTuning.PATROL_SPAWN_MAX - SpearmanTuning.PATROL_SPAWN_MIN));
+			double t = d + along;
+			double[] p = layout.roadPoint(bestRoad, t);
+			int x = (int) Math.floor(p[0]), z = (int) Math.floor(p[1]);
+			if (Math.hypot(x - px, z - pz) < SpearmanTuning.PATROL_SPAWN_MIN - 4) continue;
 			BlockPos at = new BlockPos(x, 0, z);
 			if (!level.hasChunkAt(at)) continue;
 			int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
@@ -56,17 +74,15 @@ public final class SpearmanPatrols {
 			if (!level.getBiome(at).is(ModBiomes.PALE_FOREST)) continue;
 			if (Lanterns.isSafe(level, at)) continue;
 			if (!level.getBlockState(at).isAir() || !level.getBlockState(at.above()).isAir()) continue;
-			if (!level.getFluidState(at.below()).isEmpty()) continue;
+			if (!level.getFluidState(at.below()).isEmpty() || level.getBlockState(at.below()).isAir()) continue;
 
-			int roadIndex = (int) road[0];
-			double seg = Math.floor(road[1] / SpearmanTuning.PATROL_SEGMENT) * SpearmanTuning.PATROL_SEGMENT;
 			int count = 1 + random.nextInt(2);
 			for (int i = 0; i < count; i++) {
 				PaleSpearmanEntity mob = ModMobs.PALE_SPEARMAN.create(level);
 				if (mob == null) return;
-				mob.moveTo(x + 0.5 + i, y, z + 0.5, random.nextFloat() * 360f, 0f);
+				mob.moveTo(x + 0.5 + i * 0.8, y, z + 0.5, random.nextFloat() * 360f, 0f);
 				mob.finalizeSpawn(level, level.getCurrentDifficultyAt(at), MobSpawnType.NATURAL, null);
-				mob.setPatrol(roadIndex, seg + 10, seg + SpearmanTuning.PATROL_SEGMENT - 10);
+				mob.setPatrol(bestRoad, t - SpearmanTuning.PATROL_SEGMENT / 2.0, t + SpearmanTuning.PATROL_SEGMENT / 2.0);
 				level.addFreshEntity(mob);
 			}
 			return;
