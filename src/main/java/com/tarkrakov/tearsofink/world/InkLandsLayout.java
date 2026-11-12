@@ -26,7 +26,7 @@ public final class InkLandsLayout {
 	/** Радиус всей области. */
 	public static final int RADIUS = 700;
 	/** Радиус ядра — Чернолесья. */
-	public static final int CORE_RADIUS = 240;
+	public static final int CORE_RADIUS = 324;
 	/** Насколько рвутся края области (±). */
 	public static final int EDGE_WOBBLE = 110;
 	/** Масштаб «рваности» краёв: больше — плавнее изгибы. */
@@ -42,7 +42,7 @@ public final class InkLandsLayout {
 	/** Лёгкая неровность края пятна (±). */
 	public static final int BLOOD_WOBBLE = 7;
 	/** Пятна только в средней полосе: от ядра + запас до этой доли радиуса области. */
-	public static final int BLOOD_INNER_MARGIN = 30;
+	public static final int BLOOD_INNER_MARGIN = 15;
 	public static final double BLOOD_OUTER_FRACTION = 0.92;
 
 	// ===== Низина Кроволесья =====
