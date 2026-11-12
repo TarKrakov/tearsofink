@@ -43,6 +43,7 @@ public final class ModCommands {
 						.then(Commands.literal("where").executes(ModCommands::where))
 						.then(Commands.literal("center").executes(ModCommands::center))
 						.then(Commands.literal("blood").executes(ModCommands::blood))
+						.then(Commands.literal("lake").executes(ModCommands::lake))
 						.then(Commands.literal("edge")
 								.executes(ctx -> edge(ctx, 1))
 								.then(Commands.argument("road", IntegerArgumentType.integer(1, InkLandsLayout.ROADS))
@@ -120,6 +121,23 @@ public final class ModCommands {
 		float yaw = (float) (Math.atan2(c.getZ() - start.getZ(), c.getX() - start.getX()) * 180.0 / Math.PI) - 90f;
 		player.teleportTo(overworld, start.getX() + 0.5, y, start.getZ() + 0.5, yaw, 0f);
 		ctx.getSource().sendSuccess(() -> Component.literal("Край Чернильных Земель, дорога " + road + ". Центр — прямо перед тобой."), false);
+		return 1;
+	}
+
+	/** Телепорт на островок в центре Смоляного Озера. */
+	private static int lake(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+		InkLandsLayout layout = findLayout(ctx.getSource());
+		if (layout == null) {
+			ctx.getSource().sendFailure(Component.literal("В этом мире нет Чернильных Земель."));
+			return 0;
+		}
+		ServerPlayer player = ctx.getSource().getPlayerOrException();
+		ServerLevel overworld = ctx.getSource().getServer().overworld();
+		int lx = layout.lakeCenter().getX(), lz = layout.lakeCenter().getZ();
+		overworld.getChunk(lx >> 4, lz >> 4);
+		int y = groundY(overworld, lx, lz) + 1;
+		player.teleportTo(overworld, lx + 0.5, y, lz + 0.5, player.getYRot(), player.getXRot());
+		ctx.getSource().sendSuccess(() -> Component.literal("Смоляное Озеро: " + lx + " " + y + " " + lz), false);
 		return 1;
 	}
 
