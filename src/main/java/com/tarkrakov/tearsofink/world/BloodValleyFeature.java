@@ -56,7 +56,6 @@ public class BloodValleyFeature extends Feature<NoneFeatureConfiguration> {
 				int x = minX + dx, z = minZ + dz;
 				int surface = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z) - 1;
 				pos.set(x, surface, z);
-				if (!level.getBlockState(pos).getFluidState().isEmpty()) continue;
 				double target = layout.valleyHeight(x, z, surface,
 						(bx, bz) -> generator.getBaseHeight(bx, bz, Heightmap.Types.WORLD_SURFACE_WG, level, randomState) - 1);
 				int y = Mth.floor(target);
@@ -67,7 +66,8 @@ public class BloodValleyFeature extends Feature<NoneFeatureConfiguration> {
 					// срезаем всё выше нового уровня
 					for (int yy = y + 1; yy <= surface; yy++) {
 						pos.setY(yy);
-						if (level.getBlockState(pos).getFluidState().isEmpty()) level.setBlock(pos, air, 2);
+						// и землю, и воду: иначе вода остаётся висеть над низиной
+						level.setBlock(pos, air, 2);
 					}
 					WorldgenCleanup.removeFloatingPlants(level, x, surface + 1, z);
 				} else {
@@ -87,6 +87,7 @@ public class BloodValleyFeature extends Feature<NoneFeatureConfiguration> {
 				changed = true;
 			}
 		}
+		BloodFauna.populate(level, layout, minX, minZ, context.random());
 		return changed;
 	}
 

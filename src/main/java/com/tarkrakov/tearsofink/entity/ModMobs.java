@@ -35,6 +35,6 @@ public final class ModMobs {
 		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(ModBiomes.INKWOOD), MobCategory.CREATURE,
 				CATERPILLAR, EntityTuning.INK_WEIGHT, 2, 4);
 		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(ModBiomes.BLOODWOOD), MobCategory.CREATURE,
-				CATERPILLAR, EntityTuning.BLOOD_WEIGHT, 1, 2);
+				CATERPILLAR, EntityTuning.BLOOD_WEIGHT, 2, 3);
 	}
 }

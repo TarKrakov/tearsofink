@@ -34,22 +34,22 @@ public final class InkLandsLayout {
 
 	// ===== Кроволесье: круглые пятна (позже — вокруг Багряных Вестников) =====
 	/** Размер ячейки сетки: в каждой ячейке может быть одно пятно. */
-	public static final int BLOOD_CELL = 200;
+	public static final int BLOOD_CELL = 240;
 	/** Шанс, что в ячейке есть пятно. */
 	public static final double BLOOD_CHANCE = 0.6;
 	/** Радиус пятна: от MIN до MAX. */
-	public static final int BLOOD_MIN_RADIUS = 40, BLOOD_MAX_RADIUS = 65;
+	public static final int BLOOD_MIN_RADIUS = 60, BLOOD_MAX_RADIUS = 98;
 	/** Лёгкая неровность края пятна (±). */
 	public static final int BLOOD_WOBBLE = 7;
 	/** Пятна только в средней полосе: от ядра + запас до этой доли радиуса области. */
-	public static final int BLOOD_INNER_MARGIN = 50;
-	public static final double BLOOD_OUTER_FRACTION = 0.88;
+	public static final int BLOOD_INNER_MARGIN = 30;
+	public static final double BLOOD_OUTER_FRACTION = 0.92;
 
 	// ===== Низина Кроволесья =====
 	/** Насколько дно долины ниже окружающей земли. */
 	public static final int VALLEY_DEPTH = 11;
 	/** Ширина плавного склона вокруг пятна (за его краем). */
-	public static final int VALLEY_SLOPE = 36;
+	public static final int VALLEY_SLOPE = 40;
 
 	// ===== Дороги =====
 	/** Сколько магистралей ведёт к центру. */
