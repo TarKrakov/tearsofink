@@ -13,10 +13,10 @@ public final class SquadTuning {
 	public static final int SHIELD_AXE_DISABLE = 60;
 	/** Удар щитом: дистанция, урон, отброс, длина анимации и момент удара, перезарядка. */
 	public static final double BASH_RANGE = 2.6, BASH_DAMAGE = 8, BASH_KNOCKBACK = 1.4;
-	public static final int BASH_TICKS = 12, BASH_HIT_TICK = 6, BASH_COOLDOWN = 60;
+	public static final int BASH_TICKS = 30, BASH_HIT_TICK = 14, BASH_COOLDOWN = 60; // анимация 1,5 с, удар на 0,7 с
 	/** Рывок: когда (дистанция), замах, бег, скорость, урон, отброс, тупит после промаха, перезарядка. */
 	public static final double CHARGE_MIN = 6, CHARGE_MAX = 14, CHARGE_SPEED = 0.55, CHARGE_DAMAGE = 10, CHARGE_KNOCKBACK = 2.0;
-	public static final int CHARGE_WINDUP = 10, CHARGE_RUN = 30, CHARGE_STUN = 40, CHARGE_COOLDOWN = 200;
+	public static final int CHARGE_WINDUP = 24, CHARGE_RUN = 30, CHARGE_STUN = 40, CHARGE_COOLDOWN = 200; // замах = charge_start 1,2 с
 	/** Рывок сносит «мягкие» блоки не твёрже этого (доски 2.0, земля 0.5, листья 0.2). Камень (1.5+) — см. правило в коде. */
 	public static final float CHARGE_BREAK_HARDNESS = 2.0f;
 

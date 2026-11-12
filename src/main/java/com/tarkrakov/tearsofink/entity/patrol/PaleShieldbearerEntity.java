@@ -33,6 +33,15 @@ import java.util.EnumSet;
 public class PaleShieldbearerEntity extends PaleSoldier {
 	public static final int ACT_BLOCK = 1, ACT_BASH = 2, ACT_CHARGE_WINDUP = 3, ACT_CHARGE = 4, ACT_STUN = 5;
 
+	// анимации (клиент)
+	public final net.minecraft.world.entity.AnimationState idleState = new net.minecraft.world.entity.AnimationState();
+	public final net.minecraft.world.entity.AnimationState blockState = new net.minecraft.world.entity.AnimationState();
+	public final net.minecraft.world.entity.AnimationState bashState = new net.minecraft.world.entity.AnimationState();
+	public final net.minecraft.world.entity.AnimationState chargeStartState = new net.minecraft.world.entity.AnimationState();
+	public final net.minecraft.world.entity.AnimationState chargeState = new net.minecraft.world.entity.AnimationState();
+	public final net.minecraft.world.entity.AnimationState stunState = new net.minecraft.world.entity.AnimationState();
+	private int lastAction = -1;
+
 	int shieldUp, shieldRest, shieldDisabled;
 	int bashTicks = -1, bashCooldown;
 	int chargeTicks = -1, chargeCooldown;
@@ -64,6 +73,25 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 		this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 		this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
 		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+	}
+
+	@Override
+	public void tick() {
+		super.tick();
+		if (!this.level().isClientSide) return;
+		int act = action();
+		if (act != lastAction) {
+			if (act == ACT_BASH) bashState.start(this.tickCount);
+			if (act == ACT_CHARGE_WINDUP) chargeStartState.start(this.tickCount);
+			if (act != ACT_BASH) bashState.stop();
+			if (act != ACT_CHARGE_WINDUP) chargeStartState.stop();
+			lastAction = act;
+		}
+		boolean moving = this.walkAnimation.isMoving();
+		chargeState.animateWhen(act == ACT_CHARGE, this.tickCount);
+		stunState.animateWhen(act == ACT_STUN, this.tickCount);
+		blockState.animateWhen(act == ACT_BLOCK && !moving, this.tickCount);
+		idleState.animateWhen(act == ACT_NONE && !moving, this.tickCount);
 	}
 
 	public boolean shieldRaised() {
