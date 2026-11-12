@@ -41,7 +41,11 @@ public class BloodPumpBlock extends BaseEntityBlock {
 	public static final DirectionProperty FACING = HorizontalDirectionalBlock.FACING;
 	public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
 
-	private static final VoxelShape SHAPE = Block.box(2, 0, 2, 14, 16, 14);
+	/** Хитбокс по модели автора: низ — корпус целиком, верх — шток и крышка. */
+	private static final VoxelShape LOWER = Block.box(0, 0, 0, 16, 16, 16);
+	private static final VoxelShape UPPER = net.minecraft.world.phys.shapes.Shapes.or(
+			Block.box(6, 0, 6, 10, 12, 10),   // шток
+			Block.box(0, 12, 0, 16, 16, 16)); // крышка (в верхнем положении)
 
 	public BloodPumpBlock(Properties properties) {
 		super(properties);
@@ -78,7 +82,7 @@ public class BloodPumpBlock extends BaseEntityBlock {
 
 	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-		return SHAPE;
+		return state.getValue(HALF) == DoubleBlockHalf.LOWER ? LOWER : UPPER;
 	}
 
 	// ----- Установка: два блока + Накопитель сбоку -----

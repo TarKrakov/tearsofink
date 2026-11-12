@@ -5,6 +5,7 @@ import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.CubeDeformation;
 import net.minecraft.client.model.geom.builders.CubeListBuilder;
 import net.minecraft.client.model.geom.builders.LayerDefinition;
 import net.minecraft.client.model.geom.builders.MeshDefinition;
@@ -12,8 +13,8 @@ import net.minecraft.client.model.geom.builders.PartDefinition;
 import net.minecraft.world.entity.Entity;
 
 /**
- * ЗАГЛУШКА модели помпы Кровосборника: корпус (`base`) + ходящий поршень (`piston`).
- * Будет заменена моделью автора из Blockbench (Modded Entity, Mojmaps) — как у гусеницы.
+ * Модель помпы Кровосборника — автора (blockbench/blood_pump.bbmodel → blood_pump_model.java).
+ * Кости: base (корпус, носик, трубы), piston (шток), roof (крышка) — piston и roof ходят при ударе.
  */
 public class BloodPumpModel extends HierarchicalModel<Entity> {
 	public static final ModelLayerLocation LAYER = new ModelLayerLocation(TearsOfInk.id("blood_pump"), "main");
@@ -25,16 +26,20 @@ public class BloodPumpModel extends HierarchicalModel<Entity> {
 	}
 
 	public static LayerDefinition createBodyLayer() {
-		MeshDefinition mesh = new MeshDefinition();
-		PartDefinition root = mesh.getRoot();
-		root.addOrReplaceChild("base", CubeListBuilder.create()
-				.texOffs(0, 0).addBox(-6f, -18f, -6f, 12, 18, 12)      // корпус
-				.texOffs(0, 30).addBox(-7f, -20f, -7f, 14, 2, 14),     // крышка
-				PartPose.offset(0f, 24f, 0f));
-		root.addOrReplaceChild("piston", CubeListBuilder.create()
-				.texOffs(48, 0).addBox(-2f, -12f, -2f, 4, 12, 4),
-				PartPose.offset(0f, 4f, 0f));
-		return LayerDefinition.create(mesh, 64, 64);
+		MeshDefinition meshdefinition = new MeshDefinition();
+		PartDefinition partdefinition = meshdefinition.getRoot();
+
+		PartDefinition roof = partdefinition.addOrReplaceChild("roof", CubeListBuilder.create().texOffs(0, 32).addBox(-8.0F, -4.0F, -8.0F, 16.0F, 4.0F, 16.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, -4.0F, 0.0F));
+
+		PartDefinition piston = partdefinition.addOrReplaceChild("piston", CubeListBuilder.create().texOffs(32, 52).addBox(-2.0F, -18.0F, -2.0F, 4.0F, 12.0F, 4.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 14.0F, 0.0F));
+
+		PartDefinition base = partdefinition.addOrReplaceChild("base", CubeListBuilder.create().texOffs(0, 0).addBox(-8.0F, -16.0F, -8.0F, 16.0F, 16.0F, 16.0F, new CubeDeformation(0.0F))
+		.texOffs(0, 52).addBox(-4.0F, -14.0F, -16.0F, 8.0F, 14.0F, 8.0F, new CubeDeformation(0.0F))
+		.texOffs(48, 52).addBox(-11.0F, -14.0F, -1.0F, 2.0F, 13.0F, 2.0F, new CubeDeformation(1.0F))
+		.texOffs(64, 0).addBox(-11.0F, -14.0F, -6.0F, 2.0F, 13.0F, 2.0F, new CubeDeformation(1.0F))
+		.texOffs(56, 52).addBox(-11.0F, -14.0F, 4.0F, 2.0F, 13.0F, 2.0F, new CubeDeformation(1.0F)), PartPose.offset(0.0F, 24.0F, 0.0F));
+
+		return LayerDefinition.create(meshdefinition, 128, 128);
 	}
 
 	@Override

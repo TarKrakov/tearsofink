@@ -21,7 +21,7 @@ import org.joml.Vector3f;
  * один цикл анимации = один удар (BloodTuning.PUMP_INTERVAL), ритм — от времени мира.
  */
 public class BloodPumpRenderer implements BlockEntityRenderer<BloodPumpBlockEntity> {
-	private static final ResourceLocation TEXTURE = TearsOfInk.id("textures/entity/blood_pump.png");
+	private static final ResourceLocation TEXTURE = TearsOfInk.id("textures/entity/blood_pump/blood_pump_texture.png");
 	private final BloodPumpModel model;
 	private final Vector3f cache = new Vector3f();
 
@@ -35,7 +35,7 @@ public class BloodPumpRenderer implements BlockEntityRenderer<BloodPumpBlockEnti
 		Direction facing = pump.getBlockState().getValue(BloodPumpBlock.FACING);
 
 		model.root().getAllParts().forEach(ModelPart::resetPose);
-		float phase = ((pump.getLevel().getGameTime() % BloodTuning.PUMP_INTERVAL) + partialTick) / BloodTuning.PUMP_INTERVAL;
+		float phase = (Math.floorMod(pump.getLevel().getGameTime() - BloodTuning.SLAM_OFFSET, (long) BloodTuning.PUMP_INTERVAL) + partialTick) / BloodTuning.PUMP_INTERVAL;
 		long ms = (long) (phase * BloodPumpAnimations.PUMP.lengthInSeconds() * 1000f);
 		KeyframeAnimations.animate(model, BloodPumpAnimations.PUMP, ms, 1.0f, cache);
 

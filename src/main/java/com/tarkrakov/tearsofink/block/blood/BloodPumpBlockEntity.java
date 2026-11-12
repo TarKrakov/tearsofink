@@ -18,12 +18,14 @@ public class BloodPumpBlockEntity extends BlockEntity {
 	}
 
 	public static void serverTick(Level level, BlockPos pos, BlockState state, BloodPumpBlockEntity pump) {
-		if (level.getGameTime() % BloodTuning.PUMP_INTERVAL != 0) return;
+		long t = level.getGameTime() - BloodTuning.SLAM_OFFSET;
+		if (t % BloodTuning.PUMP_INTERVAL != 0) return;
+		// звук-заглушка: глухой удар поршня — на каждый удар
+		level.playSound(null, pos, SoundEvents.PISTON_EXTEND, SoundSource.BLOCKS, 0.35f, 0.55f);
+		if ((t / BloodTuning.PUMP_INTERVAL) % BloodTuning.STROKES_PER_BLOOD != 0) return;
 		BlockPos tankPos = BloodPumpBlock.tankPos(pos, state);
 		if (level.getBlockEntity(tankPos) instanceof BloodTankBlockEntity tank) {
 			tank.pumpIn(level.random);
-			// звук-заглушка: глухой удар поршня
-			level.playSound(null, pos, SoundEvents.PISTON_EXTEND, SoundSource.BLOCKS, 0.35f, 0.55f);
 		}
 	}
 }
