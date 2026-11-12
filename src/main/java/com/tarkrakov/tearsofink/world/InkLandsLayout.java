@@ -15,9 +15,9 @@ import java.util.function.IntBinaryOperator;
 
 /**
  * Раскладка Чернильных Земель: одна область на мир.
- * От края к центру: Бледнолесье → (круглые пятна Кроволесья) → Чернолесье. Вся вода внутри — Смоляное озеро.
- * Плюс одно настоящее Смоляное Озеро в кольце Бледнолесья: чёрная вода, островок в центре (деревня рыболюдов),
- * пляж и болотистая территория вокруг.
+ * От края к центру: Бледнолесье → (круглые пятна Кроволесья) → Чернолесье.
+ * Одно крупное Смоляное Озеро на стыке Бледнолесья и Чернолесья: чёрная вода, глубже к середине,
+ * пепельный пляж вокруг (деревня рыболюдов будет плавучей). Дороги его огибают.
  * Магистральные дороги идут от края к центру.
  * Центр выбирается автоматически (на суше) и одинаков для одного и того же сида мира.
  */
@@ -48,22 +48,23 @@ public final class InkLandsLayout {
 	public static final double BLOOD_OUTER_FRACTION = 0.92;
 
 	// ===== Смоляное Озеро (одно на область) =====
-	/** Расстояние центра Озера от центра области. Озеро ставится между двумя дорогами (в самом широком промежутке). */
-	public static final int LAKE_DISTANCE = 545;
+	/** Расстояние центра Озера от центра области: на стыке Бледнолесья и Чернолесья, ближе к Чернолесью. */
+	public static final int LAKE_DISTANCE = 400;
 	/** Радиус водной глади (до пляжа). */
-	public static final int LAKE_WATER_RADIUS = 80;
+	public static final int LAKE_WATER_RADIUS = 130;
 	/** Ширина пляжа вокруг воды. */
-	public static final int LAKE_BEACH = 12;
-	/** Плавный склон от пляжа к обычной земле. */
-	public static final int LAKE_SLOPE = 40;
-	/** Радиус всей территории Озера (зона Смоляного озера: вода, пляж, болотистый берег). */
-	public static final int LAKE_ZONE_RADIUS = 150;
-	/** Наибольшая глубина. */
-	public static final int LAKE_DEPTH = 9;
-	/** Островок в центре — место под деревню рыболюдов (радиус). */
-	public static final int LAKE_ISLAND_RADIUS = 20;
-	/** Неровность берега (±). */
-	public static final int LAKE_WOBBLE = 10;
+	public static final int LAKE_BEACH = 14;
+	/** Плавный склон от пляжа к обычной земле (там уже лес). */
+	public static final int LAKE_SLOPE = 45;
+	/** Зона «Смоляное озеро» (чёрная вода, туман Озера, без деревьев): вода + пляж + полоса берега. */
+	public static final int LAKE_ZONE_RADIUS = LAKE_WATER_RADIUS + LAKE_BEACH + 20;
+	/** Глубина у самого берега и наибольшая — в середине. */
+	public static final int LAKE_SHORE_DEPTH = 2, LAKE_DEPTH = 16;
+	/** Неровность берега (±) и её масштаб (больше — плавнее изгибы). */
+	public static final int LAKE_WOBBLE = 12;
+	public static final double LAKE_WOBBLE_SCALE = 90.0;
+	/** Дороги огибают Озеро на таком расстоянии от его центра (идут вдоль берега). */
+	public static final int LAKE_ROAD_AVOID = LAKE_WATER_RADIUS + LAKE_BEACH + LAKE_WOBBLE + 6;
 
 	// ===== Низина Кроволесья =====
 	/** Насколько дно долины ниже окружающей земли. */
@@ -149,24 +150,22 @@ public final class InkLandsLayout {
 	/** Расстояние до центра Озера с учётом неровного берега. */
 	public double lakeDistance(int x, int z) {
 		double dx = x - lakeCenter.getX(), dz = z - lakeCenter.getZ();
-		return Math.sqrt(dx * dx + dz * dz) + detailNoise.getValue(x / 40.0 + 100, z / 40.0) * LAKE_WOBBLE;
+		return Math.sqrt(dx * dx + dz * dz) + detailNoise.getValue(x / LAKE_WOBBLE_SCALE + 100, z / LAKE_WOBBLE_SCALE) * LAKE_WOBBLE;
 	}
 
 	/**
-	 * Рельеф Озера в точке: {высота верхнего твёрдого блока, 1 если над ним вода (до уровня воды), тип: 0 дно, 1 остров, 2 пляж, 3 склон}
+	 * Рельеф Озера в точке: {высота верхнего твёрдого блока, 1 если над ним вода (до уровня воды), тип: 0 дно, 2 пляж, 3 склон}
 	 * или null, если точка вне влияния Озера.
 	 */
 	public double[] lakeShape(int x, int z, double natural, double waterLevel) {
 		double r = lakeDistance(x, z);
 		double shore = LAKE_WATER_RADIUS, beachEnd = shore + LAKE_BEACH, slopeEnd = beachEnd + LAKE_SLOPE;
 		if (r >= slopeEnd) return null;
-		if (r < LAKE_ISLAND_RADIUS) {
-			double rise = 1 + Math.round((1 - r / LAKE_ISLAND_RADIUS) * 2); // островок чуть горбится
-			return new double[]{waterLevel + rise, 0, 1};
-		}
 		if (r < shore) {
-			double u = (r - LAKE_ISLAND_RADIUS) / (shore - LAKE_ISLAND_RADIUS);
-			double depth = 1 + (LAKE_DEPTH - 1) * 4 * u * (1 - u); // мелко у острова и у берега, глубоко посередине
+			// у берега мелко, к середине всё глубже; середина — ровное глубокое дно
+			double u = Mth.clamp((shore - r) / (shore * 0.75), 0, 1);
+			u = u * u * (3 - 2 * u);
+			double depth = LAKE_SHORE_DEPTH + (LAKE_DEPTH - LAKE_SHORE_DEPTH) * u;
 			return new double[]{waterLevel - Math.round(depth), 1, 0};
 		}
 		if (r < beachEnd) {
@@ -186,7 +185,7 @@ public final class InkLandsLayout {
 		int n = 0;
 		for (int a = 0; a < 12; a++) {
 			double angle = a * Mth.TWO_PI / 12;
-			for (double f : new double[]{0, 0.5, 1.0, 1.4}) {
+			for (double f : new double[]{0.5, 1.0, 1.3}) {
 				sum += baseHeight.applyAsInt((int) (lakeCenter.getX() + Math.cos(angle) * LAKE_WATER_RADIUS * f),
 						(int) (lakeCenter.getZ() + Math.sin(angle) * LAKE_WATER_RADIUS * f));
 				n++;
@@ -235,8 +234,8 @@ public final class InkLandsLayout {
 		double d = edgeDistance(x, z);
 		if (d > RADIUS) return null;
 
+		// Смоляное Озеро — одно, крупное; прочая вода внутри области — просто вода своей зоны
 		if (lakeDistance(x, z) < LAKE_ZONE_RADIUS) return ModBiomes.TAR_LAKE;
-		if (isWater(original)) return ModBiomes.TAR_LAKE;
 		if (d < CORE_RADIUS) return ModBiomes.INKWOOD;
 		if (isBlood(x, z)) return ModBiomes.BLOODWOOD;
 		return ModBiomes.PALE_FOREST;
@@ -326,7 +325,22 @@ public final class InkLandsLayout {
 	}
 
 	private double roadAngle(int road, double d) {
-		return roadAngles[road] + roadNoise.getValue(d / ROAD_MEANDER_SCALE, road * 10.0) * ROAD_MEANDER;
+		double a = roadAngles[road] + roadNoise.getValue(d / ROAD_MEANDER_SCALE, road * 10.0) * ROAD_MEANDER;
+		return avoidLake(a, d);
+	}
+
+	/** Если дорога на этом радиусе попадает в Озеро — сдвигаем её вбок, на берег (в ту сторону, где она и так шла). */
+	private double avoidLake(double a, double d) {
+		if (lakeCenter == null) return a;
+		double lx = lakeCenter.getX() - center.getX(), lz = lakeCenter.getZ() - center.getZ();
+		double dist = Math.sqrt(lx * lx + lz * lz), phi = Math.atan2(lz, lx);
+		double r = LAKE_ROAD_AVOID;
+		double c = (d * d + dist * dist - r * r) / (2 * d * dist);
+		if (c >= 1 || c <= -1) return a; // на этом радиусе круг Озера дорогу не задевает
+		double theta = Math.acos(c);
+		double diff = Mth.wrapDegrees((a - phi) * Mth.RAD_TO_DEG) * Mth.DEG_TO_RAD;
+		if (Math.abs(diff) >= theta) return a;
+		return phi + (diff >= 0 ? theta : -theta);
 	}
 
 	/**

@@ -15,7 +15,7 @@ import net.minecraft.world.level.levelgen.feature.FeaturePlaceContext;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
 
 /**
- * Выкапывает Смоляное Озеро: чаша с чёрной водой, островок в центре (под деревню рыболюдов),
+ * Выкапывает Смоляное Озеро: чаша с чёрной водой (глубже к середине),
  * пепельный пляж по кругу и плавный склон к обычной земле. Работает первым — всё остальное растёт уже на новом рельефе.
  */
 public class LakeBasinFeature extends Feature<NoneFeatureConfiguration> {
@@ -76,7 +76,7 @@ public class LakeBasinFeature extends Feature<NoneFeatureConfiguration> {
 
 				BlockState top = switch (type) {
 					case 0 -> tar;          // дно
-					case 1, 2 -> ash;       // остров и пляж
+					case 2 -> ash;          // пляж
 					default -> ashenSoil;   // склон
 				};
 				// срезать всё выше (и землю, и воду, и растения)

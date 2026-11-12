@@ -124,7 +124,7 @@ public final class ModCommands {
 		return 1;
 	}
 
-	/** Телепорт на островок в центре Смоляного Озера. */
+	/** Телепорт в центр Смоляного Озера (на воду). */
 	private static int lake(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
 		InkLandsLayout layout = findLayout(ctx.getSource());
 		if (layout == null) {
