@@ -89,8 +89,11 @@ public final class InkFog {
 	}
 
 	/** Не мешаем ванильному туману под водой, в лаве, в снегу и при слепоте/тьме. */
+	/** Туман выключен командой /inkfog (для строительства). Только у этого игрока, до перезапуска игры. */
+	public static boolean disabled = false;
+
 	public static boolean shouldApply(Camera camera) {
-		if (strength <= 0f) return false;
+		if (disabled || strength <= 0f) return false;
 		if (camera.getFluidInCamera() != FogType.NONE) return false;
 		return !(camera.getEntity() instanceof LivingEntity living
 				&& (living.hasEffect(MobEffects.BLINDNESS) || living.hasEffect(MobEffects.DARKNESS)));

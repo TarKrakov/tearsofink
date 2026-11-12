@@ -39,7 +39,7 @@ public final class FogBankSpawner {
 	public static void tick(Minecraft mc) {
 		ClientLevel level = mc.level;
 		Player player = mc.player;
-		if (level == null || player == null || mc.isPaused()) return;
+		if (level == null || player == null || mc.isPaused() || InkFog.disabled) return;
 
 		RandomSource random = level.random;
 		float keepChance = 1f - INSIDE_REDUCTION * InkFog.strength();

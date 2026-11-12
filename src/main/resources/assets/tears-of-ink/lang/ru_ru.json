@@ -178,5 +178,7 @@
   "item.tears-of-ink.blood_crystal": "Кристалл крови",
   "message.tears-of-ink.blood_collected": "Вы собрали сгустков крови: %s. В накопителе осталось: %s.",
   "message.tears-of-ink.blood_level": "В накопителе %s крови. Сгусток соберётся с %s.",
-  "message.tears-of-ink.blood_crystal": "В накопителе застыл Кристалл крови (%s)."
+  "message.tears-of-ink.blood_crystal": "В накопителе застыл Кристалл крови (%s).",
+  "message.tears-of-ink.fog_off": "Туман Чернильных Земель выключен (только у вас). /inkfog — вернуть.",
+  "message.tears-of-ink.fog_on": "Туман Чернильных Земель снова с вами."
 }

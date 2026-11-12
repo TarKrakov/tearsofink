@@ -41,6 +41,14 @@ import net.minecraft.client.renderer.RenderType;
 public class TearsOfInkClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
+		// /inkfog — выключить/включить туман Чернильных Земель у себя (удобно строить)
+		net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
+				dispatcher.register(net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal("inkfog").executes(ctx -> {
+					com.tarkrakov.tearsofink.client.fog.InkFog.disabled = !com.tarkrakov.tearsofink.client.fog.InkFog.disabled;
+					ctx.getSource().sendFeedback(net.minecraft.network.chat.Component.translatable(
+							com.tarkrakov.tearsofink.client.fog.InkFog.disabled ? "message.tears-of-ink.fog_off" : "message.tears-of-ink.fog_on"));
+					return 1;
+				})));
 		ParticleFactoryRegistry.getInstance().register(ModParticles.FOG_BANK, FogBankParticle.Provider::new);
 		ParticleFactoryRegistry.getInstance().register(ModParticles.TEAR_GLINT, TearGlintParticle.Provider::new);
 		ParticleFactoryRegistry particles = ParticleFactoryRegistry.getInstance();
