@@ -22,7 +22,7 @@ import java.util.function.IntBinaryOperator;
 public final class InkLandsLayout {
 	// ===== Размеры (в блоках) =====
 	/** На каком расстоянии от точки 0,0 ищем место для центра. */
-	public static final int[] CENTER_DISTANCES = {1400, 1200, 1700};
+	public static final int[] CENTER_DISTANCES = {1400, 1200, 1700, 2100, 2600, 3200};
 	/** Радиус всей области. */
 	public static final int RADIUS = 800;
 	/** Радиус ядра — Чернолесья. */
@@ -530,22 +530,49 @@ public final class InkLandsLayout {
 	}
 
 	/** Ищем точку на суше на кольце вокруг 0,0. Начальный угол зависит от сида мира. */
+	/**
+	 * Где поставить центр: перебираем места на кольцах вокруг 0,0 и берём то, где внутри области
+	 * меньше всего моря (иначе море «вливается» в Земли и топит Бледнолесье). Ближайшее к спавну
+	 * место совсем без моря выигрывает сразу. Одинаково для одного сида мира.
+	 */
 	private static BlockPos findCenter(Climate.Sampler sampler) {
 		Climate.TargetPoint origin = sampler.sample(0, 16, 0);
 		long hash = origin.temperature() * 31L + origin.humidity() * 17L + origin.weirdness();
 		double startAngle = Math.floorMod(hash, 360L) * Math.PI / 180.0;
+		BlockPos best = null;
+		double bestScore = Double.MAX_VALUE;
 		for (int distance : CENTER_DISTANCES) {
 			for (int i = 0; i < 24; i++) {
 				double angle = startAngle + i * Math.PI / 12.0;
 				int x = (int) Math.round(Math.cos(angle) * distance);
 				int z = (int) Math.round(Math.sin(angle) * distance);
-				Climate.TargetPoint p = sampler.sample(x >> 2, 16, z >> 2);
-				if (Climate.unquantizeCoord(p.continentalness()) > 0.15f) {
-					return new BlockPos(x, 0, z);
+				if (Climate.unquantizeCoord(sampler.sample(x >> 2, 16, z >> 2).continentalness()) < 0.15f) continue;
+				double score = seaFraction(sampler, x, z);
+				if (score < bestScore) {
+					bestScore = score;
+					best = new BlockPos(x, 0, z);
 				}
 			}
+			if (bestScore <= 0.0) break; // нашли место совсем без моря — дальше не ищем
 		}
+		if (best != null) return best;
 		return new BlockPos((int) (Math.cos(startAngle) * CENTER_DISTANCES[0]), 0,
 				(int) (Math.sin(startAngle) * CENTER_DISTANCES[0]));
+	}
+
+	/** Доля моря и побережья внутри области с центром x, z (0 — сплошная суша). */
+	private static double seaFraction(Climate.Sampler sampler, int cx, int cz) {
+		int sea = 0, total = 0;
+		for (int ring = 1; ring <= 5; ring++) {
+			double r = (RADIUS + EDGE_WOBBLE) * ring / 5.0;
+			int points = 8 + ring * 6;
+			for (int k = 0; k < points; k++) {
+				double a = k * Math.PI * 2 / points;
+				int x = cx + (int) Math.round(Math.cos(a) * r), z = cz + (int) Math.round(Math.sin(a) * r);
+				if (Climate.unquantizeCoord(sampler.sample(x >> 2, 16, z >> 2).continentalness()) < -0.11f) sea++;
+				total++;
+			}
+		}
+		return (double) sea / total;
 	}
 }
