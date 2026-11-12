@@ -19,7 +19,7 @@ import java.util.UUID;
  * Солдат бледного патруля (копейщик, щитовик, арбалетчик). Общее: отряд (кто свои), лидер,
  * отрезок дороги для патруля, общая цель (ударил одного — идут все), синхронное «действие» для анимаций.
  */
-public abstract class PaleSoldier extends Monster {
+public abstract class PaleSoldier extends Monster implements com.tarkrakov.tearsofink.entity.faction.FactionMember {
 	private static final EntityDataAccessor<Integer> ACTION = SynchedEntityData.defineId(PaleSoldier.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Boolean> AGGRESSIVE = SynchedEntityData.defineId(PaleSoldier.class, EntityDataSerializers.BOOLEAN);
 
@@ -65,9 +65,25 @@ public abstract class PaleSoldier extends Monster {
 		return squad == null || leader == null || leader.equals(this.getUUID());
 	}
 
-	/** Свой ли это (тот же отряд или вообще бледный солдат). */
+	@Override
+	public com.tarkrakov.tearsofink.entity.faction.Faction faction() {
+		return com.tarkrakov.tearsofink.entity.faction.Faction.INK; // бледные патрули служат Шпилю
+	}
+
+	/** Свой ли это — по таблице фракций. */
 	public boolean isAlly(Entity other) {
-		return other instanceof PaleSoldier;
+		return com.tarkrakov.tearsofink.entity.faction.Factions.allied(this, other);
+	}
+
+	/** Цели: кто ударил → игроки → враги по таблице фракций (ванильные монстры, другие фракции). */
+	protected void addFactionTargets() {
+		this.targetSelector.addGoal(1, new net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal(this));
+		this.targetSelector.addGoal(2, new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(this,
+				net.minecraft.world.entity.player.Player.class, true));
+		this.targetSelector.addGoal(3, new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(this,
+				LivingEntity.class, 10, true, false,
+				e -> !(e instanceof net.minecraft.world.entity.player.Player)
+						&& com.tarkrakov.tearsofink.entity.faction.Factions.wantsToAttack(this, e)));
 	}
 
 	@Override
@@ -105,7 +121,7 @@ public abstract class PaleSoldier extends Monster {
 
 	@Override
 	public void setTarget(@Nullable LivingEntity target) {
-		if (target instanceof PaleSoldier) return; // своих не бьём
+		if (target != null && isAlly(target)) return; // своих не бьём
 		super.setTarget(target);
 	}
 

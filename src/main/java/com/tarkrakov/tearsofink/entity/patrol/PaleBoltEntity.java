@@ -24,6 +24,7 @@ public class PaleBoltEntity extends AbstractArrow {
 
 	@Override
 	protected boolean canHitEntity(Entity target) {
+		if (this.getOwner() != null && com.tarkrakov.tearsofink.entity.faction.Factions.allied(this.getOwner(), target)) return false;
 		return super.canHitEntity(target) && !(target instanceof PaleSoldier);
 	}
 

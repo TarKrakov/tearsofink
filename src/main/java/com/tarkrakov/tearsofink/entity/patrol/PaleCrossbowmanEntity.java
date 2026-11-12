@@ -54,8 +54,7 @@ public class PaleCrossbowmanEntity extends PaleSoldier {
 		this.goalSelector.addGoal(5, new RoadPatrolGoal(this));
 		this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 8f));
 		this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
-		this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-		this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+		addFactionTargets();
 	}
 
 	@Override
