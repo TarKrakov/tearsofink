@@ -243,8 +243,12 @@ public final class ModCommands {
 			return 0;
 		}
 		double dist = Math.sqrt(ctx.getSource().getPosition().distanceToSqr(c.getX(), ctx.getSource().getPosition().y, c.getZ()));
+		BlockPos spawn = ctx.getSource().getServer().overworld().getSharedSpawnPos();
+		int fromSpawn = (int) Math.sqrt(spawn.distSqr(new BlockPos(c.getX(), spawn.getY(), c.getZ())));
 		ctx.getSource().sendSuccess(() -> Component.literal("Центр Чернильных Земель: X " + c.getX() + ", Z " + c.getZ()
-				+ " (до него ~" + (int) dist + " блоков, радиус области ~" + InkLandsLayout.RADIUS + ")"), false);
+				+ " (до него ~" + (int) dist + " блоков, радиус области ~" + InkLandsLayout.RADIUS + ")"
+				+ "\nОт точки спавна до центра ~" + fromSpawn + ", до ближайшего края ~" + Math.max(0, fromSpawn - InkLandsLayout.RADIUS)
+				+ " (край рваный, ±" + InkLandsLayout.EDGE_WOBBLE + ")"), false);
 		return 1;
 	}
 

@@ -546,7 +546,7 @@ public final class InkLandsLayout {
 				double angle = startAngle + i * Math.PI / 12.0;
 				int x = (int) Math.round(Math.cos(angle) * distance);
 				int z = (int) Math.round(Math.sin(angle) * distance);
-				if (Climate.unquantizeCoord(sampler.sample(x >> 2, 16, z >> 2).continentalness()) < 0.15f) continue;
+				if (Climate.unquantizeCoord(sampler.sample(x >> 2, 16, z >> 2).continentalness()) < -0.11f) continue; // центр — не в море
 				double score = seaFraction(sampler, x, z);
 				if (score < bestScore) {
 					bestScore = score;
@@ -561,7 +561,7 @@ public final class InkLandsLayout {
 	}
 
 	/** Сколько моря внутри области ещё терпимо (доля), чтобы не уходить дальше от спавна. */
-	private static final double ACCEPTABLE_SEA = 0.04;
+	private static final double ACCEPTABLE_SEA = 0.25;
 
 	/** Доля моря и побережья внутри области с центром x, z (0 — сплошная суша). */
 	private static double seaFraction(Climate.Sampler sampler, int cx, int cz) {
