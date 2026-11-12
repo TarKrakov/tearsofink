@@ -26,7 +26,10 @@ public final class DebugCommands {
 				.requires(s -> s.hasPermission(2))
 				.then(Commands.literal("check")
 						.then(Commands.literal("roads").then(Commands.argument("road", IntegerArgumentType.integer(1, InkLandsLayout.ROADS))
-								.executes(ctx -> checkRoad(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "road") - 1))))
+								.executes(ctx -> checkRoad(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "road") - 1, 100000))
+								.then(Commands.argument("length", IntegerArgumentType.integer(16, 100000))
+										.executes(ctx -> checkRoad(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "road") - 1,
+												IntegerArgumentType.getInteger(ctx, "length"))))))
 						.then(Commands.literal("terrain").executes(ctx -> checkTerrain(ctx.getSource()))))));
 	}
 
@@ -35,7 +38,7 @@ public final class DebugCommands {
 		s.sendSuccess(() -> Component.literal(msg), false);
 	}
 
-	private static int checkRoad(CommandSourceStack src, int road) {
+	private static int checkRoad(CommandSourceStack src, int road, int length) {
 		ServerLevel level = ModDimensions.lands(src.getServer());
 		InkLandsLayout layout = level == null ? null : InkLandsLayout.of(level);
 		if (layout == null) { say(src, "нет измерения"); return 0; }
@@ -44,7 +47,9 @@ public final class DebugCommands {
 		List<String> examples = new ArrayList<>();
 		double[] start = layout.arrivalPoint(road);
 		double dStart = Math.sqrt(start[0] * start[0] + start[1] * start[1]);
-		for (double d = dStart; d > InkLandsLayout.ROAD_END_RADIUS + 4; d -= 1) {
+		long t0 = System.currentTimeMillis();
+		for (double d = dStart; d > InkLandsLayout.ROAD_END_RADIUS + 4 && dStart - d < length; d -= 1) {
+			if (((int) (dStart - d)) % 64 == 0) TearsOfInk.LOGGER.info("[check] … дорога " + (road + 1) + ": " + (int) (dStart - d) + " блоков, " + (System.currentTimeMillis() - t0) / 1000 + " с");
 			double[] p = layout.roadPoint(road, d);
 			int x = (int) Math.floor(p[0]), z = (int) Math.floor(p[1]);
 			level.getChunk(x >> 4, z >> 4);
