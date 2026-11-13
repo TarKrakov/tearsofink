@@ -130,6 +130,7 @@ public final class Travel {
 				BlockPos head = state.getValue(BedBlock.PART) == BedPart.HEAD ? hit.getBlockPos()
 						: hit.getBlockPos().relative(state.getValue(BedBlock.FACING));
 				set(sp, get(sp).withRespawn(head, true));
+				preloadRespawn(sp, head);
 				sp.sendSystemMessage(Component.translatable("message.tears-of-ink.lands_bed").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
 			}
 			return InteractionResult.SUCCESS;
@@ -292,6 +293,14 @@ public final class Travel {
 
 	private static final net.minecraft.server.level.TicketType<net.minecraft.world.level.ChunkPos> RESPAWN_TICKET =
 			net.minecraft.server.level.TicketType.create("tears_of_ink_respawn", java.util.Comparator.comparingLong(net.minecraft.world.level.ChunkPos::toLong), 20 * 45);
+
+	/** Сразу прогрузить место возрождения (кровать/фонтан), чтобы смерть не подвисала. */
+	public static void preloadRespawn(ServerPlayer p, BlockPos at) {
+		ServerLevel lands = ModDimensions.lands(p.server);
+		if (lands == null) return;
+		var cp = new net.minecraft.world.level.ChunkPos(at);
+		lands.getChunkSource().addRegionTicket(RESPAWN_TICKET, cp, 3, cp);
+	}
 
 	/** Пока игрок в Землях — держим место его возрождения прогруженным (возрождение без ожидания). */
 	private static void keepRespawnLoaded(ServerLevel lands) {

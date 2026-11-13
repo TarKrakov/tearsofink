@@ -131,6 +131,7 @@ public final class InkFog {
 	/** Дальность тумана для зоны или null, если это не Чернильные Земли. */
 	public static Float zoneFogEnd(Holder<Biome> biome) {
 		if (biome.is(VESTIBULE)) return 9f;
+		if (biome.is(ModBiomes.EDGE)) return 4f;
 		if (biome.is(ModBiomes.INKWOOD)) return FOG_END_INK;
 		if (biome.is(ModBiomes.BLOODWOOD)) return FOG_END_BLOOD;
 		if (biome.is(ModBiomes.TAR_LAKE)) return FOG_END_LAKE;

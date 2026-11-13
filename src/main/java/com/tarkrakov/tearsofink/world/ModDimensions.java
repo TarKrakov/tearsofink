@@ -40,9 +40,13 @@ public final class ModDimensions {
 		return onGround(lands, (int) Math.floor(p[0]), (int) Math.floor(p[1]));
 	}
 
-	/** Поворот «лицом к центру Земель» (от края) — чтобы новичок не шёл сразу в стену тумана. */
+	/** Поворот спиной к ближайшему краю (перпендикулярно от него) — чтобы новичок не шёл сразу в стену тумана. */
 	public static float faceInward(Vec3 at) {
-		return (float) Math.toDegrees(Math.atan2(at.x, -at.z));
+		double s = 6;
+		double gx = InkLandsLayout.edgeDepth(at.x + s, at.z) - InkLandsLayout.edgeDepth(at.x - s, at.z);
+		double gz = InkLandsLayout.edgeDepth(at.x, at.z + s) - InkLandsLayout.edgeDepth(at.x, at.z - s);
+		if (gx * gx + gz * gz < 1.0E-6) { gx = -at.x; gz = -at.z; }
+		return (float) Math.toDegrees(Math.atan2(-gx, gz));
 	}
 
 	/** Центр блока на поверхности (чанк загружается). */

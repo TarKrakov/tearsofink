@@ -76,6 +76,7 @@ public class InkFountainBlock extends Block {
 			var travel = com.tarkrakov.tearsofink.travel.Travel.get(sp);
 			if (!(travel.respawn().isPresent() && travel.respawn().get().equals(pos) && !travel.respawnBed())) {
 				com.tarkrakov.tearsofink.travel.Travel.set(sp, travel.withRespawn(pos.immutable(), false));
+				com.tarkrakov.tearsofink.travel.Travel.preloadRespawn(sp, pos.immutable());
 				level.playSound(null, pos, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 0.8f, 0.7f);
 				server.sendParticles(ParticleTypes.SQUID_INK, pos.getX() + 0.5, pos.getY() + 0.9, pos.getZ() + 0.5, 12, 0.2, 0.3, 0.2, 0.02);
 			}

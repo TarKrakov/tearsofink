@@ -19,6 +19,9 @@ public final class ModBiomes {
 	/** Смоляное озеро — вся вода внутри Чернильных Земель. */
 	public static final ResourceKey<Biome> TAR_LAKE = key("tar_lake");
 
+	/** Край Земель — голая пепельная земля в стене тумана (ни деревьев, ни дорог; дальше не пройти). */
+	public static final ResourceKey<Biome> EDGE = key("ink_edge");
+
 	public static final List<ResourceKey<Biome>> ALL = List.of(PALE_FOREST, BLOODWOOD, INKWOOD, TAR_LAKE);
 
 	/** Тег «это Чернильные Земли» (все четыре биома). */

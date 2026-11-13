@@ -75,7 +75,7 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 			for (int dz = 0; dz < 16; dz++) {
 				int x = minX + dx, z = minZ + dz;
 				double[] hit = layout.roadNear(x, z, InkLandsLayout.ROAD_SHOULDER);
-				if (hit == null) continue;
+				if (hit == null || layout.depthInside(x, z) < 0) continue; // за краем дорог нет
 				int road = (int) hit[0];
 				double along = hit[1], fromAxis = hit[2];
 				boolean lane = fromAxis <= InkLandsLayout.ROAD_HALF_WIDTH;

@@ -251,5 +251,6 @@
   "diary.tears-of-ink.entry.spider.text": "(Запись-заглушка. Текст напишет автор.)",
   "item.tears-of-ink.dim_hand_lantern": "Тусклый ручной фонарь",
   "block.tears-of-ink.vestibule_gate": "Пелена ворот",
-  "effect.tears-of-ink.weakened_soul": "Ослабленная Душа"
+  "effect.tears-of-ink.weakened_soul": "Ослабленная Душа",
+  "biome.tears-of-ink.ink_edge": "Край Земель"
 }
