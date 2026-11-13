@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab",
+  "textures": {
+    "bottom": "tears-of-ink:block/cracked_ruin_bricks",
+    "top": "tears-of-ink:block/cracked_ruin_bricks",
+    "side": "tears-of-ink:block/cracked_ruin_bricks"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "replace": false,
+  "values": [
+    "tears-of-ink:ruin_brick_slab",
+    "tears-of-ink:cracked_ruin_brick_slab",
+    "tears-of-ink:overgrown_ruin_brick_slab",
+    "tears-of-ink:ruin_tile_slab",
+    "tears-of-ink:cracked_ruin_tile_slab"
+  ]
+}

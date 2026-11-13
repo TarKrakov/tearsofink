@@ -14,6 +14,26 @@
     "tears-of-ink:asphodelite_emerald_ore",
     "tears-of-ink:ink_lantern",
     "tears-of-ink:eternal_lantern",
-    "tears-of-ink:stone_lantern"
+    "tears-of-ink:stone_lantern",
+    "tears-of-ink:ruin_bricks",
+    "tears-of-ink:cracked_ruin_bricks",
+    "tears-of-ink:overgrown_ruin_bricks",
+    "tears-of-ink:ruin_tiles",
+    "tears-of-ink:cracked_ruin_tiles",
+    "tears-of-ink:ruin_pattern",
+    "tears-of-ink:cracked_ruin_pattern",
+    "tears-of-ink:ruin_pillar",
+    "tears-of-ink:cracked_ruin_pillar",
+    "tears-of-ink:ruin_brick_stairs",
+    "tears-of-ink:ruin_brick_slab",
+    "tears-of-ink:ruin_brick_wall",
+    "tears-of-ink:cracked_ruin_brick_stairs",
+    "tears-of-ink:cracked_ruin_brick_slab",
+    "tears-of-ink:cracked_ruin_brick_wall",
+    "tears-of-ink:overgrown_ruin_brick_stairs",
+    "tears-of-ink:overgrown_ruin_brick_slab",
+    "tears-of-ink:overgrown_ruin_brick_wall",
+    "tears-of-ink:ruin_tile_slab",
+    "tears-of-ink:cracked_ruin_tile_slab"
   ]
 }

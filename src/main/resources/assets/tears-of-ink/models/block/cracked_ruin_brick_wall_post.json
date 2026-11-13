@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/template_wall_post",
+  "textures": {
+    "wall": "tears-of-ink:block/cracked_ruin_bricks"
+  }
+}

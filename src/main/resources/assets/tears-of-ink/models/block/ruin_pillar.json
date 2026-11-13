@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "tears-of-ink:block/ruin_pillar_top",
+    "side": "tears-of-ink:block/ruin_pillar"
+  }
+}

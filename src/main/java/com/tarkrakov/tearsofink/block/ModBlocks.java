@@ -12,6 +12,7 @@ import net.minecraft.util.ColorRGBA;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.WallBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.effect.MobEffects;
@@ -199,6 +200,28 @@ public final class ModBlocks {
 	/** Асфоделитовая порода: камень под Чернильными пустошами (вместо обычного камня выше y=0). */
 	public static final Block ASPHODELITE_ROCK = register("asphodelite_rock", new Block(
 			BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	// ===== Древние руины (заглушки текстур — автор нарисует) =====
+	public static final Block RUIN_BRICKS = register("ruin_bricks", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block CRACKED_RUIN_BRICKS = register("cracked_ruin_bricks", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block OVERGROWN_RUIN_BRICKS = register("overgrown_ruin_bricks", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block RUIN_TILES = register("ruin_tiles", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block CRACKED_RUIN_TILES = register("cracked_ruin_tiles", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block RUIN_PATTERN = register("ruin_pattern", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block CRACKED_RUIN_PATTERN = register("cracked_ruin_pattern", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block RUIN_PILLAR = register("ruin_pillar", new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block CRACKED_RUIN_PILLAR = register("cracked_ruin_pillar", new RotatedPillarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block RUIN_BRICK_STAIRS = register("ruin_brick_stairs", new StairBlock(RUIN_BRICKS.defaultBlockState(), BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block RUIN_BRICK_SLAB = register("ruin_brick_slab", new SlabBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block RUIN_BRICK_WALL = register("ruin_brick_wall", new WallBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY).forceSolidOn()));
+	public static final Block CRACKED_RUIN_BRICK_STAIRS = register("cracked_ruin_brick_stairs", new StairBlock(CRACKED_RUIN_BRICKS.defaultBlockState(), BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block CRACKED_RUIN_BRICK_SLAB = register("cracked_ruin_brick_slab", new SlabBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block CRACKED_RUIN_BRICK_WALL = register("cracked_ruin_brick_wall", new WallBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY).forceSolidOn()));
+	public static final Block OVERGROWN_RUIN_BRICK_STAIRS = register("overgrown_ruin_brick_stairs", new StairBlock(OVERGROWN_RUIN_BRICKS.defaultBlockState(), BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block OVERGROWN_RUIN_BRICK_SLAB = register("overgrown_ruin_brick_slab", new SlabBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block OVERGROWN_RUIN_BRICK_WALL = register("overgrown_ruin_brick_wall", new WallBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY).forceSolidOn()));
+	public static final Block RUIN_TILE_SLAB = register("ruin_tile_slab", new SlabBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	public static final Block CRACKED_RUIN_TILE_SLAB = register("cracked_ruin_tile_slab", new SlabBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+
 	/** Асфоделит: руда в асфоделитовой породе и глубинном сланце. Роняет Асфоду — материал для снаряжения. */
 	public static final Block ASPHODELITE_ORE = register("asphodelite_ore", new DropExperienceBlock(UniformInt.of(2, 5),
 			BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE).lightLevel(s -> ASPHODELITE_LIGHT)));
