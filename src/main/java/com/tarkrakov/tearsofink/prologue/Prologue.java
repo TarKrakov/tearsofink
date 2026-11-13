@@ -65,6 +65,15 @@ public final class Prologue {
 	private static final net.minecraft.server.level.TicketType<net.minecraft.world.level.ChunkPos> ARRIVAL_TICKET =
 			net.minecraft.server.level.TicketType.create("tears_of_ink_arrival", java.util.Comparator.comparingLong(net.minecraft.world.level.ChunkPos::toLong), 20 * 180);
 
+	private static final java.util.Set<net.minecraft.world.level.ChunkPos> TICKETS = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+	/** Снять наши «держи прогруженным» при выключении сервера. */
+	public static void dropTickets(net.minecraft.server.MinecraftServer server) {
+		ServerLevel lands = ModDimensions.lands(server);
+		if (lands != null) for (var cp : TICKETS) lands.getChunkSource().removeRegionTicket(ARRIVAL_TICKET, cp, 6, cp);
+		TICKETS.clear();
+	}
+
 	private Prologue() {}
 
 	public static void init() {
@@ -143,6 +152,7 @@ public final class Prologue {
 		double[] a = layout.arrivalPoint(road);
 		var cp = new net.minecraft.world.level.ChunkPos(BlockPos.containing(a[0], 0, a[1]));
 		lands.getChunkSource().addRegionTicket(ARRIVAL_TICKET, cp, 6, cp); // с запасом: чтобы и вид вокруг успел сгенерироваться
+		TICKETS.add(cp);
 	}
 
 	private static void sign(ServerPlayer p) {

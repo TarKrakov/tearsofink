@@ -88,6 +88,10 @@ public final class Travel {
 	}
 
 	public static void init() {
+		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+			dropTickets(server);
+			com.tarkrakov.tearsofink.prologue.Prologue.dropTickets(server);
+		});
 		// ----- смерть: зеркальце остаётся при игроке -----
 		ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> {
 			if (entity instanceof ServerPlayer p && bound(p)
@@ -130,6 +134,7 @@ public final class Travel {
 				BlockPos head = state.getValue(BedBlock.PART) == BedPart.HEAD ? hit.getBlockPos()
 						: hit.getBlockPos().relative(state.getValue(BedBlock.FACING));
 				set(sp, get(sp).withRespawn(head, true));
+				preloadRespawn(sp, head);
 				sp.sendSystemMessage(Component.translatable("message.tears-of-ink.lands_bed").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
 			}
 			return InteractionResult.SUCCESS;
@@ -293,6 +298,24 @@ public final class Travel {
 	private static final net.minecraft.server.level.TicketType<net.minecraft.world.level.ChunkPos> RESPAWN_TICKET =
 			net.minecraft.server.level.TicketType.create("tears_of_ink_respawn", java.util.Comparator.comparingLong(net.minecraft.world.level.ChunkPos::toLong), 20 * 45);
 
+	/** Сразу прогрузить место возрождения (кровать/фонтан), чтобы смерть не подвисала. */
+	public static void preloadRespawn(ServerPlayer p, BlockPos at) {
+		ServerLevel lands = ModDimensions.lands(p.server);
+		if (lands == null) return;
+		var cp = new net.minecraft.world.level.ChunkPos(at);
+		lands.getChunkSource().addRegionTicket(RESPAWN_TICKET, cp, 3, cp);
+		TICKETS.add(cp);
+	}
+
+	/** Наши «держи прогруженным» — снимаем при выключении сервера, чтобы сохранение не ждало их генерацию. */
+	private static final java.util.Set<net.minecraft.world.level.ChunkPos> TICKETS = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+	public static void dropTickets(net.minecraft.server.MinecraftServer server) {
+		ServerLevel lands = ModDimensions.lands(server);
+		if (lands != null) for (var cp : TICKETS) lands.getChunkSource().removeRegionTicket(RESPAWN_TICKET, cp, 3, cp);
+		TICKETS.clear();
+	}
+
 	/** Пока игрок в Землях — держим место его возрождения прогруженным (возрождение без ожидания). */
 	private static void keepRespawnLoaded(ServerLevel lands) {
 		InkLandsLayout layout = InkLandsLayout.of(lands);
@@ -307,6 +330,7 @@ public final class Travel {
 			} else continue;
 			var cp = new net.minecraft.world.level.ChunkPos(at);
 			lands.getChunkSource().addRegionTicket(RESPAWN_TICKET, cp, 3, cp);
+			TICKETS.add(cp);
 		}
 	}
 

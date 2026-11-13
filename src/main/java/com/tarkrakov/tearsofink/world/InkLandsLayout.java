@@ -240,7 +240,7 @@ public final class InkLandsLayout {
 	}
 
 	/** На сколько блоков внутрь от края попадает новичок (чтобы бой у места прибытия не уводил за край, в петлю). */
-	public static final int ARRIVAL_DEPTH = 64;
+	public static final int ARRIVAL_DEPTH = 100;
 
 	/** Где игрок попадает в Земли: на дороге road, чуть внутри края Бледнолесья. {x, z} */
 	public double[] arrivalPoint(int road) {

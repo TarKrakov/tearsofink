@@ -42,7 +42,7 @@ public final class ModSurfaceRules {
 						VerticalAnchor.absolute(0), VerticalAnchor.absolute(8))),
 				ASPHODELITE_ROCK);
 
-		return SurfaceRules.ifTrue(SurfaceRules.isBiome(ModBiomes.PALE_FOREST, ModBiomes.BLOODWOOD, ModBiomes.INKWOOD, ModBiomes.TAR_LAKE), SurfaceRules.sequence(
+		return SurfaceRules.ifTrue(SurfaceRules.isBiome(ModBiomes.PALE_FOREST, ModBiomes.BLOODWOOD, ModBiomes.INKWOOD, ModBiomes.TAR_LAKE, ModBiomes.EDGE), SurfaceRules.sequence(
 				SurfaceRules.ifTrue(SurfaceRules.abovePreliminarySurface(), inkWastes),
 				rock));
 	}
