@@ -24,7 +24,7 @@ public final class InkLandsBorder {
 			if (!ModDimensions.isLands(level) || level.getGameTime() % 10 != 0) return;
 			InkLandsLayout layout = InkLandsLayout.of(level);
 			if (layout == null) return;
-			for (ServerPlayer player : level.players()) {
+			for (ServerPlayer player : java.util.List.copyOf(level.players())) {
 				if (player.isSpectator()) continue;
 				double depth = layout.depthInside(player.getBlockX(), player.getBlockZ());
 				if (depth > -LOOP_DEPTH) continue;

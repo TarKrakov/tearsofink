@@ -36,13 +36,14 @@ public final class PrologueItems {
 		public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 			ItemStack stack = player.getItemInHand(hand);
 			if (player instanceof ServerPlayer sp) {
-				stack.shrink(1);
+				stack.consume(1, sp);
 				give(sp, ModItems.INVITATION_LETTER);
 				if (!sp.getInventory().contains(new ItemStack(ModItems.DIM_MIRROR))) give(sp, ModItems.DIM_MIRROR);
 				level.playSound(null, sp.blockPosition(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1f, 0.7f);
 				level.playSound(null, sp.blockPosition(), SoundEvents.CANDLE_EXTINGUISH, SoundSource.PLAYERS, 0.6f, 0.6f);
 			}
-			return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+			// вернуть то, что сейчас в руке: письмо могло лечь в этот же слот — пустой конверт его не затрёт
+			return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide);
 		}
 	}
 
@@ -66,7 +67,7 @@ public final class PrologueItems {
 		public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
 			ItemStack stack = player.getItemInHand(hand);
 			if (player instanceof ServerPlayer sp) {
-				stack.shrink(1);
+				stack.consume(1, sp);
 				give(sp, ModItems.DIARY);
 				DiaryEntries.unlock(sp, DiaryEntries.INTRO);
 				give(sp, ModItems.INK_LONGKNIFE);
@@ -74,7 +75,7 @@ public final class PrologueItems {
 				level.playSound(null, sp.blockPosition(), SoundEvents.ARMOR_EQUIP_LEATHER.value(), SoundSource.PLAYERS, 1f, 0.8f);
 				level.playSound(null, sp.blockPosition(), SoundEvents.BUNDLE_DROP_CONTENTS, SoundSource.PLAYERS, 0.8f, 0.8f);
 			}
-			return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+			return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide);
 		}
 	}
 

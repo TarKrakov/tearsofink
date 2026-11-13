@@ -64,7 +64,7 @@ public final class Prologue {
 		ServerTickEvents.END_WORLD_TICK.register(level -> {
 			if (!Vestibule.is(level) || level.getGameTime() % 4 != 0) return;
 			Vestibule v = Vestibule.get(level);
-			for (ServerPlayer p : level.players()) {
+			for (ServerPlayer p : java.util.List.copyOf(level.players())) { // копия: игрок уходит в другое измерение прямо в цикле
 				if (p.isSpectator()) continue;
 				if (p.getBoundingBox().intersects(v.gate().inflate(0.2))) passGate(p);
 				else if (p.getY() < level.getMinBuildHeight() + 20) { // упал с островка — обратно
