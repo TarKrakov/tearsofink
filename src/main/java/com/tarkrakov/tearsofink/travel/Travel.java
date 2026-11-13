@@ -88,6 +88,10 @@ public final class Travel {
 	}
 
 	public static void init() {
+		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+			dropTickets(server);
+			com.tarkrakov.tearsofink.prologue.Prologue.dropTickets(server);
+		});
 		// ----- смерть: зеркальце остаётся при игроке -----
 		ServerLivingEntityEvents.ALLOW_DEATH.register((entity, source, amount) -> {
 			if (entity instanceof ServerPlayer p && bound(p)
@@ -300,6 +304,16 @@ public final class Travel {
 		if (lands == null) return;
 		var cp = new net.minecraft.world.level.ChunkPos(at);
 		lands.getChunkSource().addRegionTicket(RESPAWN_TICKET, cp, 3, cp);
+		TICKETS.add(cp);
+	}
+
+	/** Наши «держи прогруженным» — снимаем при выключении сервера, чтобы сохранение не ждало их генерацию. */
+	private static final java.util.Set<net.minecraft.world.level.ChunkPos> TICKETS = java.util.concurrent.ConcurrentHashMap.newKeySet();
+
+	public static void dropTickets(net.minecraft.server.MinecraftServer server) {
+		ServerLevel lands = ModDimensions.lands(server);
+		if (lands != null) for (var cp : TICKETS) lands.getChunkSource().removeRegionTicket(RESPAWN_TICKET, cp, 3, cp);
+		TICKETS.clear();
 	}
 
 	/** Пока игрок в Землях — держим место его возрождения прогруженным (возрождение без ожидания). */
@@ -316,6 +330,7 @@ public final class Travel {
 			} else continue;
 			var cp = new net.minecraft.world.level.ChunkPos(at);
 			lands.getChunkSource().addRegionTicket(RESPAWN_TICKET, cp, 3, cp);
+			TICKETS.add(cp);
 		}
 	}
 
