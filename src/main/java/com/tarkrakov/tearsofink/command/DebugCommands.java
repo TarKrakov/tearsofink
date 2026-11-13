@@ -64,7 +64,7 @@ public final class DebugCommands {
 		for (int cx = -1; cx <= 1; cx++) for (int cz = -1; cz <= 1; cz++) {
 			var st = temple == null ? null : level.getChunk((tx >> 4) + cx, (tz >> 4) + cz).getStartForStructure(temple);
 			if (st == null || !st.isValid()) continue;
-			var bb = st.getBoundingBox();
+			var bb = st.getPieces().get(0).getBoundingBox(); // у старта рамка раздута под подгонку рельефа
 			BlockPos.MutableBlockPos q = new BlockPos.MutableBlockPos();
 			for (int x = bb.minX(); x <= bb.maxX(); x++) for (int z = bb.minZ(); z <= bb.maxZ(); z++) {
 				footprint++;
