@@ -89,8 +89,9 @@ public class RuinStructure extends Structure {
 		BlockPos center = new BlockPos(x, y, z);
 		ResourceLocation chosen = template;
 		int tier = Ruins.tier(layout, x, z);
+		boolean start = kind.equals("temple") && Ruins.isStartTemple(layout, x, z);
 		return Optional.of(new GenerationStub(center, builder ->
-				builder.addPiece(new RuinPiece(context.structureTemplateManager(), chosen, center, rotation, tier))));
+				builder.addPiece(new RuinPiece(context.structureTemplateManager(), chosen, center, rotation, tier, start))));
 	}
 
 	private static ResourceLocation pick(RandomSource random) {

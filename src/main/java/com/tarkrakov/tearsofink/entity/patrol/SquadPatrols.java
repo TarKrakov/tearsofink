@@ -114,6 +114,7 @@ public final class SquadPatrols {
 			BlockPos at = groundOnRoad(level, layout, bestRoad, t);
 			if (at == null || Math.hypot(at.getX() - px, at.getZ() - pz) < SpearmanTuning.PATROL_SPAWN_MIN - 4) continue;
 			if (!level.getBiome(at).is(ModBiomes.PALE_FOREST) || Lanterns.isSafe(level, at)) continue;
+			if (com.tarkrakov.tearsofink.world.ruins.Ruins.nearStart(layout, at.getX(), at.getZ())) continue; // у места прибытия тихо
 
 			String squad = pickSquad(random, tier);
 			UUID squadId = UUID.randomUUID();

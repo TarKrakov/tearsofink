@@ -149,7 +149,7 @@ public final class Prologue {
 		int road = ARRIVAL_ROAD.computeIfAbsent(p.getUUID(), k -> p.getRandom().nextInt(InkLandsLayout.ROADS));
 		InkLandsLayout layout = InkLandsLayout.of(lands);
 		if (layout == null) return;
-		double[] a = layout.arrivalPoint(road);
+		double[] a = ModDimensions.arrivalXZ(layout);
 		var cp = new net.minecraft.world.level.ChunkPos(BlockPos.containing(a[0], 0, a[1]));
 		lands.getChunkSource().addRegionTicket(ARRIVAL_TICKET, cp, 6, cp); // с запасом: чтобы и вид вокруг успел сгенерироваться
 		TICKETS.add(cp);
@@ -207,7 +207,7 @@ public final class Prologue {
 		if (lands == null) return;
 		Integer road = ARRIVAL_ROAD.remove(p.getUUID());
 		Vec3 to = ModDimensions.arrival(lands, road != null ? road : p.getRandom().nextInt(InkLandsLayout.ROADS));
-		p.teleportTo(lands, to.x, to.y, to.z, ModDimensions.faceInward(to), 0f);
+		p.teleportTo(lands, to.x, to.y, to.z, ModDimensions.arrivalYaw(lands, to), 0f);
 		lands.playSound(null, BlockPos.containing(to), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1f, 0.6f);
 	}
 

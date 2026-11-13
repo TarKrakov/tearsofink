@@ -33,11 +33,29 @@ public final class ModDimensions {
 		return server.getLevel(INK_LANDS);
 	}
 
-	/** Точка прибытия: на дороге у края Бледнолесья (дорога — по номеру, любой int). */
+	/** Точка прибытия: на дороге у края Бледнолесья, рядом со стартовым храмом (одна на мир; road больше не важен). */
 	public static Vec3 arrival(ServerLevel lands, int road) {
 		InkLandsLayout layout = InkLandsLayout.of(lands);
-		double[] p = layout != null ? layout.arrivalPoint(road) : new double[]{InkLandsLayout.RADIUS * 0.9, 0};
+		double[] p = layout != null ? arrivalXZ(layout) : new double[]{InkLandsLayout.RADIUS * 0.9, 0};
 		return onGround(lands, (int) Math.floor(p[0]), (int) Math.floor(p[1]));
+	}
+
+	/** {x, z} места прибытия. */
+	public static double[] arrivalXZ(InkLandsLayout layout) {
+		double[] s = com.tarkrakov.tearsofink.world.ruins.Ruins.start(layout);
+		return new double[]{s[2], s[3]};
+	}
+
+	/** Поворот у места прибытия — лицом к стартовому храму; в остальных местах — спиной к краю. */
+	public static float arrivalYaw(ServerLevel lands, Vec3 at) {
+		InkLandsLayout layout = InkLandsLayout.of(lands);
+		if (layout != null) {
+			double[] s = com.tarkrakov.tearsofink.world.ruins.Ruins.start(layout);
+			if (Math.hypot(s[2] - at.x, s[3] - at.z) < 8) {
+				return (float) Math.toDegrees(Math.atan2(-(s[0] - at.x), s[1] - at.z));
+			}
+		}
+		return faceInward(at);
 	}
 
 	/** Поворот спиной к ближайшему краю (перпендикулярно от него) — чтобы новичок не шёл сразу в стену тумана. */

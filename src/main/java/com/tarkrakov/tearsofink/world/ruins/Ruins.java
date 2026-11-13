@@ -38,6 +38,15 @@ public final class Ruins {
 	/** На какой глубине от края стоят храмы. */
 	public static final int TEMPLE_MIN_DEPTH = 150, TEMPLE_MAX_DEPTH = 560;
 
+	// ===== Стартовый храм: новички попадают в Земли на дорогу рядом с ним =====
+	/** От осевой дороги до середины стартового храма (блоки). */
+	public static final int START_SIDE = 26;
+	/** Шанс, что лазурит стартового храма станет сундуком (лут — как в середине леса). */
+	public static final float START_CHEST_CHANCE = 0.7f;
+	public static final int START_LOOT_TIER = 1;
+	/** Радиус вокруг места прибытия, где не появляются патрули. */
+	public static final int START_CALM_RADIUS = 64;
+
 	// ===== Монумент — ориентир у дорог =====
 	/** Шанс, что монумент встанет у дороги (если она есть в пределах MONUMENT_ROAD_SEARCH блоков). */
 	public static final float MONUMENT_NEAR_ROAD = 0.6f;
@@ -76,15 +85,68 @@ public final class Ruins {
 	}
 
 	private static final Map<InkLandsLayout, List<int[]>> TEMPLE_CACHE = new WeakHashMap<>();
+	private static final Map<InkLandsLayout, double[]> START_CACHE = new WeakHashMap<>();
 
-	/** Места храмов (один раз на мир): по кругу, на разной глубине, в Бледнолесье, не у дорог, Озера и Вестников. */
+	/**
+	 * Стартовый храм и место прибытия (один раз на мир): {храм x, храм z, прибытие x, прибытие z}.
+	 * Прибытие — на дороге у края Бледнолесья (как раньше), храм — сбоку от дороги.
+	 */
+	public static synchronized double[] start(InkLandsLayout layout) {
+		double[] cached = START_CACHE.get(layout);
+		if (cached != null) return cached;
+		RandomSource random = RandomSource.create(layout.seed() ^ 0x51A27L);
+		int first = random.nextInt(InkLandsLayout.ROADS);
+		double firstSide = random.nextBoolean() ? 1 : -1;
+		double[] result = null;
+		for (int i = 0; i < InkLandsLayout.ROADS && result == null; i++) {
+			int road = (first + i) % InkLandsLayout.ROADS;
+			double[] a = layout.arrivalPoint(road);
+			double along = Math.hypot(a[0] - layout.center().getX(), a[1] - layout.center().getZ());
+			double[] dir = layout.roadDirection(road, along);
+			for (double side : new double[]{firstSide, -firstSide}) {
+				double tx = a[0] - dir[1] * side * START_SIDE, tz = a[1] + dir[0] * side * START_SIDE;
+				int x = (int) Math.floor(tx), z = (int) Math.floor(tz);
+				if (layout.pick(x, z, null) != ModBiomes.PALE_FOREST) continue;
+				if (layout.roadNear(x, z, 18) != null || layout.nearLake(x, z, LAKE_GAP + 20) || layout.nearHerald(x, z, HERALD_GAP + 20)) continue;
+				result = new double[]{x, z, a[0], a[1]};
+				break;
+			}
+		}
+		if (result == null) { // запасной вариант: первая дорога, как есть
+			double[] a = layout.arrivalPoint(first);
+			double along = Math.hypot(a[0] - layout.center().getX(), a[1] - layout.center().getZ());
+			double[] dir = layout.roadDirection(first, along);
+			result = new double[]{Math.floor(a[0] - dir[1] * firstSide * START_SIDE), Math.floor(a[1] + dir[0] * firstSide * START_SIDE), a[0], a[1]};
+		}
+		START_CACHE.put(layout, result);
+		return result;
+	}
+
+	public static boolean isStartTemple(InkLandsLayout layout, int x, int z) {
+		double[] s = start(layout);
+		return (int) s[0] == x && (int) s[1] == z;
+	}
+
+	/** Рядом с местом прибытия (там патрули не появляются). */
+	public static boolean nearStart(InkLandsLayout layout, double x, double z) {
+		double[] s = start(layout);
+		return Mth.square(s[2] - x) + Mth.square(s[3] - z) < START_CALM_RADIUS * START_CALM_RADIUS
+				|| Mth.square(s[0] - x) + Mth.square(s[1] - z) < START_CALM_RADIUS * START_CALM_RADIUS;
+	}
+
+	/**
+	 * Места храмов (один раз на мир): первый — стартовый у места прибытия, остальные по кругу,
+	 * на разной глубине, в Бледнолесье, не у дорог, Озера и Вестников.
+	 */
 	public static synchronized List<int[]> templePoints(InkLandsLayout layout) {
 		List<int[]> cached = TEMPLE_CACHE.get(layout);
 		if (cached != null) return cached;
 		RandomSource random = RandomSource.create(layout.seed() ^ 0x7E3B1E5L);
 		List<int[]> points = new ArrayList<>();
-		double offset = random.nextDouble() * Math.PI * 2;
-		for (int i = 0; i < TEMPLES; i++) {
+		double[] s = start(layout);
+		points.add(new int[]{(int) s[0], (int) s[1]});
+		double offset = Math.atan2(s[1] - layout.center().getZ(), s[0] - layout.center().getX());
+		for (int i = 1; i < TEMPLES; i++) {
 			for (int attempt = 0; attempt < 40; attempt++) {
 				double angle = offset + (i + (random.nextDouble() - 0.5) * 0.7) * Math.PI * 2 / TEMPLES;
 				double depth = Mth.lerp(random.nextDouble(), TEMPLE_MIN_DEPTH, TEMPLE_MAX_DEPTH);

@@ -41,17 +41,21 @@ import java.util.List;
 public class RuinPiece extends TemplateStructurePiece {
 	private final Rotation rotation;
 	private final int tier;
+	/** Стартовый храм у места прибытия: сундуков больше и лут получше. */
+	private final boolean start;
 
-	public RuinPiece(StructureTemplateManager manager, ResourceLocation template, BlockPos center, Rotation rotation, int tier) {
+	public RuinPiece(StructureTemplateManager manager, ResourceLocation template, BlockPos center, Rotation rotation, int tier, boolean start) {
 		super(Ruins.PIECE_TYPE, 0, manager, template, template.toString(), settings(rotation, manager, template), corner(manager, template, center, rotation));
 		this.rotation = rotation;
 		this.tier = tier;
+		this.start = start;
 	}
 
 	public RuinPiece(StructureTemplateManager manager, CompoundTag tag) {
 		super(Ruins.PIECE_TYPE, tag, manager, id -> settings(Rotation.valueOf(tag.getString("Rot")), manager, id));
 		this.rotation = Rotation.valueOf(tag.getString("Rot"));
 		this.tier = tag.getInt("Tier");
+		this.start = tag.getBoolean("Start");
 	}
 
 	private static StructurePlaceSettings settings(Rotation rotation, StructureTemplateManager manager, ResourceLocation id) {
@@ -72,6 +76,7 @@ public class RuinPiece extends TemplateStructurePiece {
 		super.addAdditionalSaveData(context, tag);
 		tag.putString("Rot", rotation.name());
 		tag.putInt("Tier", tier);
+		tag.putBoolean("Start", start);
 	}
 
 	@Override
@@ -83,7 +88,7 @@ public class RuinPiece extends TemplateStructurePiece {
 							BoundingBox box, ChunkPos chunkPos, BlockPos pivot) {
 		super.postProcess(level, structures, generator, random, box, chunkPos, pivot);
 		RandomSource fixed = RandomSource.create(templatePosition.asLong() * 31 + 0x5EED);
-		ResourceKey<LootTable> loot = ResourceKey.create(Registries.LOOT_TABLE, Ruins.CHEST_LOOT[tier]);
+		ResourceKey<LootTable> loot = ResourceKey.create(Registries.LOOT_TABLE, Ruins.CHEST_LOOT[start ? Math.max(tier, Ruins.START_LOOT_TIER) : tier]);
 
 		// --- сундуки: метки-лазуриты (решение одинаковое для всех чанков руины)
 		List<StructureTemplate.StructureBlockInfo> marks = template.filterBlocks(templatePosition, placeSettings, Blocks.LAPIS_BLOCK);
@@ -91,7 +96,7 @@ public class RuinPiece extends TemplateStructurePiece {
 		boolean[] chest = new boolean[marks.size()];
 		boolean any = !authorChests.isEmpty();
 		for (int i = 0; i < marks.size(); i++) {
-			chest[i] = fixed.nextFloat() < Ruins.CHEST_CHANCE[tier];
+			chest[i] = fixed.nextFloat() < (start ? Ruins.START_CHEST_CHANCE : Ruins.CHEST_CHANCE[tier]);
 			any |= chest[i];
 		}
 		if (!any && !marks.isEmpty()) chest[fixed.nextInt(marks.size())] = true; // хотя бы один сундук

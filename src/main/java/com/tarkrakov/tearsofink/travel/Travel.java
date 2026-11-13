@@ -251,7 +251,7 @@ public final class Travel {
 			yaw = t.lastYaw();
 		} else {
 			to = ModDimensions.arrival(lands, p.getRandom().nextInt(InkLandsLayout.ROADS));
-			yaw = ModDimensions.faceInward(to);
+			yaw = ModDimensions.arrivalYaw(lands, to);
 		}
 		p.teleportTo(lands, to.x, to.y, to.z, yaw, 0f);
 		arriveEffects(p);
@@ -285,7 +285,7 @@ public final class Travel {
 		}
 		if (to == null) {
 			to = ModDimensions.arrival(lands, fallbackRoad(p));
-			yaw = ModDimensions.faceInward(to);
+			yaw = ModDimensions.arrivalYaw(lands, to);
 		}
 		return new net.minecraft.world.level.portal.DimensionTransition(lands, to, Vec3.ZERO, yaw, 0f, false, post);
 	}
@@ -325,7 +325,7 @@ public final class Travel {
 			if (t.respawn().isPresent()) {
 				at = t.respawn().get();
 			} else if (layout != null) {
-				double[] a = layout.arrivalPoint(fallbackRoad(p));
+				double[] a = ModDimensions.arrivalXZ(layout);
 				at = BlockPos.containing(a[0], 0, a[1]);
 			} else continue;
 			var cp = new net.minecraft.world.level.ChunkPos(at);
