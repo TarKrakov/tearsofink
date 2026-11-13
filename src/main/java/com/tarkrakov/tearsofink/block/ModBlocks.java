@@ -326,6 +326,11 @@ public final class ModBlocks {
 		return Registry.register(BuiltInRegistries.ITEM, TearsOfInk.id("bogleaf"), new PlaceOnWaterBlockItem(BOGLEAF, new Item.Properties()));
 	}
 
+	/** Пелена в воротах Преддверия. */
+	public static final Block VESTIBULE_GATE = registerNoItem("vestibule_gate", new com.tarkrakov.tearsofink.prologue.VestibuleGateBlock(
+			BlockBehaviour.Properties.of().strength(-1f, 3600000f).noCollission().noLootTable().noOcclusion()
+					.lightLevel(s -> 11).sound(net.minecraft.world.level.block.SoundType.GLASS).pushReaction(PushReaction.BLOCK)));
+
 	private static Block registerNoItem(String name, Block block) {
 		return Registry.register(BuiltInRegistries.BLOCK, TearsOfInk.id(name), block);
 	}

@@ -39,8 +39,8 @@ public class GuideEntity extends PathfinderMob {
 	public static final int LINE_TICKS = 160; // 8 с — успеть прочитать и оглядеться
 	/** На какой секунде анимации gift «отдаёт» (тики) и длина анимации vanish. */
 	public static final int GIFT_GIVE_TICK = 14, VANISH_TICKS = 36;
-	/** Сколько тиков невидим после исчезновения. */
-	public static final int HIDDEN_TICKS = 200;
+	/** Пауза после последней реплики перед исчезновением (тики). */
+	public static final int VANISH_DELAY = 40;
 	/** С какого расстояния замечает гостя. */
 	public static final double GREET_RANGE = 14;
 
@@ -55,7 +55,7 @@ public class GuideEntity extends PathfinderMob {
 
 	/** Разговоры: гость → тик, когда сказать следующую реплику, и её номер. */
 	private final Map<UUID, int[]> talks = new HashMap<>();
-	private int actionTicks, hiddenTicks;
+	private int actionTicks, vanishAt = -1;
 
 	public GuideEntity(EntityType<? extends PathfinderMob> type, Level level) {
 		super(type, level);
@@ -120,17 +120,23 @@ public class GuideEntity extends PathfinderMob {
 	private void serverTick(ServerLevel level) {
 		actionTicks++;
 		if (hidden()) {
-			if (--hiddenTicks <= 0) {
+			// растворился — появится снова, только когда придёт новый гость
+			if (findNewGuest(level) != null) {
 				entityData.set(HIDDEN, false);
+				talks.clear();
 				level.sendParticles(ParticleTypes.LARGE_SMOKE, getX(), getY() + 1.4, getZ(), 30, 0.4, 0.9, 0.4, 0.01);
 			}
 			return;
+		}
+		if (vanishAt >= 0 && tickCount >= vanishAt) {
+			vanishAt = -1;
+			setAction(ACT_VANISH);
+			level.playSound(null, blockPosition(), SoundEvents.SOUL_ESCAPE.value(), SoundSource.NEUTRAL, 1f, 0.6f);
 		}
 		if (action() == ACT_VANISH) {
 			if (tickCount % 2 == 0) level.sendParticles(ParticleTypes.LARGE_SMOKE, getX(), getY() + 1.2, getZ(), 6, 0.35, 0.8, 0.35, 0.01);
 			if (actionTicks >= VANISH_TICKS) {
 				entityData.set(HIDDEN, true);
-				hiddenTicks = HIDDEN_TICKS;
 				setAction(ACT_IDLE);
 				level.sendParticles(com.tarkrakov.tearsofink.particle.ModParticles.INK_SMOKE, getX(), getY() + 1.4, getZ(), 40, 0.5, 1.0, 0.5, 0.02);
 			}
@@ -167,14 +173,18 @@ public class GuideEntity extends PathfinderMob {
 			if (st[1] > GREET_LINES) {
 				markGreeted(p);
 				// все договорили — растворяется
-				if (talks.values().stream().allMatch(v -> v[1] > GREET_LINES)) {
-					setAction(ACT_VANISH);
-					level.playSound(null, blockPosition(), SoundEvents.SOUL_ESCAPE.value(), SoundSource.NEUTRAL, 1f, 0.6f);
-				}
+				if (talks.values().stream().allMatch(v -> v[1] > GREET_LINES)) vanishAt = tickCount + VANISH_DELAY;
 			}
 		}
 		if (!anyTalking && action() == ACT_TALK && actionTicks > 40) setAction(ACT_IDLE);
 		if (action() == ACT_GIFT && actionTicks > 30) setAction(ACT_TALK);
+	}
+
+	private ServerPlayer findNewGuest(ServerLevel level) {
+		for (ServerPlayer p : level.getEntitiesOfClass(ServerPlayer.class, getBoundingBox().inflate(GREET_RANGE), ServerPlayer::isAlive)) {
+			if (Travel.get(p).stage() < LandsTravel.STAGE_ENTERED && !greeted(p)) return p;
+		}
+		return null;
 	}
 
 	private static final String GREETED_TAG = "tears_of_ink_greeted";

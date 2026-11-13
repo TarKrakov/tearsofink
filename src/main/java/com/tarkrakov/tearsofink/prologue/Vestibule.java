@@ -91,6 +91,7 @@ public final class Vestibule extends SavedData {
 		if (arr != null) arrival = arr;
 		if (gd != null) guide = gd;
 		if (gMin != null) { gateMin = gMin; gateMax = gMax; }
+		fillGate(level);
 		if (arr == null || gd == null || gMin == null) {
 			TearsOfInk.LOGGER.warn("Преддверие: не найдены метки (золото — игрок, алмаз — Проводник, изумруды — ворота). Беру места по умолчанию.");
 		}
@@ -128,6 +129,17 @@ public final class Vestibule extends SavedData {
 		gateMax = new BlockPos(1, BASE_Y + 4, -8);
 		arrival = new BlockPos(0, BASE_Y + 1, 6);
 		guide = new BlockPos(0, BASE_Y + 1, -5);
+		fillGate(level);
+	}
+
+	/** Пелена в проёме ворот (где были изумруды). Ворота шире по X — пелена вдоль X, иначе вдоль Z. */
+	private void fillGate(ServerLevel level) {
+		net.minecraft.core.Direction.Axis axis = (gateMax.getX() - gateMin.getX()) >= (gateMax.getZ() - gateMin.getZ())
+				? net.minecraft.core.Direction.Axis.X : net.minecraft.core.Direction.Axis.Z;
+		BlockState veil = ModBlocks.VESTIBULE_GATE.defaultBlockState().setValue(VestibuleGateBlock.AXIS, axis);
+		for (BlockPos p : BlockPos.betweenClosed(gateMin, gateMax)) {
+			if (level.getBlockState(p).isAir()) level.setBlock(p, veil, 2);
+		}
 	}
 
 	@Override

@@ -24,6 +24,13 @@ public class GuideRenderer extends MobRenderer<GuideEntity, GuideModel> {
 	}
 
 	@Override
+	public void render(GuideEntity entity, float yaw, float partialTick, com.mojang.blaze3d.vertex.PoseStack pose,
+					   net.minecraft.client.renderer.MultiBufferSource buffers, int light) {
+		if (entity.hidden()) return; // растворился: ни тела, ни глаз
+		super.render(entity, yaw, partialTick, pose, buffers, light);
+	}
+
+	@Override
 	public ResourceLocation getTextureLocation(GuideEntity entity) {
 		return TEXTURE;
 	}

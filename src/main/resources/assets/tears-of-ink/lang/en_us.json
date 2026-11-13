@@ -230,5 +230,7 @@
   "diary.tears-of-ink.entry.skeleton.title": "Кости",
   "diary.tears-of-ink.entry.skeleton.text": "(Запись-заглушка. Текст напишет автор.)",
   "diary.tears-of-ink.entry.spider.title": "Пауки",
-  "diary.tears-of-ink.entry.spider.text": "(Запись-заглушка. Текст напишет автор.)"
+  "diary.tears-of-ink.entry.spider.text": "(Запись-заглушка. Текст напишет автор.)",
+  "item.tears-of-ink.dim_hand_lantern": "Dim Hand Lantern",
+  "block.tears-of-ink.vestibule_gate": "Gate Veil"
 }

@@ -28,6 +28,7 @@ public final class ModCreativeTab {
 						output.accept(ModItems.DIARY);
 						output.accept(ModItems.INK_LONGKNIFE);
 						output.accept(ModItems.SALVATION_PENDANT);
+						output.accept(ModItems.DIM_HAND_LANTERN);
 						output.accept(ModItems.GUIDE_SPAWN_EGG);
 						output.accept(ModBlocks.ASHEN_SOIL);
 						output.accept(ModBlocks.ASH);

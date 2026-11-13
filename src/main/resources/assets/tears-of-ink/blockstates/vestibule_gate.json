@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "tears-of-ink:block/vestibule_gate_ns"
+    },
+    "axis=z": {
+      "model": "tears-of-ink:block/vestibule_gate_ew"
+    }
+  }
+}

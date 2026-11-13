@@ -72,6 +72,7 @@ public final class PrologueItems {
 				DiaryEntries.unlock(sp, DiaryEntries.INTRO);
 				give(sp, ModItems.INK_LONGKNIFE);
 				give(sp, ModItems.SALVATION_PENDANT);
+				give(sp, ModItems.DIM_HAND_LANTERN);
 				level.playSound(null, sp.blockPosition(), SoundEvents.ARMOR_EQUIP_LEATHER.value(), SoundSource.PLAYERS, 1f, 0.8f);
 				level.playSound(null, sp.blockPosition(), SoundEvents.BUNDLE_DROP_CONTENTS, SoundSource.PLAYERS, 0.8f, 0.8f);
 			}

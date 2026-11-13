@@ -35,6 +35,9 @@ public final class ModItems {
 	/** Видимость в тумане с фонарём в левой руке (в хотбаре — на 20% меньше). */
 	public static final Item HAND_LANTERN = register("hand_lantern",
 			new HandLanternItem(26f, new Item.Properties().stacksTo(1)));
+	/** Тусклый ручной фонарь (из саквояжа): слабее обычного. */
+	public static final Item DIM_HAND_LANTERN = register("dim_hand_lantern",
+			new HandLanternItem(18f, new Item.Properties().stacksTo(1)));
 	public static final Item BRIGHT_HAND_LANTERN = register("bright_hand_lantern",
 			new HandLanternItem(44f, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON)));
 
