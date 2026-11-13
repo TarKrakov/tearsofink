@@ -413,15 +413,20 @@ public final class WeaponAbilities {
 	/** Расколотая подвеска спасения: мгновенно лечит себя, несильно. */
 	public static class SalvationAbility extends Skill {
 		public static final float HEAL = 4f;
+		/** Перезарядка = длительность «Ослабленной Души» (тики): 8 с. */
+		public static final int COOLDOWN = 160;
 
 		SalvationAbility() {
-			super(TearsOfInk.id("salvation"), 0, 10, 240);
+			super(TearsOfInk.id("salvation"), 0, 10, COOLDOWN);
 		}
 
 		@Override
 		public boolean activate(ServerPlayer player, SkillInput input) {
 			if (player.getHealth() >= player.getMaxHealth()) return false;
+			if (player.hasEffect(com.tarkrakov.tearsofink.effect.ModEffects.WEAKENED_SOUL)) return false;
 			player.heal(HEAL);
+			player.addEffect(new net.minecraft.world.effect.MobEffectInstance(com.tarkrakov.tearsofink.effect.ModEffects.WEAKENED_SOUL,
+					COOLDOWN, 0, false, false, true));
 			ServerLevel level = player.serverLevel();
 			level.sendParticles(com.tarkrakov.tearsofink.particle.ModParticles.TEAR_GLINT, player.getX(), player.getY() + 1.0, player.getZ(), 18, 0.4, 0.6, 0.4, 0.02);
 			level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1f, 1.2f);

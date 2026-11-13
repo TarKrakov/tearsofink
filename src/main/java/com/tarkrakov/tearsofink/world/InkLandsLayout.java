@@ -239,12 +239,15 @@ public final class InkLandsLayout {
 		return RADIUS - (Math.sqrt(x * x + z * z) + EDGE_NOISE.getValue(x / EDGE_SCALE, z / EDGE_SCALE) * EDGE_WOBBLE);
 	}
 
+	/** На сколько блоков внутрь от края попадает новичок (чтобы бой у места прибытия не уводил за край, в петлю). */
+	public static final int ARRIVAL_DEPTH = 64;
+
 	/** Где игрок попадает в Земли: на дороге road, чуть внутри края Бледнолесья. {x, z} */
 	public double[] arrivalPoint(int road) {
 		road = Math.floorMod(road, ROADS);
 		for (double d = RADIUS * ROAD_START_FRACTION; d > CORE_RADIUS; d -= 4) {
 			double[] p = roadPoint(road, d);
-			if (depthInside((int) p[0], (int) p[1]) >= 24) return p;
+			if (depthInside((int) p[0], (int) p[1]) >= ARRIVAL_DEPTH) return p;
 		}
 		return roadPoint(road, RADIUS * 0.9);
 	}

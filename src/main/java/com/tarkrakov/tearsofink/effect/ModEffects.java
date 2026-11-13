@@ -28,6 +28,13 @@ public final class ModEffects {
 	public static final Holder<MobEffect> MERCY = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
 			TearsOfInk.id("mercy"), new MarkerEffect(MobEffectCategory.BENEFICIAL, 0xF4C9D6));
 
+	/**
+	 * «Ослабленная Душа» — после активного лечения (подвеска спасения и подобное): пока висит, лечиться так нельзя.
+	 * Длительность = перезарядка лечения. Позже может получить и свой штраф.
+	 */
+	public static final Holder<MobEffect> WEAKENED_SOUL = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+			TearsOfInk.id("weakened_soul"), new MarkerEffect(MobEffectCategory.HARMFUL, 0x6E5A7A));
+
 	private ModEffects() {}
 
 	public static void init() {}

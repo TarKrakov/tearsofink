@@ -213,7 +213,7 @@
   "item.tears-of-ink.ink_longknife": "Чернильный длинный нож",
   "item.tears-of-ink.ink_longknife.desc1": "R — Чернильная клякса: шарик чернил, малый урон, замедляет.",
   "item.tears-of-ink.salvation_pendant": "Расколотая подвеска спасения",
-  "item.tears-of-ink.salvation_pendant.desc1": "В левой руке. Shift+R — лечит вас (Душа).",
+  "item.tears-of-ink.salvation_pendant.desc1": "В левой руке. Shift+R — лечит вас (Душа); потом «Ослабленная Душа» на 8 с.",
   "item.tears-of-ink.ink_blot": "Чернильная клякса",
   "item.tears-of-ink.guide_spawn_egg": "Яйцо призыва Г-на Проводника",
   "entity.tears-of-ink.guide": "Господин Проводник",
@@ -250,5 +250,6 @@
   "diary.tears-of-ink.entry.spider.title": "Пауки",
   "diary.tears-of-ink.entry.spider.text": "(Запись-заглушка. Текст напишет автор.)",
   "item.tears-of-ink.dim_hand_lantern": "Тусклый ручной фонарь",
-  "block.tears-of-ink.vestibule_gate": "Пелена ворот"
+  "block.tears-of-ink.vestibule_gate": "Пелена ворот",
+  "effect.tears-of-ink.weakened_soul": "Ослабленная Душа"
 }

@@ -232,5 +232,6 @@
   "diary.tears-of-ink.entry.spider.title": "Пауки",
   "diary.tears-of-ink.entry.spider.text": "(Запись-заглушка. Текст напишет автор.)",
   "item.tears-of-ink.dim_hand_lantern": "Dim Hand Lantern",
-  "block.tears-of-ink.vestibule_gate": "Gate Veil"
+  "block.tears-of-ink.vestibule_gate": "Gate Veil",
+  "effect.tears-of-ink.weakened_soul": "Weakened Soul"
 }
