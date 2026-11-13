@@ -13,22 +13,43 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 public final class GateOverlay {
 	/** Сколько тиков рассеивается после переноса. */
 	private static final int FADE_OUT = 25;
-	private static int total, ticks = -1;
+	/** Дольше этого пелену не держим, даже если мир не прогрузился (тики). */
+	private static final int MAX_HOLD = 300;
+	private static int total, ticks = -1, held;
+	private static net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> from;
 
 	private GateOverlay() {}
 
 	public static void start(int duration) {
 		total = Math.max(1, duration);
 		ticks = 0;
+		held = 0;
+		var level = Minecraft.getInstance().level;
+		from = level == null ? null : level.dimension();
 	}
 
 	public static void tick() {
-		if (ticks >= 0 && ++ticks > total + FADE_OUT) ticks = -1;
+		if (ticks < 0) return;
+		// пелена держится, пока не перенесло и пока вокруг не прогрузилась земля — чтобы не стоять в пустоте
+		if (ticks == total && !arrived() && ++held < MAX_HOLD) return;
+		if (++ticks > total + FADE_OUT) ticks = -1;
+	}
+
+	private static boolean arrived() {
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.level == null || mc.player == null || mc.level.dimension() == from) return false;
+		int cx = mc.player.getBlockX() >> 4, cz = mc.player.getBlockZ() >> 4;
+		for (int dx = -2; dx <= 2; dx++) {
+			for (int dz = -2; dz <= 2; dz++) {
+				if (!mc.level.getChunkSource().hasChunk(cx + dx, cz + dz)) return false;
+			}
+		}
+		return mc.levelRenderer.hasRenderedAllSections();
 	}
 
 	public static void render(GuiGraphics g, float partialTick) {
 		if (ticks < 0) return;
-		float t = ticks + partialTick;
+		float t = ticks == total ? total : ticks + partialTick;
 		float alpha = t < total ? (t / total) : 1f - (t - total) / FADE_OUT;
 		alpha = Math.max(0f, Math.min(1f, alpha));
 		if (alpha <= 0f) return;

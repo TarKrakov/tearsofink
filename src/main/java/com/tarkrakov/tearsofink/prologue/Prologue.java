@@ -142,7 +142,7 @@ public final class Prologue {
 		if (layout == null) return;
 		double[] a = layout.arrivalPoint(road);
 		var cp = new net.minecraft.world.level.ChunkPos(BlockPos.containing(a[0], 0, a[1]));
-		lands.getChunkSource().addRegionTicket(ARRIVAL_TICKET, cp, 3, cp);
+		lands.getChunkSource().addRegionTicket(ARRIVAL_TICKET, cp, 6, cp); // с запасом: чтобы и вид вокруг успел сгенерироваться
 	}
 
 	private static void sign(ServerPlayer p) {
