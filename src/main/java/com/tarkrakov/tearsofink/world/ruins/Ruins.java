@@ -31,6 +31,12 @@ public final class Ruins {
 	/** Обычные руины: какие и с каким весом (храмы — отдельно, ровно TEMPLES штук). */
 	public static final ResourceLocation[] SCATTERED = {HOUSE, REMAINS, MONUMENT};
 	public static final int[] SCATTERED_WEIGHTS = {40, 40, 20};
+	/** Частота обычных руин — в structure_set/ruin_scattered.json (spacing: раз в N×N чанков). В Чернолесье часть попыток пропускается. */
+	public static final float INKWOOD_SKIP = 0.5f;
+	/** Наибольший перепад земли под руиной (блоки) — круче не ставим, чтобы не висела над обрывом. */
+	public static final int MAX_SLOPE = 7;
+	/** Насколько глубоко подсыпается фундамент под руиной. */
+	public static final int FOUNDATION_DEPTH = 40;
 
 	// ===== Храмы (в каждом — Малый чернильный фонтан: +5 к Чернилам навсегда) =====
 	/** Сколько храмов на всё Бледнолесье. 7 фонтанов = +35 к запасу Чернил за все. */

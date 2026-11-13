@@ -41,6 +41,19 @@ public final class ModCommands {
 				dispatcher.register(Commands.literal("tearsofink")
 						.requires(source -> source.hasPermission(2))
 						.then(Commands.literal("where").executes(ModCommands::where))
+						.then(Commands.literal("temples").executes(ctx -> {
+							var lands = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());
+							InkLandsLayout layout = lands == null ? null : InkLandsLayout.of(lands);
+							if (layout == null) return 0;
+							StringBuilder sb = new StringBuilder("Храмы (первый — стартовый):");
+							for (int[] t : com.tarkrakov.tearsofink.world.ruins.Ruins.templePoints(layout)) {
+								sb.append("\n  X ").append(t[0]).append(", Z ").append(t[1]);
+							}
+							double[] a = com.tarkrakov.tearsofink.world.ModDimensions.arrivalXZ(layout);
+							sb.append("\nМесто прибытия: X ").append((int) a[0]).append(", Z ").append((int) a[1]);
+							ctx.getSource().sendSuccess(() -> Component.literal(sb.toString()), false);
+							return 1;
+						}))
 						.then(Commands.literal("enter").executes(ctx -> {
 							ServerPlayer p = ctx.getSource().getPlayerOrException();
 							var lands = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());

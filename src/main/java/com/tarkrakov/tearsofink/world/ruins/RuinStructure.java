@@ -74,23 +74,32 @@ public class RuinStructure extends Structure {
 		if (monumentByRoad && (layout.roadNear(x, z, half - InkLandsLayout.ROAD_HALF_WIDTH + 1) != null
 				|| layout.nearLake(x, z, Ruins.LAKE_GAP) || layout.nearHerald(x, z, Ruins.HERALD_GAP))) return Optional.empty();
 		if (layout.depthInside(x, z) < 12) return Optional.empty();
+		boolean temple = kind.equals("temple");
+		boolean pale = layout.pick(x, z, null) == com.tarkrakov.tearsofink.world.ModBiomes.PALE_FOREST;
+		if (!temple && !pale && random.nextFloat() < Ruins.INKWOOD_SKIP) return Optional.empty(); // в Чернолесье реже
 
 		Rotation rotation = Rotation.getRandom(random);
 		// высота: «нижняя середина» земли под постройкой (чтобы не висела, но и не тонула)
-		int[] ys = new int[5];
+		// (с учётом низин Кроволесья — их выкапывает генерация позже, по рельефу их не видно)
+		java.util.function.IntBinaryOperator base = (bx, bz) ->
+				generator.getBaseHeight(bx, bz, Heightmap.Types.WORLD_SURFACE_WG, context.heightAccessor(), context.randomState()) - 1;
+		int[] ys = new int[9];
 		int k = 0;
-		for (int[] o : new int[][]{{0, 0}, {-half, -half}, {half, -half}, {-half, half}, {half, half}}) {
-			ys[k++] = generator.getBaseHeight(x + o[0], z + o[1], Heightmap.Types.WORLD_SURFACE_WG, context.heightAccessor(), context.randomState()) - 1;
+		for (int[] o : new int[][]{{0, 0}, {-half, -half}, {half, -half}, {-half, half}, {half, half}, {0, -half}, {0, half}, {-half, 0}, {half, 0}}) {
+			int px = x + o[0], pz = z + o[1];
+			ys[k++] = (int) Math.floor(layout.valleyHeight(px, pz, base.applyAsInt(px, pz), base));
 		}
 		Arrays.sort(ys);
-		int y = ys[1];
-		if (y <= generator.getSeaLevel()) return Optional.empty(); // не в воде
+		int y = ys[2];
+		if (!temple) {
+			if (y <= generator.getSeaLevel()) return Optional.empty(); // не в воде
+			if (ys[8] - ys[0] > Ruins.MAX_SLOPE) return Optional.empty(); // не на обрыве
+		}
 
 		BlockPos center = new BlockPos(x, y, z);
 		ResourceLocation chosen = template;
 		int tier = Ruins.tier(layout, x, z);
-		boolean start = kind.equals("temple") && Ruins.isStartTemple(layout, x, z);
-		boolean pale = layout.pick(x, z, null) == com.tarkrakov.tearsofink.world.ModBiomes.PALE_FOREST;
+		boolean start = temple && Ruins.isStartTemple(layout, x, z);
 		return Optional.of(new GenerationStub(center, builder ->
 				builder.addPiece(new RuinPiece(context.structureTemplateManager(), chosen, center, rotation, tier, start, pale))));
 	}

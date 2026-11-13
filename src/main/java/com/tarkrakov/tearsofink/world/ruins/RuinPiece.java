@@ -136,7 +136,7 @@ public class RuinPiece extends TemplateStructurePiece {
 				BlockState floor = level.getBlockState(m.set(x, baseY, z));
 				if (floor.isAir() || !floor.isSolid()) continue;
 				BlockState soil = soilAt(level, m);
-				for (int y = baseY - 1, n = 0; n < 16; y--, n++) {
+				for (int y = baseY - 1, n = 0; n < Ruins.FOUNDATION_DEPTH; y--, n++) {
 					BlockState below = level.getBlockState(m.set(x, y, z));
 					if (!below.canBeReplaced() && below.getFluidState().isEmpty()) break;
 					level.setBlock(m, n < 2 ? soil : ModBlocks.ASPHODELITE_ROCK.defaultBlockState(), 2);

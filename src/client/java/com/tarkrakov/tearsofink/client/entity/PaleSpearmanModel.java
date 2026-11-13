@@ -25,6 +25,9 @@ public class PaleSpearmanModel extends HierarchicalModel<PaleSpearmanEntity> {
 	private final ModelPart head;
 
 	public PaleSpearmanModel(ModelPart root) {
+		// с отсечением задних граней: у плоских (нулевой толщины) кубов две стороны лежат в одной плоскости
+		// и без отсечения мерцают, перебивая друг друга
+		super(net.minecraft.client.renderer.RenderType::entityCutout);
 		this.root = root;
 		this.head = root.getChild("body").getChild("neck").getChild("head");
 	}
