@@ -43,12 +43,9 @@ public class InvitationScreen extends Screen {
 		super.render(g, mouseX, mouseY, partialTick);
 		int l = left(), t = top();
 		g.blit(PAGE, l, t, 0, 0, W, H, 256, 256);
-		List<FormattedCharSequence> lines = font.split(Component.translatable("letter.tears-of-ink.invitation"), W - TEXT_MARGIN * 2);
-		int y = t + TEXT_MARGIN;
-		for (FormattedCharSequence line : lines) {
-			g.drawString(font, line, l + TEXT_MARGIN, y, 0x2A1E2C, false);
-			y += 10;
-		}
+		// текст ужимается, если не влезает над кнопкой
+		FitText.draw(g, font, Component.translatable("letter.tears-of-ink.invitation"), l + TEXT_MARGIN, t + TEXT_MARGIN,
+				W - TEXT_MARGIN * 2, buttonY() - 8 - (t + TEXT_MARGIN), 0x2A1E2C);
 		if (signedTicks < 0) {
 			boolean hover = over(mouseX, mouseY);
 			g.blit(hover ? BUTTON_HOVER : BUTTON, buttonX(), buttonY(), 0, 0, BW, BH, BW, BH);

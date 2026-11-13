@@ -23,7 +23,7 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 	private final Supplier<Skill> ability;
 
 	public InkGreatswordItem(Supplier<Skill> ability, Properties properties) {
-		super(ModTiers.ASPHODA, properties.attributes(SwordItem.createAttributes(ModTiers.ASPHODA, DAMAGE, ATTACK_SPEED)));
+		super(ModTiers.ASPHODA, properties.attributes(SwordItem.createAttributes(ModTiers.ASPHODA, DAMAGE, ATTACK_SPEED).withTooltip(false)));
 		this.ability = ability;
 	}
 

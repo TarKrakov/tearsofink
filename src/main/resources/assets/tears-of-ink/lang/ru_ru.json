@@ -252,5 +252,11 @@
   "item.tears-of-ink.dim_hand_lantern": "Тусклый ручной фонарь",
   "block.tears-of-ink.vestibule_gate": "Пелена ворот",
   "effect.tears-of-ink.weakened_soul": "Ослабленная Душа",
-  "biome.tears-of-ink.ink_edge": "Край Земель"
+  "biome.tears-of-ink.ink_edge": "Край Земель",
+  "stats.tears-of-ink.title": "Характеристики",
+  "stats.tears-of-ink.damage": "Урон: %s",
+  "stats.tears-of-ink.speed": "Скорость: %s",
+  "stats.tears-of-ink.cost_ink": "Стоимость: %s Чернил",
+  "stats.tears-of-ink.cost_soul": "Стоимость: %s Души",
+  "stats.tears-of-ink.cooldown": "Перезарядка: %s с"
 }

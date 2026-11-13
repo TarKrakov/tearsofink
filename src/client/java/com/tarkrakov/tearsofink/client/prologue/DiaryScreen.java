@@ -40,18 +40,16 @@ public class DiaryScreen extends Screen {
 		int l = l(), t = t();
 		g.blit(PAGE, l, t, 0, 0, W, H, 256, 256);
 		if (entries.isEmpty()) {
-			g.drawString(font, Component.translatable("diary.tears-of-ink.empty"), l + M, t + M, 0x3A2226, false);
+			FitText.draw(g, font, Component.translatable("diary.tears-of-ink.empty"), l + M, t + M, W - M * 2, H - M * 2, 0x3A2226);
 			return;
 		}
 		page = Math.max(0, Math.min(page, entries.size() - 1));
 		String id = entries.get(page);
 		Component title = Component.translatable("diary.tears-of-ink.entry." + id + ".title");
-		g.drawString(font, title, l + (W - font.width(title)) / 2, t + M, 0x5A1018, false);
-		int y = t + M + 16;
-		for (FormattedCharSequence line : font.split(Component.translatable("diary.tears-of-ink.entry." + id + ".text"), W - M * 2)) {
-			g.drawString(font, line, l + M, y, 0x2A1E2C, false);
-			y += 10;
-		}
+		FitText.drawCentered(g, font, title, l + W / 2, t + M, W - M * 2, 0x5A1018);
+		int top = t + M + 16;
+		FitText.draw(g, font, Component.translatable("diary.tears-of-ink.entry." + id + ".text"), l + M, top,
+				W - M * 2, arrowY() - 6 - top, 0x2A1E2C);
 		String num = (page + 1) + " / " + entries.size();
 		g.drawString(font, num, l + (W - font.width(num)) / 2, arrowY() + 2, 0x5A4A40, false);
 		if (page > 0) arrow(g, "diary_prev", prevX(), mouseX, mouseY);

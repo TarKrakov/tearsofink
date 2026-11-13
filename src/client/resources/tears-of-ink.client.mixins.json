@@ -5,7 +5,8 @@
 	"client": [
 		"DimensionSpecialEffectsMixin",
 		"FogRendererMixin",
-		"LevelRendererMixin"
+		"LevelRendererMixin",
+		"WeaponStatsMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

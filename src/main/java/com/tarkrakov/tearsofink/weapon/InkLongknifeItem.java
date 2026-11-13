@@ -16,7 +16,7 @@ public class InkLongknifeItem extends SwordItem implements AbilityWeapon {
 	public static final float ATTACK_SPEED = -2.0f;
 
 	public InkLongknifeItem(Properties properties) {
-		super(ModTiers.ASPHODA, properties.attributes(SwordItem.createAttributes(ModTiers.ASPHODA, DAMAGE, ATTACK_SPEED)));
+		super(ModTiers.ASPHODA, properties.attributes(SwordItem.createAttributes(ModTiers.ASPHODA, DAMAGE, ATTACK_SPEED).withTooltip(false)));
 	}
 
 	@Override
