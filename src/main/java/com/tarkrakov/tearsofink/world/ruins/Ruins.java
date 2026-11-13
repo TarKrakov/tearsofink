@@ -47,6 +47,8 @@ public final class Ruins {
 	// ===== Стартовый храм: новички попадают в Земли на дорогу рядом с ним =====
 	/** От осевой дороги до середины стартового храма (блоки). */
 	public static final int START_SIDE = 26;
+	/** Насколько место прибытия сдвинуто с дороги в сторону храма (храм — в START_SIDE − это блоков от игрока). */
+	public static final int START_ARRIVAL_SHIFT = 10;
 	/** Шанс, что лазурит стартового храма станет сундуком (лут — как в середине леса). */
 	public static final float START_CHEST_CHANCE = 0.7f;
 	public static final int START_LOOT_TIER = 1;
@@ -114,7 +116,7 @@ public final class Ruins {
 				int x = (int) Math.floor(tx), z = (int) Math.floor(tz);
 				if (layout.pick(x, z, null) != ModBiomes.PALE_FOREST) continue;
 				if (layout.roadNear(x, z, 18) != null || layout.nearLake(x, z, LAKE_GAP + 20) || layout.nearHerald(x, z, HERALD_GAP + 20)) continue;
-				result = new double[]{x, z, a[0], a[1]};
+				result = new double[]{x, z, a[0] - dir[1] * side * START_ARRIVAL_SHIFT, a[1] + dir[0] * side * START_ARRIVAL_SHIFT};
 				break;
 			}
 		}
