@@ -10,7 +10,8 @@
 		"SlotMixin",
 		"ContainerMenuMixin",
 		"PlayerDifficultyMixin",
-		"ServerPlayerRespawnMixin"
+		"ServerPlayerRespawnMixin",
+		"MobAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1
