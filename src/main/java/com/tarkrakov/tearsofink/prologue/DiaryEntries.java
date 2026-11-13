@@ -32,9 +32,12 @@ import java.util.Set;
  */
 public final class DiaryEntries {
 	/** О ком пишет дневник (первое убийство). */
-	public static final List<String> CREATURES = List.of("caterpillar", "pale_spearman", "pale_shieldbearer",
+	public static final List<String> CREATURES = List.of("pale_spearman", "pale_shieldbearer",
 			"pale_crossbowman", "zombie", "skeleton", "spider");
 	public static final String INTRO = "intro";
+	/** Глава о гусеницах: общая часть + страница на каждый вид (pale, blood, ink), открываются по убийствам. */
+	public static final String CATERPILLAR = "caterpillar";
+	public static final List<String> CATERPILLAR_PAGES = List.of("caterpillar", "caterpillar_pale", "caterpillar_blood", "caterpillar_ink");
 
 	public static final AttachmentType<List<String>> DATA = AttachmentRegistry.<List<String>>builder()
 			.persistent(Codec.STRING.listOf())
@@ -60,19 +63,26 @@ public final class DiaryEntries {
 		ServerPlayConnectionEvents.JOIN.register((h, s, server) -> sync(h.getPlayer()));
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			if (!(source.getEntity() instanceof ServerPlayer p)) return;
+			if (entity instanceof com.tarkrakov.tearsofink.entity.CaterpillarEntity c) {
+				// гусеницы открываются по видам; общая часть — с первой бледной
+				String kind = CATERPILLAR + "_" + c.variant().name().toLowerCase(java.util.Locale.ROOT);
+				if (c.variant() == com.tarkrakov.tearsofink.entity.CaterpillarEntity.Variant.PALE) unlock(p, CATERPILLAR, kind);
+				else unlock(p, kind);
+				return;
+			}
 			ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
 			if (CREATURES.contains(id.getPath())) unlock(p, id.getPath());
 		});
 	}
 
-	public static void unlock(ServerPlayer p, String entry) {
+	public static void unlock(ServerPlayer p, String... entries) {
 		List<String> have = p.getAttachedOrCreate(DATA);
-		if (have.contains(entry)) return;
 		Set<String> next = new LinkedHashSet<>(have);
-		next.add(entry);
+		for (String e : entries) next.add(e);
+		if (next.size() == have.size()) return;
 		p.setAttached(DATA, List.copyOf(next));
 		sync(p);
-		if (!entry.equals(INTRO)) {
+		if (!(entries.length == 1 && entries[0].equals(INTRO))) {
 			p.sendSystemMessage(Component.translatable("message.tears-of-ink.diary_new").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
 			p.playNotifySound(SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 0.9f, 0.7f);
 		}
