@@ -1,0 +1,101 @@
+{
+  "type": "minecraft:entity",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:asphoda",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 0,
+                "max": 1
+              }
+            },
+            {
+              "function": "minecraft:enchanted_count_increase",
+              "enchantment": "minecraft:looting",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 0,
+                "max": 1
+              }
+            }
+          ]
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:killed_by_player"
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:ink",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 0,
+                "max": 1
+              }
+            },
+            {
+              "function": "minecraft:enchanted_count_increase",
+              "enchantment": "minecraft:looting",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 0,
+                "max": 1
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:pigment",
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 1
+              }
+            }
+          ]
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:killed_by_player"
+        },
+        {
+          "condition": "minecraft:random_chance_with_enchanted_bonus",
+          "unenchanted_chance": 0.06,
+          "enchanted_chance": {
+            "type": "minecraft:linear",
+            "base": 0.08,
+            "per_level_above_first": 0.02
+          },
+          "enchantment": "minecraft:looting"
+        }
+      ]
+    }
+  ],
+  "random_sequence": "tears-of-ink:entities/pale_spearman"
+}

@@ -29,6 +29,8 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 	@Nullable UUID squad;
 	@Nullable UUID leader;
 	public int patrolRoad = -1;
+	/** Сила солдата (по поясу глубины): множитель здоровья и урона. */
+	private float power = 1f;
 	public double patrolFrom, patrolTo;
 	private int alertCooldown;
 
@@ -88,7 +90,7 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 
 	/** Урон по цели: по мобам ×VS_MOBS_DAMAGE, по игрокам как есть. */
 	public float damageVs(LivingEntity e, double base) {
-		return (float) (e instanceof net.minecraft.world.entity.player.Player ? base : base * SquadTuning.VS_MOBS_DAMAGE);
+		return (float) ((e instanceof net.minecraft.world.entity.player.Player ? base : base * SquadTuning.VS_MOBS_DAMAGE) * power);
 	}
 
 	/** Телохранитель стрелков: щитовик и копейщик. */
@@ -168,8 +170,37 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 	}
 
 	@Override
+	public float power() {
+		return power;
+	}
+
+	/** Задать силу (при появлении): здоровье и урон ×power. */
+	public void setPower(float value) {
+		power = value;
+		var hp = getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MAX_HEALTH);
+		if (hp != null) {
+			hp.setBaseValue(hp.getBaseValue() * value);
+			setHealth(getMaxHealth());
+		}
+		var dmg = getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
+		if (dmg != null) dmg.setBaseValue(dmg.getBaseValue() * value);
+	}
+
+	@Override
+	public void die(net.minecraft.world.damagesource.DamageSource source) {
+		super.die(source);
+		// последний из отряда пал — ближним игрокам передышка от патрулей
+		if (!level().isClientSide && squad != null && squadmates(64).isEmpty() && level() instanceof ServerLevel sl) {
+			for (var p : sl.getEntitiesOfClass(net.minecraft.server.level.ServerPlayer.class, getBoundingBox().inflate(SquadTuning.RESPITE_RADIUS))) {
+				SquadPatrols.grantRespite(p);
+			}
+		}
+	}
+
+	@Override
 	public void addAdditionalSaveData(CompoundTag tag) {
 		super.addAdditionalSaveData(tag);
+		tag.putFloat("Power", power);
 		if (squad != null) tag.putUUID("Squad", squad);
 		if (leader != null) tag.putUUID("SquadLeader", leader);
 		if (patrolRoad >= 0) {
@@ -182,6 +213,7 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
 		super.readAdditionalSaveData(tag);
+		if (tag.contains("Power")) power = tag.getFloat("Power"); // здоровье/урон уже сохранены в атрибутах
 		if (tag.hasUUID("Squad")) squad = tag.getUUID("Squad");
 		if (tag.hasUUID("SquadLeader")) leader = tag.getUUID("SquadLeader");
 		if (tag.contains("PatrolRoad")) {

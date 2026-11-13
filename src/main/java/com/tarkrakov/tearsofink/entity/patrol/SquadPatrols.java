@@ -44,15 +44,30 @@ public final class SquadPatrols {
 		}
 	}
 
-	private static String pickSquad(RandomSource random) {
+	/** Передышка: игрок → игровое время, до которого рядом с ним патрули не появляются. */
+	private static final java.util.Map<UUID, Long> RESPITE = new java.util.concurrent.ConcurrentHashMap<>();
+
+	public static void grantRespite(ServerPlayer p) {
+		RESPITE.put(p.getUUID(), p.serverLevel().getGameTime() + SquadTuning.RESPITE_TICKS);
+	}
+
+	/** Пояс глубины: 0 окраина, 1 лес, 2 глубь. */
+	public static int tier(InkLandsLayout layout, double x, double z) {
+		double depth = layout.depthInside((int) Math.floor(x), (int) Math.floor(z));
+		return depth < SquadTuning.TIER1_DEPTH ? 0 : depth < SquadTuning.TIER2_DEPTH ? 1 : 2;
+	}
+
+	private static String pickSquad(RandomSource random, int tier) {
+		String[] squads = SquadTuning.TIER_SQUADS[tier];
+		int[] weights = SquadTuning.TIER_WEIGHTS[tier];
 		int total = 0;
-		for (int w : SquadTuning.SQUAD_WEIGHTS) total += w;
+		for (int w : weights) total += w;
 		int r = random.nextInt(total);
-		for (int i = 0; i < SquadTuning.SQUADS.length; i++) {
-			r -= SquadTuning.SQUAD_WEIGHTS[i];
-			if (r < 0) return SquadTuning.SQUADS[i];
+		for (int i = 0; i < squads.length; i++) {
+			r -= weights[i];
+			if (r < 0) return squads[i];
 		}
-		return SquadTuning.SQUADS[0];
+		return squads[0];
 	}
 
 	private static EntityType<? extends PaleSoldier> typeOf(char c) {
@@ -64,9 +79,16 @@ public final class SquadPatrols {
 	}
 
 	private static void trySpawnNear(ServerLevel level, InkLandsLayout layout, ServerPlayer player) {
+		Long until = RESPITE.get(player.getUUID());
+		if (until != null) {
+			if (level.getGameTime() < until) return; // передышка после зачистки
+			RESPITE.remove(player.getUUID());
+		}
+		int tier = tier(layout, player.getX(), player.getZ());
+		if (level.random.nextFloat() > SquadTuning.TIER_SPAWN_CHANCE[tier]) return;
 		int near = level.getEntitiesOfClass(PaleSoldier.class, player.getBoundingBox().inflate(SpearmanTuning.PATROL_COUNT_RADIUS),
 				PaleSoldier::isAlive).size();
-		if (near >= SpearmanTuning.PATROL_MAX_NEAR) return;
+		if (near >= SquadTuning.TIER_MAX_NEAR[tier]) return;
 
 		BlockPos c = layout.center();
 		double px = player.getX(), pz = player.getZ();
@@ -93,7 +115,7 @@ public final class SquadPatrols {
 			if (at == null || Math.hypot(at.getX() - px, at.getZ() - pz) < SpearmanTuning.PATROL_SPAWN_MIN - 4) continue;
 			if (!level.getBiome(at).is(ModBiomes.PALE_FOREST) || Lanterns.isSafe(level, at)) continue;
 
-			String squad = pickSquad(random);
+			String squad = pickSquad(random, tier);
 			UUID squadId = UUID.randomUUID();
 			UUID leaderId = null;
 			for (int i = 0; i < squad.length(); i++) {
@@ -106,6 +128,7 @@ public final class SquadPatrols {
 				mob.finalizeSpawn(level, level.getCurrentDifficultyAt(spot), MobSpawnType.NATURAL, null);
 				if (leaderId == null) leaderId = mob.getUUID();
 				mob.joinSquad(squadId, leaderId);
+				mob.setPower(SquadTuning.TIER_POWER[tier]);
 				mob.setPatrol(bestRoad, t - SpearmanTuning.PATROL_SEGMENT / 2.0, t + SpearmanTuning.PATROL_SEGMENT / 2.0);
 				level.addFreshEntity(mob);
 			}

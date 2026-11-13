@@ -19,7 +19,11 @@ public class PaleBoltEntity extends AbstractArrow {
 		super(ModMobs.PALE_BOLT, owner, level, new ItemStack(Items.ARROW), null);
 		this.pickup = Pickup.DISALLOWED;
 		// урон стрелы = скорость × базовый урон → подгоняем под нужный урон болта
-		this.setBaseDamage(SquadTuning.BOLT_DAMAGE / SquadTuning.BOLT_SPEED);
+		this.setBaseDamage(SquadTuning.BOLT_DAMAGE * power(owner) / SquadTuning.BOLT_SPEED);
+	}
+
+	private static float power(net.minecraft.world.entity.Entity owner) {
+		return owner instanceof PaleSoldier s ? s.power() : 1f;
 	}
 
 	@Override
@@ -31,7 +35,7 @@ public class PaleBoltEntity extends AbstractArrow {
 	@Override
 	protected void onHitEntity(net.minecraft.world.phys.EntityHitResult hit) {
 		if (hit.getEntity() instanceof LivingEntity e && !(e instanceof net.minecraft.world.entity.player.Player)) {
-			this.setBaseDamage(SquadTuning.BOLT_DAMAGE * SquadTuning.VS_MOBS_DAMAGE / SquadTuning.BOLT_SPEED); // по мобам сильнее
+			this.setBaseDamage(SquadTuning.BOLT_DAMAGE * SquadTuning.VS_MOBS_DAMAGE * power(getOwner()) / SquadTuning.BOLT_SPEED); // по мобам сильнее
 		}
 		super.onHitEntity(hit);
 	}
