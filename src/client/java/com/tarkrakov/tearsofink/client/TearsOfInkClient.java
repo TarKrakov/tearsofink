@@ -105,11 +105,12 @@ public class TearsOfInkClient implements ClientModInitializer {
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.entity.PaleSpearmanModel.LAYER,
 				com.tarkrakov.tearsofink.client.entity.PaleSpearmanModel::createBodyLayer);
 		EntityRendererRegistry.register(ModMobs.PALE_SPEARMAN, com.tarkrakov.tearsofink.client.entity.PaleSpearmanRenderer::new);
-		// щитовик и арбалетчик — пока фигурки-заглушки
+		// щитовик и арбалетчик — модели автора
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.entity.PaleShieldbearerModel.LAYER,
 				com.tarkrakov.tearsofink.client.entity.PaleShieldbearerModel::createBodyLayer);
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.entity.PaleCrossbowmanModel.LAYER,
 				com.tarkrakov.tearsofink.client.entity.PaleCrossbowmanModel::createBodyLayer);
+		EntityRendererRegistry.register(ModMobs.PALE_SHIELDBEARER, com.tarkrakov.tearsofink.client.entity.PaleShieldbearerRenderer::new);
 		EntityRendererRegistry.register(ModMobs.PALE_CROSSBOWMAN, com.tarkrakov.tearsofink.client.entity.PaleCrossbowmanRenderer::new);
 		EntityRendererRegistry.register(ModMobs.PALE_BOLT, com.tarkrakov.tearsofink.client.entity.PaleBoltRenderer::new);
 		// Кровосборник: помпа рисуется моделью с анимацией
