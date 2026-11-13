@@ -101,14 +101,14 @@ public class RuinPiece extends TemplateStructurePiece {
 			if (!box.isInside(pos)) continue;
 			if (chest[i]) {
 				level.setBlock(pos, Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, facing), 2);
-				RandomizableContainerBlockEntity.setBlockEntityLootTable(level, fixed, pos, loot);
+				net.minecraft.world.RandomizableContainer.setBlockEntityLootTable(level, fixed, pos, loot);
 			} else {
 				level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
 			}
 		}
 		// сундуки автора — с тем же лутом
 		for (StructureTemplate.StructureBlockInfo info : authorChests) {
-			if (box.isInside(info.pos())) RandomizableContainerBlockEntity.setBlockEntityLootTable(level, fixed, info.pos(), loot);
+			if (box.isInside(info.pos())) net.minecraft.world.RandomizableContainer.setBlockEntityLootTable(level, fixed, info.pos(), loot);
 		}
 
 		// --- почва вместо ванильной земли + фундамент на склонах
