@@ -33,8 +33,8 @@ public final class SquadPatrols {
 
 	private static void tick(MinecraftServer server) {
 		if (server.getTickCount() % SpearmanTuning.PATROL_SPAWN_INTERVAL != 0) return;
-		ServerLevel level = server.overworld();
-		if (level.getDifficulty() == Difficulty.PEACEFUL || !level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING)) return;
+		ServerLevel level = com.tarkrakov.tearsofink.world.ModDimensions.lands(server);
+		if (level == null || level.getDifficulty() == Difficulty.PEACEFUL || !level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING)) return;
 		InkLandsLayout layout = InkLandsLayout.of(level);
 		if (layout == null) return;
 		for (ServerPlayer player : level.players()) {

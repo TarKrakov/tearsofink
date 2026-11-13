@@ -88,6 +88,11 @@ public class TearsOfInkClient implements ClientModInitializer {
 				net.minecraft.client.Minecraft.getInstance().setScreen(new com.tarkrakov.tearsofink.client.prologue.InvitationScreen());
 		com.tarkrakov.tearsofink.prologue.PrologueItems.openDiary = p ->
 				net.minecraft.client.Minecraft.getInstance().setScreen(new com.tarkrakov.tearsofink.client.prologue.DiaryScreen());
+		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.prologue.Prologue.GateTransit.TYPE, (payload, context) ->
+				context.client().execute(() -> com.tarkrakov.tearsofink.client.prologue.GateOverlay.start(payload.ticks())));
+		net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(c -> com.tarkrakov.tearsofink.client.prologue.GateOverlay.tick());
+		net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((g, counter) ->
+				com.tarkrakov.tearsofink.client.prologue.GateOverlay.render(g, counter.getGameTimeDeltaPartialTick(false)));
 		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.prologue.DiaryEntries.Sync.TYPE, (payload, context) ->
 				context.client().execute(() -> com.tarkrakov.tearsofink.client.prologue.DiaryScreen.entries = new java.util.ArrayList<>(payload.entries())));
 

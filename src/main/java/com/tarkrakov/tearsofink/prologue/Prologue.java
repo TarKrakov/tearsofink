@@ -43,11 +43,34 @@ public final class Prologue {
 		}
 	}
 
+	/** Переход через ворота: игрок замирает, экран затягивает бирюзовой пеленой (клиент), потом перенос. */
+	public record GateTransit(int ticks) implements CustomPacketPayload {
+		public static final Type<GateTransit> TYPE = new Type<>(TearsOfInk.id("gate_transit"));
+		public static final StreamCodec<RegistryFriendlyByteBuf, GateTransit> CODEC =
+				net.minecraft.network.codec.ByteBufCodecs.VAR_INT.map(GateTransit::new, GateTransit::ticks).cast();
+
+		@Override
+		public Type<? extends CustomPacketPayload> type() {
+			return TYPE;
+		}
+	}
+
+	/** Сколько длится переход сквозь ворота (тики). */
+	public static final int TRANSIT_TICKS = 60;
+	private static final net.minecraft.resources.ResourceLocation FREEZE = TearsOfInk.id("gate_freeze");
+	/** Кто сейчас проходит ворота: игрок → тиков осталось. */
+	private static final java.util.Map<java.util.UUID, Integer> TRANSIT = new java.util.HashMap<>();
+	/** Куда игрок попадёт из Преддверия (выбрано заранее, чтобы место успело прогрузиться). */
+	private static final java.util.Map<java.util.UUID, Integer> ARRIVAL_ROAD = new java.util.HashMap<>();
+	private static final net.minecraft.server.level.TicketType<net.minecraft.world.level.ChunkPos> ARRIVAL_TICKET =
+			net.minecraft.server.level.TicketType.create("tears_of_ink_arrival", java.util.Comparator.comparingLong(net.minecraft.world.level.ChunkPos::toLong), 20 * 180);
+
 	private Prologue() {}
 
 	public static void init() {
 		DiaryEntries.init();
 		PayloadTypeRegistry.playC2S().register(SignContract.TYPE, SignContract.CODEC);
+		PayloadTypeRegistry.playS2C().register(GateTransit.TYPE, GateTransit.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(SignContract.TYPE, (payload, ctx) -> ctx.player().server.execute(() -> sign(ctx.player())));
 
 		// первый вход в мир — письмо (каждому игроку один раз)
@@ -66,7 +89,19 @@ public final class Prologue {
 			Vestibule v = Vestibule.get(level);
 			for (ServerPlayer p : java.util.List.copyOf(level.players())) { // копия: игрок уходит в другое измерение прямо в цикле
 				if (p.isSpectator()) continue;
-				if (p.getBoundingBox().intersects(v.gate().inflate(0.2))) passGate(p);
+				Integer left = TRANSIT.get(p.getUUID());
+				if (left != null) {
+					left -= 4;
+					if (left <= 0) {
+						TRANSIT.remove(p.getUUID());
+						unfreeze(p);
+						passGate(p);
+					} else {
+						TRANSIT.put(p.getUUID(), left);
+					}
+				} else if (p.getBoundingBox().intersects(v.gate().inflate(0.2))) {
+					startTransit(p);
+				}
 				else if (p.getY() < level.getMinBuildHeight() + 20) { // упал с островка — обратно
 					BlockPos a = v.arrival();
 					p.teleportTo(a.getX() + 0.5, a.getY(), a.getZ() + 0.5);
@@ -74,6 +109,40 @@ public final class Prologue {
 				}
 			}
 		});
+	}
+
+	private static void startTransit(ServerPlayer p) {
+		TRANSIT.put(p.getUUID(), TRANSIT_TICKS);
+		preloadArrival(p);
+		var speed = p.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+		var jump = p.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.JUMP_STRENGTH);
+		var mod = new net.minecraft.world.entity.ai.attributes.AttributeModifier(FREEZE, -1.0,
+				net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL);
+		if (speed != null && !speed.hasModifier(FREEZE)) speed.addTransientModifier(mod);
+		if (jump != null && !jump.hasModifier(FREEZE)) jump.addTransientModifier(mod);
+		p.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+		p.hurtMarked = true;
+		ServerPlayNetworking.send(p, new GateTransit(TRANSIT_TICKS));
+		p.playNotifySound(SoundEvents.PORTAL_TRIGGER, SoundSource.PLAYERS, 0.5f, 1.4f);
+	}
+
+	private static void unfreeze(ServerPlayer p) {
+		var speed = p.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
+		var jump = p.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.JUMP_STRENGTH);
+		if (speed != null) speed.removeModifier(FREEZE);
+		if (jump != null) jump.removeModifier(FREEZE);
+	}
+
+	/** Заранее загрузить место прибытия на краю Бледнолесья (в фоне), чтобы переход не подвисал. */
+	private static void preloadArrival(ServerPlayer p) {
+		ServerLevel lands = ModDimensions.lands(p.server);
+		if (lands == null) return;
+		int road = ARRIVAL_ROAD.computeIfAbsent(p.getUUID(), k -> p.getRandom().nextInt(InkLandsLayout.ROADS));
+		InkLandsLayout layout = InkLandsLayout.of(lands);
+		if (layout == null) return;
+		double[] a = layout.arrivalPoint(road);
+		var cp = new net.minecraft.world.level.ChunkPos(BlockPos.containing(a[0], 0, a[1]));
+		lands.getChunkSource().addRegionTicket(ARRIVAL_TICKET, cp, 3, cp);
 	}
 
 	private static void sign(ServerPlayer p) {
@@ -103,6 +172,7 @@ public final class Prologue {
 		Vestibule v = Vestibule.get(level);
 		v.ensurePlaced(level);
 		ensureGuide(level, v);
+		preloadArrival(p);
 		BlockPos a = v.arrival();
 		BlockPos g = v.guidePos();
 		float yaw = (float) (Math.atan2(g.getZ() - a.getZ(), g.getX() - a.getX()) * 180 / Math.PI) - 90f;
@@ -125,7 +195,8 @@ public final class Prologue {
 		if (t.stage() < LandsTravel.STAGE_ENTERED) Travel.set(p, t.withStage(LandsTravel.STAGE_ENTERED));
 		ServerLevel lands = ModDimensions.lands(p.server);
 		if (lands == null) return;
-		Vec3 to = ModDimensions.arrival(lands, p.getRandom().nextInt(InkLandsLayout.ROADS));
+		Integer road = ARRIVAL_ROAD.remove(p.getUUID());
+		Vec3 to = ModDimensions.arrival(lands, road != null ? road : p.getRandom().nextInt(InkLandsLayout.ROADS));
 		p.teleportTo(lands, to.x, to.y, to.z, p.getYRot(), 0f);
 		lands.playSound(null, BlockPos.containing(to), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1f, 0.6f);
 	}
