@@ -118,8 +118,7 @@ public final class Travel {
 			}
 			List<ItemStack> kept = KEPT.remove(newPlayer.getUUID());
 			if (kept != null) for (ItemStack s : kept) if (!newPlayer.getInventory().add(s)) newPlayer.drop(s, false);
-			// умер в Землях — очнулся в Землях
-			if (!alive && ModDimensions.isLands(oldPlayer.level())) respawnInLands(newPlayer);
+			// умер в Землях — возрождение сразу в Землях (см. ServerPlayerRespawnMixin)
 		});
 
 		// ----- кровати в Землях: только запоминают место -----
@@ -156,6 +155,10 @@ public final class Travel {
 			TOSSES.add(new Toss(item, owner, owner.server.getTickCount() + TOSS_RETURN_TICKS));
 		});
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			if (server.getTickCount() % 600 == 1) {
+				ServerLevel lands = ModDimensions.lands(server);
+				if (lands != null) keepRespawnLoaded(lands);
+			}
 			if (TOSSES.isEmpty()) return;
 			int now = server.getTickCount();
 			TOSSES.removeIf(t -> {
@@ -250,14 +253,18 @@ public final class Travel {
 	}
 
 	/** После смерти в Землях: кровать в Землях → фонтан → край Бледнолесья. */
-	private static void respawnInLands(ServerPlayer p) {
+	/**
+	 * Куда возрождать умершего в Землях (сразу в Землях, без захода в обычный мир):
+	 * кровать в Землях → привязанный фонтан → край Бледнолесья (у каждого игрока своя дорога — место заранее прогружено).
+	 */
+	public static net.minecraft.world.level.portal.DimensionTransition landsRespawn(ServerPlayer p,
+			net.minecraft.world.level.portal.DimensionTransition.PostDimensionTransition post) {
 		ServerLevel lands = ModDimensions.lands(p.server);
-		if (lands == null) return;
 		LandsTravel t = get(p);
 		Vec3 to = null;
+		float yaw = p.getYRot();
 		if (t.respawn().isPresent()) {
 			BlockPos pos = t.respawn().get();
-			lands.getChunk(pos.getX() >> 4, pos.getZ() >> 4);
 			BlockState s = lands.getBlockState(pos);
 			if (t.respawnBed()) {
 				if (s.getBlock() instanceof BedBlock) {
@@ -271,12 +278,36 @@ public final class Travel {
 				to = standNear(lands, pos);
 			}
 		}
-		float yaw = p.getYRot();
 		if (to == null) {
-			to = ModDimensions.arrival(lands, p.getRandom().nextInt(InkLandsLayout.ROADS));
+			to = ModDimensions.arrival(lands, fallbackRoad(p));
 			yaw = ModDimensions.faceInward(to);
 		}
-		p.teleportTo(lands, to.x, to.y, to.z, yaw, 0f);
+		return new net.minecraft.world.level.portal.DimensionTransition(lands, to, Vec3.ZERO, yaw, 0f, false, post);
+	}
+
+	/** Дорога, на краю которой возрождается игрок без кровати и фонтана (постоянная — чтобы держать место прогруженным). */
+	private static int fallbackRoad(ServerPlayer p) {
+		return Math.floorMod(p.getUUID().hashCode(), InkLandsLayout.ROADS);
+	}
+
+	private static final net.minecraft.server.level.TicketType<net.minecraft.world.level.ChunkPos> RESPAWN_TICKET =
+			net.minecraft.server.level.TicketType.create("tears_of_ink_respawn", java.util.Comparator.comparingLong(net.minecraft.world.level.ChunkPos::toLong), 20 * 45);
+
+	/** Пока игрок в Землях — держим место его возрождения прогруженным (возрождение без ожидания). */
+	private static void keepRespawnLoaded(ServerLevel lands) {
+		InkLandsLayout layout = InkLandsLayout.of(lands);
+		for (ServerPlayer p : lands.players()) {
+			LandsTravel t = get(p);
+			BlockPos at;
+			if (t.respawn().isPresent()) {
+				at = t.respawn().get();
+			} else if (layout != null) {
+				double[] a = layout.arrivalPoint(fallbackRoad(p));
+				at = BlockPos.containing(a[0], 0, a[1]);
+			} else continue;
+			var cp = new net.minecraft.world.level.ChunkPos(at);
+			lands.getChunkSource().addRegionTicket(RESPAWN_TICKET, cp, 3, cp);
+		}
 	}
 
 	/** Свободное место рядом с блоком (для фонтана). */

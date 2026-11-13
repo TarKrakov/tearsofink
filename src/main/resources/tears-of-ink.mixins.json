@@ -9,7 +9,8 @@
 		"NaturalSpawnerMixin",
 		"SlotMixin",
 		"ContainerMenuMixin",
-		"PlayerDifficultyMixin"
+		"PlayerDifficultyMixin",
+		"ServerPlayerRespawnMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
