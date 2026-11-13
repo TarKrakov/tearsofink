@@ -169,7 +169,6 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 		super.setTarget(target);
 	}
 
-	@Override
 	public float power() {
 		return power;
 	}
