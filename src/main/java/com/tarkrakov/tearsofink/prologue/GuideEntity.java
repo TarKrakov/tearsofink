@@ -36,7 +36,7 @@ public class GuideEntity extends PathfinderMob {
 	/** Реплик приветствия (guide.tears-of-ink.greet.1 … N); на какой отдаёт саквояж. */
 	public static final int GREET_LINES = 5, GIFT_LINE = 4;
 	/** Пауза между репликами (тики). */
-	public static final int LINE_TICKS = 70;
+	public static final int LINE_TICKS = 160; // 8 с — успеть прочитать и оглядеться
 	/** На какой секунде анимации gift «отдаёт» (тики) и длина анимации vanish. */
 	public static final int GIFT_GIVE_TICK = 14, VANISH_TICKS = 36;
 	/** Сколько тиков невидим после исчезновения. */
@@ -140,7 +140,7 @@ public class GuideEntity extends PathfinderMob {
 		for (ServerPlayer p : level.getEntitiesOfClass(ServerPlayer.class, getBoundingBox().inflate(GREET_RANGE), ServerPlayer::isAlive)) {
 			LandsTravel t = Travel.get(p);
 			if (t.stage() >= LandsTravel.STAGE_ENTERED || talks.containsKey(p.getUUID()) || greeted(p)) continue;
-			talks.put(p.getUUID(), new int[]{tickCount + 20, 1});
+			talks.put(p.getUUID(), new int[]{tickCount + 40, 1});
 		}
 		boolean anyTalking = false;
 		var it = talks.entrySet().iterator();
