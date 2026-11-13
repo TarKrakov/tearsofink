@@ -91,6 +91,7 @@ public final class ModCreativeTab {
 						output.accept(ModBlocks.ASPHODELITE_DIAMOND_ORE);
 						output.accept(ModBlocks.ASPHODELITE_EMERALD_ORE);
 						output.accept(ModItems.PIGMENT);
+						output.accept(ModItems.FULFILLED_CONTRACT);
 						output.accept(ModBlocks.PALE_LOG);
 						output.accept(ModBlocks.STRIPPED_PALE_LOG);
 						output.accept(ModBlocks.PALE_WOOD);

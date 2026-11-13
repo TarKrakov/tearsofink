@@ -96,6 +96,11 @@ public class TearsOfInkClient implements ClientModInitializer {
 		net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(c -> com.tarkrakov.tearsofink.client.prologue.GateOverlay.tick());
 		net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((g, counter) ->
 				com.tarkrakov.tearsofink.client.prologue.GateOverlay.render(g, counter.getGameTimeDeltaPartialTick(false)));
+		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.trader.SoulTrader.Open.TYPE, (payload, context) ->
+				context.client().execute(() -> com.tarkrakov.tearsofink.client.trader.SoulTraderScreen.open(payload)));
+		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.trader.SoulTraderModel.LAYER,
+				com.tarkrakov.tearsofink.client.trader.SoulTraderModel::createBodyLayer);
+		EntityRendererRegistry.register(ModMobs.SOUL_TRADER, com.tarkrakov.tearsofink.client.trader.SoulTraderRenderer::new);
 		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.prologue.DiaryEntries.Sync.TYPE, (payload, context) ->
 				context.client().execute(() -> com.tarkrakov.tearsofink.client.prologue.DiaryScreen.entries = new java.util.ArrayList<>(payload.entries())));
 

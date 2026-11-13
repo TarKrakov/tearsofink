@@ -20,6 +20,14 @@ public final class ModItems {
 	public static final Item ASPHODA = register("asphoda", new Item(new Item.Properties()));
 	/** Пигмент: падает с врагов и из сундуков, используется в крафтах. */
 	public static final Item PIGMENT = register("pigment", new Item(new Item.Properties()));
+	/** Исполненный контракт (награда за Охоту) — сдаётся Торговке душами за Пигмент. */
+	public static final Item FULFILLED_CONTRACT = register("fulfilled_contract", new Item(new Item.Properties().stacksTo(16)) {
+		@Override
+		public void appendHoverText(net.minecraft.world.item.ItemStack stack, TooltipContext context,
+									java.util.List<net.minecraft.network.chat.Component> tooltip, net.minecraft.world.item.TooltipFlag flag) {
+			Descriptions.add(getDescriptionId(), tooltip);
+		}
+	});
 
 	// ===== Материалы трав =====
 	public static final Item BLOODROOT_CLOT = register("bloodroot_clot", new Item(new Item.Properties()));
