@@ -234,5 +234,11 @@
   "item.tears-of-ink.dim_hand_lantern": "Dim Hand Lantern",
   "block.tears-of-ink.vestibule_gate": "Gate Veil",
   "effect.tears-of-ink.weakened_soul": "Weakened Soul",
-  "biome.tears-of-ink.ink_edge": "Edge of the Lands"
+  "biome.tears-of-ink.ink_edge": "Edge of the Lands",
+  "stats.tears-of-ink.title": "Stats",
+  "stats.tears-of-ink.damage": "Damage: %s",
+  "stats.tears-of-ink.speed": "Speed: %s",
+  "stats.tears-of-ink.cost_ink": "Cost: %s Ink",
+  "stats.tears-of-ink.cost_soul": "Cost: %s Soul",
+  "stats.tears-of-ink.cooldown": "Cooldown: %s s"
 }
