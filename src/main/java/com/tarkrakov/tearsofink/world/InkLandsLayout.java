@@ -368,13 +368,93 @@ public final class InkLandsLayout {
 	/** Точка, где начинается дорога номер index (0..ROADS-1) — чуть за краем области. */
 	public BlockPos roadStart(int index) {
 		double d = RADIUS * 1.04;
-		double angle = roadAngles[Math.floorMod(index, ROADS)] + roadNoise.getValue(d / ROAD_MEANDER_SCALE, Math.floorMod(index, ROADS) * 10.0) * ROAD_MEANDER;
+		double angle = roadAngle(Math.floorMod(index, ROADS), d);
 		return new BlockPos(center.getX() + (int) Math.round(Math.cos(angle) * d), 0,
 				center.getZ() + (int) Math.round(Math.sin(angle) * d));
 	}
 
+	/** Боковой сдвиг дороги (блоки) для обхода Озера и Вестников — по 1 блоку вдоль дороги, считается один раз. */
+	private volatile double[][] roadShift;
+	/** Как круто дорога может уходить вбок при обходе: блоков вбок на блок вперёд. */
+	public static final double ROAD_SHIFT_SLOPE = 0.55;
+	/** Запас при обходе (сверх радиусов Озера/ствола), чтобы сглаживание не «срезало» угол. */
+	private static final double ROAD_SHIFT_MARGIN = 5;
+
+	/** Угол дороги без обходов: направление + плавное петляние. */
+	private double baseRoadAngle(int road, double d) {
+		return roadAngles[road] + roadNoise.getValue(d / ROAD_MEANDER_SCALE, road * 10.0) * ROAD_MEANDER;
+	}
+
 	private double roadAngle(int road, double d) {
-		double a = roadAngles[road] + roadNoise.getValue(d / ROAD_MEANDER_SCALE, road * 10.0) * ROAD_MEANDER;
+		double a = baseRoadAngle(road, d);
+		if (d < 1) return a;
+		double[] shift = roadShifts()[road];
+		double t = Mth.clamp(d, 0, shift.length - 2);
+		int i = (int) t;
+		return a + Mth.lerp(t - i, shift[i], shift[i + 1]) / d;
+	}
+
+	private double[][] roadShifts() {
+		double[][] s = roadShift;
+		if (s == null) {
+			synchronized (this) {
+				s = roadShift;
+				if (s == null) {
+					s = buildRoadShifts();
+					roadShift = s;
+				}
+			}
+		}
+		return s;
+	}
+
+	/**
+	 * Сдвиг вбок: где дорога должна обойти круг — нужный сдвиг; к нему плавные съезды с наклоном не круче
+	 * {@link #ROAD_SHIFT_SLOPE}, потом сглаживание. Так дорога не рвётся и не уходит поперёк пути.
+	 */
+	private double[][] buildRoadShifts() {
+		int n = (int) (RADIUS * ROAD_START_FRACTION) + 40;
+		double[][] out = new double[ROADS][];
+		for (int road = 0; road < ROADS; road++) {
+			double[] need = new double[n];
+			for (int i = 1; i < n; i++) {
+				double a0 = baseRoadAngle(road, i);
+				double a = avoidObstacles(a0, i);
+				need[i] = Mth.wrapDegrees((a - a0) * Mth.RAD_TO_DEG) * Mth.DEG_TO_RAD * i;
+			}
+			double[] pos = new double[n], neg = new double[n];
+			for (int i = 0; i < n; i++) {
+				double v = need[i];
+				if (v == 0) continue;
+				double mag = Math.abs(v) + ROAD_SHIFT_MARGIN;
+				int reach = (int) Math.ceil(mag / ROAD_SHIFT_SLOPE);
+				double[] env = v > 0 ? pos : neg;
+				for (int j = Math.max(0, i - reach); j <= Math.min(n - 1, i + reach); j++) {
+					env[j] = Math.max(env[j], mag - ROAD_SHIFT_SLOPE * Math.abs(i - j));
+				}
+			}
+			double[] raw = new double[n];
+			for (int i = 0; i < n; i++) raw[i] = pos[i] - neg[i];
+			double[] smooth = new double[n];
+			int w = 6;
+			for (int i = 0; i < n; i++) {
+				double sum = 0;
+				int c = 0;
+				for (int k = -w; k <= w; k++) {
+					int j = i + k;
+					if (j < 0 || j >= n) continue;
+					sum += raw[j];
+					c++;
+				}
+				smooth[i] = sum / c;
+			}
+			out[road] = smooth;
+		}
+		return out;
+	}
+
+	/** Жёсткий обход: Озеро и стволы Вестников (без сглаживания — только чтобы узнать, сколько надо сдвинуть). */
+	private double avoidObstacles(double a, double d) {
 		a = avoidLake(a, d);
 		// и стволы Багряных Вестников (в центрах пятен Кроволесья)
 		int px = center.getX() + (int) Math.round(Math.cos(a) * d), pz = center.getZ() + (int) Math.round(Math.sin(a) * d);
@@ -387,6 +467,7 @@ public final class InkLandsLayout {
 		}
 		return a;
 	}
+
 
 	/** Если дорога на этом радиусе попадает в Озеро — сдвигаем её вбок, на берег (в ту сторону, где она и так шла). */
 	private double avoidLake(double a, double d) {

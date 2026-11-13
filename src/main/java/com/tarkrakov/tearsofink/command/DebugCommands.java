@@ -56,7 +56,7 @@ public final class DebugCommands {
 			int top = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) + 1;
 			int y = Integer.MIN_VALUE;
 			boolean planks = false;
-			for (int yy = top; yy > top - 48; yy--) {
+			for (int yy = top; yy > level.getMinBuildHeight(); yy--) {
 				BlockState s = level.getBlockState(new BlockPos(x, yy, z));
 				if (s.is(ModBlocks.ASHEN_PATH) || s.is(ModBlocks.PALE_PLANKS)) { y = yy; planks = s.is(ModBlocks.PALE_PLANKS); break; }
 			}
