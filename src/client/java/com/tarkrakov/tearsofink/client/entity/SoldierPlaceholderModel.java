@@ -20,7 +20,7 @@ import net.minecraft.util.Mth;
  */
 public class SoldierPlaceholderModel<T extends PaleSoldier> extends HierarchicalModel<T> {
 	public static final ModelLayerLocation SHIELD_LAYER = new ModelLayerLocation(TearsOfInk.id("pale_shieldbearer_placeholder"), "main");
-	public static final ModelLayerLocation CROSSBOW_LAYER = new ModelLayerLocation(TearsOfInk.id("pale_crossbowman"), "main");
+	public static final ModelLayerLocation CROSSBOW_LAYER = new ModelLayerLocation(TearsOfInk.id("pale_crossbowman_placeholder"), "main");
 
 	private final ModelPart root, head, body, armR, armL, legR, legL;
 

@@ -30,6 +30,43 @@ public class PaleCrossbowmanEntity extends PaleSoldier {
 	private static final int PHASE_AIM = 0, PHASE_SHOOT = 1, PHASE_RELOAD = 2;
 
 	int phase = PHASE_AIM, phaseTicks;
+
+	/** Цель — не игрок: прицел и перезарядка быстрее (и анимации тоже). */
+	private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> FAST =
+			net.minecraft.network.syncher.SynchedEntityData.defineId(PaleCrossbowmanEntity.class, net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
+	// анимации (клиент)
+	public final net.minecraft.world.entity.AnimationState idleState = new net.minecraft.world.entity.AnimationState();
+	public final net.minecraft.world.entity.AnimationState aimState = new net.minecraft.world.entity.AnimationState();
+	public final net.minecraft.world.entity.AnimationState shootState = new net.minecraft.world.entity.AnimationState();
+	public final net.minecraft.world.entity.AnimationState reloadState = new net.minecraft.world.entity.AnimationState();
+	public final net.minecraft.world.entity.AnimationState dodgeState = new net.minecraft.world.entity.AnimationState();
+	private int lastAction = -1;
+
+	@Override
+	protected void defineSynchedData(net.minecraft.network.syncher.SynchedEntityData.Builder builder) {
+		super.defineSynchedData(builder);
+		builder.define(FAST, false);
+	}
+
+	public boolean fastCycle() {
+		return this.entityData.get(FAST);
+	}
+
+	@Override
+	public void tick() {
+		super.tick();
+		if (!this.level().isClientSide) return;
+		int act = action();
+		if (act != lastAction) {
+			aimState.stop(); shootState.stop(); reloadState.stop(); dodgeState.stop();
+			if (act == ACT_AIM) aimState.start(this.tickCount);
+			if (act == ACT_SHOOT) shootState.start(this.tickCount);
+			if (act == ACT_RELOAD) reloadState.start(this.tickCount);
+			if (act == ACT_DODGE) dodgeState.start(this.tickCount);
+			lastAction = act;
+		}
+		idleState.animateWhen(act == ACT_NONE && !this.walkAnimation.isMoving(), this.tickCount);
+	}
 	boolean dodgedThisCycle;
 	int dodgeTicks = -1, dodgeCooldown;
 	private Vec3 dodgeAway = Vec3.ZERO;
@@ -169,6 +206,7 @@ public class PaleCrossbowmanEntity extends PaleSoldier {
 			// цикл выстрела (по мобам — быстрее)
 			phaseTicks++;
 			float rate = t instanceof net.minecraft.world.entity.player.Player ? 1f : SquadTuning.VS_MOBS_FIRE_RATE;
+			entityData.set(FAST, rate < 1f);
 			switch (phase) {
 				case PHASE_AIM -> {
 					if (!sees || dist > SquadTuning.SHOOT_RANGE) {

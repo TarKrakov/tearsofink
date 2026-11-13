@@ -29,13 +29,13 @@ public final class SquadTuning {
 	/** Держит дистанцию: отходит, если ближе KEEP_MIN, подходит, если дальше KEEP_MAX. */
 	public static final double KEEP_MIN = 8, KEEP_MAX = 14, SHOOT_RANGE = 24;
 	/** Цикл: прицел → выстрел → перезарядка (тики). */
-	public static final int AIM_TICKS = 24, SHOOT_TICKS = 6, RELOAD_TICKS = 50; // выстрел раз в ~4 с (было ~2,8 с)
+	public static final int AIM_TICKS = 20, SHOOT_TICKS = 10, RELOAD_TICKS = 50; // под анимации автора: aim 1 с, shoot 0,5 с, reload 2,5 с; выстрел раз в 4 с
 	/** Болт: урон, скорость, разброс. */
 	public static final double BOLT_DAMAGE = 4, BOLT_SPEED = 2.6;
 	public static final float BOLT_SPREAD = 3f;
 	/** Отпрыжка: если игрок ближе CLOSE; один раз за цикл выстрела (потом обязан выстрелить). */
 	public static final double ARCHER_DODGE_CLOSE = 3.5, ARCHER_DODGE_BACK = 0.8, ARCHER_DODGE_UP = 0.4;
-	public static final int ARCHER_DODGE_TICKS = 16, ARCHER_DODGE_PUSH_TICK = 4, ARCHER_DODGE_COOLDOWN = 40;
+	public static final int ARCHER_DODGE_TICKS = 10, ARCHER_DODGE_PUSH_TICK = 3, ARCHER_DODGE_COOLDOWN = 40; // dodge 0,5 с
 
 	// ===== Против мобов (не игроков) =====
 	/** Множитель урона всех атак патруля по мобам (не по игрокам). */
