@@ -31,6 +31,9 @@ bin/
 # fabric
 
 run/
+run-server/*
+!run-server/eula.txt
+!run-server/server.properties
 
 # java
 

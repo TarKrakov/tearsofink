@@ -15,15 +15,14 @@ jobs:
       - run: chmod +x ./gradlew
       - name: run server and checks
         run: |
-          mkdir -p run && echo "eula=true" > run/eula.txt
-          printf "online-mode=false\nspawn-protection=0\nmax-tick-time=-1\n" > run/server.properties
+          printf "max-tick-time=-1\n" >> run-server/server.properties
           {
             for i in $(seq 1 120); do
               sleep 5
-              if grep -q "Done (" run/logs/latest.log 2>/dev/null; then break; fi
+              if grep -q "Done (" run-server/logs/latest.log 2>/dev/null; then break; fi
             done
             echo "tearsofink check start"
-            for i in $(seq 1 120); do sleep 5; if [ "$(grep -c "\[check\] Старт" run/logs/latest.log 2>/dev/null)" -ge 2 ]; then break; fi; done
+            for i in $(seq 1 120); do sleep 5; if [ "$(grep -c "\[check\] Старт" run-server/logs/latest.log 2>/dev/null)" -ge 2 ]; then break; fi; done
             echo "stop"
           } | ./gradlew runServer --console=plain 2>&1 | tee server.log | grep --line-buffered -E "\[check\]|nearest|Could not find|ERROR|Exception|Caused by|Done \(" || true
       - uses: actions/upload-artifact@v7
@@ -32,4 +31,4 @@ jobs:
           name: server-log
           path: |
             server.log
-            run/logs/
+            run-server/logs/

@@ -28,6 +28,13 @@ repositories {
 loom {
 	splitEnvironmentSourceSets()
 
+	// сервер — в своей папке, чтобы его можно было запускать одновременно с клиентом (логи и миры не мешают друг другу)
+	runs {
+		server {
+			runDir "run-server"
+		}
+	}
+
 	mods {
 		"tears-of-ink" {
 			sourceSet sourceSets.main
