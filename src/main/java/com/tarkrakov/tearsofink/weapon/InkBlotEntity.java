@@ -29,6 +29,12 @@ public class InkBlotEntity extends ThrowableItemProjectile {
 		super(ModEntities.INK_BLOT, owner, level);
 	}
 
+	/** Почти не падает — летит дальше (обычный снежок: 0.03). */
+	@Override
+	protected double getDefaultGravity() {
+		return 0.012;
+	}
+
 	@Override
 	protected Item getDefaultItem() {
 		return ModItems.INK_BLOT;

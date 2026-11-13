@@ -40,6 +40,11 @@ public final class ModDimensions {
 		return onGround(lands, (int) Math.floor(p[0]), (int) Math.floor(p[1]));
 	}
 
+	/** Поворот «лицом к центру Земель» (от края) — чтобы новичок не шёл сразу в стену тумана. */
+	public static float faceInward(Vec3 at) {
+		return (float) Math.toDegrees(Math.atan2(at.x, -at.z));
+	}
+
 	/** Центр блока на поверхности (чанк загружается). */
 	public static Vec3 onGround(ServerLevel level, int x, int z) {
 		level.getChunk(x >> 4, z >> 4);

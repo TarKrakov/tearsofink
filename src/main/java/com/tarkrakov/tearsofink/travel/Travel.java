@@ -55,6 +55,16 @@ public final class Travel {
 			.initializer(LandsTravel::fresh)
 			.buildAndRegister(TearsOfInk.id("lands_travel"));
 
+	/** Начальный набор и предметы пролога: не теряются при смерти (но в сундук класть можно). */
+	public static boolean keptOnDeath(ItemStack s) {
+		return s.is(ModItems.DIARY) || s.is(ModItems.INK_LONGKNIFE) || s.is(ModItems.SALVATION_PENDANT)
+				|| s.is(ModItems.DIM_HAND_LANTERN) || s.is(ModItems.WORN_SATCHEL) || s.is(ModItems.SEALED_LETTER)
+				|| s.is(ModItems.INVITATION_LETTER);
+	}
+
+	/** Вещи, забранные при смерти, — вернуть после возрождения. */
+	private static final java.util.Map<java.util.UUID, List<ItemStack>> KEPT = new java.util.HashMap<>();
+
 	private record Toss(ItemEntity item, ServerPlayer owner, int at) {}
 	private static final List<Toss> TOSSES = new ArrayList<>();
 
@@ -83,14 +93,20 @@ public final class Travel {
 			if (entity instanceof ServerPlayer p && bound(p)
 					&& !p.serverLevel().getGameRules().getBoolean(GameRules.RULE_KEEPINVENTORY)) {
 				int count = 0;
+				List<ItemStack> kept = new ArrayList<>();
 				var inv = p.getInventory();
 				for (int i = 0; i < inv.getContainerSize(); i++) {
-					if (isMirror(inv.getItem(i))) {
-						count += inv.getItem(i).getCount();
+					ItemStack s = inv.getItem(i);
+					if (isMirror(s)) {
+						count += s.getCount();
+						inv.setItem(i, ItemStack.EMPTY);
+					} else if (keptOnDeath(s)) {
+						kept.add(s.copy());
 						inv.setItem(i, ItemStack.EMPTY);
 					}
 				}
 				if (count > 0) set(p, get(p).withKeepMirror(count));
+				if (!kept.isEmpty()) KEPT.put(p.getUUID(), kept);
 			}
 			return true;
 		});
@@ -100,6 +116,8 @@ public final class Travel {
 				newPlayer.getInventory().add(new ItemStack(ModItems.DIM_MIRROR, t.keepMirror()));
 				set(newPlayer, t = t.withKeepMirror(0));
 			}
+			List<ItemStack> kept = KEPT.remove(newPlayer.getUUID());
+			if (kept != null) for (ItemStack s : kept) if (!newPlayer.getInventory().add(s)) newPlayer.drop(s, false);
 			// умер в Землях — очнулся в Землях
 			if (!alive && ModDimensions.isLands(oldPlayer.level())) respawnInLands(newPlayer);
 		});
@@ -225,6 +243,7 @@ public final class Travel {
 			yaw = t.lastYaw();
 		} else {
 			to = ModDimensions.arrival(lands, p.getRandom().nextInt(InkLandsLayout.ROADS));
+			yaw = ModDimensions.faceInward(to);
 		}
 		p.teleportTo(lands, to.x, to.y, to.z, yaw, 0f);
 		arriveEffects(p);
@@ -252,8 +271,12 @@ public final class Travel {
 				to = standNear(lands, pos);
 			}
 		}
-		if (to == null) to = ModDimensions.arrival(lands, p.getRandom().nextInt(InkLandsLayout.ROADS));
-		p.teleportTo(lands, to.x, to.y, to.z, p.getYRot(), 0f);
+		float yaw = p.getYRot();
+		if (to == null) {
+			to = ModDimensions.arrival(lands, p.getRandom().nextInt(InkLandsLayout.ROADS));
+			yaw = ModDimensions.faceInward(to);
+		}
+		p.teleportTo(lands, to.x, to.y, to.z, yaw, 0f);
 	}
 
 	/** Свободное место рядом с блоком (для фонтана). */

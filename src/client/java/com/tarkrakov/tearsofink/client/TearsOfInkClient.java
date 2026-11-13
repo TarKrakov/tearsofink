@@ -52,6 +52,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 		ParticleFactoryRegistry.getInstance().register(ModParticles.FOG_BANK, FogBankParticle.Provider::new);
 		ParticleFactoryRegistry.getInstance().register(ModParticles.FOG_WALL, FogBankParticle.WallProvider::new);
 		ParticleFactoryRegistry.getInstance().register(ModParticles.TEAR_GLINT, TearGlintParticle.Provider::new);
+		ParticleFactoryRegistry.getInstance().register(ModParticles.SALVATION_STAR, TearGlintParticle.Provider::new);
 		ParticleFactoryRegistry particles = ParticleFactoryRegistry.getInstance();
 		particles.register(ModParticles.BLOOD_DRIP_HANG, s -> new DripParticle.Provider(s, DripParticle.Phase.HANG, ModParticles.BLOOD_DRIP_FALL));
 		particles.register(ModParticles.BLOOD_DRIP_FALL, s -> new DripParticle.Provider(s, DripParticle.Phase.FALL, ModParticles.BLOOD_DRIP_LAND));

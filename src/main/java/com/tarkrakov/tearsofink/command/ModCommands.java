@@ -45,7 +45,7 @@ public final class ModCommands {
 							ServerPlayer p = ctx.getSource().getPlayerOrException();
 							var lands = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());
 							var at = com.tarkrakov.tearsofink.world.ModDimensions.arrival(lands, p.getRandom().nextInt(InkLandsLayout.ROADS));
-							p.teleportTo(lands, at.x, at.y, at.z, p.getYRot(), 0f);
+							p.teleportTo(lands, at.x, at.y, at.z, com.tarkrakov.tearsofink.world.ModDimensions.faceInward(at), 0f);
 							return 1;
 						}))
 						.then(Commands.literal("leave").executes(ctx -> {

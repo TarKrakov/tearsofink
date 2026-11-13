@@ -197,7 +197,7 @@ public final class Prologue {
 		if (lands == null) return;
 		Integer road = ARRIVAL_ROAD.remove(p.getUUID());
 		Vec3 to = ModDimensions.arrival(lands, road != null ? road : p.getRandom().nextInt(InkLandsLayout.ROADS));
-		p.teleportTo(lands, to.x, to.y, to.z, p.getYRot(), 0f);
+		p.teleportTo(lands, to.x, to.y, to.z, ModDimensions.faceInward(to), 0f);
 		lands.playSound(null, BlockPos.containing(to), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1f, 0.6f);
 	}
 

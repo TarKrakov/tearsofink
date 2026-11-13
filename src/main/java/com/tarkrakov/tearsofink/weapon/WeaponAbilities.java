@@ -54,6 +54,7 @@ public final class WeaponAbilities {
 			RADIANCE.tick(server);
 			CLEAVE.tick(server);
 			MERCY.tick(server);
+			SALVATION.tick(server);
 		});
 	}
 
@@ -391,7 +392,7 @@ public final class WeaponAbilities {
 	// ======================================================================
 	/** Длинный нож: Чернильная клякса — шарик чернил вперёд. Дёшево, часто. */
 	public static class BlotAbility extends Skill {
-		public static final float SPEED = 1.6f;
+		public static final float SPEED = 2.2f;
 
 		BlotAbility() {
 			super(TearsOfInk.id("ink_blot"), 3, 0, 16);
@@ -416,8 +417,32 @@ public final class WeaponAbilities {
 		/** Перезарядка = длительность «Ослабленной Души» (тики): 8 с. */
 		public static final int COOLDOWN = 160;
 
+		/** Длина эффекта: кольцо звёздочек поднимается от ног к голове (тики). */
+		public static final int GLOW_TICKS = 20;
+		private final Map<UUID, Integer> glow = new HashMap<>();
+
 		SalvationAbility() {
 			super(TearsOfInk.id("salvation"), 0, 10, COOLDOWN);
+		}
+
+		/** Звёздочки: вспышка + спиральное кольцо, поднимающееся вокруг игрока. */
+		void tick(MinecraftServer server) {
+			Iterator<Map.Entry<UUID, Integer>> it = glow.entrySet().iterator();
+			while (it.hasNext()) {
+				Map.Entry<UUID, Integer> e = it.next();
+				ServerPlayer p = server.getPlayerList().getPlayer(e.getKey());
+				int t = e.getValue();
+				if (p == null || t >= GLOW_TICKS) { it.remove(); continue; }
+				ServerLevel level = p.serverLevel();
+				var star = com.tarkrakov.tearsofink.particle.ModParticles.SALVATION_STAR;
+				if (t == 0) level.sendParticles(star, p.getX(), p.getY() + 1.0, p.getZ(), 24, 0.5, 0.7, 0.5, 0.05);
+				double h = 0.1 + 2.0 * t / GLOW_TICKS;
+				for (int k = 0; k < 3; k++) {
+					double a = t * 0.9 + k * Math.PI * 2 / 3;
+					level.sendParticles(star, p.getX() + Math.cos(a) * 0.8, p.getY() + h, p.getZ() + Math.sin(a) * 0.8, 1, 0, 0, 0, 0);
+				}
+				e.setValue(t + 1);
+			}
 		}
 
 		@Override
@@ -428,8 +453,9 @@ public final class WeaponAbilities {
 			player.addEffect(new net.minecraft.world.effect.MobEffectInstance(com.tarkrakov.tearsofink.effect.ModEffects.WEAKENED_SOUL,
 					COOLDOWN, 0, false, false, true));
 			ServerLevel level = player.serverLevel();
-			level.sendParticles(com.tarkrakov.tearsofink.particle.ModParticles.TEAR_GLINT, player.getX(), player.getY() + 1.0, player.getZ(), 18, 0.4, 0.6, 0.4, 0.02);
 			level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1f, 1.2f);
+			level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 0.5f, 1.6f);
+			glow.put(player.getUUID(), 0);
 			player.swing(net.minecraft.world.InteractionHand.OFF_HAND, true);
 			return true;
 		}

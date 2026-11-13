@@ -16,6 +16,10 @@ public final class ModParticles {
 	public static final SimpleParticleType FOG_WALL = Registry.register(
 			BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id("fog_wall"), FabricParticleTypes.simple(true));
 
+	/** Звёздочки исцеления подвески спасения (заглушка — кадры как у искорок Слёзницы). */
+	public static final SimpleParticleType SALVATION_STAR = Registry.register(
+			BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id("salvation_star"), FabricParticleTypes.simple());
+
 	/** Холодные искорки вокруг Слёзницы. */
 	public static final SimpleParticleType TEAR_GLINT = Registry.register(
 			BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id("tear_glint"), FabricParticleTypes.simple());
