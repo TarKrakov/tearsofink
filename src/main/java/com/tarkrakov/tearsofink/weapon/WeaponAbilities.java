@@ -412,7 +412,7 @@ public final class WeaponAbilities {
 	// ======================================================================
 	/** Расколотая подвеска спасения: мгновенно лечит себя, несильно. */
 	public static class SalvationAbility extends Skill {
-		public static final float HEAL = 4f;
+		public static final float HEAL = 6f;
 		/** Перезарядка = длительность «Ослабленной Души» (тики): 8 с. */
 		public static final int COOLDOWN = 160;
 

@@ -21,6 +21,8 @@ public class FogBankParticle extends TextureSheetParticle {
 	public static final float ALPHA_OUTSIDE = 0.5f;
 	/** Непрозрачность клуба, когда игрок ВНУТРИ (вокруг себя туман прозрачнее). */
 	public static final float ALPHA_INSIDE = 0.25f;
+	/** Непрозрачность клубов стены тумана на краю Земель. */
+	public static final float WALL_ALPHA = 0.8f;
 	/** Размер клуба (половина стороны, в блоках). */
 	public static final float MIN_SIZE = 2.5f, MAX_SIZE = 5.0f;
 	/** Время жизни в тиках (20 тиков = 1 секунда). */
@@ -35,6 +37,8 @@ public class FogBankParticle extends TextureSheetParticle {
 	/** 1 — клуб целый, 0 — растаял у фонаря. */
 	private float lanternFade = 1f;
 	private boolean nearLantern = false;
+	/** Клуб стены тумана на краю: плотнее, ближе не растворяется так сильно. */
+	private boolean wall;
 
 	protected FogBankParticle(ClientLevel level, double x, double y, double z, SpriteSet sprites) {
 		super(level, x, y, z);
@@ -77,7 +81,7 @@ public class FogBankParticle extends TextureSheetParticle {
 		if (near <= 0f) return;
 
 		float baseAlpha = this.alpha;
-		float zoneAlpha = Mth.lerp(InkFog.strength(), ALPHA_OUTSIDE, ALPHA_INSIDE);
+		float zoneAlpha = wall ? WALL_ALPHA : Mth.lerp(InkFog.strength(), ALPHA_OUTSIDE, ALPHA_INSIDE);
 		this.alpha = baseAlpha * zoneAlpha * near * near; // мягкое, а не линейное растворение
 		super.render(buffer, camera, partialTick);
 		this.alpha = baseAlpha;
@@ -86,6 +90,26 @@ public class FogBankParticle extends TextureSheetParticle {
 	@Override
 	public ParticleRenderType getRenderType() {
 		return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
+	}
+
+	/** Клубы стены тумана на краю Земель. */
+	public static class WallProvider implements ParticleProvider<SimpleParticleType> {
+		private final SpriteSet sprites;
+
+		public WallProvider(SpriteSet sprites) {
+			this.sprites = sprites;
+		}
+
+		@Override
+		public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z,
+									   double xd, double yd, double zd) {
+			FogBankParticle p = new FogBankParticle(level, x, y, z, sprites);
+			p.wall = true;
+			p.quadSize *= 1.4f;
+			p.lifetime = Mth.nextInt(p.random, 100, 160);
+			p.setColor(0.85f, 0.85f, 0.9f);
+			return p;
+		}
 	}
 
 	public static class Provider implements ParticleProvider<SimpleParticleType> {

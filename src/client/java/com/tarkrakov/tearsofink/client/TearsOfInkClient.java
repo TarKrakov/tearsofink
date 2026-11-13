@@ -50,6 +50,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 					return 1;
 				})));
 		ParticleFactoryRegistry.getInstance().register(ModParticles.FOG_BANK, FogBankParticle.Provider::new);
+		ParticleFactoryRegistry.getInstance().register(ModParticles.FOG_WALL, FogBankParticle.WallProvider::new);
 		ParticleFactoryRegistry.getInstance().register(ModParticles.TEAR_GLINT, TearGlintParticle.Provider::new);
 		ParticleFactoryRegistry particles = ParticleFactoryRegistry.getInstance();
 		particles.register(ModParticles.BLOOD_DRIP_HANG, s -> new DripParticle.Provider(s, DripParticle.Phase.HANG, ModParticles.BLOOD_DRIP_FALL));
@@ -59,6 +60,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 		particles.register(ModParticles.INK_DRIP_FALL, s -> new DripParticle.Provider(s, DripParticle.Phase.FALL, ModParticles.INK_DRIP_LAND));
 		particles.register(ModParticles.INK_DRIP_LAND, s -> new DripParticle.Provider(s, DripParticle.Phase.LAND, null));
 		ClientTickEvents.END_CLIENT_TICK.register(FogBankSpawner::tick);
+		ClientTickEvents.END_CLIENT_TICK.register(com.tarkrakov.tearsofink.client.fog.FogWallSpawner::tick);
 		ParticleFactoryRegistry.getInstance().register(ModParticles.FLAME_DANCE, FlameDanceParticle.Provider::new);
 		ParticleFactoryRegistry.getInstance().register(ModParticles.INK_SMOKE, SheetParticles.SmokeProvider::new);
 		ParticleFactoryRegistry.getInstance().register(ModParticles.EMBER, SheetParticles.EmberProvider::new);
