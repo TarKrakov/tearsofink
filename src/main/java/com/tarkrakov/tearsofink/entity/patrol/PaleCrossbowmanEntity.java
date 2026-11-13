@@ -95,7 +95,7 @@ public class PaleCrossbowmanEntity extends PaleSoldier {
 		double dz = target.getZ() - this.getZ();
 		double flat = Math.sqrt(dx * dx + dz * dz);
 		bolt.shoot(dx, dy + flat * 0.12, dz, (float) SquadTuning.BOLT_SPEED,
-				SquadTuning.BOLT_SPREAD * (4 - this.level().getDifficulty().getId()) / 2f + 1f);
+				SquadTuning.BOLT_SPREAD + 1f); // точность одна на всех сложностях
 		this.level().addFreshEntity(bolt);
 		this.playSound(SoundEvents.CROSSBOW_SHOOT, 1.0f, 0.8f);
 	}

@@ -8,7 +8,8 @@
 		"HealEffectsMixin",
 		"NaturalSpawnerMixin",
 		"SlotMixin",
-		"ContainerMenuMixin"
+		"ContainerMenuMixin",
+		"PlayerDifficultyMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
