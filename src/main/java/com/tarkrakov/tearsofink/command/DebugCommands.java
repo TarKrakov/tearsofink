@@ -30,12 +30,47 @@ public final class DebugCommands {
 								.then(Commands.argument("length", IntegerArgumentType.integer(16, 100000))
 										.executes(ctx -> checkRoad(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "road") - 1,
 												IntegerArgumentType.getInteger(ctx, "length"))))))
-						.then(Commands.literal("terrain").executes(ctx -> checkTerrain(ctx.getSource()))))));
+						.then(Commands.literal("terrain").executes(ctx -> checkTerrain(ctx.getSource())))
+						.then(Commands.literal("start").executes(ctx -> checkStart(ctx.getSource()))))));
 	}
 
 	private static void say(CommandSourceStack s, String msg) {
 		TearsOfInk.LOGGER.info("[check] " + msg);
 		s.sendSuccess(() -> Component.literal(msg), false);
+	}
+
+	/** Стартовый храм: где должен стоять, что о нём думает генерация и что реально построено. */
+	private static int checkStart(CommandSourceStack src) {
+		ServerLevel level = ModDimensions.lands(src.getServer());
+		InkLandsLayout layout = level == null ? null : InkLandsLayout.of(level);
+		if (layout == null) { say(src, "нет измерения"); return 0; }
+		double[] s = com.tarkrakov.tearsofink.world.ruins.Ruins.start(layout);
+		int tx = (int) s[0], tz = (int) s[1];
+		say(src, "Старт: храм X " + tx + " Z " + tz + ", прибытие X " + (int) s[2] + " Z " + (int) s[3]
+				+ "; биом по раскладке " + layout.pick(tx, tz, null) + ", глубина " + (int) layout.depthInside(tx, tz)
+				+ ", дорога рядом " + (layout.roadNear(tx, tz, 18) != null) + ", первый в списке храмов "
+				+ java.util.Arrays.toString(com.tarkrakov.tearsofink.world.ruins.Ruins.templePoints(layout).get(0)));
+		for (int cx = -2; cx <= 2; cx++) for (int cz = -2; cz <= 2; cz++) level.getChunk((tx >> 4) + cx, (tz >> 4) + cz);
+		var registry = level.registryAccess().registryOrThrow(net.minecraft.core.registries.Registries.STRUCTURE);
+		var temple = registry.get(TearsOfInk.id("ruin_temple"));
+		var start = temple == null ? null : level.structureManager().getStructureAt(new BlockPos(tx, 100, tz), temple);
+		boolean startFound = false;
+		for (int cx = -1; cx <= 1 && !startFound; cx++) for (int cz = -1; cz <= 1 && !startFound; cz++) {
+			var chunk = level.getChunk((tx >> 4) + cx, (tz >> 4) + cz);
+			if (temple != null && chunk.getStartForStructure(temple) != null && chunk.getStartForStructure(temple).isValid()) startFound = true;
+		}
+		int fountains = 0, ruin = 0, minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
+		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+		for (int x = tx - 24; x <= tx + 24; x++) for (int z = tz - 24; z <= tz + 24; z++) for (int y = level.getMinBuildHeight(); y < level.getMaxBuildHeight(); y++) {
+			BlockState b = level.getBlockState(m.set(x, y, z));
+			if (b.is(ModBlocks.INK_FOUNTAIN)) fountains++;
+			var id = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(b.getBlock());
+			if (id.getNamespace().equals(TearsOfInk.MOD_ID) && id.getPath().contains("ruin")) { ruin++; minY = Math.min(minY, y); maxY = Math.max(maxY, y); }
+		}
+		say(src, "Старт: структура " + (temple != null) + ", начало в чанке храма " + startFound + ", кусок в точке " + (start != null && start.isValid())
+				+ "; блоков руин " + ruin + (ruin > 0 ? " (Y " + minY + "…" + maxY + ")" : "") + ", фонтанов " + fountains
+				+ ", земля в точке Y " + level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, tx, tz));
+		return 1;
 	}
 
 	private static int checkRoad(CommandSourceStack src, int road, int length) {
