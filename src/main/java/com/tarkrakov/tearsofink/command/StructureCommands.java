@@ -42,7 +42,12 @@ public final class StructureCommands {
 										.then(Commands.argument("name", StringArgumentType.word())
 												.then(Commands.argument("from", BlockPosArgument.blockPos())
 														.then(Commands.argument("to", BlockPosArgument.blockPos())
-																.executes(StructureCommands::save)))))
+																.executes(ctx -> save(ctx, null))
+																// + блок, который НЕ сохранять (например, землю суперплоского мира)
+																.then(Commands.argument("ignore", net.minecraft.commands.arguments.ResourceLocationArgument.id())
+																		.suggests((c, b) -> net.minecraft.commands.SharedSuggestionProvider.suggestResource(
+																				net.minecraft.core.registries.BuiltInRegistries.BLOCK.keySet(), b))
+																		.executes(ctx -> save(ctx, net.minecraft.commands.arguments.ResourceLocationArgument.getId(ctx, "ignore"))))))))
 								.then(Commands.literal("place")
 										.then(Commands.argument("name", StringArgumentType.word())
 												.executes(StructureCommands::place))))));
@@ -53,7 +58,7 @@ public final class StructureCommands {
 		return ResourceLocation.isValidPath(name) ? TearsOfInk.id(name) : null;
 	}
 
-	private static int save(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+	private static int save(CommandContext<CommandSourceStack> ctx, ResourceLocation ignoreId) throws CommandSyntaxException {
 		ResourceLocation id = id(ctx);
 		if (id == null) {
 			ctx.getSource().sendFailure(Component.literal("Имя — только строчные латинские буквы, цифры и _"));
@@ -64,8 +69,25 @@ public final class StructureCommands {
 				BlockPosArgument.getLoadedBlockPos(ctx, "from"), BlockPosArgument.getLoadedBlockPos(ctx, "to"));
 		StructureTemplateManager manager = level.getStructureManager();
 		StructureTemplate template = manager.getOrCreate(id);
+		// «не сохранять» блок: на время сохранения он становится воздухом, потом возвращается на место
+		java.util.Map<BlockPos, net.minecraft.world.level.block.state.BlockState> hidden = new java.util.HashMap<>();
+		if (ignoreId != null) {
+			var ignore = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getOptional(ignoreId).orElse(null);
+			if (ignore == null) {
+				ctx.getSource().sendFailure(Component.literal("Нет такого блока: " + ignoreId));
+				return 0;
+			}
+			for (BlockPos p : BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())) {
+				var st = level.getBlockState(p);
+				if (st.is(ignore)) {
+					hidden.put(p.immutable(), st);
+					level.setBlock(p, Blocks.AIR.defaultBlockState(), 2 | 16);
+				}
+			}
+		}
 		template.fillFromWorld(level, new BlockPos(box.minX(), box.minY(), box.minZ()),
 				new Vec3i(box.getXSpan(), box.getYSpan(), box.getZSpan()), false, Blocks.AIR);
+		hidden.forEach((p, st) -> level.setBlock(p, st, 2 | 16));
 		template.setAuthor(ctx.getSource().getTextName());
 		if (!manager.save(id)) {
 			ctx.getSource().sendFailure(Component.literal("Не удалось сохранить файл (см. лог)."));
