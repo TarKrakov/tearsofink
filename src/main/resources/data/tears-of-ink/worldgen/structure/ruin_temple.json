@@ -1,0 +1,8 @@
+{
+  "type": "tears-of-ink:ruin",
+  "kind": "temple",
+  "biomes": "#tears-of-ink:has_ruin_temple",
+  "step": "surface_structures",
+  "spawn_overrides": {},
+  "terrain_adaptation": "none"
+}

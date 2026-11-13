@@ -221,6 +221,11 @@ public final class InkLandsLayout {
 		return h;
 	}
 
+	/** Сид раскладки (свой у каждого мира). */
+	public long seed() {
+		return seed;
+	}
+
 	public Climate.Sampler sampler() {
 		return sampler;
 	}

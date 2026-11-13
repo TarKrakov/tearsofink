@@ -1,0 +1,115 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": {
+        "type": "minecraft:uniform",
+        "min": 4,
+        "max": 6
+      },
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:asphoda",
+          "weight": 15,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:iron_ingot",
+          "weight": 12,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:ink",
+          "weight": 10,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 5
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:pigment",
+          "weight": 10,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 2
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:tearbloom_brew",
+          "weight": 8
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:strong_tearbloom_brew",
+          "weight": 6
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:tarweed_extract",
+          "weight": 6
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:waterbloom_juice",
+          "weight": 6
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:hand_lantern",
+          "weight": 4
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:bright_hand_lantern",
+          "weight": 1
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:skill_book_dash",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:atonement",
+          "weight": 2
+        }
+      ]
+    }
+  ],
+  "random_sequence": "tears-of-ink:chests/ruins_rich"
+}
