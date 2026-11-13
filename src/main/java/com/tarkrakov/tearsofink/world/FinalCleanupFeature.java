@@ -82,6 +82,27 @@ public class FinalCleanupFeature extends Feature<NoneFeatureConfiguration> {
 		return changed;
 	}
 
+	/**
+	 * Просвет над дорогой в одной точке (x, z): ROAD_CLEARANCE блоков воздуха над полотном.
+	 * Нужен и постройкам, которые встают после уборки (Вестник: дорога прорезает арку в кроне).
+	 */
+	public static boolean clearAboveRoad(WorldGenLevel level, BlockPos.MutableBlockPos pos, int x, int z, int top) {
+		int road = Integer.MIN_VALUE;
+		for (int y = top; y > top - 220 && y > level.getMinBuildHeight(); y--) { // крона высокая — ищем глубже обычного
+			BlockState s = level.getBlockState(pos.set(x, y, z));
+			if (s.is(ModBlocks.ASHEN_PATH) || s.is(ModBlocks.PALE_PLANKS)) { road = y; break; }
+		}
+		if (road == Integer.MIN_VALUE) return false;
+		boolean changed = false;
+		for (int y = road + 1; y <= road + ROAD_CLEARANCE; y++) {
+			BlockState s = level.getBlockState(pos.set(x, y, z));
+			if (s.isAir() || !s.getFluidState().isEmpty() || keep(s)) continue;
+			level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+			changed = true;
+		}
+		return changed;
+	}
+
 	/** Наше «дорожное» — не трогаем: столбы, фонари, перила. */
 	private static boolean keep(BlockState s) {
 		return s.is(ModBlocks.PALE_FENCE) || s.is(ModBlocks.INK_LANTERN) || s.is(ModBlocks.ETERNAL_LANTERN)

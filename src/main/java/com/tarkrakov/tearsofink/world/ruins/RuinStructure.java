@@ -90,7 +90,7 @@ public class RuinStructure extends Structure {
 			ys[k++] = (int) Math.floor(layout.valleyHeight(px, pz, base.applyAsInt(px, pz), base));
 		}
 		Arrays.sort(ys);
-		int y = ys[2];
+		int y = temple ? ys[4] : ys[2]; // храму рельеф подгоняется (terrain_adaptation), ставим по середине
 		if (!temple) {
 			if (y <= generator.getSeaLevel()) return Optional.empty(); // не в воде
 			if (ys[8] - ys[0] > Ruins.MAX_SLOPE) return Optional.empty(); // не на обрыве

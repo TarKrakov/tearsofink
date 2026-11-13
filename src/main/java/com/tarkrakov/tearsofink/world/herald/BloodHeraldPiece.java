@@ -59,6 +59,20 @@ public class BloodHeraldPiece extends TemplateStructurePiece {
 			set(level, box, pump.relative(BloodPumpBlock.tankSide(facing)),
 					ModBlocks.BLOOD_TANK.defaultBlockState().setValue(BloodTankBlock.FACING, facing));
 		}
+
+		// дорога под кроной прорезает в ней арку (просвет как везде на дорогах)
+		if (generator.getBiomeSource() instanceof com.tarkrakov.tearsofink.world.InkLandsAccess access) {
+			var layout = access.tearsofink$layout(level.getLevel().getChunkSource().randomState().sampler());
+			if (layout != null) {
+				BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+				int top = Math.min(box.maxY(), level.getMaxBuildHeight() - 1);
+				for (int x = box.minX(); x <= box.maxX(); x++) {
+					for (int z = box.minZ(); z <= box.maxZ(); z++) {
+						if (layout.isRoad(x, z)) com.tarkrakov.tearsofink.world.FinalCleanupFeature.clearAboveRoad(level, m, x, z, top);
+					}
+				}
+			}
+		}
 	}
 
 	private static void set(WorldGenLevel level, BoundingBox box, BlockPos pos, BlockState state) {

@@ -4,5 +4,5 @@
   "biomes": "#tears-of-ink:has_ruin_temple",
   "step": "surface_structures",
   "spawn_overrides": {},
-  "terrain_adaptation": "none"
+  "terrain_adaptation": "beard_box"
 }

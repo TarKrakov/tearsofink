@@ -59,6 +59,24 @@ public final class DebugCommands {
 			var chunk = level.getChunk((tx >> 4) + cx, (tz >> 4) + cz);
 			if (temple != null && chunk.getStartForStructure(temple) != null && chunk.getStartForStructure(temple).isValid()) startFound = true;
 		}
+		// внутри храма не должно быть земли, под ним — пустоты
+		int inside = 0, holes = 0, footprint = 0;
+		for (int cx = -1; cx <= 1; cx++) for (int cz = -1; cz <= 1; cz++) {
+			var st = temple == null ? null : level.getChunk((tx >> 4) + cx, (tz >> 4) + cz).getStartForStructure(temple);
+			if (st == null || !st.isValid()) continue;
+			var bb = st.getBoundingBox();
+			BlockPos.MutableBlockPos q = new BlockPos.MutableBlockPos();
+			for (int x = bb.minX(); x <= bb.maxX(); x++) for (int z = bb.minZ(); z <= bb.maxZ(); z++) {
+				footprint++;
+				if (level.getBlockState(q.set(x, bb.minY() - 1, z)).isAir()) holes++;
+				for (int y = bb.minY() + 2; y <= bb.maxY(); y++) {
+					var id = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(level.getBlockState(q.set(x, y, z)).getBlock()).getPath();
+					if (id.contains("soil") || id.contains("asphodelite") || id.equals("dirt") || id.equals("stone") || id.contains("tuff")) inside++;
+				}
+			}
+			break;
+		}
+		say(src, "Старт: под храмом пустот " + holes + " из " + footprint + ", земли внутри " + inside);
 		int fountains = 0, ruin = 0, minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
 		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
 		for (int x = tx - 24; x <= tx + 24; x++) for (int z = tz - 24; z <= tz + 24; z++) for (int y = level.getMinBuildHeight(); y < level.getMaxBuildHeight(); y++) {
