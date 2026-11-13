@@ -61,7 +61,7 @@ public class FogBankParticle extends TextureSheetParticle {
 		this.zd *= 1.0;
 		float t = (float) this.age / this.lifetime;
 		float fade = t < 0.2f ? t / 0.2f : (t > 0.7f ? (1f - t) / 0.3f : 1f);
-		if (this.age % 5 == 0) nearLantern = LanternClarity.inBubble(this.x, this.y, this.z, 1);
+		if (!wall && this.age % 5 == 0) nearLantern = LanternClarity.inBubble(this.x, this.y, this.z, 1); // стену фонари не рассеивают
 		if (nearLantern) {
 			lanternFade -= LANTERN_DISSOLVE_PER_TICK;
 			if (lanternFade <= 0f) this.remove();

@@ -29,6 +29,8 @@ public final class InkFog {
 	public static final float FOG_END_CHANGE_PER_SECOND = 2.0f;
 	/** Видимость в самой густой мгле за краем Земель. */
 	public static final float EDGE_FOG_END = 2.0f;
+	/** 0 — внутри Земель, 1 — глубоко в стене тумана: там ясность от фонарей не действует. */
+	private static float edgeFactor = 0f;
 	private static final net.minecraft.resources.ResourceKey<Biome> VESTIBULE = net.minecraft.resources.ResourceKey.create(
 			net.minecraft.core.registries.Registries.BIOME, com.tarkrakov.tearsofink.TearsOfInk.id("vestibule"));
 	/** За сколько блоков ДО границы туман начинает сгущаться. */
@@ -74,12 +76,14 @@ public final class InkFog {
 			if (level.hasChunkAt(camera.getBlockPosition())) {
 				Float end = zoneFogEnd(level.getBiome(camera.getBlockPosition()));
 				if (end != null) fullEndTarget = end;
-				// за краем Земель туман сгущается до непроглядного (дальше — петля назад)
+				// за краем Земель туман сгущается до непроглядного (дальше — петля назад); фонари его не рассеивают
+				edgeFactor = 0f;
 				if (com.tarkrakov.tearsofink.world.ModDimensions.isLands(level)) {
 					double depth = com.tarkrakov.tearsofink.world.InkLandsLayout.edgeDepth(camera.getPosition().x, camera.getPosition().z);
 					if (depth < 0) {
 						float t = (float) Math.min(1.0, -depth / (com.tarkrakov.tearsofink.world.InkLandsBorder.LOOP_DEPTH * 0.8));
 						fullEndTarget = net.minecraft.util.Mth.lerp(t, fullEndTarget, EDGE_FOG_END);
+						edgeFactor = t;
 					}
 				}
 			}
@@ -113,7 +117,8 @@ public final class InkFog {
 
 	/** Дальность видимости для данной силы тумана: плавно от ванильной до нашей. */
 	public static float fogEnd(float vanillaEnd, float renderDistance) {
-		float full = Math.min(renderDistance, Math.max(fullEnd, clearEnd));
+		float clear = clearEnd * (1f - edgeFactor); // в стене тумана фонари не помогают
+		float full = Math.min(renderDistance, Math.max(fullEnd, clear));
 		if (vanillaEnd <= full) return vanillaEnd;
 		// Экспоненциальная интерполяция: туман на глаз сгущается равномерно.
 		return (float) (vanillaEnd * Math.pow(full / vanillaEnd, strength));
