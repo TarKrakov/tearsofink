@@ -494,13 +494,18 @@ public final class InkLandsLayout {
 	public int[] roadLanternPost(int road, int k) {
 		double t = (double) k * ROAD_LANTERN_SPACING;
 		if (t < ROAD_END_RADIUS + 10 || t > RADIUS * ROAD_START_FRACTION) return null;
-		double a = roadAngle(road, t);
+		double[] p = roadPoint(road, t);
+		double[] dir = roadDirection(road, t);
 		double side = (k % 2 == 0) ? 1 : -1;
-		double offset = ROAD_HALF_WIDTH + 0.6; // на обочине, не на проходе
-		int x = (int) Math.floor(center.getX() + Math.cos(a) * t - Math.sin(a) * offset * side);
-		int z = (int) Math.floor(center.getZ() + Math.sin(a) * t + Math.cos(a) * offset * side);
-		if (depthInside(x, z) < 0) return null;
-		return new int[]{x, z};
+		// на обочине, поперёк НАСТОЯЩЕГО направления дороги (на изгибах и обходах — тоже не на проходе)
+		for (double offset = ROAD_HALF_WIDTH + 0.6; offset <= ROAD_HALF_WIDTH + 2.6; offset += 0.5) {
+			int x = (int) Math.floor(p[0] - dir[1] * offset * side);
+			int z = (int) Math.floor(p[1] + dir[0] * offset * side);
+			if (depthInside(x, z) < 0) return null;
+			double[] hit = roadAt(x, z, ROAD_HALF_WIDTH + ROAD_SHOULDER);
+			if (hit == null || hit[2] > ROAD_HALF_WIDTH + 0.3) return new int[]{x, z};
+		}
+		return null;
 	}
 
 	/** Дорога рядом с точкой (полуширина + extra): {номер, расстояние от центра области вдоль дороги, до осевой} или null. */
