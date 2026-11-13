@@ -43,12 +43,15 @@ public class RuinPiece extends TemplateStructurePiece {
 	private final int tier;
 	/** Стартовый храм у места прибытия: сундуков больше и лут получше. */
 	private final boolean start;
+	/** Стоит в Бледнолесье (решается при выборе места — в postProcess соседние чанки могут быть ещё не готовы). */
+	private final boolean pale;
 
-	public RuinPiece(StructureTemplateManager manager, ResourceLocation template, BlockPos center, Rotation rotation, int tier, boolean start) {
+	public RuinPiece(StructureTemplateManager manager, ResourceLocation template, BlockPos center, Rotation rotation, int tier, boolean start, boolean pale) {
 		super(Ruins.PIECE_TYPE, 0, manager, template, template.toString(), settings(rotation, manager, template), corner(manager, template, center, rotation));
 		this.rotation = rotation;
 		this.tier = tier;
 		this.start = start;
+		this.pale = pale;
 	}
 
 	public RuinPiece(StructureTemplateManager manager, CompoundTag tag) {
@@ -56,6 +59,7 @@ public class RuinPiece extends TemplateStructurePiece {
 		this.rotation = Rotation.valueOf(tag.getString("Rot"));
 		this.tier = tag.getInt("Tier");
 		this.start = tag.getBoolean("Start");
+		this.pale = tag.getBoolean("Pale");
 	}
 
 	private static StructurePlaceSettings settings(Rotation rotation, StructureTemplateManager manager, ResourceLocation id) {
@@ -77,6 +81,7 @@ public class RuinPiece extends TemplateStructurePiece {
 		tag.putString("Rot", rotation.name());
 		tag.putInt("Tier", tier);
 		tag.putBoolean("Start", start);
+		tag.putBoolean("Pale", pale);
 	}
 
 	@Override
@@ -140,7 +145,7 @@ public class RuinPiece extends TemplateStructurePiece {
 		}
 
 		// --- ряска по стенам (только Бледнолесье)
-		if (level.getBiome(templatePosition).is(ModBiomes.PALE_FOREST)) {
+		if (pale) {
 			List<BlockPos> hang = new ArrayList<>();
 			for (int x = Math.max(bb.minX(), box.minX()); x <= Math.min(bb.maxX(), box.maxX()); x++) {
 				for (int z = Math.max(bb.minZ(), box.minZ()); z <= Math.min(bb.maxZ(), box.maxZ()); z++) {
@@ -184,9 +189,9 @@ public class RuinPiece extends TemplateStructurePiece {
 		return id.getNamespace().equals("tears-of-ink") && id.getPath().contains("ruin");
 	}
 
-	private static BlockState soilAt(WorldGenLevel level, BlockPos pos) {
-		var biome = level.getBiome(pos);
-		Block b = biome.is(ModBiomes.INKWOOD) ? ModBlocks.TAR_SOIL : ModBlocks.ASHEN_SOIL;
+	/** Почва под руиной: руины бывают только в Бледнолесье и Чернолесье. */
+	private BlockState soilAt(WorldGenLevel level, BlockPos pos) {
+		Block b = pale ? ModBlocks.ASHEN_SOIL : ModBlocks.TAR_SOIL;
 		return b.defaultBlockState();
 	}
 }

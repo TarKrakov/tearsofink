@@ -90,8 +90,9 @@ public class RuinStructure extends Structure {
 		ResourceLocation chosen = template;
 		int tier = Ruins.tier(layout, x, z);
 		boolean start = kind.equals("temple") && Ruins.isStartTemple(layout, x, z);
+		boolean pale = layout.pick(x, z, null) == com.tarkrakov.tearsofink.world.ModBiomes.PALE_FOREST;
 		return Optional.of(new GenerationStub(center, builder ->
-				builder.addPiece(new RuinPiece(context.structureTemplateManager(), chosen, center, rotation, tier, start))));
+				builder.addPiece(new RuinPiece(context.structureTemplateManager(), chosen, center, rotation, tier, start, pale))));
 	}
 
 	private static ResourceLocation pick(RandomSource random) {
