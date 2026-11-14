@@ -31,7 +31,12 @@ public final class ModItems {
 
 	// ===== Материалы трав =====
 	public static final Item BLOODROOT_CLOT = register("bloodroot_clot", new Item(new Item.Properties()));
-	public static final Item FLESHBERRY_PULP = register("fleshberry_pulp", new Item(new Item.Properties()));
+	/** Мякоть Плотеягоды — съедобна (чуть слабее сырого мяса гусеницы), жарится в Печёную плотеягоду. */
+	public static final Item FLESHBERRY_PULP = register("fleshberry_pulp", new Item(new Item.Properties()
+			.food(new FoodProperties.Builder().nutrition(2).saturationModifier(0.1f).build())));
+	/** Печёная плотеягода (чуть слабее жареного мяса гусеницы). */
+	public static final Item ROASTED_FLESHBERRY = register("roasted_fleshberry", new Item(new Item.Properties()
+			.food(new FoodProperties.Builder().nutrition(5).saturationModifier(0.5f).build())));
 	public static final Item INKROOT_ROOT = register("inkroot_root", new Item(new Item.Properties()));
 	public static final Item TARWEED_EXTRACT = register("tarweed_extract", new Item(new Item.Properties()));
 	public static final Item WATERBLOOM_JUICE = register("waterbloom_juice", new Item(new Item.Properties()));

@@ -312,5 +312,6 @@
   "trader.tears-of-ink.nothing_left": "Мне больше нечего у тебя взять.",
   "trader.tears-of-ink.no_contracts": "У тебя нет исполненных контрактов.",
   "trader.tears-of-ink.contracts_taken": "Контрактов принято: %s. Пигмента: %s.",
-  "trader.tears-of-ink.farewell": "«Фонтан помнит. И я буду помнить.»"
+  "trader.tears-of-ink.farewell": "«Фонтан помнит. И я буду помнить.»",
+  "item.tears-of-ink.roasted_fleshberry": "Печёная плотеягода"
 }

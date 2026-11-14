@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:campfire_cooking",
+  "category": "food",
+  "ingredient": {
+    "item": "tears-of-ink:fleshberry_pulp"
+  },
+  "result": {
+    "id": "tears-of-ink:roasted_fleshberry"
+  },
+  "experience": 0.25,
+  "cookingtime": 600
+}

@@ -49,6 +49,7 @@ public final class ModCreativeTab {
 						output.accept(ModItems.BLOODROOT_CLOT);
 						output.accept(ModBlocks.FLESHBERRY);
 						output.accept(ModItems.FLESHBERRY_PULP);
+						output.accept(ModItems.ROASTED_FLESHBERRY);
 						output.accept(ModBlocks.INKROOT);
 						output.accept(ModItems.INKROOT_ROOT);
 						output.accept(ModBlocks.TARWEED);
