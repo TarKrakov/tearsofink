@@ -1,6 +1,6 @@
 {
 	"entity": "minecraft:spider",
 	"weight": 8,
-	"hp": 2.7,
-	"damage": 2.9
+	"hp": 3.0,
+	"damage": 3.2
 }
