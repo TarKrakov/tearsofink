@@ -19,6 +19,15 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
  */
 @Mixin(NaturalSpawner.class)
 public abstract class NaturalSpawnerMixin {
+	/** В храмах (мирная зона) не появляется никто. */
+	@Inject(method = "isValidPositionForMob", at = @At("HEAD"), cancellable = true)
+	private static void tearsofink$noSpawnInTemples(ServerLevel level, Mob mob, double distance,
+													CallbackInfoReturnable<Boolean> cir) {
+		if (com.tarkrakov.tearsofink.world.sanctuary.Sanctuary.inside(level, mob.getX(), mob.getZ())) {
+			cir.setReturnValue(false);
+		}
+	}
+
 	@Inject(method = "isValidPositionForMob", at = @At("HEAD"), cancellable = true)
 	private static void tearsofink$noMonstersUnderHerald(ServerLevel level, Mob mob, double distance,
 														 CallbackInfoReturnable<Boolean> cir) {

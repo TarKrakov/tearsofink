@@ -115,6 +115,7 @@ public final class SquadPatrols {
 			if (at == null || Math.hypot(at.getX() - px, at.getZ() - pz) < SpearmanTuning.PATROL_SPAWN_MIN - 4) continue;
 			if (!level.getBiome(at).is(ModBiomes.PALE_FOREST) || Lanterns.isSafe(level, at)) continue;
 			if (com.tarkrakov.tearsofink.world.ruins.Ruins.nearStart(layout, at.getX(), at.getZ())) continue; // у места прибытия тихо
+			if (com.tarkrakov.tearsofink.world.sanctuary.Sanctuary.near(layout, at.getX(), at.getZ(), 16)) continue; // у храмов тихо
 
 			String squad = pickSquad(random, tier);
 			UUID squadId = UUID.randomUUID();

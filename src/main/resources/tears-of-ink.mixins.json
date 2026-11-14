@@ -12,7 +12,8 @@
 		"PlayerDifficultyMixin",
 		"ServerPlayerRespawnMixin",
 		"MobAccessor",
-		"LivingEntityAttackAccessor"
+		"LivingEntityAttackAccessor",
+		"SanctuaryAttackMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
