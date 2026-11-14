@@ -36,6 +36,7 @@ public final class CombatClient {
 		if (now - lastRequest < 120) return;
 		lastRequest = now;
 		equipping = false;
+		player.resetAttackStrengthTicker(); // шкала под прицелом — как у обычного удара (сервер сбрасывает свою)
 		ClientPlayNetworking.send(new Combat.Swing());
 	}
 
