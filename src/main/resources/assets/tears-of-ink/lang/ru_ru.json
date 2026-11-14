@@ -352,5 +352,6 @@
   "hunt.tears-of-ink.remote_prey": "Где-то в тумане цель Охоты растерзала охотника (%s).",
   "hunt.tears-of-ink.frenzy": "%s обращает клинок против живых!",
   "hunt.tears-of-ink.frenzy_end": "Обезумевший охотник повержен.",
-  "trader.tears-of-ink.contract_weapon": "Этот охотник оставил кое-что для тебя: %s."
+  "trader.tears-of-ink.contract_weapon": "Этот охотник оставил кое-что для тебя: %s.",
+  "hunt.tears-of-ink.marker": "%s м"
 }

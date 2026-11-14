@@ -334,5 +334,6 @@
   "hunt.tears-of-ink.remote_prey": "Somewhere in the fog, the prey tore apart the hunter (%s).",
   "hunt.tears-of-ink.frenzy": "%s turns the blade on the living!",
   "hunt.tears-of-ink.frenzy_end": "The maddened hunter has fallen.",
-  "trader.tears-of-ink.contract_weapon": "This hunter left something for you: %s."
+  "trader.tears-of-ink.contract_weapon": "This hunter left something for you: %s.",
+  "hunt.tears-of-ink.marker": "%s m"
 }

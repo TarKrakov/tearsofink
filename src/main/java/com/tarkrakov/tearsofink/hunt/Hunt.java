@@ -68,12 +68,12 @@ public final class Hunt {
 	private static final String C_LINE = "HunterLine", C_TIER = "HunterTier", C_KIND = "HunterKind";
 
 	/** Луч Охоты и затемнение цели у клиентов. on=false — Охоты нет. */
-	public record Beam(boolean on, int entity, double x, double y, double z, int color) implements CustomPacketPayload {
+	public record Beam(boolean on, int entity, double x, double y, double z, int color, boolean engaged) implements CustomPacketPayload {
 		public static final Type<Beam> TYPE = new Type<>(TearsOfInk.id("hunt_beam"));
 		public static final StreamCodec<RegistryFriendlyByteBuf, Beam> CODEC = StreamCodec.composite(
 				ByteBufCodecs.BOOL, Beam::on, ByteBufCodecs.VAR_INT, Beam::entity,
 				ByteBufCodecs.DOUBLE, Beam::x, ByteBufCodecs.DOUBLE, Beam::y, ByteBufCodecs.DOUBLE, Beam::z,
-				ByteBufCodecs.INT, Beam::color, Beam::new);
+				ByteBufCodecs.INT, Beam::color, ByteBufCodecs.BOOL, Beam::engaged, Beam::new);
 
 		@Override
 		public Type<? extends CustomPacketPayload> type() {
@@ -328,7 +328,7 @@ public final class Hunt {
 			hunter.setFoe(prey, a.engaged);
 		}
 		if (now % 10 == 0) {
-			Beam beam = new Beam(true, prey.getId(), a.x, a.y, a.z, a.type.beamColor);
+			Beam beam = new Beam(true, prey.getId(), a.x, a.y, a.z, a.type.beamColor, a.engaged);
 			for (ServerPlayer p : lands.players()) ServerPlayNetworking.send(p, beam);
 		}
 		if (now % 4 == 0) lands.sendParticles(ParticleTypes.SQUID_INK, a.x, a.y + prey.getBbHeight() * 0.6, a.z, 2, 0.3, 0.4, 0.3, 0.01);
@@ -380,7 +380,7 @@ public final class Hunt {
 		if (hunter != null && a.type == HunterType.INK) { // Чернильный, убив цель, бросается на живых
 			a.frenzyUntil = lands.getServer().getTickCount() + HuntTuning.INK_FRENZY;
 			announce(lands, Component.translatable("hunt.tears-of-ink.frenzy", name).withStyle(ChatFormatting.DARK_PURPLE));
-			for (ServerPlayer p : lands.players()) ServerPlayNetworking.send(p, new Beam(false, -1, 0, 0, 0, 0));
+			for (ServerPlayer p : lands.players()) ServerPlayNetworking.send(p, new Beam(false, -1, 0, 0, 0, 0, false));
 			return;
 		}
 		finish(lands, hunter, null);
@@ -402,7 +402,7 @@ public final class Hunt {
 		if (prey != null && prey.isAlive()) prey.discard();
 		active = null;
 		nextStart = lands.getServer().getTickCount() + HuntTuning.INTERVAL;
-		for (ServerPlayer p : lands.players()) ServerPlayNetworking.send(p, new Beam(false, -1, 0, 0, 0, 0));
+		for (ServerPlayer p : lands.players()) ServerPlayNetworking.send(p, new Beam(false, -1, 0, 0, 0, 0, false));
 	}
 
 	/** Растворяется в чернилах. */
