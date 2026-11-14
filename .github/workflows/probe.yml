@@ -12,7 +12,7 @@ jobs:
       - run: chmod +x gradlew && ./gradlew --no-daemon build -x test
       - name: javap targets
         run: |
-          J=$(find ~/.gradle/caches/fabric-loom .gradle/loom-cache -name "minecraft-*merged*.jar" -o -name "minecraft-client*.jar" 2>/dev/null | grep -i named | head -3); echo "$J"
+          J=$(find ~/.gradle/caches .gradle -name "minecraft-clientOnly-*loom.mappings*.jar" 2>/dev/null | head -1); echo "JAR $J"
           for j in $J; do
             javap -p -c -classpath "$j" net.minecraft.client.renderer.entity.ItemRenderer 2>/dev/null | grep -n "ItemTransform.apply\|public void render(" | head
             javap -p -classpath "$j" net.minecraft.client.renderer.ItemInHandRenderer 2>/dev/null | grep renderArmWithItem
