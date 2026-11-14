@@ -323,10 +323,10 @@ public final class WeaponAbilities {
 			Vec3 center = player.position().add(dir.scale(REACH));
 			AABB area = new AABB(center.x - 1.5, center.y - 0.5, center.z - 1.5, center.x + 1.5, center.y + 2.0, center.z + 1.5);
 			for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, area, t -> t != player && t.isAlive())) {
-				target.hurt(player.damageSources().playerAttack(player), DAMAGE);
+				target.hurt(player.damageSources().playerAttack(player), DAMAGE * mult);
 				target.knockback(KNOCKBACK, -dir.x, -dir.z);
 			}
-			player.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
+			player.swing(leftHand ? net.minecraft.world.InteractionHand.OFF_HAND : net.minecraft.world.InteractionHand.MAIN_HAND, true);
 			level.sendParticles(ParticleTypes.SQUID_INK, center.x, center.y + 0.3, center.z, 60, 1.2, 0.2, 1.2, 0.08);
 			level.sendParticles(ParticleTypes.SWEEP_ATTACK, center.x, center.y + 0.8, center.z, 3, 0.8, 0.1, 0.8, 0.0);
 			level.playSound(null, center.x, center.y, center.z, SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 1.2f, 0.5f);

@@ -186,7 +186,8 @@ public final class Combat {
 		s.next = 0;
 		s.hitAt = -1;
 		s.queued = false;
-		broadcast(p, a, combo.abilityAnim(), combo.abilityTicks(), -1f, 1f);
+		boolean left = weapon == p.getOffhandItem() && weapon != p.getMainHandItem();
+		broadcast(p, a, (left ? "off:" : "") + combo.abilityAnim(), combo.abilityTicks(), -1f, 1f); // абилка левой руки — движение левой
 	}
 
 	/** Гильотина: очередной удар одной рукой (offhand — левой, т. е. второй рукой). */
