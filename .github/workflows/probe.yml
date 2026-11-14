@@ -18,3 +18,5 @@ jobs:
             javap -p -classpath "$j" net.minecraft.client.renderer.ItemInHandRenderer 2>/dev/null | grep renderArmWithItem
             javap -p -classpath "$j" net.minecraft.client.Minecraft 2>/dev/null | grep "startAttack\|continueAttack\|LocalPlayer player\|HitResult hitResult"
           done
+            javap -p -classpath "$j" net.minecraft.client.model.HumanoidModel 2>/dev/null | grep "setupAnim\|ModelPart\|attackTime\|setupAttackAnimation"
+            javap -p -classpath "$j" net.minecraft.client.model.PlayerModel 2>/dev/null | grep "setupAnim"
