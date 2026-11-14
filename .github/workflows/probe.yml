@@ -22,10 +22,15 @@ jobs:
             javap -p -classpath "$j" net.minecraft.client.model.PlayerModel 2>/dev/null | grep "setupAnim"
       - name: javap common
         run: |
-          for j in $(find ~/.gradle/caches .gradle -name "minecraft-*loom.mappings*.jar" 2>/dev/null | grep -v clientOnly); do
+          find ~/.gradle/caches .gradle -name "minecraft-*.jar" 2>/dev/null | grep -i mappings | head
+          for j in $(find ~/.gradle/caches .gradle -name "minecraft-*loom.mappings*.jar" 2>/dev/null); do
             echo "JAR $j"
-            javap -p -classpath "$j" net.minecraft.world.entity.LivingEntity 2>/dev/null | grep "canAttack"
-            javap -p -classpath "$j" net.minecraft.world.entity.OwnableEntity 2>/dev/null | grep "getOwnerUUID"
-            javap -p -classpath "$j" net.minecraft.world.level.Level 2>/dev/null | grep "hasChunk"
-            javap -p -classpath "$j" net.minecraft.world.level.NaturalSpawner 2>/dev/null | grep "isValidPositionForMob"
+            javap -p -classpath "$j" net.minecraft.world.entity.LivingEntity 2>/dev/null | grep "canAttack" || true
+            javap -p -classpath "$j" net.minecraft.world.entity.OwnableEntity 2>/dev/null | grep "getOwnerUUID" || true
+            javap -p -classpath "$j" net.minecraft.world.level.NaturalSpawner 2>/dev/null | grep "isValidPositionForMob" || true
+            javap -p -classpath "$j" net.minecraft.client.renderer.blockentity.BeaconRenderer 2>/dev/null | grep "renderBeaconBeam" || true
+            javap -p -c -classpath "$j" net.minecraft.client.renderer.entity.LivingEntityRenderer 2>/dev/null | grep "public void render(\|renderToBuffer" || true
+            javap -p -classpath "$j" net.minecraft.client.model.PlayerModel 2>/dev/null | grep "createMesh\|PlayerModel(" || true
+            javap -p -classpath "$j" net.minecraft.client.renderer.entity.HumanoidMobRenderer 2>/dev/null | grep "HumanoidMobRenderer(" || true
           done
+          find ~/.gradle/caches -name "fabric-entity-events*.jar" | head -1 | xargs -I{} sh -c 'unzip -l {} | grep -i "ServerLivingEntityEvents"' || true
