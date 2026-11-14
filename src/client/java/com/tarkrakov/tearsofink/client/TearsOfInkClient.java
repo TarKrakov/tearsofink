@@ -101,6 +101,9 @@ public class TearsOfInkClient implements ClientModInitializer {
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.trader.SoulTraderModel.LAYER,
 				com.tarkrakov.tearsofink.client.trader.SoulTraderModel::createBodyLayer);
 		EntityRendererRegistry.register(ModMobs.SOUL_TRADER, com.tarkrakov.tearsofink.client.trader.SoulTraderRenderer::new);
+		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.hunt.HunterModel.LAYER,
+				com.tarkrakov.tearsofink.client.hunt.HunterModel::createBodyLayer);
+		EntityRendererRegistry.register(ModMobs.HUNTER, com.tarkrakov.tearsofink.client.hunt.HunterRenderer::new);
 		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.prologue.DiaryEntries.Sync.TYPE, (payload, context) ->
 				context.client().execute(() -> com.tarkrakov.tearsofink.client.prologue.DiaryScreen.entries = new java.util.ArrayList<>(payload.entries())));
 
@@ -130,6 +133,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.VESTIBULE_GATE, RenderType.translucent());
 		ShieldIcons.init();
 		com.tarkrakov.tearsofink.client.combat.CombatClient.init();
+		com.tarkrakov.tearsofink.client.hunt.HuntClient.init();
 		for (Item shield : new Item[]{ModItems.RAM_SHIELD, ModItems.RADIANT_SHIELD, ModItems.MERCY_SHIELD, ModItems.REPEL_SHIELD}) {
 			ItemProperties.register(shield, ResourceLocation.withDefaultNamespace("blocking"),
 					(stack, level, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1f : 0f);

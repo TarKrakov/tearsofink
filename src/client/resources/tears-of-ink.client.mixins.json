@@ -11,7 +11,8 @@
 		"MinecraftAttackMixin",
 		"ItemInHandRendererInvoker",
 		"ItemInHandRendererMixin",
-		"HumanoidModelMixin"
+		"HumanoidModelMixin",
+		"LivingEntityRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

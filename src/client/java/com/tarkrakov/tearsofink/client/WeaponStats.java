@@ -40,6 +40,7 @@ public final class WeaponStats {
 			out.add(Component.translatable("stats.tears-of-ink.speed", fmt(4 + speed)).withStyle(ChatFormatting.WHITE));
 		}
 		Skill skill = weapon.ability();
+		if (skill == null) return out;
 		if (skill.inkCost() > 0) out.add(Component.translatable("stats.tears-of-ink.cost_ink", skill.inkCost()).withStyle(ChatFormatting.DARK_PURPLE));
 		if (skill.soulCost() > 0) out.add(Component.translatable("stats.tears-of-ink.cost_soul", skill.soulCost()).withStyle(ChatFormatting.AQUA));
 		if (skill.cooldownTicks() > 0) out.add(Component.translatable("stats.tears-of-ink.cooldown", fmt(skill.cooldownTicks() / 20.0)).withStyle(ChatFormatting.GRAY));

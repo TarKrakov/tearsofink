@@ -47,6 +47,11 @@ public final class ModMobs {
 			BuiltInRegistries.ENTITY_TYPE, TearsOfInk.id("soul_trader"),
 			EntityType.Builder.of(com.tarkrakov.tearsofink.trader.SoulTraderEntity::new, MobCategory.MISC)
 					.sized(0.7f, 2.3f).clientTrackingRange(10).build("soul_trader"));
+	/** Охотник (Охота). */
+	public static final EntityType<com.tarkrakov.tearsofink.hunt.HunterEntity> HUNTER = Registry.register(
+			BuiltInRegistries.ENTITY_TYPE, TearsOfInk.id("hunter"),
+			EntityType.Builder.of(com.tarkrakov.tearsofink.hunt.HunterEntity::new, MobCategory.MISC)
+					.sized(0.6f, 1.8f).clientTrackingRange(10).build("hunter"));
 	/** Арбалетный болт. */
 	public static final EntityType<com.tarkrakov.tearsofink.entity.patrol.PaleBoltEntity> PALE_BOLT = Registry.register(
 			BuiltInRegistries.ENTITY_TYPE, TearsOfInk.id("pale_bolt"),
@@ -62,6 +67,7 @@ public final class ModMobs {
 		FabricDefaultAttributeRegistry.register(PALE_CROSSBOWMAN, com.tarkrakov.tearsofink.entity.patrol.PaleCrossbowmanEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(GUIDE, com.tarkrakov.tearsofink.prologue.GuideEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(SOUL_TRADER, com.tarkrakov.tearsofink.trader.SoulTraderEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(HUNTER, com.tarkrakov.tearsofink.hunt.HunterEntity.createAttributes());
 		com.tarkrakov.tearsofink.entity.patrol.SquadPatrols.init();
 		SpawnPlacements.register(CATERPILLAR, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
 				(type, level, reason, pos, random) -> {

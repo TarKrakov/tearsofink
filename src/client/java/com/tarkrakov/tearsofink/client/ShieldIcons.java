@@ -33,6 +33,9 @@ public final class ShieldIcons {
 	public static void init() {
 		ModelLoadingPlugin.register(ctx -> {
 			for (String name : ICONS.values()) ctx.addModels(icon(name));
+			for (String kind : new String[]{"hunter_greatsword", "hunter_saber"}) {
+				for (var line : com.tarkrakov.tearsofink.hunt.HunterType.values()) ctx.addModels(icon(kind + "_" + line.id));
+			}
 			ctx.addModels(icon("radiant_shield_glow"));
 		});
 	}
@@ -40,6 +43,10 @@ public final class ShieldIcons {
 	/** Плоская иконка для окна или null, если предмет — не наш щит. */
 	public static BakedModel iconFor(ItemStack stack) {
 		String name = ICONS.get(stack.getItem());
+		if (stack.getItem() instanceof com.tarkrakov.tearsofink.hunt.HunterWeaponItem) { // оружие охотников — рисунок своей линии
+			name = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath()
+					+ "_" + com.tarkrakov.tearsofink.hunt.HunterWeaponItem.line(stack).id;
+		}
 		if (name == null) return null;
 		Minecraft mc = Minecraft.getInstance();
 		if (stack.is(ModItems.RADIANT_SHIELD) && mc.player != null && mc.player.hasEffect(ModEffects.RADIANCE)) name = "radiant_shield_glow";

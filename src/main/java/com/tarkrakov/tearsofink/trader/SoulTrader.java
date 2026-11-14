@@ -199,7 +199,23 @@ public final class SoulTrader {
 			sendOpen(p, trader);
 			return;
 		}
+		// контракт помнит охотника той Охоты — шанс получить его оружие
+		java.util.List<ItemStack> weapons = new java.util.ArrayList<>();
+		java.util.List<ItemStack> all = new java.util.ArrayList<>(p.getInventory().items);
+		all.addAll(p.getInventory().offhand);
+		for (ItemStack s : all) {
+			if (!s.is(ModItems.FULFILLED_CONTRACT)) continue;
+			for (int i = 0; i < s.getCount(); i++) {
+				if (p.getRandom().nextFloat() >= com.tarkrakov.tearsofink.hunt.HuntTuning.CONTRACT_WEAPON_CHANCE) continue;
+				ItemStack w = com.tarkrakov.tearsofink.hunt.Hunt.weaponOf(s);
+				if (!w.isEmpty()) weapons.add(w);
+			}
+		}
 		p.getInventory().clearOrCountMatchingItems(s -> s.is(ModItems.FULFILLED_CONTRACT), -1, p.inventoryMenu.getCraftSlots());
+		for (ItemStack w : weapons) {
+			say(p, "contract_weapon", w.getHoverName());
+			if (!p.getInventory().add(w)) p.drop(w, false);
+		}
 		ItemStack reward = new ItemStack(ModItems.PIGMENT, n * PIGMENT_PER_CONTRACT);
 		if (!p.getInventory().add(reward)) p.drop(reward, false);
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1.0f, 0.6f);

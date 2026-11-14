@@ -14,6 +14,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class HumanoidModelMixin {
 	@Inject(method = "setupAnim(Lnet/minecraft/world/entity/LivingEntity;FFFFF)V", at = @At("TAIL"))
 	private void tearsofink$bladeMotion(LivingEntity entity, float limbSwing, float limbAmount, float age, float yaw, float pitch, CallbackInfo ci) {
-		if (entity instanceof Player) ThirdPerson.apply((HumanoidModel<?>) (Object) this, entity);
+		if (entity instanceof Player || entity instanceof com.tarkrakov.tearsofink.hunt.HunterEntity) ThirdPerson.apply((HumanoidModel<?>) (Object) this, entity);
 	}
 }

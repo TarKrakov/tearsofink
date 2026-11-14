@@ -35,7 +35,7 @@ public final class CombatClient {
 			boolean offTag = anim.startsWith("off:"); // парные приёмы: движение второй руки
 			if (offTag) anim = anim.substring(4);
 			// третье лицо — у всех (и у себя в F5)
-			if (level.getEntity(payload.entity()) instanceof net.minecraft.world.entity.player.Player who && !anim.isEmpty()) {
+			if (level.getEntity(payload.entity()) instanceof net.minecraft.world.entity.LivingEntity who && !anim.isEmpty()) {
 				var side = offTag ? who.getMainArm().getOpposite() : who.getMainArm();
 				ThirdPerson.play(who.getId(), side, a, anim, payload.tempo());
 			}

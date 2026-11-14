@@ -46,6 +46,7 @@ public class TearsOfInk implements ModInitializer {
 		com.tarkrakov.tearsofink.entity.faction.VanillaAggro.init();
 		com.tarkrakov.tearsofink.world.ruins.Ruins.init();
 		com.tarkrakov.tearsofink.world.sanctuary.Sanctuary.init();
+		com.tarkrakov.tearsofink.hunt.Hunt.init();
 		com.tarkrakov.tearsofink.world.AwayFromHeraldFilter.init();
 		ModBlocks.init();
 		ModBlockEntities.init();

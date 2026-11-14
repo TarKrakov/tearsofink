@@ -1,0 +1,17 @@
+{
+	"parent": "tears-of-ink:item/hunter_saber_spire",
+	"overrides": [
+		{
+			"predicate": {
+				"custom_model_data": 2
+			},
+			"model": "tears-of-ink:item/hunter_saber_blood"
+		},
+		{
+			"predicate": {
+				"custom_model_data": 3
+			},
+			"model": "tears-of-ink:item/hunter_saber_ink"
+		}
+	]
+}

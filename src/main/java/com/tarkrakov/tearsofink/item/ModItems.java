@@ -88,6 +88,12 @@ public final class ModItems {
 	public static final Item CLEAVE_GREATSWORD = register("cleave_greatsword",
 			new InkGreatswordItem(() -> WeaponAbilities.CLEAVE, new Item.Properties()));
 
+	/** Оружие охотников: линия и ступень — в самом предмете (HunterWeaponItem.make). */
+	public static final Item HUNTER_GREATSWORD = register("hunter_greatsword",
+			new com.tarkrakov.tearsofink.hunt.HunterWeaponItem(new Item.Properties(), true));
+	public static final Item HUNTER_SABER = register("hunter_saber",
+			new com.tarkrakov.tearsofink.hunt.HunterWeaponItem(new Item.Properties(), false));
+
 	// ===== Добыча с фауны =====
 	/** Шёлковая нить (бледные гусеницы) — работает в рецептах вместо ванильной нити. */
 	public static final Item SILK_THREAD = register("silk_thread", new Item(new Item.Properties()));

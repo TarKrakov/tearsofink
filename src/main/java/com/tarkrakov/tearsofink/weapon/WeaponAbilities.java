@@ -72,7 +72,7 @@ public final class WeaponAbilities {
 	private static void use(ServerPlayer player, SkillPayloads.UseWeapon payload) {
 		if (!player.isAlive() || player.isSpectator()) return;
 		ItemStack stack = payload.offhand() ? player.getOffhandItem() : player.getMainHandItem();
-		if (!(stack.getItem() instanceof AbilityWeapon weapon)) return;
+		if (!(stack.getItem() instanceof AbilityWeapon weapon) || weapon.ability() == null) return;
 		// двуручник (Палачи) занимает обе руки: щит в левой молчит
 		if (payload.offhand() && InkGreatswordItem.twoHanded(player.getMainHandItem())) return;
 		// аура Милосердия гасится повторным нажатием — бесплатно и без проверок

@@ -41,6 +41,34 @@ public final class ModCommands {
 				dispatcher.register(Commands.literal("tearsofink")
 						.requires(source -> source.hasPermission(2))
 						.then(Commands.literal("where").executes(ModCommands::where))
+						.then(Commands.literal("hunt")
+								.then(Commands.literal("start").executes(ctx -> {
+									var lands = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());
+									var p = ctx.getSource().getPlayer();
+									if (lands == null || p == null || p.level() != lands) {
+										ctx.getSource().sendFailure(Component.literal("Охота начинается только в Землях, рядом с вами."));
+										return 0;
+									}
+									if (com.tarkrakov.tearsofink.hunt.Hunt.running()) {
+										ctx.getSource().sendFailure(Component.literal("Охота уже идёт (/tearsofink hunt stop)."));
+										return 0;
+									}
+									boolean ok = com.tarkrakov.tearsofink.hunt.Hunt.start(lands, p);
+									if (!ok) ctx.getSource().sendFailure(Component.literal("Не нашлось места для цели — отойдите от храма или воды."));
+									return ok ? 1 : 0;
+								}))
+								.then(Commands.literal("stop").executes(ctx -> {
+									var lands = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());
+									if (lands != null) com.tarkrakov.tearsofink.hunt.Hunt.stop(lands);
+									ctx.getSource().sendSuccess(() -> Component.literal("Охота остановлена. Следующая — через 15 минут."), false);
+									return 1;
+								}))
+								.then(Commands.literal("next").executes(ctx -> {
+									long t = com.tarkrakov.tearsofink.hunt.Hunt.ticksUntilNext(ctx.getSource().getServer());
+									ctx.getSource().sendSuccess(() -> Component.literal(com.tarkrakov.tearsofink.hunt.Hunt.running()
+											? "Охота идёт сейчас." : "Следующая Охота примерно через " + (t / 20 / 60) + " мин " + (t / 20 % 60) + " с."), false);
+									return 1;
+								})))
 						.then(Commands.literal("temples").executes(ctx -> {
 							var lands = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());
 							InkLandsLayout layout = lands == null ? null : InkLandsLayout.of(lands);

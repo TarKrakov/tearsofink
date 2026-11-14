@@ -1,0 +1,25 @@
+{
+	"type": "minecraft:gift",
+	"pools": [
+		{
+			"rolls": 1,
+			"entries": [
+				{
+					"type": "minecraft:item",
+					"name": "tears-of-ink:pigment",
+					"functions": [{"function": "minecraft:set_count", "count": {"min": 2, "max": 4}}]
+				}
+			]
+		},
+		{
+			"rolls": 1,
+			"entries": [
+				{"type": "minecraft:item", "name": "tears-of-ink:asphoda", "weight": 4,
+					"functions": [{"function": "minecraft:set_count", "count": {"min": 2, "max": 5}}]},
+				{"type": "minecraft:item", "name": "tears-of-ink:ink", "weight": 4,
+					"functions": [{"function": "minecraft:set_count", "count": {"min": 2, "max": 4}}]},
+				{"type": "minecraft:empty", "weight": 2}
+			]
+		}
+	]
+}

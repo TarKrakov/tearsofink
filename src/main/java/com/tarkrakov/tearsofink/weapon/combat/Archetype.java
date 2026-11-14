@@ -30,7 +30,9 @@ public enum Archetype {
 		if (items == null) {
 			items = Map.of(
 					ModItems.CLEAVE_GREATSWORD, EXECUTIONER,
-					ModItems.WAVE_GREATSWORD, SCIMITAR);
+					ModItems.WAVE_GREATSWORD, SCIMITAR,
+					ModItems.HUNTER_GREATSWORD, EXECUTIONER,
+					ModItems.HUNTER_SABER, SCIMITAR);
 		}
 		return items;
 	}

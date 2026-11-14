@@ -1,0 +1,17 @@
+{
+	"parent": "tears-of-ink:item/hunter_greatsword_spire",
+	"overrides": [
+		{
+			"predicate": {
+				"custom_model_data": 2
+			},
+			"model": "tears-of-ink:item/hunter_greatsword_blood"
+		},
+		{
+			"predicate": {
+				"custom_model_data": 3
+			},
+			"model": "tears-of-ink:item/hunter_greatsword_ink"
+		}
+	]
+}
