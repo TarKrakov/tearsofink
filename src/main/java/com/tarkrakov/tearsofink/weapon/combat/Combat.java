@@ -75,6 +75,8 @@ public final class Combat {
 		float speed = 1f, carry; // ускоренное заполнение шкалы
 		boolean queued;      // нажал чуть раньше — удар запомнен
 		long queuedAt;
+		boolean dual;        // идёт парная связка (клинки в обеих руках)
+		int window = 30;     // окно «чуть позже» после последнего удара
 	}
 
 	private record Pending(long at, Archetype archetype, Combos.Step step) {}
@@ -135,6 +137,12 @@ public final class Combat {
 
 	private static void start(ServerPlayer p, State s, Archetype a, Combos.Combo combo, float strength, long now) {
 		s.queued = false;
+		boolean dual = !combo.dualSteps().isEmpty() && Archetype.of(p.getOffhandItem()) == a;
+		java.util.List<Combos.Step> steps = dual ? combo.dualSteps() : combo.steps();
+		if (s.dual != dual) {
+			s.dual = dual;
+			s.next = 0;
+		}
 		int index;
 		float scale = 1f;
 		if (strength < combo.minStrength()) {
@@ -143,11 +151,12 @@ public final class Combat {
 			scale = strength * strength;
 			s.next = 0;
 		} else {
-			if (now - s.lastEnd > combo.resetTicks() || s.next >= combo.steps().size()) s.next = 0;
+			if (now - s.lastEnd > s.window || s.next >= steps.size()) s.next = 0;
 			index = s.next;
-			s.next = index + 1 >= combo.steps().size() ? 0 : index + 1;
+			s.next = index + 1 >= steps.size() ? 0 : index + 1;
 		}
-		Combos.Step step = combo.steps().get(index);
+		Combos.Step step = steps.get(index);
+		s.window = step.late() >= 0 ? step.late() : combo.resetTicks();
 		int duration = combo.scaled(step.duration());
 		s.busyUntil = now + duration;
 		s.lastEnd = now + duration;
@@ -159,7 +168,8 @@ public final class Combat {
 		s.carry = 0;
 		p.resetAttackStrengthTicker();
 		p.swing(InteractionHand.MAIN_HAND); // ванильный взмах для тех, кто смотрит со стороны (пока нет своих поз)
-		broadcast(p, a, step.anim(), duration, s.speed, combo.tempo());
+		broadcast(p, a, step.anim(), duration, s.speed, combo.tempo()); // пустое anim — правая рука в этом ударе не двигается (шкала всё равно)
+		if (step.offAnim() != null) broadcast(p, a, "off:" + step.offAnim(), duration, -2f, combo.tempo());
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.5f,
 				a == Archetype.EXECUTIONER ? 0.6f : 0.9f);
 	}

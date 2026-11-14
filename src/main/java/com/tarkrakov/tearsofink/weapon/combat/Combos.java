@@ -24,15 +24,26 @@ import java.util.Map;
  */
 public final class Combos {
 	/** Один удар связки. */
-	/** speed — во сколько раз быстрее заполняется шкала атаки после этого удара (1 — как обычно). */
-	public record Step(String anim, int duration, int hit, float damage, float reach, float arc, float knockback, float speed) {}
+	/**
+	 * speed — во сколько раз быстрее заполняется шкала атаки после этого удара (1 — как обычно, меньше 1 — медленнее).
+	 * offAnim — движение второй руки (парные связки; null — вторая рука не двигается).
+	 * late — своё окно «чуть позже» после этого удара в тиках (-1 — общее reset_ticks).
+	 */
+	public record Step(String anim, int duration, int hit, float damage, float reach, float arc, float knockback, float speed,
+					   String offAnim, int late) {
+		public Step(String anim, int duration, int hit, float damage, float reach, float arc, float knockback, float speed) {
+			this(anim, duration, hit, damage, reach, arc, knockback, speed, null, -1);
+		}
+	}
 
 	/** Связка архетипа. */
 	/**
 	 * early — за сколько тиков до готовности нажатие уже засчитывается (запоминается и срабатывает вовремя).
 	 * tempo — общая скорость атаки архетипа: 1 — как задано, 0.8 — всё на 20% медленнее (удары, движения, шкала), 1.2 — быстрее.
 	 */
-	public record Combo(List<Step> steps, int resetTicks, float minStrength, String abilityAnim, int abilityTicks, int early, float tempo) {
+	/** dualSteps — связка, когда в обеих руках клинки этого архетипа (пусто — обычная). */
+	public record Combo(List<Step> steps, int resetTicks, float minStrength, String abilityAnim, int abilityTicks, int early, float tempo,
+						List<Step> dualSteps) {
 		/** Тики с учётом общей скорости. */
 		public int scaled(int ticks) {
 			return Math.max(1, Math.round(ticks / Math.max(0.1f, tempo)));
@@ -49,7 +60,7 @@ public final class Combos {
 	}
 
 	private static Combo fallback() {
-		return new Combo(List.of(new Step("attack1", 12, 5, 1f, 3f, 100f, 0.4f, 1f)), 30, 0.9f, "ability", 20, 6, 1f);
+		return new Combo(List.of(new Step("attack1", 12, 5, 1f, 3f, 100f, 0.4f, 1f)), 30, 0.9f, "ability", 20, 6, 1f, List.of());
 	}
 
 	public static void init() {
@@ -75,21 +86,29 @@ public final class Combos {
 		});
 	}
 
-	private static Combo parse(JsonObject o) {
+	private static List<Step> steps(JsonArray arr) {
 		List<Step> steps = new ArrayList<>();
-		JsonArray arr = o.getAsJsonArray("steps");
+		if (arr == null) return steps;
 		for (JsonElement el : arr) {
 			JsonObject s = el.getAsJsonObject();
 			steps.add(new Step(s.get("anim").getAsString(), s.get("duration").getAsInt(), s.get("hit").getAsInt(),
 					s.get("damage").getAsFloat(), s.get("reach").getAsFloat(), s.get("arc").getAsFloat(),
 					s.has("knockback") ? s.get("knockback").getAsFloat() : 0.4f,
-					s.has("speed") ? s.get("speed").getAsFloat() : 1f));
+					s.has("speed") ? s.get("speed").getAsFloat() : 1f,
+					s.has("off_anim") ? s.get("off_anim").getAsString() : null,
+					s.has("late") ? s.get("late").getAsInt() : -1));
 		}
+		return steps;
+	}
+
+	private static Combo parse(JsonObject o) {
+		List<Step> steps = steps(o.getAsJsonArray("steps"));
 		return new Combo(steps, o.has("reset_ticks") ? o.get("reset_ticks").getAsInt() : 30,
 				o.has("min_strength") ? o.get("min_strength").getAsFloat() : 0.9f,
 				o.has("ability_anim") ? o.get("ability_anim").getAsString() : "ability",
 				o.has("ability_ticks") ? o.get("ability_ticks").getAsInt() : 20,
 				o.has("early_ticks") ? o.get("early_ticks").getAsInt() : 6,
-				o.has("tempo") ? o.get("tempo").getAsFloat() : 1f);
+				o.has("tempo") ? o.get("tempo").getAsFloat() : 1f,
+				steps(o.getAsJsonArray("dual_steps")));
 	}
 }

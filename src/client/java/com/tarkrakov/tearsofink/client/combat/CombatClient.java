@@ -36,7 +36,10 @@ public final class CombatClient {
 				anim = anim.substring(4);
 				arm = arm.getOpposite();
 			}
-			WeaponAnims.play(arm, a, anim, arm == player.getMainArm() ? payload.ticks() : 0, payload.tempo());
+			boolean off = arm != player.getMainArm();
+			if (anim.isEmpty()) return; // в этом ударе рука не двигается
+			WeaponAnims.play(arm, a, anim, off ? 0 : payload.ticks(), payload.tempo());
+			if (off) return;
 			if (payload.speed() >= 0) { // удар связки (не приём): шкала под прицелом — как у сервера
 				player.resetAttackStrengthTicker();
 				fillSpeed = payload.speed();
