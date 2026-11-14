@@ -10,7 +10,14 @@ import net.minecraft.world.item.ItemStack;
 
 /** Клинки на стороне игрока: ЛКМ → просьба об ударе, движения от сервера, доставание при смене оружия. */
 public final class CombatClient {
+	/** Сколько тиков держать ЛКМ, чтобы клинок начал копать (клик по блоку — просто удар). */
+	public static final int MINING_HOLD = 6;
+	private static int attackHeld;
 	private static long lastRequest;
+
+	public static int attackHeld() {
+		return attackHeld;
+	}
 	private static ItemStack lastMain = ItemStack.EMPTY, lastOff = ItemStack.EMPTY;
 	private static int lastSlot = -1;
 
@@ -50,6 +57,9 @@ public final class CombatClient {
 			lastSlot = -1;
 			return;
 		}
+		attackHeld = mc.options.keyAttack.isDown() && mc.screen == null ? attackHeld + 1 : 0;
+		// копаем зажатой ЛКМ — движение удара прерывается, рука машет по-ванильному
+		if (mc.gameMode != null && mc.gameMode.isDestroying()) WeaponAnims.stop(player.getMainArm());
 		ItemStack main = player.getMainHandItem(), off = player.getOffhandItem();
 		int slot = player.getInventory().selected;
 		if (slot != lastSlot || !ItemStack.isSameItem(main, lastMain)) equip(player.getMainArm(), main);

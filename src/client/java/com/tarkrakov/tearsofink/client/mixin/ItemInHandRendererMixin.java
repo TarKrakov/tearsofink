@@ -24,6 +24,8 @@ public abstract class ItemInHandRendererMixin {
 									  ItemStack stack, float equippedProgress, PoseStack poseStack, MultiBufferSource buffer, int light, CallbackInfo ci) {
 		if (tearsofink$inner || Archetype.of(stack) == null || (swingProgress == 0 && equippedProgress == 0)) return;
 		if (player.isUsingItem() && player.getUsedItemHand() == hand) return; // своё использование (если будет) — по-ванильному
+		var gm = net.minecraft.client.Minecraft.getInstance().gameMode;
+		if (hand == InteractionHand.MAIN_HAND && gm != null && gm.isDestroying()) return; // копает — ванильный мах «палкой-копалкой»
 		tearsofink$inner = true;
 		try {
 			((ItemInHandRendererInvoker) this).tearsofink$renderArmWithItem(player, partialTicks, pitch, hand, 0, stack, 0, poseStack, buffer, light);
