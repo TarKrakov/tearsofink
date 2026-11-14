@@ -37,8 +37,8 @@ public final class HuntTuning {
 	 * Урон умножается у ВСЕХ целей одинаково (ванильные удары, стрелы, удары солдат).
 	 * Своя сила каждой цели — поле "power" в hunt_targets/*.json.
 	 */
-	public static final float[] PREY_HP = {3.2f, 4.0f, 5.0f};
-	public static final float[] PREY_DAMAGE = {1.3f, 1.6f, 2.0f};
+	public static final float[] PREY_HP = {3.6f, 4.0f, 4.6f};
+	public static final float[] PREY_DAMAGE = {1.45f, 1.6f, 1.8f};
 	/** Шанс охотника победить цель «вдали» (по рангу). */
 	public static final float[] REMOTE_HUNTER_WINS = {0.45f, 0.6f, 0.75f};
 	/** Чернильный охотник после победы бросается на игроков — столько тиков, потом растворяется. */
