@@ -47,7 +47,9 @@ public final class SoulTrader {
 	public static final int IDLE_TICKS = 20 * 30, MAX_LIFE = 20 * 180;
 	public static final double RADIUS = 8, TRADE_RANGE = 6;
 
-	public static final int ACTION_SELL = 1, ACTION_CONTRACTS = 2, ACTION_LEAVE = 3;
+	public static final int ACTION_SELL = 1, ACTION_CONTRACTS = 2, ACTION_LEAVE = 3, ACTION_BOARD = 4, ACTION_ABANDON = 20;
+	/** Взять контракт с доски: ACTION_TAKE + номер (0 лёгкий … 2 сложный). */
+	public static final int ACTION_TAKE = 10;
 
 	/** Сервер → клиент: открыть (или обновить) окно Торговки. */
 	public record Open(int entity, int soulMax, int inkMax, int contracts) implements CustomPacketPayload {
@@ -162,13 +164,19 @@ public final class SoulTrader {
 
 	private static void act(ServerPlayer p, Action a) {
 		if (!(p.level().getEntity(a.entity()) instanceof SoulTraderEntity trader) || !trader.isAlive()
-				|| p.distanceTo(trader) > TRADE_RANGE) return;
+				|| p.distanceTo(trader) > TRADE_RANGE || !InkPowers.get(p).inside()) return;
 		trader.keepAlive();
 		switch (a.action()) {
 			case ACTION_SELL -> sell(p, trader);
 			case ACTION_CONTRACTS -> takeContracts(p, trader);
 			case ACTION_LEAVE -> trader.farewell(p);
-			default -> {}
+			case ACTION_BOARD -> com.tarkrakov.tearsofink.hunt.HuntContracts.send(p, trader);
+			case ACTION_ABANDON -> com.tarkrakov.tearsofink.hunt.HuntContracts.abandon(p, trader);
+			default -> {
+				if (a.action() >= ACTION_TAKE && a.action() < ACTION_TAKE + 3) {
+					com.tarkrakov.tearsofink.hunt.HuntContracts.take(p, trader, a.action() - ACTION_TAKE);
+				}
+			}
 		}
 	}
 
@@ -206,7 +214,7 @@ public final class SoulTrader {
 		for (ItemStack s : all) {
 			if (!s.is(ModItems.FULFILLED_CONTRACT)) continue;
 			for (int i = 0; i < s.getCount(); i++) {
-				if (p.getRandom().nextFloat() >= com.tarkrakov.tearsofink.hunt.HuntTuning.CONTRACT_WEAPON_CHANCE) continue;
+				if (p.getRandom().nextFloat() >= com.tarkrakov.tearsofink.hunt.Hunt.weaponChance(s)) continue;
 				ItemStack w = com.tarkrakov.tearsofink.hunt.Hunt.weaponOf(s);
 				if (!w.isEmpty()) weapons.add(w);
 			}

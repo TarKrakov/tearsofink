@@ -118,7 +118,21 @@ public final class HuntTuning {
 	public static final double SPIRE_LAUNCH = 0.45;
 
 	/** Шанс получить у Торговки оружие охотника за контракт. */
-	public static final float CONTRACT_WEAPON_CHANCE = 0.3f;
+	public static final float[] CONTRACT_WEAPON_CHANCE = {0.3f, 0.6f, 1.0f}; // лёгкий / средний / сложный (= ранг охотника)
+
+	// ===== Мировая Охота и контракты =====
+	/** Раз в INTERVAL — бросок: с таким шансом начинается мировая Охота. */
+	public static final float WORLD_CHANCE = 0.5f;
+	/** Доска контрактов у Торговки обновляется раз в столько тиков (5 мин). */
+	public static final int BOARD_REFRESH = 5 * 60 * 20;
+	/** Время на контракт (10 мин), иначе сгорает. */
+	public static final int CONTRACT_TIME = 10 * 60 * 20;
+	/** Место контракта — столько блоков от храма, где он взят. */
+	public static final int CONTRACT_DIST_MIN = 150, CONTRACT_DIST_MAX = 300;
+	/** Цель и охотник появляются, когда хозяин контракта подходит ближе этого. */
+	public static final int CONTRACT_SPAWN_DIST = 64;
+	/** Сообщения и луч контракта видят хозяин и все ближе этого к месту. */
+	public static final int CONTRACT_AUDIENCE = 128;
 
 	private HuntTuning() {}
 }
