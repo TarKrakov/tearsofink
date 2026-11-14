@@ -6,7 +6,8 @@
 		"DimensionSpecialEffectsMixin",
 		"FogRendererMixin",
 		"LevelRendererMixin",
-		"WeaponStatsMixin"
+		"WeaponStatsMixin",
+		"ItemRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
