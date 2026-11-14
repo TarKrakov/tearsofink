@@ -1,4 +1,5 @@
 {
 	"entity": "tears-of-ink:pale_shieldbearer",
-	"weight": 10
+	"weight": 10,
+	"power": 0.45
 }

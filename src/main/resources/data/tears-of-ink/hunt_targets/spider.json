@@ -1,4 +1,5 @@
 {
 	"entity": "minecraft:spider",
-	"weight": 8
+	"weight": 8,
+	"power": 1.8
 }

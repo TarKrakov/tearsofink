@@ -14,7 +14,8 @@
 		"MobAccessor",
 		"LivingEntityAttackAccessor",
 		"SanctuaryAttackMixin",
-		"NoSunBurnMixin"
+		"NoSunBurnMixin",
+		"PreyDamageMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

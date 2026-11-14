@@ -1,0 +1,44 @@
+# Испытательные бои охотников (баланс): сервер без игроков, ускоренное время, итог в логе.
+name: duel
+on:
+  workflow_dispatch:
+    inputs:
+      per:
+        description: "Боёв на каждый случай (цель × ранг × особенность)"
+        default: "8"
+
+jobs:
+  duel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'microsoft'
+      - run: chmod +x ./gradlew
+      - name: run duels
+        run: |
+          printf "max-tick-time=-1\n" >> run-server/server.properties
+          {
+            for i in $(seq 1 120); do
+              sleep 5
+              if grep -q "Done (" run-server/logs/latest.log 2>/dev/null; then break; fi
+            done
+            echo "tick sprint 10000000"
+            sleep 2
+            echo "tearsofink hunt duel ${{ github.event.inputs.per }}"
+            for i in $(seq 1 600); do sleep 5; if grep -q "\[duel\] DONE" run-server/logs/latest.log 2>/dev/null; then break; fi; done
+            echo "stop"
+          } | ./gradlew runServer --console=plain 2>&1 | tee server.log | grep --line-buffered -E "\[duel\]|ERROR|Exception|Caused by|Done \(" || true
+      - name: summary
+        if: always()
+        run: grep -A200 "\[duel\] ИТОГ" server.log | sed 's/.*\[duel\] //' || true
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: duel-log
+          path: |
+            server.log
+            run-server/logs/

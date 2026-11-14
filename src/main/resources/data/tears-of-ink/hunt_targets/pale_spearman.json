@@ -1,4 +1,5 @@
 {
 	"entity": "tears-of-ink:pale_spearman",
-	"weight": 12
+	"weight": 12,
+	"power": 0.9
 }

@@ -23,16 +23,22 @@ public final class HuntTuning {
 	/** Ранги охотника: Новичок, Опытный, Легендарный — вес выпадения. */
 	public static final int[] RANK_WEIGHT = {60, 30, 10};
 	/** Здоровье охотника по рангу (± разброс). */
-	public static final float[] HUNTER_HP = {36, 60, 90};
+	public static final float[] HUNTER_HP = {55, 80, 110};
 	public static final float HUNTER_HP_SPREAD = 0.15f;
 	/** Урон охотника по рангу (умножается на множитель удара связки). */
-	public static final float[] HUNTER_DAMAGE = {4.2f, 5.8f, 7};
+	public static final float[] HUNTER_DAMAGE = {4.4f, 5.2f, 6.2f};
 	public static final float HUNTER_DAMAGE_SPREAD = 0.15f;
+	/** Защита охотника за каждую надетую деталь брони (Новичок 2, Опытный 4, Легендарный 6 деталей). */
+	public static final float ARMOR_PER_PIECE = 1f;
 	/** Скорость передвижения охотника. */
 	public static final double HUNTER_SPEED = 0.3;
-	/** Цель тем крепче, чем выше ранг охотника: множитель здоровья и урона цели. */
-	public static final float[] PREY_HP = {3.0f, 4.0f, 5.5f};
-	public static final float[] PREY_DAMAGE = {1.8f, 2.2f, 2.8f};
+	/**
+	 * Цель тем крепче, чем выше ранг охотника: множитель здоровья и урона цели.
+	 * Урон умножается у ВСЕХ целей одинаково (ванильные удары, стрелы, удары солдат).
+	 * Своя сила каждой цели — поле "power" в hunt_targets/*.json.
+	 */
+	public static final float[] PREY_HP = {3.2f, 4.0f, 5.0f};
+	public static final float[] PREY_DAMAGE = {1.3f, 1.6f, 2.0f};
 	/** Шанс охотника победить цель «вдали» (по рангу). */
 	public static final float[] REMOTE_HUNTER_WINS = {0.45f, 0.6f, 0.75f};
 	/** Чернильный охотник после победы бросается на игроков — столько тиков, потом растворяется. */
@@ -41,12 +47,14 @@ public final class HuntTuning {
 	/** Вес: обычная, резвая, гигант, разделённая. */
 	public static final int[] PREFIX_WEIGHT = {40, 25, 20, 15};
 	/** Резвая: быстрее ходит; после удара вблизи — ещё один быстрый удар (доля урона) через столько тиков. */
-	public static final float SWIFT_SPEED = 1.4f, SWIFT_ECHO = 0.5f;
+	public static final float SWIFT_SPEED = 1.4f, SWIFT_ECHO = 0.2f;
 	public static final int SWIFT_ECHO_DELAY = 6;
 	/** Гигант: здоровье, урон, размер. */
-	public static final float GIANT_HP = 1.6f, GIANT_DAMAGE = 1.15f, GIANT_SCALE = 1.5f;
+	public static final float GIANT_HP = 1.2f, GIANT_DAMAGE = 1.05f, GIANT_SCALE = 1.5f;
 	/** Разделённая: две цели, у каждой такая доля силы и размер. */
-	public static final float SPLIT_STATS = 0.65f, SPLIT_SCALE = 0.75f;
+	public static final float SPLIT_STATS = 0.6f, SPLIT_SCALE = 0.75f;
+	/** За особую цель — больше Пигмента каждому, кто получил контракт. */
+	public static final int PREFIX_BONUS_PIGMENT_MIN = 2, PREFIX_BONUS_PIGMENT_MAX = 3;
 
 	// ===== Броня (навески gear_* модели) =====
 	/** Сколько мест занято бронёй по рангу: {от, до}. Новичок 2, Опытный 4, Легендарный 6. */
@@ -58,11 +66,11 @@ public final class HuntTuning {
 
 	// ===== Приёмы и рывок =====
 	/** Перезарядки приёмов по рангу (множитель от игрока): Новичок медленнее, Легендарный быстрее. */
-	public static final float[] RANK_COOLDOWN = {1.3f, 1.0f, 0.75f};
+	public static final float[] RANK_COOLDOWN = {1.2f, 1.0f, 0.8f};
 	/** Охотник Шпиля играет от приёмов — перезарядки у него ещё короче. */
 	public static final float SPIRE_COOLDOWN = 0.75f;
 	/** Урон приёмов охотника по рангу (множитель). */
-	public static final float[] SKILL_DAMAGE = {0.8f, 1.0f, 1.25f};
+	public static final float[] SKILL_DAMAGE = {0.85f, 1.0f, 1.2f};
 	/** Урон Волны и Рассечения у охотника (как у игрока). */
 	public static final float WAVE_DAMAGE = 6f, CLEAVE_DAMAGE = 12f;
 	/** Приёмы Скимитаров у охотников (Волна, Чернильный Росчерк) — перезарядка дольше в столько раз. */

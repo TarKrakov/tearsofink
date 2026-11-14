@@ -63,6 +63,15 @@ public final class ModCommands {
 									ctx.getSource().sendSuccess(() -> Component.literal("Охота остановлена. Следующая — через 15 минут."), false);
 									return 1;
 								}))
+								.then(Commands.literal("duel")
+										.then(Commands.argument("per", com.mojang.brigadier.arguments.IntegerArgumentType.integer(1, 100)).executes(ctx -> {
+											var lands = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());
+											if (lands == null) return 0;
+											int n = com.tarkrakov.tearsofink.hunt.HuntDuels.start(lands,
+													com.mojang.brigadier.arguments.IntegerArgumentType.getInteger(ctx, "per"));
+											ctx.getSource().sendSuccess(() -> Component.literal("Испытательные бои: " + n + " (итог — в логе, [duel])."), false);
+											return n;
+										})))
 								.then(Commands.literal("next").executes(ctx -> {
 									long t = com.tarkrakov.tearsofink.hunt.Hunt.ticksUntilNext(ctx.getSource().getServer());
 									ctx.getSource().sendSuccess(() -> Component.literal(com.tarkrakov.tearsofink.hunt.Hunt.running()

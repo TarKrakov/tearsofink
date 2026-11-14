@@ -113,12 +113,27 @@ public final class Hunt {
 	private record Echo(UUID prey, UUID target, float damage, long at) {}
 	private static final List<Echo> ECHOES = new ArrayList<>();
 	private static boolean echoing;
+	/** Множитель урона целей (по рангу охотника, силе цели и особенности). */
+	private static final Map<UUID, Float> DAMAGE_MULT = new HashMap<>();
+
+	/** Во сколько раз усилен урон этого существа (цель Охоты), иначе 1. */
+	public static float outgoingMultiplier(@Nullable Entity e) {
+		if (e == null || echoing || DAMAGE_MULT.isEmpty()) return 1f;
+		Float m = DAMAGE_MULT.get(e.getUUID());
+		return m == null ? 1f : m;
+	}
+
+	/** Забыть усиление (цель пала или исчезла). */
+	public static void forgetPrey(UUID id) {
+		DAMAGE_MULT.remove(id);
+	}
 	private static long nextStart = -1;
 
 	private Hunt() {}
 
 	public static void init() {
 		HuntTargets.init();
+		HuntDuels.init();
 		PayloadTypeRegistry.playS2C().register(Beam.TYPE, Beam.CODEC);
 		ServerTickEvents.END_SERVER_TICK.register(Hunt::tick);
 		ServerLifecycleEvents.SERVER_STOPPED.register(s -> {
@@ -201,19 +216,8 @@ public final class Hunt {
 		if (preys.isEmpty()) return false;
 		Mob prey = preys.get(0);
 
-		// оружие: один меч / пара одинаковых / клинок + двуручник в левой (правило рук игрока)
-		HunterWeaponItem great = (HunterWeaponItem) ModItems.HUNTER_GREATSWORD, saber = (HunterWeaponItem) ModItems.HUNTER_SABER;
-		HunterWeaponItem kind = random.nextBoolean() ? great : saber;
-		ItemStack weapon = kind.make(type, rank), offWeapon = ItemStack.EMPTY;
-		int lw = 0;
-		for (int w : HuntTuning.LOADOUT_WEIGHT) lw += w;
-		int roll = random.nextInt(lw);
-		if (roll >= HuntTuning.LOADOUT_WEIGHT[0] + HuntTuning.LOADOUT_WEIGHT[1]) { // разные
-			weapon = saber.make(type, rank);
-			offWeapon = great.make(type, rank);
-		} else if (roll >= HuntTuning.LOADOUT_WEIGHT[0]) { // пара одинаковых
-			offWeapon = kind.make(type, rank);
-		}
+		ItemStack[] arms2 = loadout(type, rank, random);
+		ItemStack weapon = arms2[0], offWeapon = arms2[1];
 		HunterEntity hunter = ModMobs.HUNTER.create(lands);
 		if (hunter == null) {
 			prey.discard();
@@ -269,6 +273,23 @@ public final class Hunt {
 		return 0;
 	}
 
+	/** Оружие охотника: один меч / пара одинаковых / клинок + двуручник в левой (правило рук игрока). {правая, левая} */
+	static ItemStack[] loadout(HunterType type, int rank, RandomSource random) {
+		HunterWeaponItem great = (HunterWeaponItem) ModItems.HUNTER_GREATSWORD, saber = (HunterWeaponItem) ModItems.HUNTER_SABER;
+		HunterWeaponItem kind = random.nextBoolean() ? great : saber;
+		ItemStack weapon = kind.make(type, rank), offWeapon = ItemStack.EMPTY;
+		int lw = 0;
+		for (int w : HuntTuning.LOADOUT_WEIGHT) lw += w;
+		int roll = random.nextInt(lw);
+		if (roll >= HuntTuning.LOADOUT_WEIGHT[0] + HuntTuning.LOADOUT_WEIGHT[1]) { // разные
+			weapon = saber.make(type, rank);
+			offWeapon = great.make(type, rank);
+		} else if (roll >= HuntTuning.LOADOUT_WEIGHT[0]) { // пара одинаковых
+			offWeapon = kind.make(type, rank);
+		}
+		return new ItemStack[]{weapon, offWeapon};
+	}
+
 	private static PreyPrefix pickPrefix(RandomSource random) {
 		int total = 0;
 		for (int w : HuntTuning.PREFIX_WEIGHT) total += w;
@@ -282,7 +303,7 @@ public final class Hunt {
 
 	/** Меченая цель: крепче по рангу охотника, плюс особенность. */
 	@Nullable
-	private static Mob makePrey(ServerLevel lands, HuntTargets.Target t, BlockPos at, int rank, PreyPrefix prefix, RandomSource random) {
+	static Mob makePrey(ServerLevel lands, HuntTargets.Target t, BlockPos at, int rank, PreyPrefix prefix, RandomSource random) {
 		Entity e = t.type().create(lands);
 		if (!(e instanceof Mob prey)) {
 			if (e != null) e.discard();
@@ -292,7 +313,7 @@ public final class Hunt {
 		prey.finalizeSpawn(lands, lands.getCurrentDifficultyAt(at), MobSpawnType.EVENT, null);
 		prey.setPersistenceRequired();
 		prey.addTag(PREY_TAG);
-		float hp = HuntTuning.PREY_HP[rank], dmg = HuntTuning.PREY_DAMAGE[rank];
+		float hp = HuntTuning.PREY_HP[rank] * t.power(), dmg = HuntTuning.PREY_DAMAGE[rank] * t.power();
 		switch (prefix) {
 			case GIANT -> {
 				hp *= HuntTuning.GIANT_HP;
@@ -308,7 +329,7 @@ public final class Hunt {
 			default -> {}
 		}
 		boost(prey, Attributes.MAX_HEALTH, hp);
-		boost(prey, Attributes.ATTACK_DAMAGE, dmg);
+		DAMAGE_MULT.put(prey.getUUID(), dmg); // урон умножается у всех целей одинаково (PreyDamageMixin)
 		prey.setHealth(prey.getMaxHealth());
 		if (prefix != PreyPrefix.NONE) {
 			prey.setCustomName(Component.translatable("hunt.tears-of-ink.prefix_name." + prefix.id, prey.getType().getDescription()));
@@ -483,7 +504,7 @@ public final class Hunt {
 			if (!(lands.getEntity(e.target()) instanceof LivingEntity t) || !t.isAlive()) continue;
 			if (m.distanceTo(t) > 3.5 + t.getBbWidth() / 2) continue;
 			m.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
-			echoing = true;
+			echoing = true; // второй удар — без повторного усиления
 			try {
 				t.hurt(m.damageSources().mobAttack(m), e.damage());
 			} finally {
@@ -506,6 +527,7 @@ public final class Hunt {
 			return;
 		}
 		if (!a.preys.remove(entity.getUUID())) return;
+		forgetPrey(entity.getUUID());
 		if (!a.preys.isEmpty()) { // разделённая: одна половина пала, вторая ещё жива
 			announce(lands, Component.translatable("hunt.tears-of-ink.half_down").withStyle(ChatFormatting.GRAY));
 			return;
@@ -568,6 +590,7 @@ public final class Hunt {
 			}
 		}
 		ECHOES.clear();
+		if (a != null) for (UUID id : a.preys) forgetPrey(id);
 		active = null;
 		nextStart = lands.getServer().getTickCount() + HuntTuning.INTERVAL;
 		for (ServerPlayer p : lands.players()) ServerPlayNetworking.send(p, new Beam(false, -1, -1, 0, 0, 0, 0, false));
@@ -608,6 +631,10 @@ public final class Hunt {
 				.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.THIS_ENTITY, p)
 				.create(LootContextParamSets.GIFT);
 		for (ItemStack s : table.getRandomItems(params)) give(p, s);
+		if (a.prefix != PreyPrefix.NONE) { // особая цель — больше Пигмента
+			give(p, new ItemStack(ModItems.PIGMENT, HuntTuning.PREFIX_BONUS_PIGMENT_MIN
+					+ lands.random.nextInt(HuntTuning.PREFIX_BONUS_PIGMENT_MAX - HuntTuning.PREFIX_BONUS_PIGMENT_MIN + 1)));
+		}
 		p.sendSystemMessage(Component.translatable("hunt.tears-of-ink.your_reward", contracts).withStyle(ChatFormatting.GOLD));
 		p.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.7f, 0.8f);
 	}

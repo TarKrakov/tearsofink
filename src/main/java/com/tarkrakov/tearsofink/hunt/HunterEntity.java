@@ -103,6 +103,7 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 				.add(Attributes.MOVEMENT_SPEED, HuntTuning.HUNTER_SPEED)
 				.add(Attributes.FOLLOW_RANGE, 48)
 				.add(Attributes.KNOCKBACK_RESISTANCE, 0.4)
+				.add(Attributes.ARMOR, 0)
 				.add(Attributes.ATTACK_DAMAGE, 5);
 	}
 
@@ -134,6 +135,8 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		float hp = HuntTuning.HUNTER_HP[rank] * (1 + (random.nextFloat() * 2 - 1) * HuntTuning.HUNTER_HP_SPREAD);
 		getAttribute(Attributes.MAX_HEALTH).setBaseValue(hp);
 		setHealth(hp);
+		int pieces = HuntTuning.GEAR_SLOTS[Math.min(rank, HuntTuning.GEAR_SLOTS.length - 1)][0];
+		getAttribute(Attributes.ARMOR).setBaseValue(pieces * HuntTuning.ARMOR_PER_PIECE); // броня на модели и защищает
 		baseDamage = HuntTuning.HUNTER_DAMAGE[rank] * (1 + (random.nextFloat() * 2 - 1) * HuntTuning.HUNTER_DAMAGE_SPREAD);
 		setItemSlot(EquipmentSlot.MAINHAND, main);
 		setItemSlot(EquipmentSlot.OFFHAND, off);
