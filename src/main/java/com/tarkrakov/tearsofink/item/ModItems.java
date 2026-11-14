@@ -81,10 +81,10 @@ public final class ModItems {
 	/** Щит Души: Отпор — светлая волна, расталкивает (R / Shift+R). */
 	public static final Item REPEL_SHIELD = register("repel_shield",
 			new SoulShieldItem(() -> WeaponAbilities.REPEL, new Item.Properties().durability(500)));
-	/** Двуручник Чернил: Волна (R). */
+	/** Скимитар Чернил (одноручный): Волна (R). Внутреннее имя осталось wave_greatsword — чтобы не потерялись предметы в мирах. */
 	public static final Item WAVE_GREATSWORD = register("wave_greatsword",
-			new InkGreatswordItem(() -> WeaponAbilities.WAVE, new Item.Properties()));
-	/** Двуручник Чернил: Рассечение (R). */
+			new InkGreatswordItem(() -> WeaponAbilities.WAVE, new Item.Properties(), false));
+	/** Клинок Палача (двуручный): Рассечение (R). */
 	public static final Item CLEAVE_GREATSWORD = register("cleave_greatsword",
 			new InkGreatswordItem(() -> WeaponAbilities.CLEAVE, new Item.Properties()));
 

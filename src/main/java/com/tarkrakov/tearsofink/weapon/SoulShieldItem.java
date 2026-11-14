@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 
 /**
  * Щит Души: блокирует как ванильный, абилка по Shift+R тратит Душу.
- * Не блокирует, если в правой руке двуручный меч.
+ * Не блокирует, если в правой руке двуручный клинок (Палачи); с одноручным (Скимитары) — блокирует.
  */
 public class SoulShieldItem extends ShieldItem implements AbilityWeapon {
 	private final Supplier<Skill> ability;
@@ -34,7 +34,7 @@ public class SoulShieldItem extends ShieldItem implements AbilityWeapon {
 
 	@Override
 	public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
-		if (hand == InteractionHand.OFF_HAND && player.getMainHandItem().getItem() instanceof InkGreatswordItem) {
+		if (hand == InteractionHand.OFF_HAND && InkGreatswordItem.twoHanded(player.getMainHandItem())) {
 			return InteractionResultHolder.pass(player.getItemInHand(hand));
 		}
 		return super.use(level, player, hand);

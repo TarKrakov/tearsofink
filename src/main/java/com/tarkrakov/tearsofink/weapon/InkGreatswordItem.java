@@ -11,20 +11,35 @@ import java.util.List;
 import java.util.function.Supplier;
 
 /**
- * Двуручный меч Чернил: бьёт сильно и медленно. Абилка по R тратит Чернила.
- * Пока он в правой руке, щит в левой не блокирует (фонарь — работает).
+ * Клинок Чернил с абилкой по R (тратит Чернила). Бывает двуручным (Палачи: сильно и медленно —
+ * пока он в правой руке, щит в левой не блокирует, фонарь работает) и одноручным (Скимитары: быстрее и легче, левая рука свободна).
  */
 public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 	// ===== Настройки — крутить здесь =====
-	/** Урон сверх материала (итого: 1 рука + 2 Асфода + это = 9) и скорость атаки (меч −2.4, двуручник медленнее). */
+	/** Двуручный (Палачи): урон сверх материала (итого: 1 рука + 2 Асфода + это = 9) и скорость атаки (меч −2.4, двуручник медленнее → 1.0). */
 	public static final int DAMAGE = 6;
 	public static final float ATTACK_SPEED = -3.0f;
+	/** Одноручный (Скимитары): итого урон 5, скорость атаки 1.5. */
+	public static final int ONE_HANDED_DAMAGE = 2;
+	public static final float ONE_HANDED_SPEED = -2.5f;
 
 	private final Supplier<Skill> ability;
+	private final boolean twoHanded;
 
 	public InkGreatswordItem(Supplier<Skill> ability, Properties properties) {
-		super(ModTiers.ASPHODA, properties.attributes(SwordItem.createAttributes(ModTiers.ASPHODA, DAMAGE, ATTACK_SPEED).withTooltip(false)));
+		this(ability, properties, true);
+	}
+
+	public InkGreatswordItem(Supplier<Skill> ability, Properties properties, boolean twoHanded) {
+		super(ModTiers.ASPHODA, properties.attributes(SwordItem.createAttributes(ModTiers.ASPHODA,
+				twoHanded ? DAMAGE : ONE_HANDED_DAMAGE, twoHanded ? ATTACK_SPEED : ONE_HANDED_SPEED).withTooltip(false)));
 		this.ability = ability;
+		this.twoHanded = twoHanded;
+	}
+
+	/** Двуручный клинок в этой руке — занимает обе руки (щит в левой молчит). */
+	public static boolean twoHanded(ItemStack stack) {
+		return stack.getItem() instanceof InkGreatswordItem g && g.twoHanded;
 	}
 
 	@Override

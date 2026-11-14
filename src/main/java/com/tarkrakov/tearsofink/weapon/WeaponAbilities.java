@@ -30,7 +30,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Абилки оружия: Таран и Сияние (щиты Души), Волна и Рассечение (двуручники Чернил).
+ * Абилки оружия: Таран и Сияние (щиты Души), Волна (Скимитар) и Рассечение (Клинок Палача) — оружие Чернил.
  * Цифры — в начале каждого класса.
  */
 public final class WeaponAbilities {
@@ -65,8 +65,8 @@ public final class WeaponAbilities {
 		if (!player.isAlive() || player.isSpectator()) return;
 		ItemStack stack = payload.offhand() ? player.getOffhandItem() : player.getMainHandItem();
 		if (!(stack.getItem() instanceof AbilityWeapon weapon)) return;
-		// двуручник занимает обе руки: щит в левой молчит
-		if (payload.offhand() && player.getMainHandItem().getItem() instanceof InkGreatswordItem) return;
+		// двуручник (Палачи) занимает обе руки: щит в левой молчит
+		if (payload.offhand() && InkGreatswordItem.twoHanded(player.getMainHandItem())) return;
 		// аура Милосердия гасится повторным нажатием — бесплатно и без проверок
 		if (weapon.ability() == MERCY && MERCY.isActive(player)) {
 			MERCY.stop(player);
