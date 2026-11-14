@@ -19,14 +19,16 @@ public final class Factions {
 
 	private static final Relation A = Relation.ALLY, N = Relation.NEUTRAL, H = Relation.HOSTILE;
 
-	/** Строка — кто смотрит, столбец — на кого. Порядок: INK, BLOOD, FISH, PLAYER, MONSTER. */
+	/** Строка — кто смотрит, столбец — на кого. Порядок: INK, BLOOD, FISH, PLAYER, MONSTER, HUNTER, FERAL. */
 	private static final Relation[][] TABLE = {
-			//            INK BLOOD FISH PLAYER MONSTER
-			/* INK     */ {A,  H,    H,   H,     H},
-			/* BLOOD   */ {H,  A,    H,   N,     H}, // к игроку пока нейтральны (позже — от репутации/стадии Души)
-			/* FISH    */ {H,  H,    A,   H,     H},
-			/* PLAYER  */ {H,  N,    H,   N,     H}, // строка игрока ни на что не влияет (игрок решает сам), для полноты
-			/* MONSTER */ {H,  H,    H,   H,     A}, // ванильные в Землях нападают сами (VanillaAggro); криперы и нейтральные — нет
+			//            INK BLOOD FISH PLAYER MONSTER HUNTER FERAL
+			/* INK     */ {A,  H,    H,   H,     H,      N,     H},
+			/* BLOOD   */ {H,  A,    H,   N,     H,      N,     H}, // к игроку пока нейтральны (позже — от репутации/стадии Души)
+			/* FISH    */ {H,  H,    A,   H,     H,      H,     H},
+			/* PLAYER  */ {H,  N,    H,   N,     H,      N,     H}, // строка игрока ни на что не влияет (игрок решает сам), для полноты
+			/* MONSTER */ {H,  H,    H,   H,     A,      H,     H}, // ванильные в Землях нападают сами (VanillaAggro); криперы и нейтральные — нет
+			/* HUNTER  */ {N,  N,    N,   N,     N,      A,     N}, // охотники Шпиля и Крови: только отвечают на удар
+			/* FERAL   */ {H,  H,    H,   N,     H,      N,     A}, // Чернильный: воюет со всеми, на игроков — только в бешенстве (Охота)
 	};
 
 	/** Криперов фракции не трогают первыми (иначе взорвут отряд). Ударит — тогда да. */

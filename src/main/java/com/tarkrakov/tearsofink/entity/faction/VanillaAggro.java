@@ -33,6 +33,6 @@ public final class VanillaAggro {
 	private static boolean isFactionTarget(LivingEntity e) {
 		if (!(e instanceof FactionMember m)) return false;
 		Faction f = m.faction();
-		return f == Faction.INK || f == Faction.BLOOD || f == Faction.FISH;
+		return f == Faction.INK || f == Faction.BLOOD || f == Faction.FISH || f == Faction.HUNTER || f == Faction.FERAL;
 	}
 }

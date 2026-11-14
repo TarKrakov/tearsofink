@@ -45,14 +45,22 @@ import java.util.List;
  * охотник Шпиля бьёт и отходит, играет от приёмов.
  * Живёт только пока идёт Охота: в мир не сохраняется.
  */
-public class HunterEntity extends PathfinderMob {
+public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsofink.entity.faction.FactionMember {
 	private static final EntityDataAccessor<Integer> TYPE = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> RANK = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.INT);
 	/** Какие навески gear_* видны (биты по местам навесок). */
 	private static final EntityDataAccessor<Integer> GEAR = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.INT);
 
+	/** Кого бить прямо сейчас: обидчик, если есть, иначе цель Охоты. */
 	@Nullable
 	private LivingEntity foe;
+	/** Цель Охоты (а у Чернильного в бешенстве — игрок). */
+	@Nullable
+	private LivingEntity prey;
+	/** Чужой, кто напал (или на кого кинулся Чернильный). */
+	@Nullable
+	private LivingEntity threat;
+	private long threatUntil;
 	private boolean engaged;
 	private float baseDamage = 5;
 	private long lastHurt = -100;
@@ -141,15 +149,48 @@ public class HunterEntity extends PathfinderMob {
 		return getMaxHealth() * baseDamage * (getOffhandItem().isEmpty() ? 1f : 1.2f);
 	}
 
-	/** Кого бить. engaged — пора драться (а не ждать в стороне). */
-	public void setFoe(@Nullable LivingEntity foe, boolean engaged) {
-		this.foe = foe;
+	/** Цель Охоты. engaged — пора драться (а не ждать в стороне). */
+	public void setFoe(@Nullable LivingEntity prey, boolean engaged) {
+		this.prey = prey;
 		this.engaged = engaged;
 	}
 
 	@Nullable
 	public LivingEntity foe() {
 		return foe;
+	}
+
+	@Override
+	public com.tarkrakov.tearsofink.entity.faction.Faction faction() {
+		return hunterType() == HunterType.INK ? com.tarkrakov.tearsofink.entity.faction.Faction.FERAL
+				: com.tarkrakov.tearsofink.entity.faction.Faction.HUNTER;
+	}
+
+	/** Обидчик ещё актуален? Иначе — цель Охоты. Чернильный сам ищет врагов рядом. */
+	@Nullable
+	private LivingEntity pickFoe(ServerLevel level, long now) {
+		LivingEntity t = threat;
+		if (t != null && (!t.isAlive() || t.level() != level || now >= threatUntil || distanceTo(t) > HuntTuning.THREAT_FORGET || t == prey)) {
+			threat = null;
+		}
+		if (threat == null && hunterType() == HunterType.INK && now % 10 == 0) {
+			LivingEntity near = null;
+			double best = HuntTuning.FERAL_AGGRO;
+			for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(HuntTuning.FERAL_AGGRO),
+					e -> e != this && e != prey && e.isAlive() && !(e instanceof Player)
+							&& com.tarkrakov.tearsofink.entity.faction.Factions.wantsToAttack(this, e))) {
+				double d = distanceTo(e);
+				if (d < best && (prey == null || d < distanceTo(prey))) {
+					best = d;
+					near = e;
+				}
+			}
+			if (near != null) {
+				threat = near;
+				threatUntil = now + HuntTuning.THREAT_TICKS / 2;
+			}
+		}
+		return threat != null ? threat : prey;
 	}
 
 	@Override
@@ -167,7 +208,14 @@ public class HunterEntity extends PathfinderMob {
 		// охотники Шпиля и Крови не связываются с игроками (их цель — добыча Охоты); Чернильный — уязвим
 		if (source.getEntity() instanceof Player && hunterType() != HunterType.INK) return false;
 		boolean hit = super.hurt(source, amount);
-		if (hit) lastHurt = level().getGameTime();
+		if (hit) {
+			lastHurt = level().getGameTime();
+			// кто-то чужой напал (патруль, монстр) — ответить, потом вернуться к цели
+			if (source.getEntity() instanceof LivingEntity by && by != prey && by != this && !(by instanceof Player) && by.isAlive()) {
+				threat = by;
+				threatUntil = lastHurt + HuntTuning.THREAT_TICKS;
+			}
+		}
 		return hit;
 	}
 
@@ -205,7 +253,7 @@ public class HunterEntity extends PathfinderMob {
 		runTimed(now);
 		tickDash(level);
 
-		LivingEntity f = foe;
+		LivingEntity f = foe = pickFoe(level, now);
 		if (f == null || !f.isAlive() || f.level() != level) {
 			getNavigation().stop();
 			return;
@@ -215,7 +263,7 @@ public class HunterEntity extends PathfinderMob {
 		boolean fleeing = lastFoeDist >= 0 && dist > lastFoeDist + 0.05;
 		lastFoeDist = dist;
 
-		if (!engaged) { // ждёт игроков в стороне
+		if (!engaged && f == prey) { // ждёт игроков в стороне (а на обидчика — сразу)
 			if (dist > HuntTuning.WAIT_MAX) getNavigation().moveTo(f, 0.9);
 			else if (dist < HuntTuning.WAIT_MIN) moveAway(f, 4, 1.0);
 			else getNavigation().stop();
