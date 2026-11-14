@@ -16,5 +16,5 @@ jobs:
           for j in $J; do
             javap -p -c -classpath "$j" net.minecraft.client.renderer.entity.ItemRenderer 2>/dev/null | grep -n "ItemTransform.apply\|public void render(" | head
             javap -p -classpath "$j" net.minecraft.client.renderer.ItemInHandRenderer 2>/dev/null | grep renderArmWithItem
-            javap -p -classpath "$j" net.minecraft.client.Minecraft 2>/dev/null | grep "startAttack\|LocalPlayer player\|HitResult hitResult"
+            javap -p -classpath "$j" net.minecraft.client.Minecraft 2>/dev/null | grep "startAttack\|continueAttack\|LocalPlayer player\|HitResult hitResult"
           done
