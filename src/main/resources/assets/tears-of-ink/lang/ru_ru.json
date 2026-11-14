@@ -355,5 +355,12 @@
   "trader.tears-of-ink.contract_weapon": "Этот охотник оставил кое-что для тебя: %s.",
   "hunt.tears-of-ink.marker": "%s м",
   "hunt.tears-of-ink.weapon_one": "«%s»",
-  "hunt.tears-of-ink.weapon_two": "«%s» и «%s»"
+  "hunt.tears-of-ink.weapon_two": "«%s» и «%s»",
+  "hunt.tears-of-ink.prefix.swift": "резвого %s",
+  "hunt.tears-of-ink.prefix.giant": "гигантского %s",
+  "hunt.tears-of-ink.prefix.split": "разделённого надвое %s",
+  "hunt.tears-of-ink.prefix_name.swift": "Резвый %s",
+  "hunt.tears-of-ink.prefix_name.giant": "Гигант: %s",
+  "hunt.tears-of-ink.prefix_name.split": "Половина: %s",
+  "hunt.tears-of-ink.half_down": "Одна половина цели повержена — осталась вторая."
 }

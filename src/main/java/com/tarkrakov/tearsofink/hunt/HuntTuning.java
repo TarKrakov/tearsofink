@@ -26,7 +26,7 @@ public final class HuntTuning {
 	public static final float[] HUNTER_HP = {36, 60, 90};
 	public static final float HUNTER_HP_SPREAD = 0.15f;
 	/** Урон охотника по рангу (умножается на множитель удара связки). */
-	public static final float[] HUNTER_DAMAGE = {3.5f, 5, 7};
+	public static final float[] HUNTER_DAMAGE = {4.2f, 5.8f, 7};
 	public static final float HUNTER_DAMAGE_SPREAD = 0.15f;
 	/** Скорость передвижения охотника. */
 	public static final double HUNTER_SPEED = 0.3;
@@ -37,6 +37,17 @@ public final class HuntTuning {
 	public static final float[] REMOTE_HUNTER_WINS = {0.45f, 0.6f, 0.75f};
 	/** Чернильный охотник после победы бросается на игроков — столько тиков, потом растворяется. */
 	public static final int INK_FRENZY = 60 * 20;
+	// ===== Особые цели =====
+	/** Вес: обычная, резвая, гигант, разделённая. */
+	public static final int[] PREFIX_WEIGHT = {40, 25, 20, 15};
+	/** Резвая: быстрее ходит; после удара вблизи — ещё один быстрый удар (доля урона) через столько тиков. */
+	public static final float SWIFT_SPEED = 1.4f, SWIFT_ECHO = 0.5f;
+	public static final int SWIFT_ECHO_DELAY = 6;
+	/** Гигант: здоровье, урон, размер. */
+	public static final float GIANT_HP = 1.6f, GIANT_DAMAGE = 1.15f, GIANT_SCALE = 1.5f;
+	/** Разделённая: две цели, у каждой такая доля силы и размер. */
+	public static final float SPLIT_STATS = 0.65f, SPLIT_SCALE = 0.75f;
+
 	// ===== Броня (навески gear_* модели) =====
 	/** Сколько мест занято бронёй по рангу: {от, до}. Новичок 2, Опытный 4, Легендарный 6. */
 	public static final int[][] GEAR_SLOTS = {{2, 2}, {4, 4}, {6, 6}};

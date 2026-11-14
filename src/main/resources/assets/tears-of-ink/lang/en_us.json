@@ -337,5 +337,12 @@
   "trader.tears-of-ink.contract_weapon": "This hunter left something for you: %s.",
   "hunt.tears-of-ink.marker": "%s m",
   "hunt.tears-of-ink.weapon_one": "«%s»",
-  "hunt.tears-of-ink.weapon_two": "«%s» and «%s»"
+  "hunt.tears-of-ink.weapon_two": "«%s» and «%s»",
+  "hunt.tears-of-ink.prefix.swift": "a swift %s",
+  "hunt.tears-of-ink.prefix.giant": "a giant %s",
+  "hunt.tears-of-ink.prefix.split": "%s, split in two",
+  "hunt.tears-of-ink.prefix_name.swift": "Swift %s",
+  "hunt.tears-of-ink.prefix_name.giant": "Giant %s",
+  "hunt.tears-of-ink.prefix_name.split": "Half of %s",
+  "hunt.tears-of-ink.half_down": "One half of the prey has fallen — one remains."
 }

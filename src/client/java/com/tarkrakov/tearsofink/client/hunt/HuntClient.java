@@ -27,7 +27,7 @@ public final class HuntClient {
 	private static boolean engaged;
 
 	private static boolean on;
-	private static int preyId = -1;
+	private static int preyId = -1, preyId2 = -1;
 	private static int color;
 	private static Vec3 target = Vec3.ZERO, shown = Vec3.ZERO;
 
@@ -38,6 +38,7 @@ public final class HuntClient {
 			boolean was = on;
 			on = payload.on();
 			preyId = payload.on() ? payload.entity() : -1;
+			preyId2 = payload.on() ? payload.entity2() : -1;
 			color = payload.color();
 			engaged = payload.engaged();
 			target = new Vec3(payload.x(), payload.y(), payload.z());
@@ -58,7 +59,7 @@ public final class HuntClient {
 	}
 
 	public static boolean isPrey(int entityId) {
-		return on && entityId == preyId;
+		return on && (entityId == preyId || entityId == preyId2);
 	}
 
 	private static void render(WorldRenderContext ctx) {

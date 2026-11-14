@@ -70,17 +70,18 @@ public final class Hunt {
 	private static final String C_LINE = "HunterLine", C_TIER = "HunterTier", C_KIND = "HunterKind";
 
 	/** Луч Охоты и затемнение цели у клиентов. on=false — Охоты нет. */
-	public record Beam(boolean on, int entity, double x, double y, double z, int color, boolean engaged) implements CustomPacketPayload {
+	public record Beam(boolean on, int entity, int entity2, double x, double y, double z, int color, boolean engaged) implements CustomPacketPayload {
 		public static final Type<Beam> TYPE = new Type<>(TearsOfInk.id("hunt_beam"));
 		public static final StreamCodec<RegistryFriendlyByteBuf, Beam> CODEC = StreamCodec.of((buf, b) -> {
 			buf.writeBoolean(b.on());
 			buf.writeVarInt(b.entity());
+			buf.writeVarInt(b.entity2());
 			buf.writeDouble(b.x());
 			buf.writeDouble(b.y());
 			buf.writeDouble(b.z());
 			buf.writeInt(b.color());
 			buf.writeBoolean(b.engaged());
-		}, buf -> new Beam(buf.readBoolean(), buf.readVarInt(), buf.readDouble(), buf.readDouble(), buf.readDouble(),
+		}, buf -> new Beam(buf.readBoolean(), buf.readVarInt(), buf.readVarInt(), buf.readDouble(), buf.readDouble(), buf.readDouble(),
 				buf.readInt(), buf.readBoolean()));
 
 		@Override
@@ -90,7 +91,10 @@ public final class Hunt {
 	}
 
 	private static final class Active {
-		UUID prey, hunter;
+		/** Цели (у разделённой — две). Убитые убираются из списка. */
+		final List<UUID> preys = new ArrayList<>();
+		UUID hunter;
+		PreyPrefix prefix = PreyPrefix.NONE;
 		HunterType type;
 		int rank;
 		ItemStack weapon;
@@ -105,6 +109,10 @@ public final class Hunt {
 
 	@Nullable
 	private static Active active;
+	/** Резвая цель: отложенный второй удар. */
+	private record Echo(UUID prey, UUID target, float damage, long at) {}
+	private static final List<Echo> ECHOES = new ArrayList<>();
+	private static boolean echoing;
 	private static long nextStart = -1;
 
 	private Hunt() {}
@@ -119,7 +127,14 @@ public final class Hunt {
 		});
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
 			Active a = active;
-			if (a != null && entity.getUUID().equals(a.prey)) {
+			if (a == null) return true;
+			// резвая цель: после удара вблизи — ещё один быстрый
+			if (a.prefix == PreyPrefix.SWIFT && !echoing && source.getEntity() != null && source.getEntity() == source.getDirectEntity()
+					&& a.preys.contains(source.getEntity().getUUID()) && entity.level() instanceof ServerLevel sl) {
+				ECHOES.add(new Echo(source.getEntity().getUUID(), entity.getUUID(), amount * HuntTuning.SWIFT_ECHO,
+						sl.getServer().getTickCount() + HuntTuning.SWIFT_ECHO_DELAY));
+			}
+			if (a.preys.contains(entity.getUUID())) {
 				Entity by = source.getEntity();
 				if (by instanceof ServerPlayer p) a.damage.merge(p.getUUID(), Math.min(amount, entity.getHealth()), Float::sum);
 				else if (by instanceof HunterEntity) a.hunterDamage += Math.min(amount, entity.getHealth());
@@ -131,7 +146,7 @@ public final class Hunt {
 		ServerEntityEvents.ENTITY_LOAD.register((entity, level) -> {
 			if (!entity.getTags().contains(PREY_TAG)) return;
 			Active a = active;
-			if (a == null || !entity.getUUID().equals(a.prey)) entity.discard();
+			if (a == null || !a.preys.contains(entity.getUUID())) entity.discard();
 		});
 	}
 
@@ -169,20 +184,22 @@ public final class Hunt {
 		if (t == null) return false;
 		BlockPos at = spot(lands, target, random);
 		if (at == null) return false;
-		Entity e = t.type().create(lands);
-		if (!(e instanceof Mob prey)) {
-			if (e != null) e.discard();
-			return false;
-		}
 		int rank = pickRank(random);
 		HunterType type = HunterType.byIndex(random.nextInt(HunterType.values().length));
-		prey.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, random.nextFloat() * 360, 0);
-		prey.finalizeSpawn(lands, lands.getCurrentDifficultyAt(at), MobSpawnType.EVENT, null);
-		prey.setPersistenceRequired();
-		prey.addTag(PREY_TAG);
-		boost(prey, Attributes.MAX_HEALTH, HuntTuning.PREY_HP[rank]);
-		boost(prey, Attributes.ATTACK_DAMAGE, HuntTuning.PREY_DAMAGE[rank]);
-		prey.setHealth(prey.getMaxHealth());
+		PreyPrefix prefix = pickPrefix(random);
+		List<Mob> preys = new ArrayList<>();
+		if (prefix == PreyPrefix.SPLIT) { // две цели поменьше, у каждой часть силы
+			Mob a1 = makePrey(lands, t, at, rank, prefix, random);
+			BlockPos at2 = near2(lands, at, random);
+			Mob a2 = makePrey(lands, t, at2, rank, prefix, random);
+			if (a1 != null) preys.add(a1);
+			if (a2 != null) preys.add(a2);
+		} else {
+			Mob one = makePrey(lands, t, at, rank, prefix, random);
+			if (one != null) preys.add(one);
+		}
+		if (preys.isEmpty()) return false;
+		Mob prey = preys.get(0);
 
 		// оружие: один меч / пара одинаковых / клинок + двуручник в левой (правило рук игрока)
 		HunterWeaponItem great = (HunterWeaponItem) ModItems.HUNTER_GREATSWORD, saber = (HunterWeaponItem) ModItems.HUNTER_SABER;
@@ -208,7 +225,8 @@ public final class Hunt {
 		hunter.setFoe(prey, false);
 
 		Active n = new Active();
-		n.prey = prey.getUUID();
+		for (Mob m : preys) n.preys.add(m.getUUID());
+		n.prefix = prefix;
 		n.hunter = hunter.getUUID();
 		n.type = type;
 		n.rank = rank;
@@ -220,8 +238,10 @@ public final class Hunt {
 		n.y = prey.getY();
 		n.z = prey.getZ();
 		active = n; // до появления в мире: иначе цель «чужая» и растворяется сразу
-		if (!lands.addFreshEntity(prey)) {
+		for (Mob m : preys) lands.addFreshEntity(m);
+		if (!prey.isAddedToLevel()) {
 			active = null;
+			for (Mob m : preys) m.discard();
 			hunter.discard();
 			return false;
 		}
@@ -230,7 +250,7 @@ public final class Hunt {
 				? Component.translatable("hunt.tears-of-ink.weapon_one", weapon.getHoverName())
 				: Component.translatable("hunt.tears-of-ink.weapon_two", weapon.getHoverName(), offWeapon.getHoverName());
 		announce(lands, Component.translatable("hunt.tears-of-ink.start", hunter.getCustomName(), arms,
-				preyName(prey), target.getDisplayName()).withStyle(ChatFormatting.GOLD));
+				preyTitle(prey, prefix), target.getDisplayName()).withStyle(ChatFormatting.GOLD));
 		for (ServerPlayer p : lands.players()) {
 			p.playNotifySound(SoundEvents.RAID_HORN.value(), SoundSource.HOSTILE, 0.5f, 1.3f);
 		}
@@ -246,6 +266,69 @@ public final class Hunt {
 			if (r < 0) return i;
 		}
 		return 0;
+	}
+
+	private static PreyPrefix pickPrefix(RandomSource random) {
+		int total = 0;
+		for (int w : HuntTuning.PREFIX_WEIGHT) total += w;
+		int r = random.nextInt(total);
+		for (int i = 0; i < HuntTuning.PREFIX_WEIGHT.length; i++) {
+			r -= HuntTuning.PREFIX_WEIGHT[i];
+			if (r < 0) return PreyPrefix.values()[i];
+		}
+		return PreyPrefix.NONE;
+	}
+
+	/** Меченая цель: крепче по рангу охотника, плюс особенность. */
+	@Nullable
+	private static Mob makePrey(ServerLevel lands, HuntTargets.Target t, BlockPos at, int rank, PreyPrefix prefix, RandomSource random) {
+		Entity e = t.type().create(lands);
+		if (!(e instanceof Mob prey)) {
+			if (e != null) e.discard();
+			return null;
+		}
+		prey.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, random.nextFloat() * 360, 0);
+		prey.finalizeSpawn(lands, lands.getCurrentDifficultyAt(at), MobSpawnType.EVENT, null);
+		prey.setPersistenceRequired();
+		prey.addTag(PREY_TAG);
+		float hp = HuntTuning.PREY_HP[rank], dmg = HuntTuning.PREY_DAMAGE[rank];
+		switch (prefix) {
+			case GIANT -> {
+				hp *= HuntTuning.GIANT_HP;
+				dmg *= HuntTuning.GIANT_DAMAGE;
+				boost(prey, Attributes.SCALE, HuntTuning.GIANT_SCALE);
+			}
+			case SPLIT -> {
+				hp *= HuntTuning.SPLIT_STATS;
+				dmg *= HuntTuning.SPLIT_STATS;
+				boost(prey, Attributes.SCALE, HuntTuning.SPLIT_SCALE);
+			}
+			case SWIFT -> boost(prey, Attributes.MOVEMENT_SPEED, HuntTuning.SWIFT_SPEED);
+			default -> {}
+		}
+		boost(prey, Attributes.MAX_HEALTH, hp);
+		boost(prey, Attributes.ATTACK_DAMAGE, dmg);
+		prey.setHealth(prey.getMaxHealth());
+		if (prefix != PreyPrefix.NONE) {
+			prey.setCustomName(Component.translatable("hunt.tears-of-ink.prefix_name." + prefix.id, prey.getType().getDescription()));
+			prey.setCustomNameVisible(true);
+		}
+		return prey;
+	}
+
+	/** Место для второй половины — рядом с первой. */
+	private static BlockPos near2(ServerLevel level, BlockPos at, RandomSource random) {
+		for (int attempt = 0; attempt < 8; attempt++) {
+			BlockPos g = ground(level, at.getX() + random.nextInt(7) - 3, at.getZ() + random.nextInt(7) - 3);
+			if (g != null && Math.abs(g.getY() - at.getY()) <= 3) return g;
+		}
+		return at;
+	}
+
+	/** Как цель зовётся в объявлении: «резвого паука», «гигантского зомби», «разделённого надвое скелета». */
+	public static Component preyTitle(Entity prey, PreyPrefix prefix) {
+		Component name = preyName(prey);
+		return prefix == PreyPrefix.NONE ? name : Component.translatable("hunt.tears-of-ink.prefix." + prefix.id, name);
 	}
 
 	private static void boost(LivingEntity e, net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute> attr, float mult) {
@@ -312,14 +395,21 @@ public final class Hunt {
 
 	// ===== Ход Охоты =====
 
+	private static List<LivingEntity> alive(ServerLevel lands, Active a) {
+		List<LivingEntity> list = new ArrayList<>();
+		for (UUID id : a.preys) {
+			if (lands.getEntity(id) instanceof LivingEntity l && l.isAlive()) list.add(l);
+		}
+		return list;
+	}
+
 	private static void update(ServerLevel lands, Active a, long now) {
-		Entity preyE = lands.getEntity(a.prey);
 		Entity hunterE = lands.getEntity(a.hunter);
-		LivingEntity prey = preyE instanceof LivingEntity l && l.isAlive() ? l : null;
 		HunterEntity hunter = hunterE instanceof HunterEntity h && h.isAlive() ? h : null;
+		tickEchoes(lands, now);
 
 		if (a.frenzyUntil >= 0) { // охотник уже победил
-			if (hunter == null || now >= a.frenzyUntil) finish(lands, hunter, null);
+			if (hunter == null || now >= a.frenzyUntil) finish(lands, hunter);
 			else if (now % 20 == 0) {
 				ServerPlayer near = hunter.level().getNearestPlayer(hunter, 32) instanceof ServerPlayer sp && !sp.isCreative() && !sp.isSpectator()
 						&& !Sanctuary.contains(sp) ? sp : null;
@@ -327,25 +417,29 @@ public final class Hunt {
 			}
 			return;
 		}
-		if (prey == null) { // цель пропала (выгрузилась) — исход вдали
+		List<LivingEntity> preys = alive(lands, a);
+		if (preys.isEmpty()) { // цели пропали (выгрузились) — исход вдали
 			remote(lands, a, hunter);
 			return;
 		}
+		LivingEntity prey = preys.get(0);
 		a.x = prey.getX();
 		a.y = prey.getY();
 		a.z = prey.getZ();
 		if (now >= a.end) {
 			announce(lands, Component.translatable("hunt.tears-of-ink.timeout").withStyle(ChatFormatting.GRAY));
-			vanish(lands, prey);
-			finish(lands, hunter, prey);
+			for (LivingEntity p : preys) vanish(lands, p);
+			finish(lands, hunter);
 			return;
 		}
 		boolean playerNear = false, anyoneClose = false;
 		for (ServerPlayer p : lands.players()) {
 			if (p.isSpectator()) continue;
-			double d = p.distanceTo(prey);
-			if (d < HuntTuning.PLAYER_ENGAGE) playerNear = true;
-			if (d < HuntTuning.REMOTE) anyoneClose = true;
+			for (LivingEntity pr : preys) {
+				double d = p.distanceTo(pr);
+				if (d < HuntTuning.PLAYER_ENGAGE) playerNear = true;
+				if (d < HuntTuning.REMOTE) anyoneClose = true;
+			}
 		}
 		if (!anyoneClose && now % 20 == 0) {
 			remote(lands, a, hunter);
@@ -356,13 +450,45 @@ public final class Hunt {
 				a.engaged = true;
 				announce(lands, Component.translatable("hunt.tears-of-ink.engage", hunter.getCustomName()).withStyle(ChatFormatting.GRAY));
 			}
-			hunter.setFoe(prey, a.engaged);
+			LivingEntity closest = prey;
+			for (LivingEntity pr : preys) if (hunter.distanceTo(pr) < hunter.distanceTo(closest)) closest = pr;
+			hunter.setFoe(closest, a.engaged);
 		}
 		if (now % 10 == 0) {
-			Beam beam = new Beam(true, prey.getId(), a.x, a.y, a.z, a.type.beamColor, a.engaged);
+			Beam beam = new Beam(true, prey.getId(), preys.size() > 1 ? preys.get(1).getId() : -1, a.x, a.y, a.z, a.type.beamColor, a.engaged);
 			for (ServerPlayer p : lands.players()) ServerPlayNetworking.send(p, beam);
 		}
-		if (now % 4 == 0) lands.sendParticles(ParticleTypes.SQUID_INK, a.x, a.y + prey.getBbHeight() * 0.6, a.z, 2, 0.3, 0.4, 0.3, 0.01);
+		if (now % 4 == 0) {
+			for (LivingEntity pr : preys) {
+				lands.sendParticles(ParticleTypes.SQUID_INK, pr.getX(), pr.getY() + pr.getBbHeight() * 0.6, pr.getZ(), 2, 0.3, 0.4, 0.3, 0.01);
+			}
+		}
+	}
+
+	/** Резвая цель: второй быстрый удар, если враг всё ещё рядом. */
+	private static void tickEchoes(ServerLevel lands, long now) {
+		if (ECHOES.isEmpty()) return;
+		var it = ECHOES.iterator();
+		List<Echo> due = new ArrayList<>();
+		while (it.hasNext()) {
+			Echo e = it.next();
+			if (e.at() <= now) {
+				due.add(e);
+				it.remove();
+			}
+		}
+		for (Echo e : due) {
+			if (!(lands.getEntity(e.prey()) instanceof Mob m) || !m.isAlive()) continue;
+			if (!(lands.getEntity(e.target()) instanceof LivingEntity t) || !t.isAlive()) continue;
+			if (m.distanceTo(t) > 3.5 + t.getBbWidth() / 2) continue;
+			m.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
+			echoing = true;
+			try {
+				t.hurt(m.damageSources().mobAttack(m), e.damage());
+			} finally {
+				echoing = false;
+			}
+		}
 	}
 
 	private static void onDeath(LivingEntity entity, DamageSource source) {
@@ -371,14 +497,18 @@ public final class Hunt {
 		if (entity.getUUID().equals(a.hunter)) {
 			if (a.frenzyUntil >= 0) { // Чернильного в бешенстве одолели игроки
 				announce(lands, Component.translatable("hunt.tears-of-ink.frenzy_end").withStyle(ChatFormatting.GOLD));
-				finish(lands, null, null);
+				finish(lands, null);
 				return;
 			}
 			a.hunterDead = true;
 			announce(lands, Component.translatable("hunt.tears-of-ink.devoured").withStyle(ChatFormatting.DARK_RED));
 			return;
 		}
-		if (!entity.getUUID().equals(a.prey)) return;
+		if (!a.preys.remove(entity.getUUID())) return;
+		if (!a.preys.isEmpty()) { // разделённая: одна половина пала, вторая ещё жива
+			announce(lands, Component.translatable("hunt.tears-of-ink.half_down").withStyle(ChatFormatting.GRAY));
+			return;
+		}
 		HunterEntity hunter = lands.getEntity(a.hunter) instanceof HunterEntity h && h.isAlive() ? h : null;
 		float players = 0;
 		for (float f : a.damage.values()) players += f;
@@ -402,7 +532,7 @@ public final class Hunt {
 		}
 		announce(lands, Component.translatable(a.hunterDead ? "hunt.tears-of-ink.won_double" : "hunt.tears-of-ink.won", list)
 				.withStyle(ChatFormatting.GOLD));
-		finish(lands, hunter, null);
+		finish(lands, hunter);
 	}
 
 	private static void hunterWins(ServerLevel lands, Active a, @Nullable HunterEntity hunter) {
@@ -411,29 +541,35 @@ public final class Hunt {
 		if (hunter != null && a.type == HunterType.INK) { // Чернильный, убив цель, бросается на живых
 			a.frenzyUntil = lands.getServer().getTickCount() + HuntTuning.INK_FRENZY;
 			announce(lands, Component.translatable("hunt.tears-of-ink.frenzy", name).withStyle(ChatFormatting.DARK_PURPLE));
-			for (ServerPlayer p : lands.players()) ServerPlayNetworking.send(p, new Beam(false, -1, 0, 0, 0, 0, false));
+			for (ServerPlayer p : lands.players()) ServerPlayNetworking.send(p, new Beam(false, -1, -1, 0, 0, 0, 0, false));
 			return;
 		}
-		finish(lands, hunter, null);
+		finish(lands, hunter);
 	}
 
 	private static void remote(ServerLevel lands, Active a, @Nullable HunterEntity hunter) {
-		Entity prey = lands.getEntity(a.prey);
 		boolean hunterWins = !a.hunterDead && lands.random.nextFloat() < HuntTuning.REMOTE_HUNTER_WINS[a.rank];
 		Component name = Component.translatable("hunt.tears-of-ink.hunter_name",
 				Component.translatable("hunt.tears-of-ink.type." + a.type.id), Component.translatable("hunt.tears-of-ink.rank." + a.rank));
 		announce(lands, Component.translatable(hunterWins ? "hunt.tears-of-ink.remote_hunter" : "hunt.tears-of-ink.remote_prey", name)
 				.withStyle(ChatFormatting.GRAY));
-		if (prey != null) prey.discard();
-		finish(lands, hunter, null);
+		finish(lands, hunter);
 	}
 
-	private static void finish(ServerLevel lands, @Nullable HunterEntity hunter, @Nullable Entity prey) {
+	/** Конец Охоты: охотник уходит, оставшиеся цели растворяются. */
+	private static void finish(ServerLevel lands, @Nullable HunterEntity hunter) {
 		if (hunter != null) vanish(lands, hunter);
-		if (prey != null && prey.isAlive()) prey.discard();
+		Active a = active;
+		if (a != null) {
+			for (UUID id : a.preys) {
+				Entity e = lands.getEntity(id);
+				if (e != null && e.isAlive()) e.discard();
+			}
+		}
+		ECHOES.clear();
 		active = null;
 		nextStart = lands.getServer().getTickCount() + HuntTuning.INTERVAL;
-		for (ServerPlayer p : lands.players()) ServerPlayNetworking.send(p, new Beam(false, -1, 0, 0, 0, 0, false));
+		for (ServerPlayer p : lands.players()) ServerPlayNetworking.send(p, new Beam(false, -1, -1, 0, 0, 0, 0, false));
 	}
 
 	/** Растворяется в чернилах. */
@@ -447,9 +583,8 @@ public final class Hunt {
 	public static void stop(ServerLevel lands) {
 		Active a = active;
 		if (a == null) return;
-		Entity prey = lands.getEntity(a.prey);
 		Entity hunter = lands.getEntity(a.hunter);
-		finish(lands, hunter instanceof HunterEntity h ? h : null, prey);
+		finish(lands, hunter instanceof HunterEntity h ? h : null);
 	}
 
 	/** Сдвинуть следующую Охоту (команда). */

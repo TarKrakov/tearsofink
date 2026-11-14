@@ -13,7 +13,8 @@
 		"ServerPlayerRespawnMixin",
 		"MobAccessor",
 		"LivingEntityAttackAccessor",
-		"SanctuaryAttackMixin"
+		"SanctuaryAttackMixin",
+		"NoSunBurnMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
