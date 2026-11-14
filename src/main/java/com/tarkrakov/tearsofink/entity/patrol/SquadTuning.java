@@ -21,6 +21,8 @@ public final class SquadTuning {
 	public static final int CHARGE_WINDUP = 24, CHARGE_RUN = 30, CHARGE_STUN = 25, CHARGE_COOLDOWN = 160; // замах = charge_start 1,2 с
 	/** Рывок сносит «мягкие» блоки не твёрже этого (доски 2.0, земля 0.5, листья 0.2). Камень (1.5+) — см. правило в коде. */
 	public static final float CHARGE_BREAK_HARDNESS = 2.0f;
+	/** Рывок проламывает до стольких мягких блоков и бежит дальше; упёрся в твёрдое — оглушён. */
+	public static final int CHARGE_BREAK_MAX = 8;
 	/** Во время бега чуть доворачивает за игроком: градусов за тик. */
 	public static final float CHARGE_TURN_DEG = 2.5f;
 	/** Не попал по врагу столько тиков (3 с) — рывок (не даёт себя кайтить); и с какой дистанции. */

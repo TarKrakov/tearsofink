@@ -47,6 +47,8 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 	int chargeTicks = -1, chargeCooldown;
 	/** Когда последний раз попал по врагу (тики) — давно не попадал → рывок. */
 	private int lastLanded;
+	/** Сколько блоков снёс за этот рывок. */
+	private int chargeBroken;
 	int stun;
 	private Vec3 chargeDir = Vec3.ZERO;
 	private final java.util.Set<Integer> chargeHit = new java.util.HashSet<>();
@@ -160,6 +162,7 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 	// ----- рывок -----
 	void startCharge(LivingEntity target) {
 		chargeTicks = 0;
+		chargeBroken = 0;
 		chargeHit.clear();
 		chargeCooldown = SquadTuning.CHARGE_COOLDOWN;
 		lastLanded = this.tickCount;
@@ -206,9 +209,13 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 			return;
 		}
 		if (this.horizontalCollision) {
-			breakSoftBlocks();
+			int broken = chargeBroken < SquadTuning.CHARGE_BREAK_MAX ? breakSoftBlocks(SquadTuning.CHARGE_BREAK_MAX - chargeBroken) : 0;
 			this.playSound(SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, 1.0f, 0.7f);
-			endCharge(true);
+			if (broken > 0) { // проломил — бежит дальше
+				chargeBroken += broken;
+				return;
+			}
+			endCharge(true); // твёрдое (или лимит) — оглушён
 			return;
 		}
 		if (chargeTicks >= SquadTuning.CHARGE_WINDUP + SquadTuning.CHARGE_RUN) endCharge(true);
@@ -263,17 +270,19 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 	}
 
 	/** Сносит мягкие блоки перед собой (если в мире разрешено разрушение мобами). */
-	private void breakSoftBlocks() {
-		if (!this.level().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) return;
+	private int breakSoftBlocks(int limit) {
+		if (!this.level().getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) return 0;
+		int broken = 0;
 		Vec3 front = this.position().add(chargeDir.scale(this.getBbWidth() / 2 + 0.6));
 		Vec3 side = new Vec3(-chargeDir.z, 0, chargeDir.x);
 		for (int s = -1; s <= 1; s++) {
 			for (int h = 0; h <= 2; h++) {
 				BlockPos pos = BlockPos.containing(front.add(side.scale(s * 0.6)).add(0, h + 0.1, 0));
 				BlockState state = this.level().getBlockState(pos);
-				if (isSoft(state, pos)) this.level().destroyBlock(pos, true, this);
+				if (broken < limit && isSoft(state, pos) && this.level().destroyBlock(pos, true, this)) broken++;
 			}
 		}
+		return broken;
 	}
 
 	private boolean isSoft(BlockState state, BlockPos pos) {

@@ -65,6 +65,8 @@ public final class Hunt {
 	public static final String PREY_TAG = "tearsofink.hunt_prey";
 	private static final ResourceKey<LootTable> REWARD = ResourceKey.create(Registries.LOOT_TABLE, TearsOfInk.id("gameplay/hunt_reward"));
 	private static final ResourceLocation PREY_BOOST = TearsOfInk.id("hunt_prey");
+	/** Цель — не выше и не ниже игрока больше чем на столько блоков. */
+	private static final int HEIGHT_GAP = 12;
 	private static final String C_LINE = "HunterLine", C_TIER = "HunterTier", C_KIND = "HunterKind";
 
 	/** Луч Охоты и затемнение цели у клиентов. on=false — Охоты нет. */
@@ -269,6 +271,7 @@ public final class Hunt {
 			int x = (int) Math.floor(player.getX() + Math.cos(angle) * d), z = (int) Math.floor(player.getZ() + Math.sin(angle) * d);
 			BlockPos ground = ground(level, x, z);
 			if (ground == null || !level.isPositionEntityTicking(ground)) continue;
+			if (Math.abs(ground.getY() - player.getY()) > HEIGHT_GAP) continue; // примерно на уровне игрока
 			if (layout != null && (layout.depthInside(x, z) < 20 || Sanctuary.near(layout, x, z, 8))) continue;
 			return ground;
 		}
@@ -282,21 +285,29 @@ public final class Hunt {
 			double angle = away + (random.nextDouble() - 0.5) * Math.PI;
 			double d = HuntTuning.WAIT_MIN + random.nextDouble() * (HuntTuning.WAIT_MAX - HuntTuning.WAIT_MIN);
 			BlockPos g = ground(level, (int) Math.floor(prey.getX() + Math.cos(angle) * d), (int) Math.floor(prey.getZ() + Math.sin(angle) * d));
-			if (g != null) return g;
+			if (g != null && Math.abs(g.getY() - prey.getY()) <= 4) return g; // охотник — на одном уровне с целью
 		}
 		return prey;
 	}
 
+	/** Настоящая земля: сверху вниз, мимо крон и веток (на дереве цель недосягаема). */
 	@Nullable
 	private static BlockPos ground(ServerLevel level, int x, int z) {
 		BlockPos col = new BlockPos(x, 0, z);
 		if (!level.hasChunkAt(col)) return null;
-		int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-		BlockPos at = new BlockPos(x, y, z);
-		if (!level.getFluidState(at.below()).isEmpty() || !level.getFluidState(at).isEmpty()) return null;
-		if (!level.getBlockState(at).getCollisionShape(level, at).isEmpty()
-				|| !level.getBlockState(at.above()).getCollisionShape(level, at.above()).isEmpty()) return null;
-		return at;
+		int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+		for (int y = top; y > top - 48 && y > level.getMinBuildHeight(); y--) {
+			BlockPos at = new BlockPos(x, y, z);
+			var below = level.getBlockState(at.below());
+			if (below.getCollisionShape(level, at.below()).isEmpty()) continue;
+			if (below.is(net.minecraft.tags.BlockTags.LOGS) || below.is(net.minecraft.tags.BlockTags.LEAVES)) continue; // ветка — ниже
+			if (!level.getFluidState(at.below()).isEmpty() || !level.getFluidState(at).isEmpty()) return null;
+			if (!level.getBlockState(at).getCollisionShape(level, at).isEmpty()
+					|| !level.getBlockState(at.above()).getCollisionShape(level, at.above()).isEmpty()) continue;
+			if (!level.canSeeSky(at) && y < top - 3 && level.getBrightness(net.minecraft.world.level.LightLayer.SKY, at) == 0) return null; // пещера
+			return at;
+		}
+		return null;
 	}
 
 	// ===== Ход Охоты =====
