@@ -70,10 +70,16 @@ public final class Hunt {
 	/** Луч Охоты и затемнение цели у клиентов. on=false — Охоты нет. */
 	public record Beam(boolean on, int entity, double x, double y, double z, int color, boolean engaged) implements CustomPacketPayload {
 		public static final Type<Beam> TYPE = new Type<>(TearsOfInk.id("hunt_beam"));
-		public static final StreamCodec<RegistryFriendlyByteBuf, Beam> CODEC = StreamCodec.composite(
-				ByteBufCodecs.BOOL, Beam::on, ByteBufCodecs.VAR_INT, Beam::entity,
-				ByteBufCodecs.DOUBLE, Beam::x, ByteBufCodecs.DOUBLE, Beam::y, ByteBufCodecs.DOUBLE, Beam::z,
-				ByteBufCodecs.INT, Beam::color, ByteBufCodecs.BOOL, Beam::engaged, Beam::new);
+		public static final StreamCodec<RegistryFriendlyByteBuf, Beam> CODEC = StreamCodec.of((buf, b) -> {
+			buf.writeBoolean(b.on());
+			buf.writeVarInt(b.entity());
+			buf.writeDouble(b.x());
+			buf.writeDouble(b.y());
+			buf.writeDouble(b.z());
+			buf.writeInt(b.color());
+			buf.writeBoolean(b.engaged());
+		}, buf -> new Beam(buf.readBoolean(), buf.readVarInt(), buf.readDouble(), buf.readDouble(), buf.readDouble(),
+				buf.readInt(), buf.readBoolean()));
 
 		@Override
 		public Type<? extends CustomPacketPayload> type() {
