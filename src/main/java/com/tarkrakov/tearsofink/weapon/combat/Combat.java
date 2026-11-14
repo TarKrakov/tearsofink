@@ -167,7 +167,6 @@ public final class Combat {
 		s.speed = step.speed() * combo.tempo();
 		s.carry = 0;
 		p.resetAttackStrengthTicker();
-		p.swing(InteractionHand.MAIN_HAND); // ванильный взмах для тех, кто смотрит со стороны (пока нет своих поз)
 		broadcast(p, a, step.anim(), duration, s.speed, combo.tempo()); // пустое anim — правая рука в этом ударе не двигается (шкала всё равно)
 		if (step.offAnim() != null) broadcast(p, a, "off:" + step.offAnim(), duration, -2f, combo.tempo());
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.5f,
@@ -201,7 +200,6 @@ public final class Combat {
 		s.queued = false;
 		s.extra.add(new Pending(now + combo.scaled(GUILLOTINE_CHOP.hit()), Archetype.EXECUTIONER, GUILLOTINE_CHOP));
 		broadcast(p, Archetype.EXECUTIONER, (offhand ? "off:" : "") + GUILLOTINE_CHOP.anim(), chopInterval(), -1f, combo.tempo());
-		p.swing(offhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.6f, 0.55f + p.getRandom().nextFloat() * 0.1f);
 	}
 
@@ -221,7 +219,6 @@ public final class Combat {
 		s.extra.add(new Pending(now + combo.scaled(GUILLOTINE_END.hit()), Archetype.EXECUTIONER, GUILLOTINE_END));
 		broadcast(p, Archetype.EXECUTIONER, GUILLOTINE_END.anim(), duration, -1f, combo.tempo());
 		broadcast(p, Archetype.EXECUTIONER, "off:" + GUILLOTINE_END.anim(), duration, -1f, combo.tempo());
-		p.swing(InteractionHand.MAIN_HAND);
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1f, 0.5f);
 	}
 

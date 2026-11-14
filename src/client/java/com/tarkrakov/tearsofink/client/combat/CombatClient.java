@@ -27,15 +27,20 @@ public final class CombatClient {
 		WeaponAnims.init();
 		ClientPlayNetworking.registerGlobalReceiver(Combat.Anim.TYPE, (payload, ctx) -> ctx.client().execute(() -> {
 			var player = ctx.client().player;
-			if (player == null || payload.entity() != player.getId()) return; // чужие удары — позже (третье лицо)
+			var level = ctx.client().level;
+			if (player == null || level == null) return;
 			Archetype a = Archetype.byId(payload.archetype());
 			if (a == null) return;
 			String anim = payload.anim();
-			var arm = player.getMainArm();
-			if (anim.startsWith("off:")) { // парные приёмы: движение второй руки
-				anim = anim.substring(4);
-				arm = arm.getOpposite();
+			boolean offTag = anim.startsWith("off:"); // парные приёмы: движение второй руки
+			if (offTag) anim = anim.substring(4);
+			// третье лицо — у всех (и у себя в F5)
+			if (level.getEntity(payload.entity()) instanceof net.minecraft.world.entity.player.Player who && !anim.isEmpty()) {
+				var side = offTag ? who.getMainArm().getOpposite() : who.getMainArm();
+				ThirdPerson.play(who.getId(), side, a, anim, payload.tempo());
 			}
+			if (payload.entity() != player.getId()) return;
+			var arm = offTag ? player.getMainArm().getOpposite() : player.getMainArm();
 			boolean off = arm != player.getMainArm();
 			// пустое движение — в этом ударе рука не двигается (но шкала у правой всё равно сбрасывается)
 			if (!anim.isEmpty()) WeaponAnims.play(arm, a, anim, off ? 0 : payload.ticks(), payload.tempo());
@@ -46,6 +51,7 @@ public final class CombatClient {
 				fillCarry = 0;
 			}
 		}));
+		net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((h, c) -> ThirdPerson.clear());
 		ClientTickEvents.END_CLIENT_TICK.register(CombatClient::tick);
 	}
 

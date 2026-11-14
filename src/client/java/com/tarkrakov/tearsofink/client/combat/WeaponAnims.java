@@ -41,7 +41,7 @@ public final class WeaponAnims {
 	 * hold — сколько секунд клинок стоит в последней позе (следующий удар начнётся прямо из неё),
 	 * back — за сколько потом возвращается в стойку. Без hold движение идёт к стойке к моменту length.
 	 */
-	public record Clip(float length, boolean absolute, List<Key> keys, float hold, float back) {}
+	public record Clip(float length, boolean absolute, List<Key> keys, float hold, float back, float impact, ThirdPerson.Track third) {}
 
 	private static final Map<String, Map<String, Clip>> CLIPS = new HashMap<>();
 
@@ -117,7 +117,9 @@ public final class WeaponAnims {
 			}
 			keys.sort((a, b) -> Float.compare(a.t(), b.t()));
 			out.put(e.getKey(), new Clip(o.get("length").getAsFloat(), absolute, keys,
-					o.has("hold") ? o.get("hold").getAsFloat() : 0f, o.has("return") ? o.get("return").getAsFloat() : 0.3f));
+					o.has("hold") ? o.get("hold").getAsFloat() : 0f, o.has("return") ? o.get("return").getAsFloat() : 0.3f,
+					o.has("impact") ? o.get("impact").getAsFloat() : -1f,
+					o.has("third") ? ThirdPerson.parse(o.getAsJsonObject("third")) : null));
 		}
 		return out;
 	}
@@ -126,6 +128,11 @@ public final class WeaponAnims {
 		if (!o.has(key)) return new Vector3f(def);
 		JsonArray a = o.getAsJsonArray(key);
 		return new Vector3f(a.get(0).getAsFloat(), a.get(1).getAsFloat(), a.get(2).getAsFloat());
+	}
+
+	public static Clip clip(Archetype a, String anim) {
+		Map<String, Clip> m = CLIPS.get(a.id);
+		return m == null ? null : m.get(anim);
 	}
 
 	public static boolean has(Archetype a, String anim) {
@@ -215,11 +222,11 @@ public final class WeaponAnims {
 		}
 	}
 
-	private static Vector3f lerp(Vector3f a, Vector3f b, float u) {
+	static Vector3f lerp(Vector3f a, Vector3f b, float u) {
 		return new Vector3f(a).lerp(b, u);
 	}
 
-	private static float ease(Ease e, float u) {
+	static float ease(Ease e, float u) {
 		return switch (e) {
 			case LINEAR -> u;
 			case EASE_IN -> u * u * u;
