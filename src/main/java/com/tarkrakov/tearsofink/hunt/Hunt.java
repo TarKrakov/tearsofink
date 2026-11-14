@@ -238,8 +238,9 @@ public final class Hunt {
 		n.y = prey.getY();
 		n.z = prey.getZ();
 		active = n; // до появления в мире: иначе цель «чужая» и растворяется сразу
-		for (Mob m : preys) lands.addFreshEntity(m);
-		if (!prey.isAddedToLevel()) {
+		boolean added = false;
+		for (Mob m : preys) added |= lands.addFreshEntity(m);
+		if (!added) {
 			active = null;
 			for (Mob m : preys) m.discard();
 			hunter.discard();
