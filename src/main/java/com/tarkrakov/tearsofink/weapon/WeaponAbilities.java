@@ -38,6 +38,14 @@ public final class WeaponAbilities {
 	public static final RadianceAbility RADIANCE = new RadianceAbility();
 	public static final WaveAbility WAVE = new WaveAbility();
 	public static final CleaveAbility CLEAVE = new CleaveAbility();
+	/** Двуручный клинок в ЛЕВОЙ руке (когда в правой одноручный): урон его абилки ×это. */
+	public static final float OFFHAND_TWO_HANDED_POWER = 0.6f;
+	/** Сила текущей абилки для игрока (1 — полная). Ставится перед запуском, абилки читают при срабатывании. */
+	private static final Map<UUID, Float> POWER = new HashMap<>();
+
+	public static float power(ServerPlayer player) {
+		return POWER.getOrDefault(player.getUUID(), 1f);
+	}
 	/** Парные приёмы (два одинаковых клинка, ПКМ). */
 	public static final GuillotineAbility GUILLOTINE = new GuillotineAbility();
 	public static final FlourishAbility FLOURISH = new FlourishAbility();
@@ -73,6 +81,8 @@ public final class WeaponAbilities {
 			return;
 		}
 		SkillInput input = new SkillInput(payload.strafe(), payload.forward(), payload.offhand());
+		// двуручник в левой (в правой одноручный) — можно, но абилка слабее
+		POWER.put(player.getUUID(), payload.offhand() && InkGreatswordItem.twoHanded(stack) ? OFFHAND_TWO_HANDED_POWER : 1f);
 		if (Skills.activate(player, weapon.ability(), input) && stack.getItem() instanceof InkGreatswordItem) {
 			// белая «шторка» перезарядки на иконке меча
 			player.getCooldowns().addCooldown(stack.getItem(), weapon.ability().cooldownTicks());
@@ -266,6 +276,8 @@ public final class WeaponAbilities {
 		public static final double REACH = 2.75;
 
 		private final Map<UUID, Integer> pending = new HashMap<>();
+		private final Map<UUID, Float> power = new HashMap<>();
+		private final Map<UUID, Boolean> offhand = new HashMap<>();
 
 		CleaveAbility() {
 			super(TearsOfInk.id("ink_cleave"), 15, 0, 100);
@@ -275,6 +287,8 @@ public final class WeaponAbilities {
 		public boolean activate(ServerPlayer player, SkillInput input) {
 			if (pending.containsKey(player.getUUID())) return false;
 			pending.put(player.getUUID(), WINDUP_TICKS);
+			power.put(player.getUUID(), WeaponAbilities.power(player));
+			offhand.put(player.getUUID(), input.sneaking());
 			player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, WINDUP_TICKS, 3, false, false, false));
 			player.serverLevel().playSound(null, player.blockPosition(), SoundEvents.TRIDENT_RIPTIDE_1.value(), SoundSource.PLAYERS, 0.6f, 0.6f);
 			return true;
@@ -298,11 +312,13 @@ public final class WeaponAbilities {
 					continue;
 				}
 				it.remove();
-				strike(player, level);
+				strike(player, level, power.getOrDefault(e.getKey(), 1f), offhand.getOrDefault(e.getKey(), false));
+				power.remove(e.getKey());
+				offhand.remove(e.getKey());
 			}
 		}
 
-		private void strike(ServerPlayer player, ServerLevel level) {
+		private void strike(ServerPlayer player, ServerLevel level, float mult, boolean leftHand) {
 			Vec3 dir = flatLook(player);
 			Vec3 center = player.position().add(dir.scale(REACH));
 			AABB area = new AABB(center.x - 1.5, center.y - 0.5, center.z - 1.5, center.x + 1.5, center.y + 2.0, center.z + 1.5);
