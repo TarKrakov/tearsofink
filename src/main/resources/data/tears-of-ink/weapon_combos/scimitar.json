@@ -1,0 +1,36 @@
+{
+  "_comment": "Связка Разрывающих Скимитаров: два текучих взмаха и подцеп (укол с доп. уроном за полную связку). Правка → /reload.",
+  "min_strength": 0.9,
+  "reset_ticks": 30,
+  "ability_anim": "ability",
+  "ability_ticks": 16,
+  "steps": [
+    {
+      "anim": "attack1",
+      "duration": 12,
+      "hit": 6,
+      "damage": 0.9,
+      "reach": 3.2,
+      "arc": 120,
+      "knockback": 0.3
+    },
+    {
+      "anim": "attack2",
+      "duration": 12,
+      "hit": 6,
+      "damage": 0.9,
+      "reach": 3.2,
+      "arc": 120,
+      "knockback": 0.3
+    },
+    {
+      "anim": "attack3",
+      "duration": 15,
+      "hit": 6,
+      "damage": 1.5,
+      "reach": 3.6,
+      "arc": 40,
+      "knockback": 0.5
+    }
+  ]
+}

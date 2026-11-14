@@ -1,0 +1,281 @@
+{
+  "_comment": "Движения Клинков Палачей от первого лица. t — секунды, rotation — градусы [X наклон вперёд-назад, Y поворот, Z крен по экрану], translation — пиксели [вправо, вверх, к тебе]. Это сдвиг от обычной стойки (Display). ease — как идёт переход К СЛЕДУЮЩЕЙ позе: linear, ease_in (разгон), ease_out (торможение), ease_in_out, back_out (с пружинкой), heavy (долго набирает ход). Можно 'absolute': true — тогда позы это полные числа Display из Blockbench. Правка → Ctrl+F9 → F3+T.",
+  "animations": {
+    "equip": {
+      "length": 0.75,
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            -60,
+            0,
+            -40
+          ],
+          "translation": [
+            4,
+            -16,
+            4
+          ],
+          "ease": "heavy"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            -60,
+            0,
+            -40
+          ],
+          "translation": [
+            4,
+            -16,
+            4
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.55,
+          "rotation": [
+            6,
+            0,
+            6
+          ],
+          "translation": [
+            0,
+            1,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.75,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    "attack1": {
+      "length": 0.7,
+      "keyframes": [
+        {
+          "t": 0.18,
+          "rotation": [
+            25,
+            0,
+            -35
+          ],
+          "translation": [
+            6,
+            8,
+            2
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -30,
+            0,
+            30
+          ],
+          "translation": [
+            -2,
+            0,
+            -4
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.42,
+          "rotation": [
+            -55,
+            0,
+            50
+          ],
+          "translation": [
+            -6,
+            -6,
+            -2
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "attack2": {
+      "length": 0.6,
+      "keyframes": [
+        {
+          "t": 0.0,
+          "rotation": [
+            -55,
+            0,
+            50
+          ],
+          "translation": [
+            -6,
+            -6,
+            -2
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.25,
+          "rotation": [
+            10,
+            0,
+            -60
+          ],
+          "translation": [
+            8,
+            2,
+            3
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.35,
+          "rotation": [
+            15,
+            0,
+            -65
+          ],
+          "translation": [
+            9,
+            3,
+            3
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "attack3": {
+      "length": 1.0,
+      "keyframes": [
+        {
+          "t": 0.3,
+          "rotation": [
+            65,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            12,
+            5
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.42,
+          "rotation": [
+            70,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            13,
+            5
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.5,
+          "rotation": [
+            -80,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            -8,
+            -6
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.62,
+          "rotation": [
+            -72,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            -6,
+            -5
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.8,
+          "rotation": [
+            -70,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            -6,
+            -5
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "ability": {
+      "length": 1.2,
+      "keyframes": [
+        {
+          "t": 0.45,
+          "rotation": [
+            75,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            14,
+            5
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.55,
+          "rotation": [
+            -85,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            -10,
+            -6
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.85,
+          "rotation": [
+            -80,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            -9,
+            -6
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    }
+  }
+}
