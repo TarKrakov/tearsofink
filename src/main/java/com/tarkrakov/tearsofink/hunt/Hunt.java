@@ -175,7 +175,6 @@ public final class Hunt {
 		boost(prey, Attributes.MAX_HEALTH, HuntTuning.PREY_HP[rank]);
 		boost(prey, Attributes.ATTACK_DAMAGE, HuntTuning.PREY_DAMAGE[rank]);
 		prey.setHealth(prey.getMaxHealth());
-		lands.addFreshEntity(prey);
 
 		HunterWeaponItem kind = random.nextBoolean() ? (HunterWeaponItem) ModItems.HUNTER_GREATSWORD : (HunterWeaponItem) ModItems.HUNTER_SABER;
 		ItemStack weapon = kind.make(type, rank);
@@ -188,7 +187,6 @@ public final class Hunt {
 		hunter.moveTo(hp.getX() + 0.5, hp.getY(), hp.getZ() + 0.5, 0, 0);
 		hunter.setup(type, rank, weapon);
 		hunter.setFoe(prey, false);
-		lands.addFreshEntity(hunter);
 
 		Active n = new Active();
 		n.prey = prey.getUUID();
@@ -202,7 +200,13 @@ public final class Hunt {
 		n.x = prey.getX();
 		n.y = prey.getY();
 		n.z = prey.getZ();
-		active = n;
+		active = n; // до появления в мире: иначе цель «чужая» и растворяется сразу
+		if (!lands.addFreshEntity(prey)) {
+			active = null;
+			hunter.discard();
+			return false;
+		}
+		lands.addFreshEntity(hunter);
 		announce(lands, Component.translatable("hunt.tears-of-ink.start", hunter.getCustomName(), weapon.getHoverName(),
 				preyName(prey), target.getDisplayName()).withStyle(ChatFormatting.GOLD));
 		for (ServerPlayer p : lands.players()) {
@@ -237,12 +241,14 @@ public final class Hunt {
 	@Nullable
 	private static BlockPos spot(ServerLevel level, ServerPlayer player, RandomSource random) {
 		InkLandsLayout layout = InkLandsLayout.of(level);
-		for (int attempt = 0; attempt < 32; attempt++) {
+		for (int attempt = 0; attempt < 48; attempt++) {
 			double angle = random.nextDouble() * Math.PI * 2;
-			double d = HuntTuning.SPAWN_MIN + random.nextDouble() * (HuntTuning.SPAWN_MAX - HuntTuning.SPAWN_MIN);
+			// маленькая дальность прорисовки мира — понемногу ближе (цель должна «жить», а не стоять замороженной)
+			double shrink = attempt < 24 ? 1 : 0.7;
+			double d = (HuntTuning.SPAWN_MIN + random.nextDouble() * (HuntTuning.SPAWN_MAX - HuntTuning.SPAWN_MIN)) * shrink;
 			int x = (int) Math.floor(player.getX() + Math.cos(angle) * d), z = (int) Math.floor(player.getZ() + Math.sin(angle) * d);
 			BlockPos ground = ground(level, x, z);
-			if (ground == null) continue;
+			if (ground == null || !level.isPositionEntityTicking(ground)) continue;
 			if (layout != null && (layout.depthInside(x, z) < 20 || Sanctuary.near(layout, x, z, 8))) continue;
 			return ground;
 		}
