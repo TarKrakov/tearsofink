@@ -32,6 +32,71 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 		return ability.get();
 	}
 
+	// ===== Парные приёмы: два одинаковых клинка, ПКМ =====
+	private static boolean dual(net.minecraft.world.entity.player.Player player, ItemStack stack) {
+		var a = com.tarkrakov.tearsofink.weapon.combat.Archetype.of(stack);
+		return a != null && a == com.tarkrakov.tearsofink.weapon.combat.Archetype.of(player.getOffhandItem())
+				&& player.getMainHandItem() == stack;
+	}
+
+	@Override
+	public net.minecraft.world.InteractionResultHolder<ItemStack> use(net.minecraft.world.level.Level level,
+			net.minecraft.world.entity.player.Player player, net.minecraft.world.InteractionHand hand) {
+		ItemStack stack = player.getItemInHand(hand);
+		if (hand != net.minecraft.world.InteractionHand.MAIN_HAND || !dual(player, stack)) return net.minecraft.world.InteractionResultHolder.pass(stack);
+		var a = com.tarkrakov.tearsofink.weapon.combat.Archetype.of(stack);
+		var input = new com.tarkrakov.tearsofink.skill.SkillInput(0, 0, false);
+		if (a == com.tarkrakov.tearsofink.weapon.combat.Archetype.EXECUTIONER) {
+			// Гильотина: держать ПКМ
+			if (player instanceof net.minecraft.server.level.ServerPlayer sp
+					&& !com.tarkrakov.tearsofink.skill.Skills.activate(sp, WeaponAbilities.GUILLOTINE, input)) {
+				return net.minecraft.world.InteractionResultHolder.fail(stack);
+			}
+			player.startUsingItem(hand);
+			return net.minecraft.world.InteractionResultHolder.consume(stack);
+		}
+		// Чернильный Росчерк: одно нажатие
+		if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
+			com.tarkrakov.tearsofink.skill.Skills.activate(sp, WeaponAbilities.FLOURISH, input);
+		}
+		return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+	}
+
+	@Override
+	public int getUseDuration(ItemStack stack, net.minecraft.world.entity.LivingEntity entity) {
+		return 72000;
+	}
+
+	@Override
+	public net.minecraft.world.item.UseAnim getUseAnimation(ItemStack stack) {
+		return net.minecraft.world.item.UseAnim.NONE;
+	}
+
+	@Override
+	public void onUseTick(net.minecraft.world.level.Level level, net.minecraft.world.entity.LivingEntity entity, ItemStack stack, int remaining) {
+		if (!(entity instanceof net.minecraft.server.level.ServerPlayer sp)) return;
+		if (!dual(sp, stack)) {
+			sp.stopUsingItem();
+			return;
+		}
+		int used = getUseDuration(stack, entity) - remaining;
+		int every = com.tarkrakov.tearsofink.weapon.combat.Combat.GUILLOTINE_CHOP.duration();
+		if (used % every != 1) return;
+		int n = used / every;
+		if (n >= com.tarkrakov.tearsofink.weapon.combat.Combat.GUILLOTINE_MAX_CHOPS) {
+			sp.releaseUsingItem(); // устал — завершающий удар сам
+			return;
+		}
+		com.tarkrakov.tearsofink.weapon.combat.Combat.guillotineChop(sp, n % 2 == 1);
+	}
+
+	@Override
+	public void releaseUsing(ItemStack stack, net.minecraft.world.level.Level level, net.minecraft.world.entity.LivingEntity entity, int timeLeft) {
+		if (!(entity instanceof net.minecraft.server.level.ServerPlayer sp) || !dual(sp, stack)) return;
+		int used = getUseDuration(stack, entity) - timeLeft;
+		if (used >= 2) com.tarkrakov.tearsofink.weapon.combat.Combat.guillotineEnd(sp); // хоть один удар был — казнь сверху
+	}
+
 	@Override
 	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
 		Descriptions.add(getDescriptionId(), tooltip);

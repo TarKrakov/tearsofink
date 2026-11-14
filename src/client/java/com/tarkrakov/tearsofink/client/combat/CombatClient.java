@@ -30,7 +30,13 @@ public final class CombatClient {
 			if (player == null || payload.entity() != player.getId()) return; // чужие удары — позже (третье лицо)
 			Archetype a = Archetype.byId(payload.archetype());
 			if (a == null) return;
-			WeaponAnims.play(player.getMainArm(), a, payload.anim(), payload.ticks());
+			String anim = payload.anim();
+			var arm = player.getMainArm();
+			if (anim.startsWith("off:")) { // парные приёмы: движение второй руки
+				anim = anim.substring(4);
+				arm = arm.getOpposite();
+			}
+			WeaponAnims.play(arm, a, anim, arm == player.getMainArm() ? payload.ticks() : 0);
 			if (payload.speed() >= 0) { // удар связки (не приём): шкала под прицелом — как у сервера
 				player.resetAttackStrengthTicker();
 				fillSpeed = payload.speed();

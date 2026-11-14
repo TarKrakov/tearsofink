@@ -38,6 +38,9 @@ public final class WeaponAbilities {
 	public static final RadianceAbility RADIANCE = new RadianceAbility();
 	public static final WaveAbility WAVE = new WaveAbility();
 	public static final CleaveAbility CLEAVE = new CleaveAbility();
+	/** Парные приёмы (два одинаковых клинка, ПКМ). */
+	public static final GuillotineAbility GUILLOTINE = new GuillotineAbility();
+	public static final FlourishAbility FLOURISH = new FlourishAbility();
 	public static final MercyAbility MERCY = new MercyAbility();
 	public static final RepelAbility REPEL = new RepelAbility();
 	public static final BlotAbility BLOT = new BlotAbility();
@@ -208,6 +211,47 @@ public final class WeaponAbilities {
 			player.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
 			level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1f, 0.6f);
 			level.playSound(null, player.blockPosition(), SoundEvents.SQUID_SQUIRT, SoundSource.PLAYERS, 0.8f, 0.6f);
+			return true;
+		}
+	}
+
+	// ======================================================================
+	/** Гильотина (два Клинка Палачей, держать ПКМ): сами удары ведёт InkGreatswordItem, здесь — допуск и перезарядка. */
+	public static class GuillotineAbility extends Skill {
+		GuillotineAbility() {
+			super(TearsOfInk.id("guillotine"), 0, 0, 120);
+		}
+
+		@Override
+		public boolean activate(ServerPlayer player, SkillInput input) {
+			return true;
+		}
+	}
+
+	/**
+	 * Чернильный Росчерк (два Скимитара, ПКМ): встречный взмах — две чернильные волны (выше и ниже), урон ×2,
+	 * цена — в полтора раза дороже Волны.
+	 */
+	public static class FlourishAbility extends Skill {
+		FlourishAbility() {
+			super(TearsOfInk.id("ink_flourish"), 12, 0, 50);
+		}
+
+		@Override
+		public boolean activate(ServerPlayer player, SkillInput input) {
+			ServerLevel level = player.serverLevel();
+			Vec3 dir = flatLook(player);
+			Vec3 side = new Vec3(-dir.z, 0, dir.x);
+			for (int i = 0; i < 2; i++) {
+				InkWaveEntity wave = new InkWaveEntity(level, player, dir);
+				double up = i == 0 ? 0.55 : -0.25, off = i == 0 ? 0.25 : -0.25;
+				wave.setPos(wave.getX() + side.x * off, wave.getY() + up, wave.getZ() + side.z * off);
+				level.addFreshEntity(wave);
+			}
+			com.tarkrakov.tearsofink.weapon.combat.Combat.dualAnim(player, com.tarkrakov.tearsofink.weapon.combat.Archetype.SCIMITAR,
+					"flourish_high", "flourish_low", 14);
+			level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1f, 0.7f);
+			level.playSound(null, player.blockPosition(), SoundEvents.SQUID_SQUIRT, SoundSource.PLAYERS, 1f, 0.5f);
 			return true;
 		}
 	}

@@ -71,12 +71,22 @@ public final class Combat {
 		Archetype hitArchetype;
 		Combos.Step hitStep;
 		float hitScale = 1f; // слабый удар (шкала не восстановилась)
+		final java.util.List<Pending> extra = new java.util.ArrayList<>(); // удары парных приёмов
 		float speed = 1f, carry; // ускоренное заполнение шкалы
 		boolean queued;      // нажал чуть раньше — удар запомнен
 		long queuedAt;
 	}
 
+	private record Pending(long at, Archetype archetype, Combos.Step step) {}
+
 	private static final Map<UUID, State> STATES = new HashMap<>();
+
+	// ===== Парные приёмы (два одинаковых клинка, ПКМ) — числа крутить здесь =====
+	/** Гильотина: удар каждой рукой по очереди, пока держишь ПКМ (тики: длина, момент урона). */
+	public static final Combos.Step GUILLOTINE_CHOP = new Combos.Step("guillotine_chop", 10, 4, 0.8f, 3.3f, 100f, 0.3f, 1f);
+	/** Гильотина: завершающий удар сверху обоими клинками, когда отпустил ПКМ. */
+	public static final Combos.Step GUILLOTINE_END = new Combos.Step("guillotine_end", 18, 9, 2.0f, 3.6f, 80f, 1.0f, 1f);
+	public static final int GUILLOTINE_MAX_CHOPS = 8;
 
 	private Combat() {}
 
@@ -168,6 +178,45 @@ public final class Combat {
 		broadcast(p, a, combo.abilityAnim(), combo.abilityTicks(), -1f);
 	}
 
+	/** Гильотина: очередной удар одной рукой (offhand — левой, т. е. второй рукой). */
+	public static void guillotineChop(ServerPlayer p, boolean offhand) {
+		State s = state(p);
+		long now = p.serverLevel().getGameTime();
+		s.busyUntil = now + GUILLOTINE_CHOP.duration();
+		s.lastEnd = s.busyUntil;
+		s.next = 0;
+		s.queued = false;
+		s.extra.add(new Pending(now + GUILLOTINE_CHOP.hit(), Archetype.EXECUTIONER, GUILLOTINE_CHOP));
+		broadcast(p, Archetype.EXECUTIONER, (offhand ? "off:" : "") + GUILLOTINE_CHOP.anim(), GUILLOTINE_CHOP.duration(), -1f);
+		p.swing(offhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
+		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.6f, 0.55f + p.getRandom().nextFloat() * 0.1f);
+	}
+
+	/** Гильотина: отпустил ПКМ — удар сверху обоими клинками. */
+	public static void guillotineEnd(ServerPlayer p) {
+		State s = state(p);
+		long now = p.serverLevel().getGameTime();
+		s.busyUntil = now + GUILLOTINE_END.duration();
+		s.lastEnd = s.busyUntil;
+		s.extra.add(new Pending(now + GUILLOTINE_END.hit(), Archetype.EXECUTIONER, GUILLOTINE_END));
+		broadcast(p, Archetype.EXECUTIONER, GUILLOTINE_END.anim(), GUILLOTINE_END.duration(), -1f);
+		broadcast(p, Archetype.EXECUTIONER, "off:" + GUILLOTINE_END.anim(), GUILLOTINE_END.duration(), -1f);
+		p.swing(InteractionHand.MAIN_HAND);
+		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1f, 0.5f);
+	}
+
+	/** Движение парного приёма у всех, без урона (урон даёт сам приём). */
+	public static void dualAnim(ServerPlayer p, Archetype a, String mainAnim, String offAnim, int ticks) {
+		State s = state(p);
+		long now = p.serverLevel().getGameTime();
+		s.busyUntil = now + ticks;
+		s.lastEnd = s.busyUntil;
+		s.next = 0;
+		s.queued = false;
+		broadcast(p, a, mainAnim, ticks, -1f);
+		broadcast(p, a, "off:" + offAnim, ticks, -1f);
+	}
+
 	/**
 	 * Ускоренное заполнение шкалы атаки: каждый тик добавляет (speed − 1) лишних тиков. Возвращает новый остаток.
 	 * Работает одинаково на сервере и у игрока (чтобы шкала под прицелом не врала).
@@ -202,6 +251,15 @@ public final class Combat {
 			if (s.speed > 1f) {
 				s.carry = fastFill(p, s.speed, s.carry);
 				if (p.getAttackStrengthScale(0) >= 1f) s.speed = 1f;
+			}
+			if (!s.extra.isEmpty()) {
+				var it = s.extra.iterator();
+				while (it.hasNext()) {
+					Pending h = it.next();
+					if (now < h.at()) continue;
+					it.remove();
+					if (p.isAlive() && Archetype.of(p.getMainHandItem()) == h.archetype()) strike(p, h.step(), 1f);
+				}
 			}
 			if (s.hitAt >= 0 && now >= s.hitAt) {
 				s.hitAt = -1;

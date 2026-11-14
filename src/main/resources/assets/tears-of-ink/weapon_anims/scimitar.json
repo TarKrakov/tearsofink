@@ -1,5 +1,5 @@
 {
-  "_comment": "Движения Разрывающих Скимитаров от первого лица (числа — как у executioner.json). Правка → Ctrl+F9 → F3+T.",
+  "_comment": "Движения Разрывающих Скимитаров от первого лица (числа — как у executioner.json). Правка → Ctrl+F9 → F3+T. Чернильный Росчерк (два клинка, ПКМ): flourish_high — правая рука (верхний взмах), flourish_low — левая (нижний; зеркалится сама).",
   "animations": {
     "equip": {
       "length": 0.55,
@@ -187,6 +187,72 @@
           "translation": [
             -7,
             0,
+            -4
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "flourish_high": {
+      "length": 0.65,
+      "keyframes": [
+        {
+          "t": 0.1,
+          "rotation": [
+            0,
+            20,
+            -50
+          ],
+          "translation": [
+            6,
+            6,
+            1
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -10,
+            -20,
+            55
+          ],
+          "translation": [
+            -6,
+            5,
+            -4
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "flourish_low": {
+      "length": 0.65,
+      "keyframes": [
+        {
+          "t": 0.1,
+          "rotation": [
+            -10,
+            20,
+            -40
+          ],
+          "translation": [
+            6,
+            -4,
+            1
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -30,
+            -20,
+            45
+          ],
+          "translation": [
+            -6,
+            -5,
             -4
           ],
           "ease": "ease_in_out"
