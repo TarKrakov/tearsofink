@@ -73,6 +73,7 @@ public final class WeaponAbilities {
 		if (Skills.activate(player, weapon.ability(), input) && stack.getItem() instanceof InkGreatswordItem) {
 			// белая «шторка» перезарядки на иконке меча
 			player.getCooldowns().addCooldown(stack.getItem(), weapon.ability().cooldownTicks());
+			com.tarkrakov.tearsofink.weapon.combat.Combat.ability(player, stack); // движение приёма у всех
 		}
 	}
 

@@ -1,0 +1,20 @@
+name: probe
+on: workflow_dispatch
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 21 }
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 25 }
+      - run: chmod +x gradlew && ./gradlew --no-daemon build -x test
+      - name: javap targets
+        run: |
+          J=$(find ~/.gradle/caches .gradle -name "minecraft-clientOnly-*loom.mappings*.jar" 2>/dev/null | head -1); echo "JAR $J"
+          for j in $J; do
+            javap -p -c -classpath "$j" net.minecraft.client.renderer.entity.ItemRenderer 2>/dev/null | grep -n "ItemTransform.apply\|public void render(" | head
+            javap -p -classpath "$j" net.minecraft.client.renderer.ItemInHandRenderer 2>/dev/null | grep renderArmWithItem
+            javap -p -classpath "$j" net.minecraft.client.Minecraft 2>/dev/null | grep "startAttack\|LocalPlayer player\|HitResult hitResult"
+          done

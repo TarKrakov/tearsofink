@@ -7,7 +7,10 @@
 		"FogRendererMixin",
 		"LevelRendererMixin",
 		"WeaponStatsMixin",
-		"ItemRendererMixin"
+		"ItemRendererMixin",
+		"MinecraftAttackMixin",
+		"ItemInHandRendererInvoker",
+		"ItemInHandRendererMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1
