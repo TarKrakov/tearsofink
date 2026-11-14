@@ -132,7 +132,8 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		entityData.set(TYPE, type.ordinal());
 		entityData.set(RANK, rank);
 		entityData.set(GEAR, random.nextInt()); // зерно брони: какие куски надеты — решает модель по рангу
-		float hp = HuntTuning.HUNTER_HP[rank] * (1 + (random.nextFloat() * 2 - 1) * HuntTuning.HUNTER_HP_SPREAD);
+		float hp = HuntTuning.HUNTER_HP[rank] * (1 + (random.nextFloat() * 2 - 1) * HuntTuning.HUNTER_HP_SPREAD)
+				* (type == HunterType.SPIRE ? HuntTuning.SPIRE_HP : 1f);
 		getAttribute(Attributes.MAX_HEALTH).setBaseValue(hp);
 		setHealth(hp);
 		int pieces = HuntTuning.GEAR_SLOTS[Math.min(rank, HuntTuning.GEAR_SLOTS.length - 1)][0];
@@ -275,6 +276,11 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		}
 		if (dashTicks > 0 || now < busyUntil) return;
 
+		// стрелок держит дистанцию — догнать рывком (у всех типов)
+		if (shooter(f) && dist > HuntTuning.CHASE_RANGED && now >= dashReady) {
+			dash(level, f.position(), 1);
+			return;
+		}
 		switch (hunterType()) {
 			case BLOOD -> blood(level, f, dist, fleeing, now);
 			case INK -> ink(level, f, dist, now);
@@ -311,6 +317,7 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 	/** Шпиль: 1–2 удара, отход и приём издалека; рывок — порвать дистанцию и сразу приём. Иногда подбивает врага. */
 	private void spire(ServerLevel level, LivingEntity f, double dist, long now) {
 		boolean ranged = mainArch() == Archetype.SCIMITAR; // Волна бьёт издалека
+		if (shooter(f)) keepAwayUntil = 0; // от стрелка отходить бессмысленно — давить
 		if (now < keepAwayUntil) {
 			if (dist < HuntTuning.SPIRE_KEEP_MIN) {
 				if (now >= dashReady && dist < 3) { // наседают — рывок назад и сразу приём
@@ -511,7 +518,7 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 	}
 
 	private float skillScale() {
-		return HuntTuning.SKILL_DAMAGE[rank()];
+		return HuntTuning.SKILL_DAMAGE[rank()] * (hunterType() == HunterType.SPIRE ? HuntTuning.SPIRE_SKILL_DAMAGE : 1f);
 	}
 
 	// ===== Чернильный рывок =====
@@ -599,6 +606,12 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 			}
 		}
 		for (Timed t : due) t.action().run();
+	}
+
+	/** Стреляет издалека (скелет, арбалетчик и т. п.). */
+	private static boolean shooter(LivingEntity e) {
+		return e instanceof net.minecraft.world.entity.monster.RangedAttackMob
+				|| e instanceof com.tarkrakov.tearsofink.entity.patrol.PaleCrossbowmanEntity;
 	}
 
 	/** Куда смотрит голова (тело доворачивает с опозданием — по нему удары «мазали»). */

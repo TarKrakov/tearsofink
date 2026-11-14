@@ -107,6 +107,10 @@ public final class HuntTuning {
 	public static final double SPIRE_KEEP_MIN = 5, SPIRE_KEEP_MAX = 7;
 	/** Шпиль: шанс подбить врага ударом и сила подброса. */
 	public static final float SPIRE_LAUNCH_CHANCE = 0.25f;
+	/** Шпиль играет от приёмов: урон его приёмов и здоровье — выше (иначе отходы стоят ему боя). */
+	public static final float SPIRE_SKILL_DAMAGE = 1.25f, SPIRE_HP = 1.12f;
+	/** Стрелки (скелет, арбалетчик): враг дальше этого — охотник догоняет рывком; Шпиль против стрелка не отходит. */
+	public static final double CHASE_RANGED = 4;
 	/** Шпиль: шанс после отхода не стрелять издалека, а полезть в драку (3–4 удара подряд). */
 	public static final float SPIRE_BRAWL_CHANCE = 0.35f;
 	/** Шпиль: сколько держит дистанцию (тики, + случайно до SPIRE_KEEP_RANDOM). */
