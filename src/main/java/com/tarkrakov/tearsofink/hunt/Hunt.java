@@ -313,7 +313,7 @@ public final class Hunt {
 		prey.finalizeSpawn(lands, lands.getCurrentDifficultyAt(at), MobSpawnType.EVENT, null);
 		prey.setPersistenceRequired();
 		prey.addTag(PREY_TAG);
-		float hp = HuntTuning.PREY_HP[rank] * t.power(), dmg = HuntTuning.PREY_DAMAGE[rank] * t.power();
+		float hp = HuntTuning.PREY_HP[rank] * t.hp(), dmg = HuntTuning.PREY_DAMAGE[rank] * t.damage();
 		switch (prefix) {
 			case GIANT -> {
 				hp *= HuntTuning.GIANT_HP;

@@ -19,13 +19,14 @@ import java.util.List;
 
 /**
  * Цели Охоты: data/tears-of-ink/hunt_targets/*.json — {"entity": "minecraft:zombie", "weight": 10, "power": 1.25}.
- * power — своя сила цели (здоровье и урон), чтобы все цели были примерно равны по трудности.
+ * hp и damage — своя сила цели (множители здоровья и урона; power — оба сразу), чтобы все цели были примерно равны по трудности.
+ * Подобраны испытательными боями (workflow duel): стрелки бьют издалека, им нужен меньший урон, ближникам — больше.
  * Новая цель — новый файл (правка → /reload). Как цель называется в объявлении («выслеживает кого») —
  * ключ hunt.tears-of-ink.prey.<мод>.<имя> в ru_ru.json (нет ключа — просто название существа).
  */
 public final class HuntTargets {
 	/** power — своя сила цели: множитель и здоровья, и урона (1 — как задано рангом). */
-	public record Target(EntityType<?> type, int weight, float power) {}
+	public record Target(EntityType<?> type, int weight, float hp, float damage) {}
 
 	private static final List<Target> TARGETS = new ArrayList<>();
 
@@ -69,7 +70,9 @@ public final class HuntTargets {
 						}
 						int weight = o.has("weight") ? o.get("weight").getAsInt() : 10;
 						float power = o.has("power") ? o.get("power").getAsFloat() : 1f;
-						if (weight > 0) TARGETS.add(new Target(type.get(), weight, power));
+						float hp = o.has("hp") ? o.get("hp").getAsFloat() : power;
+						float damage = o.has("damage") ? o.get("damage").getAsFloat() : power;
+						if (weight > 0) TARGETS.add(new Target(type.get(), weight, hp, damage));
 					} catch (Exception e) {
 						TearsOfInk.LOGGER.error("Цель Охоты {} не прочиталась: {}", id, e.toString());
 					}

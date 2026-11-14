@@ -1,5 +1,6 @@
 {
 	"entity": "minecraft:zombie",
 	"weight": 10,
-	"power": 1.25
+	"hp": 1.6,
+	"damage": 2.0
 }
