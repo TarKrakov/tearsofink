@@ -49,13 +49,19 @@ public final class WeaponAnims {
 		final Clip clip;
 		final Archetype archetype;
 		final long start;
-		final float busy; // сколько секунд клинок занят (по серверу)
+		final float busy; // сколько секунд клинок занят (по серверу, реальное время)
+		final float tempo; // общая скорость архетипа: движение идёт быстрее/медленнее
 
-		Playing(Clip clip, Archetype archetype, int busyTicks) {
+		Playing(Clip clip, Archetype archetype, int busyTicks, float tempo) {
 			this.clip = clip;
 			this.archetype = archetype;
 			this.start = System.nanoTime();
 			this.busy = busyTicks / 20f;
+			this.tempo = Math.max(0.1f, tempo);
+		}
+
+		float real() {
+			return (System.nanoTime() - start) / 1e9f;
 		}
 
 		float end() {
@@ -63,8 +69,9 @@ public final class WeaponAnims {
 			return lastT(clip) + clip.hold() + clip.back();
 		}
 
+		/** Время внутри движения (с учётом общей скорости). */
 		float time() {
-			return (System.nanoTime() - start) / 1e9f;
+			return real() * tempo;
 		}
 	}
 
@@ -127,10 +134,10 @@ public final class WeaponAnims {
 	}
 
 	/** Начать движение рукой arm. */
-	public static void play(HumanoidArm arm, Archetype a, String anim, int busyTicks) {
+	public static void play(HumanoidArm arm, Archetype a, String anim, int busyTicks, float tempo) {
 		Map<String, Clip> m = CLIPS.get(a.id);
 		Clip clip = m == null ? null : m.get(anim);
-		ARMS[arm.ordinal()] = clip == null ? null : new Playing(clip, a, busyTicks);
+		ARMS[arm.ordinal()] = clip == null ? null : new Playing(clip, a, busyTicks, tempo);
 	}
 
 	private static float lastT(Clip c) {
@@ -144,7 +151,7 @@ public final class WeaponAnims {
 	/** Занят ли клинок ударом (по времени сервера; задержка в позе hold — уже не занят). */
 	public static boolean busy(HumanoidArm arm) {
 		Playing p = ARMS[arm.ordinal()];
-		return p != null && p.time() < p.busy;
+		return p != null && p.real() < p.busy;
 	}
 
 	/**

@@ -28,8 +28,16 @@ public final class Combos {
 	public record Step(String anim, int duration, int hit, float damage, float reach, float arc, float knockback, float speed) {}
 
 	/** Связка архетипа. */
-	/** early — за сколько тиков до готовности нажатие уже засчитывается (запоминается и срабатывает вовремя). */
-	public record Combo(List<Step> steps, int resetTicks, float minStrength, String abilityAnim, int abilityTicks, int early) {}
+	/**
+	 * early — за сколько тиков до готовности нажатие уже засчитывается (запоминается и срабатывает вовремя).
+	 * tempo — общая скорость атаки архетипа: 1 — как задано, 0.8 — всё на 20% медленнее (удары, движения, шкала), 1.2 — быстрее.
+	 */
+	public record Combo(List<Step> steps, int resetTicks, float minStrength, String abilityAnim, int abilityTicks, int early, float tempo) {
+		/** Тики с учётом общей скорости. */
+		public int scaled(int ticks) {
+			return Math.max(1, Math.round(ticks / Math.max(0.1f, tempo)));
+		}
+	}
 
 	private static final Map<Archetype, Combo> COMBOS = new EnumMap<>(Archetype.class);
 
@@ -41,7 +49,7 @@ public final class Combos {
 	}
 
 	private static Combo fallback() {
-		return new Combo(List.of(new Step("attack1", 12, 5, 1f, 3f, 100f, 0.4f, 1f)), 30, 0.9f, "ability", 20, 6);
+		return new Combo(List.of(new Step("attack1", 12, 5, 1f, 3f, 100f, 0.4f, 1f)), 30, 0.9f, "ability", 20, 6, 1f);
 	}
 
 	public static void init() {
@@ -81,6 +89,7 @@ public final class Combos {
 				o.has("min_strength") ? o.get("min_strength").getAsFloat() : 0.9f,
 				o.has("ability_anim") ? o.get("ability_anim").getAsString() : "ability",
 				o.has("ability_ticks") ? o.get("ability_ticks").getAsInt() : 20,
-				o.has("early_ticks") ? o.get("early_ticks").getAsInt() : 6);
+				o.has("early_ticks") ? o.get("early_ticks").getAsInt() : 6,
+				o.has("tempo") ? o.get("tempo").getAsFloat() : 1f);
 	}
 }

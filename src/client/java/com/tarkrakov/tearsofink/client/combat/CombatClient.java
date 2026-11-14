@@ -36,7 +36,7 @@ public final class CombatClient {
 				anim = anim.substring(4);
 				arm = arm.getOpposite();
 			}
-			WeaponAnims.play(arm, a, anim, arm == player.getMainArm() ? payload.ticks() : 0);
+			WeaponAnims.play(arm, a, anim, arm == player.getMainArm() ? payload.ticks() : 0, payload.tempo());
 			if (payload.speed() >= 0) { // удар связки (не приём): шкала под прицелом — как у сервера
 				player.resetAttackStrengthTicker();
 				fillSpeed = payload.speed();
@@ -69,7 +69,7 @@ public final class CombatClient {
 			return;
 		}
 		attackHeld = mc.options.keyAttack.isDown() && mc.screen == null ? attackHeld + 1 : 0;
-		if (fillSpeed > 1f) {
+		if (fillSpeed != 1f) {
 			fillCarry = Combat.fastFill(player, fillSpeed, fillCarry);
 			if (player.getAttackStrengthScale(0) >= 1f) fillSpeed = 1f;
 		}
@@ -87,7 +87,7 @@ public final class CombatClient {
 	private static void equip(HumanoidArm arm, ItemStack stack) {
 		Archetype a = Archetype.of(stack);
 		if (a != null && WeaponAnims.has(a, "equip")) {
-			WeaponAnims.play(arm, a, "equip", 0);
+			WeaponAnims.play(arm, a, "equip", 0, 1f);
 			if (arm == Minecraft.getInstance().player.getMainArm()) equipping = true;
 		} else {
 			WeaponAnims.stop(arm);

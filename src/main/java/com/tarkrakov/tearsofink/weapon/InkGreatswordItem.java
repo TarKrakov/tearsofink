@@ -80,7 +80,7 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 			return;
 		}
 		int used = getUseDuration(stack, entity) - remaining;
-		int every = com.tarkrakov.tearsofink.weapon.combat.Combat.GUILLOTINE_CHOP.duration();
+		int every = com.tarkrakov.tearsofink.weapon.combat.Combat.chopInterval();
 		if (used % every != 1) return;
 		int n = used / every;
 		if (n >= com.tarkrakov.tearsofink.weapon.combat.Combat.GUILLOTINE_MAX_CHOPS) {

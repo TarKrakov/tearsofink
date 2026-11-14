@@ -51,11 +51,11 @@ public final class Combat {
 	 * Сервер → клиенты: сущность начала движение anim архетипа. ticks — сколько клинок занят,
 	 * speed — во сколько раз быстрее после этого заполняется шкала атаки (меньше 0 — приём, шкала не трогается).
 	 */
-	public record Anim(int entity, String archetype, String anim, int ticks, float speed) implements CustomPacketPayload {
+	public record Anim(int entity, String archetype, String anim, int ticks, float speed, float tempo) implements CustomPacketPayload {
 		public static final Type<Anim> TYPE = new Type<>(TearsOfInk.id("combat_anim"));
 		public static final StreamCodec<RegistryFriendlyByteBuf, Anim> CODEC = StreamCodec.composite(
 				ByteBufCodecs.VAR_INT, Anim::entity, ByteBufCodecs.STRING_UTF8, Anim::archetype,
-				ByteBufCodecs.STRING_UTF8, Anim::anim, ByteBufCodecs.VAR_INT, Anim::ticks, ByteBufCodecs.FLOAT, Anim::speed, Anim::new);
+				ByteBufCodecs.STRING_UTF8, Anim::anim, ByteBufCodecs.VAR_INT, Anim::ticks, ByteBufCodecs.FLOAT, Anim::speed, ByteBufCodecs.FLOAT, Anim::tempo, Anim::new);
 
 		@Override
 		public Type<? extends CustomPacketPayload> type() {
@@ -117,9 +117,9 @@ public final class Combat {
 		long now = p.serverLevel().getGameTime();
 		Combos.Combo combo = Combos.get(a);
 		float strength = p.getAttackStrengthScale(0.5f);
-		// сколько ещё ждать до готовности (с учётом ускоренной шкалы)
+		// сколько ещё ждать до готовности (с учётом ускоренной/замедленной шкалы)
 		float delay = p.getCurrentItemAttackStrengthDelay();
-		long waitBar = strength >= combo.minStrength() ? 0 : (long) Math.ceil((combo.minStrength() - strength) * delay / Math.max(1f, s.speed));
+		long waitBar = strength >= combo.minStrength() ? 0 : (long) Math.ceil((combo.minStrength() - strength) * delay / Math.max(0.1f, s.speed));
 		long wait = Math.max(Math.max(0, s.busyUntil - now), waitBar);
 		if (wait > 0) {
 			if (wait <= combo.early()) {
@@ -148,17 +148,18 @@ public final class Combat {
 			s.next = index + 1 >= combo.steps().size() ? 0 : index + 1;
 		}
 		Combos.Step step = combo.steps().get(index);
-		s.busyUntil = now + step.duration();
-		s.lastEnd = now + step.duration();
-		s.hitAt = now + step.hit();
+		int duration = combo.scaled(step.duration());
+		s.busyUntil = now + duration;
+		s.lastEnd = now + duration;
+		s.hitAt = now + combo.scaled(step.hit());
 		s.hitArchetype = a;
 		s.hitStep = step;
 		s.hitScale = scale;
-		s.speed = step.speed();
+		s.speed = step.speed() * combo.tempo();
 		s.carry = 0;
 		p.resetAttackStrengthTicker();
 		p.swing(InteractionHand.MAIN_HAND); // ванильный взмах для тех, кто смотрит со стороны (пока нет своих поз)
-		broadcast(p, a, step.anim(), step.duration(), step.speed());
+		broadcast(p, a, step.anim(), duration, s.speed, combo.tempo());
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.5f,
 				a == Archetype.EXECUTIONER ? 0.6f : 0.9f);
 	}
@@ -175,32 +176,40 @@ public final class Combat {
 		s.next = 0;
 		s.hitAt = -1;
 		s.queued = false;
-		broadcast(p, a, combo.abilityAnim(), combo.abilityTicks(), -1f);
+		broadcast(p, a, combo.abilityAnim(), combo.abilityTicks(), -1f, 1f);
 	}
 
 	/** Гильотина: очередной удар одной рукой (offhand — левой, т. е. второй рукой). */
 	public static void guillotineChop(ServerPlayer p, boolean offhand) {
 		State s = state(p);
 		long now = p.serverLevel().getGameTime();
-		s.busyUntil = now + GUILLOTINE_CHOP.duration();
+		Combos.Combo combo = Combos.get(Archetype.EXECUTIONER);
+		s.busyUntil = now + chopInterval();
 		s.lastEnd = s.busyUntil;
 		s.next = 0;
 		s.queued = false;
-		s.extra.add(new Pending(now + GUILLOTINE_CHOP.hit(), Archetype.EXECUTIONER, GUILLOTINE_CHOP));
-		broadcast(p, Archetype.EXECUTIONER, (offhand ? "off:" : "") + GUILLOTINE_CHOP.anim(), GUILLOTINE_CHOP.duration(), -1f);
+		s.extra.add(new Pending(now + combo.scaled(GUILLOTINE_CHOP.hit()), Archetype.EXECUTIONER, GUILLOTINE_CHOP));
+		broadcast(p, Archetype.EXECUTIONER, (offhand ? "off:" : "") + GUILLOTINE_CHOP.anim(), chopInterval(), -1f, combo.tempo());
 		p.swing(offhand ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.6f, 0.55f + p.getRandom().nextFloat() * 0.1f);
+	}
+
+	/** Промежуток между ударами Гильотины (с учётом общей скорости Палачей). */
+	public static int chopInterval() {
+		return Combos.get(Archetype.EXECUTIONER).scaled(GUILLOTINE_CHOP.duration());
 	}
 
 	/** Гильотина: отпустил ПКМ — удар сверху обоими клинками. */
 	public static void guillotineEnd(ServerPlayer p) {
 		State s = state(p);
 		long now = p.serverLevel().getGameTime();
-		s.busyUntil = now + GUILLOTINE_END.duration();
+		Combos.Combo combo = Combos.get(Archetype.EXECUTIONER);
+		int duration = combo.scaled(GUILLOTINE_END.duration());
+		s.busyUntil = now + duration;
 		s.lastEnd = s.busyUntil;
-		s.extra.add(new Pending(now + GUILLOTINE_END.hit(), Archetype.EXECUTIONER, GUILLOTINE_END));
-		broadcast(p, Archetype.EXECUTIONER, GUILLOTINE_END.anim(), GUILLOTINE_END.duration(), -1f);
-		broadcast(p, Archetype.EXECUTIONER, "off:" + GUILLOTINE_END.anim(), GUILLOTINE_END.duration(), -1f);
+		s.extra.add(new Pending(now + combo.scaled(GUILLOTINE_END.hit()), Archetype.EXECUTIONER, GUILLOTINE_END));
+		broadcast(p, Archetype.EXECUTIONER, GUILLOTINE_END.anim(), duration, -1f, combo.tempo());
+		broadcast(p, Archetype.EXECUTIONER, "off:" + GUILLOTINE_END.anim(), duration, -1f, combo.tempo());
 		p.swing(InteractionHand.MAIN_HAND);
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1f, 0.5f);
 	}
@@ -213,8 +222,8 @@ public final class Combat {
 		s.lastEnd = s.busyUntil;
 		s.next = 0;
 		s.queued = false;
-		broadcast(p, a, mainAnim, ticks, -1f);
-		broadcast(p, a, "off:" + offAnim, ticks, -1f);
+		broadcast(p, a, mainAnim, ticks, -1f, 1f);
+		broadcast(p, a, "off:" + offAnim, ticks, -1f, 1f);
 	}
 
 	/**
@@ -222,18 +231,18 @@ public final class Combat {
 	 * Работает одинаково на сервере и у игрока (чтобы шкала под прицелом не врала).
 	 */
 	public static float fastFill(net.minecraft.world.entity.player.Player p, float speed, float carry) {
-		if (speed <= 1f || p.getAttackStrengthScale(0) >= 1f) return 0;
-		carry += speed - 1f;
+		if (speed == 1f || p.getAttackStrengthScale(0) >= 1f) return 0;
+		carry += speed - 1f; // меньше 1 — шкала идёт медленнее (тики отнимаются)
 		int add = (int) carry;
-		if (add > 0) {
+		if (add != 0) {
 			var acc = (com.tarkrakov.tearsofink.mixin.LivingEntityAttackAccessor) p;
-			acc.tearsofink$setAttackStrengthTicker(acc.tearsofink$getAttackStrengthTicker() + add);
+			acc.tearsofink$setAttackStrengthTicker(Math.max(0, acc.tearsofink$getAttackStrengthTicker() + add));
 		}
 		return carry - add;
 	}
 
-	public static void broadcast(ServerPlayer p, Archetype a, String anim, int ticks, float speed) {
-		Anim msg = new Anim(p.getId(), a.id, anim, ticks, speed);
+	public static void broadcast(ServerPlayer p, Archetype a, String anim, int ticks, float speed, float tempo) {
+		Anim msg = new Anim(p.getId(), a.id, anim, ticks, speed, tempo);
 		ServerPlayNetworking.send(p, msg);
 		for (ServerPlayer other : PlayerLookup.tracking(p)) {
 			if (other != p) ServerPlayNetworking.send(other, msg);
@@ -248,7 +257,7 @@ public final class Combat {
 			ServerPlayer p = server.getPlayerList().getPlayer(e.getKey());
 			if (p == null) continue;
 			long now = p.serverLevel().getGameTime();
-			if (s.speed > 1f) {
+			if (s.speed != 1f) {
 				s.carry = fastFill(p, s.speed, s.carry);
 				if (p.getAttackStrengthScale(0) >= 1f) s.speed = 1f;
 			}
