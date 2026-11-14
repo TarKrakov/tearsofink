@@ -34,6 +34,7 @@ public class InkWaveEntity extends Entity {
 	private float damage = DAMAGE;
 	private double knockback = 0.4;
 	private UUID ownerId;
+	private UUID onlyTarget;
 	private double travelled = 0;
 	private final Set<UUID> hit = new HashSet<>();
 
@@ -46,7 +47,13 @@ public class InkWaveEntity extends Entity {
 		this(level, owner, dir, false, DAMAGE, 0.4);
 	}
 
-	public InkWaveEntity(Level level, ServerPlayer owner, Vec3 dir, boolean light, float damage, double knockback) {
+	/** Волна охотника: задевает только его врага (только этого, остальных — нет). */
+	public InkWaveEntity onlyTarget(@org.jetbrains.annotations.Nullable Entity target) {
+		this.onlyTarget = target == null ? null : target.getUUID();
+		return this;
+	}
+
+	public InkWaveEntity(Level level, net.minecraft.world.entity.LivingEntity owner, Vec3 dir, boolean light, float damage, double knockback) {
 		this(ModEntities.INK_WAVE, level);
 		this.entityData.set(LIGHT, light);
 		this.damage = damage;
@@ -90,10 +97,12 @@ public class InkWaveEntity extends Entity {
 		}
 		Entity owner = ownerId == null ? null : level.getEntity(ownerId);
 		for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(0.3),
-				t -> t != owner && t.isAlive())) {
+				t -> t != owner && t.isAlive() && (onlyTarget == null || onlyTarget.equals(t.getUUID())))) {
 			if (!hit.add(target.getUUID())) continue;
 			if (owner instanceof ServerPlayer player) {
 				target.hurt(player.damageSources().playerAttack(player), damage);
+			} else if (owner instanceof LivingEntity mob) {
+				target.hurt(level.damageSources().mobAttack(mob), damage);
 			} else {
 				target.hurt(level.damageSources().magic(), damage);
 			}

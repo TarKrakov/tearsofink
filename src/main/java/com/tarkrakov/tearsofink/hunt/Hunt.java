@@ -182,8 +182,19 @@ public final class Hunt {
 		boost(prey, Attributes.ATTACK_DAMAGE, HuntTuning.PREY_DAMAGE[rank]);
 		prey.setHealth(prey.getMaxHealth());
 
-		HunterWeaponItem kind = random.nextBoolean() ? (HunterWeaponItem) ModItems.HUNTER_GREATSWORD : (HunterWeaponItem) ModItems.HUNTER_SABER;
-		ItemStack weapon = kind.make(type, rank);
+		// оружие: один меч / пара одинаковых / клинок + двуручник в левой (правило рук игрока)
+		HunterWeaponItem great = (HunterWeaponItem) ModItems.HUNTER_GREATSWORD, saber = (HunterWeaponItem) ModItems.HUNTER_SABER;
+		HunterWeaponItem kind = random.nextBoolean() ? great : saber;
+		ItemStack weapon = kind.make(type, rank), offWeapon = ItemStack.EMPTY;
+		int lw = 0;
+		for (int w : HuntTuning.LOADOUT_WEIGHT) lw += w;
+		int roll = random.nextInt(lw);
+		if (roll >= HuntTuning.LOADOUT_WEIGHT[0] + HuntTuning.LOADOUT_WEIGHT[1]) { // разные
+			weapon = saber.make(type, rank);
+			offWeapon = great.make(type, rank);
+		} else if (roll >= HuntTuning.LOADOUT_WEIGHT[0]) { // пара одинаковых
+			offWeapon = kind.make(type, rank);
+		}
 		HunterEntity hunter = ModMobs.HUNTER.create(lands);
 		if (hunter == null) {
 			prey.discard();
@@ -191,7 +202,7 @@ public final class Hunt {
 		}
 		BlockPos hp = near(lands, at, target, random);
 		hunter.moveTo(hp.getX() + 0.5, hp.getY(), hp.getZ() + 0.5, 0, 0);
-		hunter.setup(type, rank, weapon);
+		hunter.setup(type, rank, weapon, offWeapon);
 		hunter.setFoe(prey, false);
 
 		Active n = new Active();
@@ -199,7 +210,7 @@ public final class Hunt {
 		n.hunter = hunter.getUUID();
 		n.type = type;
 		n.rank = rank;
-		n.weapon = weapon.copy();
+		n.weapon = (!offWeapon.isEmpty() && random.nextBoolean() ? offWeapon : weapon).copy(); // контракт помнит одно из двух
 		long now = lands.getServer().getTickCount();
 		n.end = now + HuntTuning.DURATION;
 		n.engageAt = now + HuntTuning.HUNTER_WAIT;
@@ -213,7 +224,10 @@ public final class Hunt {
 			return false;
 		}
 		lands.addFreshEntity(hunter);
-		announce(lands, Component.translatable("hunt.tears-of-ink.start", hunter.getCustomName(), weapon.getHoverName(),
+		Component arms = offWeapon.isEmpty()
+				? Component.translatable("hunt.tears-of-ink.weapon_one", weapon.getHoverName())
+				: Component.translatable("hunt.tears-of-ink.weapon_two", weapon.getHoverName(), offWeapon.getHoverName());
+		announce(lands, Component.translatable("hunt.tears-of-ink.start", hunter.getCustomName(), arms,
 				preyName(prey), target.getDisplayName()).withStyle(ChatFormatting.GOLD));
 		for (ServerPlayer p : lands.players()) {
 			p.playNotifySound(SoundEvents.RAID_HORN.value(), SoundSource.HOSTILE, 0.5f, 1.3f);

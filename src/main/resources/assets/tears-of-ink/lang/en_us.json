@@ -322,7 +322,7 @@
   "hunt.tears-of-ink.prey.minecraft.zombie": "a zombie",
   "hunt.tears-of-ink.prey.minecraft.skeleton": "a skeleton",
   "hunt.tears-of-ink.prey.minecraft.spider": "a spider",
-  "hunt.tears-of-ink.start": "The Hunt begins! %1$s wielding «%2$s» stalks %3$s near %4$s. Look for the beam in the sky.",
+  "hunt.tears-of-ink.start": "The Hunt begins! %1$s wielding %2$s stalks %3$s near %4$s. Look for the beam in the sky.",
   "hunt.tears-of-ink.engage": "%s joins the fight.",
   "hunt.tears-of-ink.timeout": "The Hunt is over: the prey dissolved into the fog.",
   "hunt.tears-of-ink.hunter_won": "%s caught the prey. The Hunt is over — no reward.",
@@ -335,5 +335,7 @@
   "hunt.tears-of-ink.frenzy": "%s turns the blade on the living!",
   "hunt.tears-of-ink.frenzy_end": "The maddened hunter has fallen.",
   "trader.tears-of-ink.contract_weapon": "This hunter left something for you: %s.",
-  "hunt.tears-of-ink.marker": "%s m"
+  "hunt.tears-of-ink.marker": "%s m",
+  "hunt.tears-of-ink.weapon_one": "«%s»",
+  "hunt.tears-of-ink.weapon_two": "«%s» and «%s»"
 }

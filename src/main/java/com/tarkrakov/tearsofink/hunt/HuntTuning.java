@@ -37,6 +37,37 @@ public final class HuntTuning {
 	public static final float[] REMOTE_HUNTER_WINS = {0.45f, 0.6f, 0.75f};
 	/** Чернильный охотник после победы бросается на игроков — столько тиков, потом растворяется. */
 	public static final int INK_FRENZY = 60 * 20;
+	// ===== Оружие в руках =====
+	/** Один меч / пара одинаковых / разные (клинок в правой, двуручник в левой) — %. */
+	public static final int[] LOADOUT_WEIGHT = {50, 35, 15};
+
+	// ===== Приёмы и рывок =====
+	/** Перезарядки приёмов по рангу (множитель от игрока): Новичок медленнее, Легендарный быстрее. */
+	public static final float[] RANK_COOLDOWN = {1.3f, 1.0f, 0.75f};
+	/** Охотник Шпиля играет от приёмов — перезарядки у него ещё короче. */
+	public static final float SPIRE_COOLDOWN = 0.75f;
+	/** Урон приёмов охотника по рангу (множитель). */
+	public static final float[] SKILL_DAMAGE = {0.8f, 1.0f, 1.25f};
+	/** Урон Волны и Рассечения у охотника (как у игрока). */
+	public static final float WAVE_DAMAGE = 6f, CLEAVE_DAMAGE = 12f;
+	/** Гильотина охотника: сколько ударов, прежде чем казнь. */
+	public static final int GUILLOTINE_CHOPS_MIN = 3, GUILLOTINE_CHOPS_MAX = 6;
+	/** Чернильный рывок: перезарядка по рангу (тики: 7 / 5 / 4 с), скорость и длительность (≈ 4,5 блока). */
+	public static final int[] DASH_COOLDOWN = {140, 100, 80};
+	public static final double DASH_SPEED = 0.9;
+	public static final int DASH_TICKS = 5;
+
+	// ===== Стили боя =====
+	/** Кровавый: враг убегает дальше этого — рывок вдогонку. */
+	public static final double BLOOD_CHASE = 6;
+	/** Чернильный: враг дальше этого — рывок к нему. */
+	public static final double INK_DASH_FROM = 4.5;
+	/** Шпиль: держит дистанцию столько блоков после 1–2 ударов. */
+	public static final double SPIRE_KEEP_MIN = 5, SPIRE_KEEP_MAX = 7;
+	/** Шпиль: шанс подбить врага ударом и сила подброса. */
+	public static final float SPIRE_LAUNCH_CHANCE = 0.25f;
+	public static final double SPIRE_LAUNCH = 0.45;
+
 	/** Шанс получить у Торговки оружие охотника за контракт. */
 	public static final float CONTRACT_WEAPON_CHANCE = 0.3f;
 

@@ -340,7 +340,7 @@
   "hunt.tears-of-ink.prey.minecraft.zombie": "зомби",
   "hunt.tears-of-ink.prey.minecraft.skeleton": "скелета",
   "hunt.tears-of-ink.prey.minecraft.spider": "паука",
-  "hunt.tears-of-ink.start": "Охота началась! %1$s с оружием «%2$s» выслеживает %3$s неподалёку от %4$s. Ищите луч в небе.",
+  "hunt.tears-of-ink.start": "Охота началась! %1$s с оружием %2$s выслеживает %3$s неподалёку от %4$s. Ищите луч в небе.",
   "hunt.tears-of-ink.engage": "%s вступает в бой.",
   "hunt.tears-of-ink.timeout": "Охота окончена: цель растворилась в тумане.",
   "hunt.tears-of-ink.hunter_won": "%s настиг свою цель. Охота окончена — без награды.",
@@ -353,5 +353,7 @@
   "hunt.tears-of-ink.frenzy": "%s обращает клинок против живых!",
   "hunt.tears-of-ink.frenzy_end": "Обезумевший охотник повержен.",
   "trader.tears-of-ink.contract_weapon": "Этот охотник оставил кое-что для тебя: %s.",
-  "hunt.tears-of-ink.marker": "%s м"
+  "hunt.tears-of-ink.marker": "%s м",
+  "hunt.tears-of-ink.weapon_one": "«%s»",
+  "hunt.tears-of-ink.weapon_two": "«%s» и «%s»"
 }
