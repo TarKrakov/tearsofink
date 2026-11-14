@@ -13,13 +13,16 @@ import net.minecraft.world.item.ItemStack;
 import java.util.Map;
 
 /**
- * Щиты Души: в руке — 3D-модель (models/item/shield/*.json), в инвентаре — плоский рисунок автора (models/item/icon/*.json).
+ * Щиты Души и клинки: в руке — 3D-модель (щиты — models/item/shield/*.json, клинки — models/item/<предмет>.json),
+ * в инвентаре — плоский рисунок автора (models/item/icon/*.json).
  * Подмену в окнах делает ItemRendererMixin.
  */
 public final class ShieldIcons {
 	private static final Map<Item, String> ICONS = Map.of(
 			ModItems.RAM_SHIELD, "ram_shield", ModItems.RADIANT_SHIELD, "radiant_shield",
-			ModItems.MERCY_SHIELD, "mercy_shield", ModItems.REPEL_SHIELD, "repel_shield");
+			ModItems.MERCY_SHIELD, "mercy_shield", ModItems.REPEL_SHIELD, "repel_shield",
+			ModItems.WAVE_GREATSWORD, "wave_greatsword", ModItems.CLEAVE_GREATSWORD, "cleave_greatsword",
+			ModItems.INK_LONGKNIFE, "ink_longknife");
 
 	private ShieldIcons() {}
 
