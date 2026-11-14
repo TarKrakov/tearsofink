@@ -48,14 +48,14 @@ public final class Combat {
 	}
 
 	/**
-	 * Сервер → клиенты: сущность начала движение anim архетипа. ticks — сколько клинок занят (клики не считаются),
-	 * recover — с какой доли стартует шкала атаки (0 — с нуля).
+	 * Сервер → клиенты: сущность начала движение anim архетипа. ticks — сколько клинок занят,
+	 * speed — во сколько раз быстрее после этого заполняется шкала атаки (меньше 0 — приём, шкала не трогается).
 	 */
-	public record Anim(int entity, String archetype, String anim, int ticks, float recover) implements CustomPacketPayload {
+	public record Anim(int entity, String archetype, String anim, int ticks, float speed) implements CustomPacketPayload {
 		public static final Type<Anim> TYPE = new Type<>(TearsOfInk.id("combat_anim"));
 		public static final StreamCodec<RegistryFriendlyByteBuf, Anim> CODEC = StreamCodec.composite(
 				ByteBufCodecs.VAR_INT, Anim::entity, ByteBufCodecs.STRING_UTF8, Anim::archetype,
-				ByteBufCodecs.STRING_UTF8, Anim::anim, ByteBufCodecs.VAR_INT, Anim::ticks, ByteBufCodecs.FLOAT, Anim::recover, Anim::new);
+				ByteBufCodecs.STRING_UTF8, Anim::anim, ByteBufCodecs.VAR_INT, Anim::ticks, ByteBufCodecs.FLOAT, Anim::speed, Anim::new);
 
 		@Override
 		public Type<? extends CustomPacketPayload> type() {
@@ -71,6 +71,9 @@ public final class Combat {
 		Archetype hitArchetype;
 		Combos.Step hitStep;
 		float hitScale = 1f; // слабый удар (шкала не восстановилась)
+		float speed = 1f, carry; // ускоренное заполнение шкалы
+		boolean queued;      // нажал чуть раньше — удар запомнен
+		long queuedAt;
 	}
 
 	private static final Map<UUID, State> STATES = new HashMap<>();
@@ -102,13 +105,30 @@ public final class Combat {
 		if (a == null) return;
 		State s = state(p);
 		long now = p.serverLevel().getGameTime();
-		if (now < s.busyUntil) return;
 		Combos.Combo combo = Combos.get(a);
 		float strength = p.getAttackStrengthScale(0.5f);
+		// сколько ещё ждать до готовности (с учётом ускоренной шкалы)
+		float delay = p.getCurrentItemAttackStrengthDelay();
+		long waitBar = strength >= combo.minStrength() ? 0 : (long) Math.ceil((combo.minStrength() - strength) * delay / Math.max(1f, s.speed));
+		long wait = Math.max(Math.max(0, s.busyUntil - now), waitBar);
+		if (wait > 0) {
+			if (wait <= combo.early()) {
+				// чуть раньше — не беда: удар запомнен и выйдет ровно вовремя
+				s.queued = true;
+				s.queuedAt = now;
+				return;
+			}
+			if (now < s.busyUntil) return; // ещё машет — клик мимо, но связку не рвём
+		}
+		start(p, s, a, combo, strength, now);
+	}
+
+	private static void start(ServerPlayer p, State s, Archetype a, Combos.Combo combo, float strength, long now) {
+		s.queued = false;
 		int index;
 		float scale = 1f;
 		if (strength < combo.minStrength()) {
-			// поторопился — связка сорвана: слабый первый удар, дальше снова с начала
+			// сильно поторопился — связка сорвана: слабый первый удар, дальше снова с начала
 			index = 0;
 			scale = strength * strength;
 			s.next = 0;
@@ -124,10 +144,11 @@ public final class Combat {
 		s.hitArchetype = a;
 		s.hitStep = step;
 		s.hitScale = scale;
+		s.speed = step.speed();
+		s.carry = 0;
 		p.resetAttackStrengthTicker();
-		prefill(p, step.recover());
 		p.swing(InteractionHand.MAIN_HAND); // ванильный взмах для тех, кто смотрит со стороны (пока нет своих поз)
-		broadcast(p, a, step.anim(), step.duration(), step.recover());
+		broadcast(p, a, step.anim(), step.duration(), step.speed());
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.5f,
 				a == Archetype.EXECUTIONER ? 0.6f : 0.9f);
 	}
@@ -143,18 +164,27 @@ public final class Combat {
 		s.lastEnd = now + combo.abilityTicks();
 		s.next = 0;
 		s.hitAt = -1;
+		s.queued = false;
 		broadcast(p, a, combo.abilityAnim(), combo.abilityTicks(), -1f);
 	}
 
-	/** Шкала атаки после удара стартует с доли recover (так следующий удар связки доступен раньше). */
-	public static void prefill(net.minecraft.world.entity.player.Player p, float recover) {
-		if (recover <= 0) return;
-		int delay = (int) Math.ceil(p.getCurrentItemAttackStrengthDelay());
-		((com.tarkrakov.tearsofink.mixin.LivingEntityAttackAccessor) p).tearsofink$setAttackStrengthTicker((int) (recover * delay));
+	/**
+	 * Ускоренное заполнение шкалы атаки: каждый тик добавляет (speed − 1) лишних тиков. Возвращает новый остаток.
+	 * Работает одинаково на сервере и у игрока (чтобы шкала под прицелом не врала).
+	 */
+	public static float fastFill(net.minecraft.world.entity.player.Player p, float speed, float carry) {
+		if (speed <= 1f || p.getAttackStrengthScale(0) >= 1f) return 0;
+		carry += speed - 1f;
+		int add = (int) carry;
+		if (add > 0) {
+			var acc = (com.tarkrakov.tearsofink.mixin.LivingEntityAttackAccessor) p;
+			acc.tearsofink$setAttackStrengthTicker(acc.tearsofink$getAttackStrengthTicker() + add);
+		}
+		return carry - add;
 	}
 
-	public static void broadcast(ServerPlayer p, Archetype a, String anim, int ticks, float recover) {
-		Anim msg = new Anim(p.getId(), a.id, anim, ticks, recover);
+	public static void broadcast(ServerPlayer p, Archetype a, String anim, int ticks, float speed) {
+		Anim msg = new Anim(p.getId(), a.id, anim, ticks, speed);
 		ServerPlayNetworking.send(p, msg);
 		for (ServerPlayer other : PlayerLookup.tracking(p)) {
 			if (other != p) ServerPlayNetworking.send(other, msg);
@@ -166,13 +196,25 @@ public final class Combat {
 		STATES.entrySet().removeIf(e -> server.getPlayerList().getPlayer(e.getKey()) == null);
 		for (var e : STATES.entrySet()) {
 			State s = e.getValue();
-			if (s.hitAt < 0) continue;
 			ServerPlayer p = server.getPlayerList().getPlayer(e.getKey());
 			if (p == null) continue;
-			if (p.serverLevel().getGameTime() < s.hitAt) continue;
-			s.hitAt = -1;
-			if (!p.isAlive() || Archetype.of(p.getMainHandItem()) != s.hitArchetype) continue; // сменил клинок — удар пропал
-			strike(p, s.hitStep, s.hitScale);
+			long now = p.serverLevel().getGameTime();
+			if (s.speed > 1f) {
+				s.carry = fastFill(p, s.speed, s.carry);
+				if (p.getAttackStrengthScale(0) >= 1f) s.speed = 1f;
+			}
+			if (s.hitAt >= 0 && now >= s.hitAt) {
+				s.hitAt = -1;
+				if (p.isAlive() && Archetype.of(p.getMainHandItem()) == s.hitArchetype) strike(p, s.hitStep, s.hitScale); // сменил клинок — удар пропал
+			}
+			if (s.queued) {
+				Archetype a = Archetype.of(p.getMainHandItem());
+				if (a == null || !p.isAlive() || now - s.queuedAt > 20) {
+					s.queued = false;
+				} else if (now >= s.busyUntil && p.getAttackStrengthScale(0.5f) >= Combos.get(a).minStrength()) {
+					start(p, s, a, Combos.get(a), p.getAttackStrengthScale(0.5f), now);
+				}
+			}
 		}
 	}
 

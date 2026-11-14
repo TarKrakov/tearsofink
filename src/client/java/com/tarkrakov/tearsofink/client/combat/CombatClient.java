@@ -31,19 +31,19 @@ public final class CombatClient {
 			Archetype a = Archetype.byId(payload.archetype());
 			if (a == null) return;
 			WeaponAnims.play(player.getMainArm(), a, payload.anim(), payload.ticks());
-			if (payload.recover() >= 0) { // удар связки (не приём): шкала под прицелом — как у сервера
+			if (payload.speed() >= 0) { // удар связки (не приём): шкала под прицелом — как у сервера
 				player.resetAttackStrengthTicker();
-				Combat.prefill(player, payload.recover());
+				fillSpeed = payload.speed();
+				fillCarry = 0;
 			}
 		}));
 		ClientTickEvents.END_CLIENT_TICK.register(CombatClient::tick);
 	}
 
-	/** ЛКМ с клинком архетипа. Пока идёт удар — клики не считаются. */
+	/** ЛКМ с клинком архетипа. Решает сервер: чуть раньше времени — удар запоминается и выходит вовремя. */
 	public static void requestSwing() {
 		var player = Minecraft.getInstance().player;
 		if (player == null) return;
-		if (WeaponAnims.busy(player.getMainArm()) && !equipping) return;
 		long now = System.currentTimeMillis();
 		if (now - lastRequest < 120) return;
 		lastRequest = now;
@@ -52,6 +52,7 @@ public final class CombatClient {
 	}
 
 	private static boolean equipping;
+	private static float fillSpeed = 1f, fillCarry;
 
 	private static void tick(Minecraft mc) {
 		var player = mc.player;
@@ -62,6 +63,10 @@ public final class CombatClient {
 			return;
 		}
 		attackHeld = mc.options.keyAttack.isDown() && mc.screen == null ? attackHeld + 1 : 0;
+		if (fillSpeed > 1f) {
+			fillCarry = Combat.fastFill(player, fillSpeed, fillCarry);
+			if (player.getAttackStrengthScale(0) >= 1f) fillSpeed = 1f;
+		}
 		// копаем зажатой ЛКМ — движение удара прерывается, рука машет по-ванильному
 		if (mc.gameMode != null && mc.gameMode.isDestroying()) WeaponAnims.stop(player.getMainArm());
 		ItemStack main = player.getMainHandItem(), off = player.getOffhandItem();

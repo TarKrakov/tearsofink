@@ -32,5 +32,6 @@
       "arc": 40,
       "knockback": 0.5
     }
-  ]
+  ],
+  "early_ticks": 6
 }
