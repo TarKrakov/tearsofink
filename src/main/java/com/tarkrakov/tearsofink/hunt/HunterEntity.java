@@ -277,12 +277,17 @@ public class HunterEntity extends PathfinderMob {
 			if (ranged && trySkill(level, f, dist, now)) return;
 			if (!ranged && dist < 3.5 && trySkill(level, f, dist, now)) return;
 			if (dist > HuntTuning.SPIRE_KEEP_MAX + 2) keepAwayUntil = 0; // убежал — снова в ближний
+			else if (random.nextFloat() < 0.02f) keepAwayUntil = 0; // иногда сам идёт в драку
 			return;
 		}
-		if (swingsSinceSkill >= swingsWanted) { // наработал ударов — отход
+		if (swingsSinceSkill >= swingsWanted) { // наработал ударов — отход (или иногда лезет в драку)
 			swingsSinceSkill = 0;
-			swingsWanted = 1 + random.nextInt(2);
-			keepAwayUntil = now + 60 + random.nextInt(40);
+			if (random.nextFloat() < HuntTuning.SPIRE_BRAWL_CHANCE) {
+				swingsWanted = 3 + random.nextInt(2); // драка: 3–4 удара без отхода
+			} else {
+				swingsWanted = 1 + random.nextInt(2);
+				keepAwayUntil = now + HuntTuning.SPIRE_KEEP_TICKS + random.nextInt(HuntTuning.SPIRE_KEEP_RANDOM);
+			}
 			return;
 		}
 		if (dist > 4 && trySkill(level, f, dist, now)) return;
@@ -377,7 +382,7 @@ public class HunterEntity extends PathfinderMob {
 		anim(Archetype.SCIMITAR, (offhand ? "off:" : "") + combo.abilityAnim(), combo.scaled(combo.abilityTicks()), combo.tempo());
 		level.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1f, 0.6f);
 		level.playSound(null, blockPosition(), SoundEvents.SQUID_SQUIRT, SoundSource.HOSTILE, 0.8f, 0.6f);
-		skillReady = now + (long) cd(WeaponAbilities.WAVE.cooldownTicks());
+		skillReady = now + (long) (cd(WeaponAbilities.WAVE.cooldownTicks()) * HuntTuning.SCIMITAR_SKILL_COOLDOWN);
 		skillDone(now, combo.scaled(combo.abilityTicks()));
 		return true;
 	}
@@ -396,7 +401,7 @@ public class HunterEntity extends PathfinderMob {
 		anim(Archetype.SCIMITAR, "off:flourish_low", 14, combo.tempo());
 		level.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1f, 0.7f);
 		level.playSound(null, blockPosition(), SoundEvents.SQUID_SQUIRT, SoundSource.HOSTILE, 1f, 0.5f);
-		techReady = now + (long) cd(WeaponAbilities.FLOURISH.cooldownTicks());
+		techReady = now + (long) (cd(WeaponAbilities.FLOURISH.cooldownTicks()) * HuntTuning.SCIMITAR_SKILL_COOLDOWN);
 		skillDone(now, 16);
 		return true;
 	}

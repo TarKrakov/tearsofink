@@ -23,6 +23,9 @@ public final class SquadTuning {
 	public static final float CHARGE_BREAK_HARDNESS = 2.0f;
 	/** Во время бега чуть доворачивает за игроком: градусов за тик. */
 	public static final float CHARGE_TURN_DEG = 2.5f;
+	/** Не попал по врагу столько тиков (3 с) — рывок (не даёт себя кайтить); и с какой дистанции. */
+	public static final int CHARGE_IF_NO_HIT = 60;
+	public static final double CHARGE_NO_HIT_MIN = 3;
 
 	// ===== Арбалетчик =====
 	public static final double ARCHER_HEALTH = 16, ARCHER_SPEED = 0.25;

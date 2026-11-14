@@ -45,6 +45,8 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 	int shieldUp, shieldRest, shieldDisabled;
 	int bashTicks = -1, bashCooldown;
 	int chargeTicks = -1, chargeCooldown;
+	/** Когда последний раз попал по врагу (тики) — давно не попадал → рывок. */
+	private int lastLanded;
 	int stun;
 	private Vec3 chargeDir = Vec3.ZERO;
 	private final java.util.Set<Integer> chargeHit = new java.util.HashSet<>();
@@ -147,7 +149,10 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 				e.knockback(SquadTuning.BASH_KNOCKBACK, this.getX() - e.getX(), this.getZ() - e.getZ());
 				any = true;
 			}
-			if (any) this.playSound(SoundEvents.SHIELD_BLOCK, 1.0f, 0.6f);
+			if (any) {
+				this.playSound(SoundEvents.SHIELD_BLOCK, 1.0f, 0.6f);
+				lastLanded = this.tickCount;
+			}
 		}
 		if (bashTicks >= SquadTuning.BASH_TICKS) bashTicks = -1;
 	}
@@ -157,6 +162,7 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 		chargeTicks = 0;
 		chargeHit.clear();
 		chargeCooldown = SquadTuning.CHARGE_COOLDOWN;
+		lastLanded = this.tickCount;
 		Vec3 d = target.position().subtract(this.position()).multiply(1, 0, 1);
 		chargeDir = d.lengthSqr() < 1.0E-4 ? this.getLookAngle().multiply(1, 0, 1).normalize() : d.normalize();
 		this.getNavigation().stop();
@@ -191,6 +197,7 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 			if (!chargeHit.add(e.getId())) continue;
 			e.hurt(this.damageSources().mobAttack(this), damageVs(e, SquadTuning.CHARGE_DAMAGE));
 			e.knockback(SquadTuning.CHARGE_KNOCKBACK, -chargeDir.x, -chargeDir.z);
+			lastLanded = this.tickCount;
 			this.playSound(SoundEvents.SHIELD_BLOCK, 1.2f, 0.5f);
 			if (e == t) hitTarget = true;
 		}
@@ -348,6 +355,11 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 		}
 
 		@Override
+		public void start() {
+			lastLanded = tickCount;
+		}
+
+		@Override
 		public void stop() {
 			getNavigation().stop();
 		}
@@ -363,8 +375,10 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 			}
 			double dist = distanceTo(t);
 
-			if (dist >= SquadTuning.CHARGE_MIN && dist <= SquadTuning.CHARGE_MAX && chargeCooldown <= 0 && onGround()
-					&& hasLineOfSight(t) && getRandom().nextInt(10) == 0 && clearChargePath(t)) {
+			// давно не попадал по врагу (бегает вокруг, кайтит) — рывок, даже если не откатился
+			boolean noHits = tickCount - lastLanded >= SquadTuning.CHARGE_IF_NO_HIT && dist >= SquadTuning.CHARGE_NO_HIT_MIN;
+			if (dist <= SquadTuning.CHARGE_MAX && onGround() && hasLineOfSight(t) && clearChargePath(t)
+					&& (noHits || dist >= SquadTuning.CHARGE_MIN && chargeCooldown <= 0 && getRandom().nextInt(10) == 0)) {
 				startCharge(t);
 				return;
 			}
