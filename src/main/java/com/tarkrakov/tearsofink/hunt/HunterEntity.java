@@ -253,6 +253,7 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		runTimed(now);
 		tickDash(level);
 
+		if (dashTicks <= 0 && now >= dodgeLock) dodgeCharges(level, now);
 		LivingEntity f = foe = pickFoe(level, now);
 		if (f == null || !f.isAlive() || f.level() != level) {
 			getNavigation().stop();
@@ -379,9 +380,9 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		LivingEntity f = foe;
 		if (f == null || !f.isAlive()) return;
 		double dist = distanceTo(f) - f.getBbWidth() / 2;
-		if (dist > s.reach() + 0.5) return;
+		if (dist > s.reach() + 0.8) return;
 		Vec3 to = flatTo(f);
-		Vec3 look = getLookAngle().multiply(1, 0, 1).normalize();
+		Vec3 look = facing();
 		double angle = Math.toDegrees(Math.acos(Mth.clamp(look.dot(to), -1, 1)));
 		if (angle > s.arc() / 2 + 25) return;
 		if (f.hurt(damageSources().mobAttack(this), baseDamage * s.damage() * mult)) {
@@ -464,7 +465,7 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 			timed.add(new Timed(now + i, () -> level.sendParticles(ParticleTypes.SQUID_INK, getX(), getY() + 2.2, getZ(), 3, 0.2, 0.1, 0.2, 0)));
 		}
 		timed.add(new Timed(now + windup, () -> {
-			Vec3 dir = getLookAngle().multiply(1, 0, 1).normalize();
+			Vec3 dir = facing();
 			Vec3 c = position().add(dir.scale(WeaponAbilities.CleaveAbility.REACH));
 			AABB area = new AABB(c.x - 1.5, c.y - 0.5, c.z - 1.5, c.x + 1.5, c.y + 2.0, c.z + 1.5);
 			LivingEntity f = foe;
@@ -519,6 +520,11 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 			Vec3 side = new Vec3(-v.z, 0, v.x).scale(random.nextBoolean() ? 0.6 : -0.6);
 			v = v.add(side).normalize();
 		}
+		dashDir(level, v);
+	}
+
+	/** Рывок в заданную сторону. */
+	private void dashDir(ServerLevel level, Vec3 v) {
 		dashX = v.x;
 		dashZ = v.z;
 		dashTicks = HuntTuning.DASH_TICKS;
@@ -529,6 +535,38 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 			double a = random.nextDouble() * Math.PI * 2;
 			level.sendParticles(ModParticles.INK_SPARK, getX(), getY() + 0.9, getZ(), 0,
 					Math.cos(a) * 0.15, 0.05 + random.nextDouble() * 0.1, Math.sin(a) * 0.15, 1.0);
+		}
+	}
+
+	private long dodgeLock;
+
+	/** Щитоносец разгоняется на охотника — уйти вбок: рывком, а если рывок на откате — шагом-прыжком. */
+	private void dodgeCharges(ServerLevel level, long now) {
+		for (var sb : level.getEntitiesOfClass(com.tarkrakov.tearsofink.entity.patrol.PaleShieldbearerEntity.class,
+				getBoundingBox().inflate(14), e -> e.isAlive() && e.chargeTicks() >= 0)) {
+			Vec3 dir = sb.chargeDirection();
+			Vec3 toMe = position().subtract(sb.position()).multiply(1, 0, 1);
+			double dist = toMe.length();
+			if (dist < 1.0e-3) continue;
+			boolean aimed = sb.getTarget() == this || dir.dot(toMe.scale(1 / dist)) > 0.85;
+			if (!aimed) continue;
+			int windup = com.tarkrakov.tearsofink.entity.patrol.SquadTuning.CHARGE_WINDUP;
+			boolean running = sb.chargeTicks() >= windup;
+			boolean now_ = running ? dist < HuntTuning.DODGE_RUN_DIST : sb.chargeTicks() >= windup - HuntTuning.DODGE_LEAD[rank()];
+			if (!now_) continue;
+			// вбок — в ту сторону, где охотник и так стоит от линии рывка
+			Vec3 side = new Vec3(-dir.z, 0, dir.x);
+			if (side.dot(toMe) < 0) side = side.scale(-1);
+			dodgeLock = now + 30;
+			busyUntil = Math.max(busyUntil, now + 6);
+			getNavigation().stop();
+			if (now >= dashReady) {
+				dashDir(level, side);
+			} else {
+				setDeltaMovement(side.x * HuntTuning.SIDESTEP, 0.3, side.z * HuntTuning.SIDESTEP);
+				hurtMarked = true;
+			}
+			return;
 		}
 	}
 
@@ -558,6 +596,12 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 			}
 		}
 		for (Timed t : due) t.action().run();
+	}
+
+	/** Куда смотрит голова (тело доворачивает с опозданием — по нему удары «мазали»). */
+	private Vec3 facing() {
+		float yaw = getYHeadRot() * Mth.DEG_TO_RAD;
+		return new Vec3(-Mth.sin(yaw), 0, Mth.cos(yaw));
 	}
 
 	private Vec3 flatTo(LivingEntity f) {

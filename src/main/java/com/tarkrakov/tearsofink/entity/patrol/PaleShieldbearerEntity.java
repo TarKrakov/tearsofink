@@ -160,6 +160,15 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 	}
 
 	// ----- рывок -----
+	/** Идёт рывок (замах или бег): сколько тиков и куда. Охотники по нему уворачиваются. */
+	public int chargeTicks() {
+		return chargeTicks;
+	}
+
+	public Vec3 chargeDirection() {
+		return chargeDir;
+	}
+
 	void startCharge(LivingEntity target) {
 		chargeTicks = 0;
 		chargeBroken = 0;

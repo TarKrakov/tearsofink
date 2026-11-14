@@ -71,6 +71,14 @@ public final class HuntTuning {
 	/** Чернильный сам бросается на врагов (патрули, монстры) ближе этого. */
 	public static final double FERAL_AGGRO = 6;
 
+	// ===== Уворот от рывка щитоносца =====
+	/** За сколько тиков до конца замаха охотник уходит вбок (по рангу: Новичок поздно, Легендарный заранее). */
+	public static final int[] DODGE_LEAD = {3, 6, 10};
+	/** Уже бежит на него ближе этого — тоже уворот. */
+	public static final double DODGE_RUN_DIST = 7;
+	/** Рывок на откате — шаг-прыжок вбок с такой силой. */
+	public static final double SIDESTEP = 0.55;
+
 	// ===== Стили боя =====
 	/** Кровавый: враг убегает дальше этого — рывок вдогонку. */
 	public static final double BLOOD_CHASE = 6;
