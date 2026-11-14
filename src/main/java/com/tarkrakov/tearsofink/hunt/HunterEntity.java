@@ -122,7 +122,7 @@ public class HunterEntity extends PathfinderMob {
 	public void setup(HunterType type, int rank, ItemStack main, ItemStack off) {
 		entityData.set(TYPE, type.ordinal());
 		entityData.set(RANK, rank);
-		entityData.set(GEAR, rank == 0 ? 0 : rank == 1 ? random.nextInt(1 << 16) : -1);
+		entityData.set(GEAR, random.nextInt()); // зерно брони: какие куски надеты — решает модель по рангу
 		float hp = HuntTuning.HUNTER_HP[rank] * (1 + (random.nextFloat() * 2 - 1) * HuntTuning.HUNTER_HP_SPREAD);
 		getAttribute(Attributes.MAX_HEALTH).setBaseValue(hp);
 		setHealth(hp);
