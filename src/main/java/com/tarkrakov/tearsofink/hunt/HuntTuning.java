@@ -37,8 +37,8 @@ public final class HuntTuning {
 	 * Урон умножается у ВСЕХ целей одинаково (ванильные удары, стрелы, удары солдат).
 	 * Своя сила каждой цели — поле "power" в hunt_targets/*.json.
 	 */
-	public static final float[] PREY_HP = {3.6f, 4.0f, 4.6f};
-	public static final float[] PREY_DAMAGE = {1.45f, 1.6f, 1.8f};
+	public static final float[] PREY_HP = {3.6f, 4.2f, 5.1f};
+	public static final float[] PREY_DAMAGE = {1.45f, 1.7f, 2.0f};
 	/** Шанс охотника победить цель «вдали» (по рангу). */
 	public static final float[] REMOTE_HUNTER_WINS = {0.45f, 0.6f, 0.75f};
 	/** Чернильный охотник после победы бросается на игроков — столько тиков, потом растворяется. */
@@ -108,7 +108,7 @@ public final class HuntTuning {
 	/** Шпиль: шанс подбить врага ударом и сила подброса. */
 	public static final float SPIRE_LAUNCH_CHANCE = 0.25f;
 	/** Шпиль играет от приёмов: урон его приёмов и здоровье — выше (иначе отходы стоят ему боя). */
-	public static final float SPIRE_SKILL_DAMAGE = 1.25f, SPIRE_HP = 1.12f;
+	public static final float SPIRE_SKILL_DAMAGE = 1.1f, SPIRE_HP = 1.05f;
 	/** Стрелки (скелет, арбалетчик): враг дальше этого — охотник догоняет рывком; Шпиль против стрелка не отходит. */
 	public static final double CHASE_RANGED = 4;
 	/** Шпиль: шанс после отхода не стрелять издалека, а полезть в драку (3–4 удара подряд). */
