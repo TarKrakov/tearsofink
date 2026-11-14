@@ -77,6 +77,11 @@ public final class DebugCommands {
 			break;
 		}
 		say(src, "Старт: под храмом пустот " + holes + " из " + footprint + ", земли внутри " + inside);
+		var arrive = ModDimensions.arrival(level, 0);
+		BlockPos feet = BlockPos.containing(arrive);
+		say(src, "Старт: прибытие " + feet.toShortString() + ", под ногами " + net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(level.getBlockState(feet.below()).getBlock())
+				+ ", на месте " + net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(level.getBlockState(feet).getBlock())
+				+ ", поворот " + (int) ModDimensions.arrivalYaw(level, arrive));
 		int fountains = 0, ruin = 0, minY = Integer.MAX_VALUE, maxY = Integer.MIN_VALUE;
 		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
 		for (int x = tx - 24; x <= tx + 24; x++) for (int z = tz - 24; z <= tz + 24; z++) for (int y = level.getMinBuildHeight(); y < level.getMaxBuildHeight(); y++) {

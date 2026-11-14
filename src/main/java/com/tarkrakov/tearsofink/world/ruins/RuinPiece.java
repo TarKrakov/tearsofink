@@ -144,6 +144,26 @@ public class RuinPiece extends TemplateStructurePiece {
 			}
 		}
 
+		// --- опоры под заборами и стенками: столбики из кладки руин вразнобой до земли (иначе висят в воздухе)
+		BlockState[] bricks = {ModBlocks.RUIN_BRICKS.defaultBlockState(), ModBlocks.CRACKED_RUIN_BRICKS.defaultBlockState(),
+				ModBlocks.OVERGROWN_RUIN_BRICKS.defaultBlockState()};
+		for (int x = Math.max(bb.minX(), box.minX()); x <= Math.min(bb.maxX(), box.maxX()); x++) {
+			for (int z = Math.max(bb.minZ(), box.minZ()); z <= Math.min(bb.maxZ(), box.maxZ()); z++) {
+				for (int y = baseY; y <= bb.maxY(); y++) {
+					BlockState st = level.getBlockState(m.set(x, y, z));
+					if (!(st.getBlock() instanceof net.minecraft.world.level.block.FenceBlock)
+							&& !(st.getBlock() instanceof net.minecraft.world.level.block.WallBlock)) continue;
+					for (int yy = y - 1, n = 0; n < Ruins.FOUNDATION_DEPTH + (y - baseY); yy--, n++) {
+						BlockState below = level.getBlockState(m.set(x, yy, z));
+						if (!below.canBeReplaced() && below.getFluidState().isEmpty()) break;
+						RandomSource r = RandomSource.create(m.asLong() ^ 0xB71C5L);
+						level.setBlock(m, bricks[r.nextInt(bricks.length)], 2);
+					}
+					break; // в столбце — только нижний забор
+				}
+			}
+		}
+
 		// --- ряска по стенам (только Бледнолесье)
 		if (pale) {
 			List<BlockPos> hang = new ArrayList<>();

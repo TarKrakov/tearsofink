@@ -22,7 +22,7 @@ jobs:
               if grep -q "Done (" run-server/logs/latest.log 2>/dev/null; then break; fi
             done
             echo "tearsofink check start"
-            for i in $(seq 1 120); do sleep 5; if [ "$(grep -c "\[check\] Старт" run-server/logs/latest.log 2>/dev/null)" -ge 3 ]; then break; fi; done
+            for i in $(seq 1 120); do sleep 5; if [ "$(grep -c "\[check\] Старт" run-server/logs/latest.log 2>/dev/null)" -ge 4 ]; then break; fi; done
             echo "stop"
           } | ./gradlew runServer --console=plain 2>&1 | tee server.log | grep --line-buffered -E "\[check\]|nearest|Could not find|ERROR|Exception|Caused by|Done \(" || true
       - uses: actions/upload-artifact@v7

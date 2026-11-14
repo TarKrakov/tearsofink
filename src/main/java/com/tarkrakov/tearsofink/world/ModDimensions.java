@@ -33,26 +33,76 @@ public final class ModDimensions {
 		return server.getLevel(INK_LANDS);
 	}
 
-	/** Точка прибытия: на дороге у края Бледнолесья, рядом со стартовым храмом (одна на мир; road больше не важен). */
+	/** Точка прибытия: на полу стартового храма, у его фонтана (одна на мир; road больше не важен). */
 	public static Vec3 arrival(ServerLevel lands, int road) {
 		InkLandsLayout layout = InkLandsLayout.of(lands);
-		double[] p = layout != null ? arrivalXZ(layout) : new double[]{InkLandsLayout.RADIUS * 0.9, 0};
-		return onGround(lands, (int) Math.floor(p[0]), (int) Math.floor(p[1]));
+		if (layout != null) {
+			BlockPos spot = templeSpot(lands, layout);
+			if (spot != null) return Vec3.atBottomCenterOf(spot);
+		}
+		double[] p = layout != null ? com.tarkrakov.tearsofink.world.ruins.Ruins.start(layout) : new double[]{0, 0, InkLandsLayout.RADIUS * 0.9, 0};
+		return onGround(lands, (int) Math.floor(p[2]), (int) Math.floor(p[3]));
 	}
 
-	/** {x, z} места прибытия. */
+	/** {x, z} места прибытия (стартовый храм) — для заблаговременной прогрузки. */
 	public static double[] arrivalXZ(InkLandsLayout layout) {
 		double[] s = com.tarkrakov.tearsofink.world.ruins.Ruins.start(layout);
-		return new double[]{s[2], s[3]};
+		return new double[]{s[0], s[1]};
 	}
 
-	/** Поворот у места прибытия — лицом к стартовому храму; в остальных местах — спиной к краю. */
+	private static final java.util.Map<ServerLevel, BlockPos[]> TEMPLE_SPOT = new java.util.WeakHashMap<>();
+
+	/** Место у фонтана стартового храма: {где стоять, фонтан}; ищется один раз (храм к этому моменту построен). */
+	private static BlockPos[] templeSpotAndFountain(ServerLevel lands, InkLandsLayout layout) {
+		BlockPos[] cached = TEMPLE_SPOT.get(lands);
+		if (cached != null) return cached;
+		double[] s = com.tarkrakov.tearsofink.world.ruins.Ruins.start(layout);
+		int cx = (int) s[0], cz = (int) s[1];
+		for (int dx = -2; dx <= 2; dx++) for (int dz = -2; dz <= 2; dz++) lands.getChunk((cx >> 4) + dx, (cz >> 4) + dz);
+		int top = lands.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cx, cz);
+		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
+		BlockPos fountain = null;
+		search:
+		for (int dx = -26; dx <= 26; dx++) {
+			for (int dz = -26; dz <= 26; dz++) {
+				for (int y = top + 30; y >= top - 40; y--) {
+					if (lands.getBlockState(m.set(cx + dx, y, cz + dz)).is(com.tarkrakov.tearsofink.block.ModBlocks.INK_FOUNTAIN)) {
+						fountain = m.immutable();
+						break search;
+					}
+				}
+			}
+		}
+		if (fountain == null) return null;
+		for (int dist = 2; dist <= 4; dist++) {
+			for (net.minecraft.core.Direction d : net.minecraft.core.Direction.Plane.HORIZONTAL) {
+				for (int dy = 0; dy >= -1; dy--) {
+					BlockPos at = fountain.relative(d, dist).above(dy);
+					if (lands.getBlockState(at).getCollisionShape(lands, at).isEmpty()
+							&& lands.getBlockState(at.above()).getCollisionShape(lands, at.above()).isEmpty()
+							&& lands.getBlockState(at.below()).isFaceSturdy(lands, at.below(), net.minecraft.core.Direction.UP)) {
+						BlockPos[] found = {at, fountain};
+						TEMPLE_SPOT.put(lands, found);
+						return found;
+					}
+				}
+			}
+		}
+		return null;
+	}
+
+	private static BlockPos templeSpot(ServerLevel lands, InkLandsLayout layout) {
+		BlockPos[] f = templeSpotAndFountain(lands, layout);
+		return f == null ? null : f[0];
+	}
+
+	/** Поворот у места прибытия — лицом к фонтану стартового храма; в остальных местах — спиной к краю. */
 	public static float arrivalYaw(ServerLevel lands, Vec3 at) {
 		InkLandsLayout layout = InkLandsLayout.of(lands);
 		if (layout != null) {
-			double[] s = com.tarkrakov.tearsofink.world.ruins.Ruins.start(layout);
-			if (Math.hypot(s[2] - at.x, s[3] - at.z) < 8) {
-				return (float) Math.toDegrees(Math.atan2(-(s[0] - at.x), s[1] - at.z));
+			BlockPos[] f = TEMPLE_SPOT.get(lands);
+			if (f != null && at.distanceToSqr(Vec3.atBottomCenterOf(f[0])) < 4) {
+				return (float) Math.toDegrees(Math.atan2(-(f[1].getX() + 0.5 - at.x), f[1].getZ() + 0.5 - at.z));
 			}
 		}
 		return faceInward(at);
