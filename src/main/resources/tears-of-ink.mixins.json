@@ -11,7 +11,8 @@
 		"ContainerMenuMixin",
 		"PlayerDifficultyMixin",
 		"ServerPlayerRespawnMixin",
-		"MobAccessor"
+		"MobAccessor",
+		"LivingEntityAttackAccessor"
 	],
 	"injectors": {
 		"defaultRequire": 1

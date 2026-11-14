@@ -47,12 +47,15 @@ public final class Combat {
 		}
 	}
 
-	/** Сервер → клиенты: сущность начала движение anim архетипа (длина — ticks). */
-	public record Anim(int entity, String archetype, String anim, int ticks) implements CustomPacketPayload {
+	/**
+	 * Сервер → клиенты: сущность начала движение anim архетипа. ticks — сколько клинок занят (клики не считаются),
+	 * recover — с какой доли стартует шкала атаки (0 — с нуля).
+	 */
+	public record Anim(int entity, String archetype, String anim, int ticks, float recover) implements CustomPacketPayload {
 		public static final Type<Anim> TYPE = new Type<>(TearsOfInk.id("combat_anim"));
 		public static final StreamCodec<RegistryFriendlyByteBuf, Anim> CODEC = StreamCodec.composite(
 				ByteBufCodecs.VAR_INT, Anim::entity, ByteBufCodecs.STRING_UTF8, Anim::archetype,
-				ByteBufCodecs.STRING_UTF8, Anim::anim, ByteBufCodecs.VAR_INT, Anim::ticks, Anim::new);
+				ByteBufCodecs.STRING_UTF8, Anim::anim, ByteBufCodecs.VAR_INT, Anim::ticks, ByteBufCodecs.FLOAT, Anim::recover, Anim::new);
 
 		@Override
 		public Type<? extends CustomPacketPayload> type() {
@@ -122,8 +125,9 @@ public final class Combat {
 		s.hitStep = step;
 		s.hitScale = scale;
 		p.resetAttackStrengthTicker();
+		prefill(p, step.recover());
 		p.swing(InteractionHand.MAIN_HAND); // ванильный взмах для тех, кто смотрит со стороны (пока нет своих поз)
-		broadcast(p, a, step.anim(), step.duration());
+		broadcast(p, a, step.anim(), step.duration(), step.recover());
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.5f,
 				a == Archetype.EXECUTIONER ? 0.6f : 0.9f);
 	}
@@ -139,11 +143,18 @@ public final class Combat {
 		s.lastEnd = now + combo.abilityTicks();
 		s.next = 0;
 		s.hitAt = -1;
-		broadcast(p, a, combo.abilityAnim(), combo.abilityTicks());
+		broadcast(p, a, combo.abilityAnim(), combo.abilityTicks(), -1f);
 	}
 
-	public static void broadcast(ServerPlayer p, Archetype a, String anim, int ticks) {
-		Anim msg = new Anim(p.getId(), a.id, anim, ticks);
+	/** Шкала атаки после удара стартует с доли recover (так следующий удар связки доступен раньше). */
+	public static void prefill(net.minecraft.world.entity.player.Player p, float recover) {
+		if (recover <= 0) return;
+		int delay = (int) Math.ceil(p.getCurrentItemAttackStrengthDelay());
+		((com.tarkrakov.tearsofink.mixin.LivingEntityAttackAccessor) p).tearsofink$setAttackStrengthTicker((int) (recover * delay));
+	}
+
+	public static void broadcast(ServerPlayer p, Archetype a, String anim, int ticks, float recover) {
+		Anim msg = new Anim(p.getId(), a.id, anim, ticks, recover);
 		ServerPlayNetworking.send(p, msg);
 		for (ServerPlayer other : PlayerLookup.tracking(p)) {
 			if (other != p) ServerPlayNetworking.send(other, msg);

@@ -37,7 +37,11 @@ public final class WeaponAnims {
 
 	public record Key(float t, Vector3f rot, Vector3f pos, Vector3f scale, Ease ease) {}
 
-	public record Clip(float length, boolean absolute, List<Key> keys) {}
+	/**
+	 * hold — сколько секунд клинок стоит в последней позе (следующий удар начнётся прямо из неё),
+	 * back — за сколько потом возвращается в стойку. Без hold движение идёт к стойке к моменту length.
+	 */
+	public record Clip(float length, boolean absolute, List<Key> keys, float hold, float back) {}
 
 	private static final Map<String, Map<String, Clip>> CLIPS = new HashMap<>();
 
@@ -45,11 +49,18 @@ public final class WeaponAnims {
 		final Clip clip;
 		final Archetype archetype;
 		final long start;
+		final float busy; // сколько секунд клинок занят (по серверу)
 
-		Playing(Clip clip, Archetype archetype) {
+		Playing(Clip clip, Archetype archetype, int busyTicks) {
 			this.clip = clip;
 			this.archetype = archetype;
 			this.start = System.nanoTime();
+			this.busy = busyTicks / 20f;
+		}
+
+		float end() {
+			if (clip.hold() <= 0) return clip.length();
+			return lastT(clip) + clip.hold() + clip.back();
 		}
 
 		float time() {
@@ -98,7 +109,8 @@ public final class WeaponAnims {
 						k.has("ease") ? Ease.valueOf(k.get("ease").getAsString().toUpperCase()) : Ease.EASE_IN_OUT));
 			}
 			keys.sort((a, b) -> Float.compare(a.t(), b.t()));
-			out.put(e.getKey(), new Clip(o.get("length").getAsFloat(), absolute, keys));
+			out.put(e.getKey(), new Clip(o.get("length").getAsFloat(), absolute, keys,
+					o.has("hold") ? o.get("hold").getAsFloat() : 0f, o.has("return") ? o.get("return").getAsFloat() : 0.3f));
 		}
 		return out;
 	}
@@ -115,20 +127,24 @@ public final class WeaponAnims {
 	}
 
 	/** Начать движение рукой arm. */
-	public static void play(HumanoidArm arm, Archetype a, String anim) {
+	public static void play(HumanoidArm arm, Archetype a, String anim, int busyTicks) {
 		Map<String, Clip> m = CLIPS.get(a.id);
 		Clip clip = m == null ? null : m.get(anim);
-		ARMS[arm.ordinal()] = clip == null ? null : new Playing(clip, a);
+		ARMS[arm.ordinal()] = clip == null ? null : new Playing(clip, a, busyTicks);
+	}
+
+	private static float lastT(Clip c) {
+		return c.keys().isEmpty() ? 0 : c.keys().get(c.keys().size() - 1).t();
 	}
 
 	public static void stop(HumanoidArm arm) {
 		ARMS[arm.ordinal()] = null;
 	}
 
-	/** Идёт ли движение (кроме доставания — оно не мешает бить). */
+	/** Занят ли клинок ударом (по времени сервера; задержка в позе hold — уже не занят). */
 	public static boolean busy(HumanoidArm arm) {
 		Playing p = ARMS[arm.ordinal()];
-		return p != null && p.time() < p.clip.length();
+		return p != null && p.time() < p.busy;
 	}
 
 	/**
@@ -142,7 +158,7 @@ public final class WeaponAnims {
 		Playing p = ARMS[arm.ordinal()];
 		if (p == null) return false;
 		float t = p.time();
-		if (t >= p.clip.length() || Archetype.of(stack) != p.archetype) {
+		if (t >= p.end() || Archetype.of(stack) != p.archetype) {
 			ARMS[arm.ordinal()] = null;
 			return false;
 		}
@@ -152,6 +168,15 @@ public final class WeaponAnims {
 				? new Key(0, new Vector3f(rest.rotation), new Vector3f(rest.translation).mul(16), new Vector3f(rest.scale), Ease.EASE_IN_OUT)
 				: new Key(0, new Vector3f(), new Vector3f(), new Vector3f(1, 1, 1), Ease.EASE_IN_OUT);
 		List<Key> keys = c.keys();
+		if (c.hold() > 0 && !keys.isEmpty() && t >= lastT(c)) {
+			// замер в последней позе, потом мягкий возврат в стойку
+			Key last = keys.get(keys.size() - 1);
+			float since = t - lastT(c) - c.hold();
+			Key to = since <= 0 ? last : restKey;
+			float u0 = since <= 0 ? 0 : ease(Ease.EASE_IN_OUT, Mth.clamp(since / Math.max(0.01f, c.back()), 0, 1));
+			put(c, rest, left, pose, lerp(last.rot(), to.rot(), u0), lerp(last.pos(), to.pos(), u0), lerp(last.scale(), to.scale(), u0));
+			return true;
+		}
 		Key a = restKey, b = null;
 		float ta = 0, tb = c.length();
 		for (Key k : keys) {
@@ -167,7 +192,11 @@ public final class WeaponAnims {
 		if (b == null) b = new Key(c.length(), restKey.rot(), restKey.pos(), restKey.scale(), Ease.EASE_IN_OUT);
 		float u = tb > ta ? Mth.clamp((t - ta) / (tb - ta), 0, 1) : 1;
 		u = ease(a.ease(), u);
-		Vector3f rot = lerp(a.rot(), b.rot(), u), pos = lerp(a.pos(), b.pos(), u), scl = lerp(a.scale(), b.scale(), u);
+		put(c, rest, left, pose, lerp(a.rot(), b.rot(), u), lerp(a.pos(), b.pos(), u), lerp(a.scale(), b.scale(), u));
+		return true;
+	}
+
+	private static void put(Clip c, ItemTransform rest, boolean left, PoseStack pose, Vector3f rot, Vector3f pos, Vector3f scl) {
 		if (c.absolute()) {
 			new ItemTransform(rot, pos.mul(0.0625f), scl).apply(left, pose);
 		} else {
@@ -177,7 +206,6 @@ public final class WeaponAnims {
 			pose.scale(scl.x, scl.y, scl.z);
 			rest.apply(left, pose);
 		}
-		return true;
 	}
 
 	private static Vector3f lerp(Vector3f a, Vector3f b, float u) {

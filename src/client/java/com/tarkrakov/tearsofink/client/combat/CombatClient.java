@@ -29,7 +29,12 @@ public final class CombatClient {
 			var player = ctx.client().player;
 			if (player == null || payload.entity() != player.getId()) return; // чужие удары — позже (третье лицо)
 			Archetype a = Archetype.byId(payload.archetype());
-			if (a != null) WeaponAnims.play(player.getMainArm(), a, payload.anim());
+			if (a == null) return;
+			WeaponAnims.play(player.getMainArm(), a, payload.anim(), payload.ticks());
+			if (payload.recover() >= 0) { // удар связки (не приём): шкала под прицелом — как у сервера
+				player.resetAttackStrengthTicker();
+				Combat.prefill(player, payload.recover());
+			}
 		}));
 		ClientTickEvents.END_CLIENT_TICK.register(CombatClient::tick);
 	}
@@ -43,7 +48,6 @@ public final class CombatClient {
 		if (now - lastRequest < 120) return;
 		lastRequest = now;
 		equipping = false;
-		player.resetAttackStrengthTicker(); // шкала под прицелом — как у обычного удара (сервер сбрасывает свою)
 		ClientPlayNetworking.send(new Combat.Swing());
 	}
 
@@ -72,7 +76,7 @@ public final class CombatClient {
 	private static void equip(HumanoidArm arm, ItemStack stack) {
 		Archetype a = Archetype.of(stack);
 		if (a != null && WeaponAnims.has(a, "equip")) {
-			WeaponAnims.play(arm, a, "equip");
+			WeaponAnims.play(arm, a, "equip", 0);
 			if (arm == Minecraft.getInstance().player.getMainArm()) equipping = true;
 		} else {
 			WeaponAnims.stop(arm);
