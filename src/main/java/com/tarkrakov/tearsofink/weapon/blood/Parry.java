@@ -79,7 +79,7 @@ public final class Parry {
 			Vec3 d = by.position().subtract(p.position()).multiply(1, 0, 1).normalize();
 			by.knockback(0.4, -d.x, -d.z);
 		}
-		if (s.dual) Combat.play(p, Archetype.DUSSAK, "dual_split", "dual_split", BloodTuning.RIPOSTE_GAP);
+		if (s.dual) Combat.play(p, Archetype.DUSSAK, "dual_riposte", "dual_riposte", BloodTuning.RIPOSTE_GAP);
 		else Combat.play(p, Archetype.DUSSAK, "riposte", null, BloodTuning.RIPOSTE_GAP);
 		p.serverLevel().sendParticles(ParticleTypes.CRIT, by.getX(), by.getY() + by.getBbHeight() * 0.6, by.getZ(), 12, 0.3, 0.3, 0.3, 0.2);
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.35f, 2.0f);
