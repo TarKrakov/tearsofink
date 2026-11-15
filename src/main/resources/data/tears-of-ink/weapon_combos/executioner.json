@@ -28,8 +28,8 @@
     },
     {
       "anim": "attack3",
-      "duration": 20,
-      "hit": 9,
+      "duration": 22,
+      "hit": 11,
       "damage": 1.7,
       "reach": 3.6,
       "arc": 50,
@@ -68,7 +68,7 @@
       "arc": 80,
       "knockback": 1.0,
       "speed": 1.0,
-      "off_anim": "dual_fall"
+      "off_anim": "dual_fall_off"
     }
   ]
 }

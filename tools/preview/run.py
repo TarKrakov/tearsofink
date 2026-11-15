@@ -4,7 +4,8 @@ from PIL import Image, ImageDraw
 sys.path.insert(0, os.path.dirname(__file__))
 from third import *
 
-ITEM = {'executioner':'cleave_greatsword','scimitar':'wave_greatsword','talwar':'blood_talvar','dussak':'blood_dussak'}
+FP_FOV = 70
+ITEM = {'executioner':'spire_torturer_greatsword','scimitar':'wave_greatsword','talwar':'blood_talvar','dussak':'blood_dussak'}
 TUNE = dict(reach=1.3, body=0.3, body_max=25, lead=0.5)
 
 def load(arch):
@@ -28,7 +29,7 @@ def cell(arch, clipname, t, model, disp, grip, clip, both, tune):
         fq += item_quads(model, fp_item_m(fp, rot, pos, grip, m), (190,40,50) if m == 1 else (150,30,90))
         if not both: body = max(-D(tune['body_max']), min(D(tune['body_max']), y*tune['body']))
     q = scene(arms, items, body)
-    a = render(fq, [0,0,0], [0,0,-1], size=(200,150), fov=70, bg=(40,40,56))
+    a = render(fq, [0,0,0], [0,0,-1], size=(200,150), fov=FP_FOV, bg=(40,40,56))
     b = render(q, [0.9,2.4,2.6], [0,1.3,-0.6], size=(200,200), fov=50)
     c = render(q, [-1.6,1.9,-2.6], [0,1.25,0], size=(200,200), fov=50)
     im = Image.new('RGB', (200, 550), (20,20,20))

@@ -84,8 +84,8 @@ public final class ModItems {
 	/** Скимитар Чернил (одноручный): Волна (R). Внутреннее имя осталось wave_greatsword — чтобы не потерялись предметы в мирах. */
 	public static final Item WAVE_GREATSWORD = register("wave_greatsword",
 			new InkGreatswordItem(() -> WeaponAbilities.WAVE, new Item.Properties(), false));
-	/** Клинок Палача (двуручный): Рассечение (R). */
-	public static final Item CLEAVE_GREATSWORD = register("cleave_greatsword",
+	/** Клинок Палача (двуручный): Рассечение (R). Предмет spire_torturer_greatsword (15 ноя, модель автора; раньше cleave_greatsword). */
+	public static final Item CLEAVE_GREATSWORD = register("spire_torturer_greatsword",
 			new InkGreatswordItem(() -> WeaponAbilities.CLEAVE, new Item.Properties()));
 
 	/** Оружие охотников: линия и ступень — в самом предмете (HunterWeaponItem.make). */

@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "tears-of-ink:item/cleave_greatsword"
+    "layer0": "tears-of-ink:item/spire_torturer_greatsword"
   }
 }

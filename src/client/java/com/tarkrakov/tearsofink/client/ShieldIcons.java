@@ -21,7 +21,7 @@ public final class ShieldIcons {
 	private static final Map<Item, String> ICONS = Map.ofEntries(
 			Map.entry(ModItems.RAM_SHIELD, "ram_shield"), Map.entry(ModItems.RADIANT_SHIELD, "radiant_shield"),
 			Map.entry(ModItems.MERCY_SHIELD, "mercy_shield"), Map.entry(ModItems.REPEL_SHIELD, "repel_shield"),
-			Map.entry(ModItems.WAVE_GREATSWORD, "wave_greatsword"), Map.entry(ModItems.CLEAVE_GREATSWORD, "cleave_greatsword"),
+			Map.entry(ModItems.WAVE_GREATSWORD, "wave_greatsword"), Map.entry(ModItems.CLEAVE_GREATSWORD, "spire_torturer_greatsword"),
 			Map.entry(ModItems.INK_LONGKNIFE, "ink_longknife"),
 			Map.entry(ModItems.ROARING_AXE, "roaring_axe"),
 			Map.entry(ModItems.RAPID_KNIFE, "rapid_knife"),

@@ -26,7 +26,7 @@ import java.util.List;
  * Тестовая Охота рядом с собой с заказанным охотником:
  * <pre>/tearsofink hunt test &lt;тип&gt; &lt;ранг&gt; &lt;оружие&gt; [второе|none] [цель|random] [особенность]</pre>
  * тип — spire | blood | ink; ранг — 0 (Новичок), 1 (Опытный), 2 (Легендарный);
- * оружие — имя предмета мода (blood_talvar, blood_dussak, hunter_greatsword, hunter_saber, cleave_greatsword, wave_greatsword…);
+ * оружие — имя предмета мода (blood_talvar, blood_dussak, hunter_greatsword, hunter_saber, spire_torturer_greatsword, wave_greatsword…);
  * цель — имя существа из hunt_targets (zombie, pale_spearman…); особенность — none | swift | giant | split.
  * Идущая мировая Охота останавливается.
  */
