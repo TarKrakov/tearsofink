@@ -40,6 +40,12 @@ public class SoulShieldItem extends ShieldItem implements AbilityWeapon {
 		return super.use(level, player, hand);
 	}
 
+	/** Отпустил ПКМ: в стойке двух щитов — выброс заряда (ShieldStance). */
+	@Override
+	public void releaseUsing(ItemStack stack, Level level, net.minecraft.world.entity.LivingEntity entity, int timeLeft) {
+		if (entity instanceof net.minecraft.server.level.ServerPlayer sp) com.tarkrakov.tearsofink.weapon.shield.ShieldStance.release(sp);
+	}
+
 	@Override
 	public boolean isValidRepairItem(ItemStack stack, ItemStack repair) {
 		return repair.is(ModItems.ASPHODA);

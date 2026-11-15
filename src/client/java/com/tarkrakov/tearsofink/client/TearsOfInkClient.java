@@ -137,9 +137,10 @@ public class TearsOfInkClient implements ClientModInitializer {
 		ShieldIcons.init();
 		com.tarkrakov.tearsofink.client.combat.CombatClient.init();
 		com.tarkrakov.tearsofink.client.hunt.HuntClient.init();
+		com.tarkrakov.tearsofink.client.shield.ShieldStanceClient.init();
 		for (Item shield : new Item[]{ModItems.RAM_SHIELD, ModItems.RADIANT_SHIELD, ModItems.MERCY_SHIELD, ModItems.REPEL_SHIELD}) {
 			ItemProperties.register(shield, ResourceLocation.withDefaultNamespace("blocking"),
-					(stack, level, entity, seed) -> entity != null && entity.isUsingItem() && entity.getUseItem() == stack ? 1f : 0f);
+					(stack, level, entity, seed) -> com.tarkrakov.tearsofink.client.shield.ShieldStanceClient.blocking(stack, entity) ? 1f : 0f);
 		}
 		ItemProperties.register(ModItems.RADIANT_SHIELD, TearsOfInk.id("radiant"),
 				(stack, level, entity, seed) -> entity != null && entity.hasEffect(ModEffects.RADIANCE) ? 1f : 0f);

@@ -22,4 +22,12 @@ public abstract class ItemInHandLayerMixin {
 								  MultiBufferSource buffers, int light, CallbackInfo ci) {
 		ThirdPerson.wrist(entity, arm, pose);
 	}
+
+	/** Щиты Души парой светятся в темноте (ярче с зарядом). */
+	@org.spongepowered.asm.mixin.injection.ModifyArg(method = "renderArmWithItem", index = 6, at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"))
+	private int tearsofink$shieldGlow(LivingEntity entity, ItemStack stack, ItemDisplayContext context, boolean left, PoseStack pose,
+									  MultiBufferSource buffers, int light) {
+		return com.tarkrakov.tearsofink.client.shield.ShieldStanceClient.light(entity, stack, light);
+	}
 }

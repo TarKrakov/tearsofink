@@ -224,6 +224,13 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 		boolean hitTarget = false;
 		for (LivingEntity e : this.level().getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(0.4), this::isEnemy)) {
 			if (!chargeHit.add(e.getId())) continue;
+			if (com.tarkrakov.tearsofink.weapon.shield.ShieldStance.inStance(e)) { // Скала: упёрся в два щита — отскок и оглушение
+				e.hurt(this.damageSources().mobAttack(this), damageVs(e, SquadTuning.CHARGE_DAMAGE)); // стойка примет удар (Душа, заряд)
+				endCharge(true);
+				this.setDeltaMovement(-chargeDir.x * 0.6, 0.2, -chargeDir.z * 0.6);
+				this.hasImpulse = true;
+				return;
+			}
 			e.hurt(this.damageSources().mobAttack(this), damageVs(e, SquadTuning.CHARGE_DAMAGE));
 			e.knockback(SquadTuning.CHARGE_KNOCKBACK, -chargeDir.x, -chargeDir.z);
 			lastLanded = this.tickCount;

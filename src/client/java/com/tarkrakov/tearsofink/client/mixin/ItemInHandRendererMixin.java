@@ -19,6 +19,14 @@ public abstract class ItemInHandRendererMixin {
 	@Unique
 	private static boolean tearsofink$inner;
 
+	/** Щиты Души парой светятся в темноте и от первого лица. */
+	@org.spongepowered.asm.mixin.injection.ModifyArg(method = "renderArmWithItem", index = 6, require = 0, at = @At(value = "INVOKE",
+			target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"))
+	private int tearsofink$shieldGlow(net.minecraft.world.entity.LivingEntity entity, ItemStack stack, net.minecraft.world.item.ItemDisplayContext context,
+									  boolean left, PoseStack pose, MultiBufferSource buffers, int light) {
+		return com.tarkrakov.tearsofink.client.shield.ShieldStanceClient.light(entity, stack, light);
+	}
+
 	@Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$ownMotion(AbstractClientPlayer player, float partialTicks, float pitch, InteractionHand hand, float swingProgress,
 									  ItemStack stack, float equippedProgress, PoseStack poseStack, MultiBufferSource buffer, int light, CallbackInfo ci) {

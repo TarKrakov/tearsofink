@@ -83,7 +83,7 @@ public final class LanternClarity {
 	private static float handLanternView(LocalPlayer player) {
 		if (player == null) return 0f;
 		if (player.getOffhandItem().getItem() instanceof HandLanternItem lantern) return lantern.viewDistance();
-		float best = 0f;
+		float best = com.tarkrakov.tearsofink.client.shield.ShieldStanceClient.clarity(player); // два щита Души — свой свет
 		for (int i = 0; i < Inventory.getSelectionSize(); i++) {
 			ItemStack stack = player.getInventory().getItem(i);
 			if (stack.getItem() instanceof HandLanternItem lantern) best = Math.max(best, lantern.viewDistance() * HOTBAR_FACTOR);
