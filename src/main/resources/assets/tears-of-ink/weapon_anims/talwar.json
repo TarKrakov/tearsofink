@@ -492,7 +492,7 @@
           "rotation": [
             0,
             35,
-            -80
+            80
           ],
           "translation": [
             9,
@@ -506,7 +506,7 @@
           "rotation": [
             0,
             -25,
-            -82
+            82
           ],
           "translation": [
             -6,
@@ -520,7 +520,7 @@
           "rotation": [
             0,
             -35,
-            -84
+            84
           ],
           "translation": [
             -8,
