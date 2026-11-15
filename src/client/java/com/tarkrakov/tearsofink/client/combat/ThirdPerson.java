@@ -171,7 +171,9 @@ public final class ThirdPerson {
 		// двуручное в одной руке: вторая рука тоже на рукояти
 		if (playing == 1 && supportFor != null && slots[supportFor.getOpposite().ordinal()] == null) {
 			HumanoidArm other = supportFor.getOpposite();
-			float[] a = aim(model, supportPoint, other == HumanoidArm.LEFT ? -1 : 1, WeaponAnims.ThirdTune.DEFAULT.reach(), WeaponAnims.ThirdTune.DEFAULT.look());
+			// к рукояти, но ближе к середине — чтобы рука не проходила сквозь грудь
+			Vector3f grip = new Vector3f(supportPoint.x * 0.6f, supportPoint.y, supportPoint.z);
+			float[] a = aim(model, grip, other == HumanoidArm.LEFT ? -1 : 1, WeaponAnims.ThirdTune.DEFAULT.reach(), WeaponAnims.ThirdTune.DEFAULT.look());
 			ModelPart arm = arm(model, other);
 			arm.xRot = Mth.lerp(supportWeight, arm.xRot, a[0]);
 			arm.yRot = Mth.lerp(supportWeight, arm.yRot, a[1]);
