@@ -44,8 +44,11 @@ public final class AuraClient {
 	/** Свет союзникам: игроки ближе этого (блоки) видят дальше — на эту долю света светящегося. */
 	public static final double ALLY_RADIUS = 4;
 	public static final float ALLY_SHARE = 0.5f;
-	/** Сила свечения (тело) и ореола по ступени света. */
-	private static final float[] GLOW = {0.18f, 0.25f, 0.35f, 0.5f}, HALO = {0.12f, 0.17f, 0.24f, 0.34f};
+	/**
+	 * Сила свечения тела и ореола по ступени света 0…3. Свет складывается поверх скина (и ореол тоже ложится на тело спереди),
+	 * поэтому числа малые: при сумме ~0,5 персонаж выгорает в белый силуэт без цветов (так было, 15 ноя). Больше — ярче.
+	 */
+	private static final float[] GLOW = {0.0f, 0.02f, 0.035f, 0.05f}, HALO = {0.05f, 0.07f, 0.1f, 0.13f};
 
 	private static final ResourceLocation WHITE = TearsOfInk.id("textures/entity/aura/white.png");
 	private static final ResourceLocation[] VEINS = {
