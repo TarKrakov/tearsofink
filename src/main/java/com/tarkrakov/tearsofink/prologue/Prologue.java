@@ -109,7 +109,10 @@ public final class Prologue {
 						TRANSIT.put(p.getUUID(), left);
 					}
 				} else if (p.getBoundingBox().intersects(v.gate().inflate(0.2))) {
-					if (com.tarkrakov.tearsofink.vow.Vows.mayPass(p)) startTransit(p);
+					if (com.tarkrakov.tearsofink.vow.Vows.mayPass(p)) {
+						PrologueItems.giveKit(p); // не дождался подарка Проводника — набор всё равно
+						startTransit(p);
+					}
 					else { // без обета дальше не пройти — назад от ворот и окно выбора
 						BlockPos a = v.arrival();
 						p.teleportTo(a.getX() + 0.5, a.getY(), a.getZ() + 0.5);

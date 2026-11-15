@@ -25,6 +25,7 @@ public final class ModCreativeTab {
 						output.accept(ModItems.INVITATION_LETTER);
 						output.accept(ModItems.DIM_MIRROR);
 						output.accept(ModItems.WORN_SATCHEL);
+						output.accept(ModItems.PILGRIM_BUNDLE);
 						output.accept(ModItems.DIARY);
 						output.accept(ModItems.INK_LONGKNIFE);
 						output.accept(ModItems.SALVATION_PENDANT);
@@ -120,6 +121,9 @@ public final class ModCreativeTab {
 						output.accept(ModItems.RAM_SHIELD);
 						output.accept(ModItems.RADIANT_SHIELD);
 						output.accept(ModItems.MERCY_SHIELD);
+						output.accept(ModItems.WORN_RAM_SHIELD);
+						output.accept(ModItems.WORN_MERCY_SHIELD);
+						output.accept(ModItems.DIM_SCIMITAR);
 						output.accept(ModItems.REPEL_SHIELD);
 						output.accept(ModItems.WAVE_GREATSWORD);
 						output.accept(ModItems.CLEAVE_GREATSWORD);

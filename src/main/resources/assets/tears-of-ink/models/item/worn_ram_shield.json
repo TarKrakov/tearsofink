@@ -1,0 +1,12 @@
+{
+  "parent": "tears-of-ink:item/shield/worn_ram",
+  "gui_light": "front",
+  "overrides": [
+    {
+      "predicate": {
+        "blocking": 1
+      },
+      "model": "tears-of-ink:item/worn_ram_shield_blocking"
+    }
+  ]
+}

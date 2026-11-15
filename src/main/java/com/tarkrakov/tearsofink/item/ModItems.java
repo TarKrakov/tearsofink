@@ -72,6 +72,11 @@ public final class ModItems {
 	/** Щит Души: Таран (Shift+R). */
 	public static final Item RAM_SHIELD = register("ram_shield",
 			new SoulShieldItem(() -> WeaponAbilities.RAM, new Item.Properties().durability(500)));
+	/** Котомка паломника (Путь Души): потёртые щиты — полноценные щиты Души, но слабее (×0,7). */
+	public static final Item WORN_RAM_SHIELD = register("worn_ram_shield",
+			new SoulShieldItem(() -> WeaponAbilities.RAM, new Item.Properties().durability(300), SoulShieldItem.WORN_POWER));
+	public static final Item WORN_MERCY_SHIELD = register("worn_mercy_shield",
+			new SoulShieldItem(() -> WeaponAbilities.MERCY, new Item.Properties().durability(300), SoulShieldItem.WORN_POWER));
 	/** Щит Души: Сияние (Shift+R). */
 	public static final Item RADIANT_SHIELD = register("radiant_shield",
 			new SoulShieldItem(() -> WeaponAbilities.RADIANCE, new Item.Properties().durability(500)));
@@ -170,6 +175,13 @@ public final class ModItems {
 			new com.tarkrakov.tearsofink.prologue.PrologueItems.Invitation(new Item.Properties().stacksTo(1)));
 	public static final Item WORN_SATCHEL = register("worn_satchel",
 			new com.tarkrakov.tearsofink.prologue.PrologueItems.Satchel(new Item.Properties().stacksTo(1)));
+	/** Котомка паломника — стартовый набор Пути Души. */
+	public static final Item PILGRIM_BUNDLE = register("pilgrim_bundle",
+			new com.tarkrakov.tearsofink.prologue.PrologueItems.PilgrimBundle(new Item.Properties().stacksTo(1)));
+	/** Тусклый скимитар — стартовое оружие Пути Чернил: удары Скимитаров, урон 4, тусклая Волна (R). */
+	public static final Item DIM_SCIMITAR = register("dim_scimitar",
+			new com.tarkrakov.tearsofink.weapon.InkGreatswordItem(() -> com.tarkrakov.tearsofink.weapon.WeaponAbilities.DIM_WAVE,
+					new Item.Properties(), false, com.tarkrakov.tearsofink.weapon.InkGreatswordItem.ONE_HANDED_DAMAGE - 1));
 	public static final Item DIARY = register("diary",
 			new com.tarkrakov.tearsofink.prologue.PrologueItems.Diary(new Item.Properties().stacksTo(1)));
 	/** Базовое оружие Чернил: Чернильная клякса (R). */
