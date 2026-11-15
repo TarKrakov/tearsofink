@@ -75,7 +75,7 @@
       ],
       "third": {
         "mirror": true,
-        "push": [0, 3]
+        "push": [3, 3]
       }
     },
     "slam": {
@@ -86,8 +86,8 @@
       "smooth": true,
       "third": {
         "mirror": true,
-        "push": 3,
-        "turn": 10
+        "push": 4,
+        "turn": 25
       },
       "keyframes": [
         {
