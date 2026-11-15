@@ -5,7 +5,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from third import *
 
 FP_FOV = 70
-ITEM = {'executioner':'spire_torturer_greatsword','scimitar':'wave_greatsword','talwar':'blood_talvar','dussak':'blood_dussak'}
+ITEM = {'executioner':'spire_torturer_greatsword','scimitar':'spire_shadow_scimitar','talwar':'blood_talvar','dussak':'blood_dussak'}
 TUNE = dict(reach=1.3, body=0.3, body_max=25, lead=0.5)
 
 def load(arch):
