@@ -11,7 +11,8 @@ import com.tarkrakov.tearsofink.client.combat.WeaponAnims;
 import net.minecraft.client.renderer.block.model.ItemTransform;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
-import org.spongepowered.asm.mixin.injection.Redirect;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -36,9 +37,10 @@ public abstract class ItemRendererMixin {
 	}
 
 	/** От первого лица у клинков архетипов вместо обычной стойки — поза текущего движения (удар, доставание). */
-	@Redirect(method = "render(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IILnet/minecraft/client/resources/model/BakedModel;)V",
+	@WrapOperation(method = "render(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;IILnet/minecraft/client/resources/model/BakedModel;)V",
 			at = @At(value = "INVOKE", target = "Lnet/minecraft/client/renderer/block/model/ItemTransform;apply(ZLcom/mojang/blaze3d/vertex/PoseStack;)V"))
-	private void tearsofink$weaponMotion(ItemTransform rest, boolean leftHand, PoseStack pose) {
-		if (!WeaponAnims.apply(tearsofink$context, tearsofink$stack, rest, leftHand, pose)) rest.apply(leftHand, pose);
+	private void tearsofink$weaponMotion(ItemTransform rest, boolean leftHand, PoseStack pose, Operation<Void> original) {
+		// мягкая обёртка (уживается с другими модами на том же вызове): наш клинок — поза движения, иначе — как было
+		if (!WeaponAnims.apply(tearsofink$context, tearsofink$stack, rest, leftHand, pose)) original.call(rest, leftHand, pose);
 	}
 }
