@@ -405,5 +405,7 @@
   "death.attack.tears-of-ink.bleeding.player": "%1$s истёк кровью от ран, нанесённых %2$s",
   "message.tears-of-ink.no_blood": "Кровью платить нечем",
   "skill.tears-of-ink.blood_arc": "Кровавая дуга",
-  "skill.tears-of-ink.talwar_cross": "Кровавый крест"
+  "skill.tears-of-ink.talwar_cross": "Кровавый крест",
+  "skill.tears-of-ink.dussak_parry": "Парирование",
+  "skill.tears-of-ink.dussak_double_parry": "Двойное парирование"
 }

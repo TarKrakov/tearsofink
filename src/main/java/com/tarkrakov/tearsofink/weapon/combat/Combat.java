@@ -222,6 +222,19 @@ public final class Combat {
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1f, 0.5f);
 	}
 
+	/** Движение приёма у всех, без урона. mainAnim / offAnim — null, если эта рука не двигается. */
+	public static void play(ServerPlayer p, Archetype a, @org.jetbrains.annotations.Nullable String mainAnim,
+							@org.jetbrains.annotations.Nullable String offAnim, int ticks) {
+		State s = state(p);
+		long now = p.serverLevel().getGameTime();
+		s.busyUntil = now + ticks;
+		s.lastEnd = s.busyUntil;
+		s.next = 0;
+		s.queued = false;
+		if (mainAnim != null) broadcast(p, a, mainAnim, ticks, -1f, 1f);
+		if (offAnim != null) broadcast(p, a, "off:" + offAnim, ticks, -1f, 1f);
+	}
+
 	/** Движение парного приёма у всех, без урона (урон даёт сам приём). */
 	public static void dualAnim(ServerPlayer p, Archetype a, String mainAnim, String offAnim, int ticks) {
 		State s = state(p);

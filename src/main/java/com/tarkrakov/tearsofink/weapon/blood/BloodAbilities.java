@@ -16,6 +16,8 @@ import net.minecraft.world.phys.Vec3;
 public final class BloodAbilities {
 	public static final BloodArcAbility BLOOD_ARC = new BloodArcAbility();
 	public static final TalwarCrossAbility TALWAR_CROSS = new TalwarCrossAbility();
+	public static final ParryAbility PARRY = new ParryAbility();
+	public static final DoubleParryAbility DOUBLE_PARRY = new DoubleParryAbility();
 
 	private BloodAbilities() {}
 
@@ -69,6 +71,44 @@ public final class BloodAbilities {
 			player.hurtMarked = true;
 			level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1f, 0.8f);
 			level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1f, 0.7f);
+			return true;
+		}
+	}
+
+	/** Дуссак (R): стойка парирования — удар вблизи обнуляется, клинок отвечает росчерком с кровотечением. */
+	public static class ParryAbility extends Skill {
+		ParryAbility() {
+			super(TearsOfInk.id("dussak_parry"), 0, 0, BloodTuning.PARRY_COOLDOWN);
+		}
+
+		@Override
+		public float healthCost() {
+			return BloodTuning.PARRY_HEALTH;
+		}
+
+		@Override
+		public boolean activate(ServerPlayer player, SkillInput input) {
+			if (Parry.active(player)) return false;
+			Parry.start(player, false); // движение стойки — ability_anim из dussak.json
+			return true;
+		}
+	}
+
+	/** Два Дуссака (ПКМ): усиленная стойка — дольше, отвечают оба клинка, кровотечение сильнее. */
+	public static class DoubleParryAbility extends Skill {
+		DoubleParryAbility() {
+			super(TearsOfInk.id("dussak_double_parry"), 0, 0, BloodTuning.DOUBLE_PARRY_COOLDOWN);
+		}
+
+		@Override
+		public float healthCost() {
+			return BloodTuning.DOUBLE_PARRY_HEALTH;
+		}
+
+		@Override
+		public boolean activate(ServerPlayer player, SkillInput input) {
+			if (Parry.active(player)) return false;
+			Parry.start(player, true);
 			return true;
 		}
 	}

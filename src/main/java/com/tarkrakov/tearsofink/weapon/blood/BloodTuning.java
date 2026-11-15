@@ -23,5 +23,21 @@ public final class BloodTuning {
 	public static final int CROSS_COOLDOWN = 100, CROSS_BLEED = 2;
 	public static final double CROSS_BACKSTEP = 0.9;
 
+	// ===== Дуссак: парирование =====
+	/** R — стойка парирования: длится (тики), цена здоровьем, перезарядка (с начала стойки). */
+	public static final int PARRY_TICKS = 40, PARRY_COOLDOWN = 120;
+	public static final float PARRY_HEALTH = 1f;
+	/** Ответный удар: урон = урон оружия × множитель, ступени кровотечения. */
+	public static final float RIPOSTE_MULT = 1.5f;
+	public static final int RIPOSTE_BLEED = 1;
+	/** ПКМ парой — усиленная стойка: дольше, ответ двумя клинками сильнее и кровотечение сильнее. */
+	public static final int DOUBLE_PARRY_TICKS = 60, DOUBLE_PARRY_COOLDOWN = 200;
+	public static final float DOUBLE_PARRY_HEALTH = 2f, DOUBLE_RIPOSTE_MULT = 2.2f;
+	public static final int DOUBLE_RIPOSTE_BLEED = 2;
+	/** Между ответами не меньше стольких тиков (ответ — росчерк, ему нужно время). */
+	public static final int RIPOSTE_GAP = 10;
+	/** Ответ достаёт обидчика не дальше стольких блоков. */
+	public static final double RIPOSTE_REACH = 4.5;
+
 	private BloodTuning() {}
 }

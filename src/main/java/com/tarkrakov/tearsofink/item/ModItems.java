@@ -106,7 +106,8 @@ public final class ModItems {
 	public static final Item BLOOD_TALVAR = register("blood_talvar",
 			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD, () -> com.tarkrakov.tearsofink.weapon.blood.BloodAbilities.BLOOD_ARC));
 	public static final Item BLOOD_DUSSAK = register("blood_dussak",
-			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD));
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD,
+					() -> com.tarkrakov.tearsofink.weapon.blood.BloodAbilities.PARRY));
 
 	// ===== Добыча с фауны =====
 	/** Шёлковая нить (бледные гусеницы) — работает в рецептах вместо ванильной нити. */

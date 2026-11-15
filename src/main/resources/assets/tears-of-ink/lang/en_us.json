@@ -381,5 +381,7 @@
   "death.attack.tears-of-ink.bleeding.player": "%1$s bled out from wounds by %2$s",
   "message.tears-of-ink.no_blood": "No blood to pay with",
   "skill.tears-of-ink.blood_arc": "Blood Arc",
-  "skill.tears-of-ink.talwar_cross": "Blood Cross"
+  "skill.tears-of-ink.talwar_cross": "Blood Cross",
+  "skill.tears-of-ink.dussak_parry": "Parry",
+  "skill.tears-of-ink.dussak_double_parry": "Double Parry"
 }

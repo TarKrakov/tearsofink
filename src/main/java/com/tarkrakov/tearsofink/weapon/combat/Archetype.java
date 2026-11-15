@@ -18,7 +18,9 @@ public enum Archetype {
 	/** Разрывающие Скимитары: изогнутые одноручные, быстрые «танцующие» удары. Пример — Меч Волны. */
 	SCIMITAR("scimitar"),
 	/** Парящие Тальвары (Кровь): одноручные режущие, удары-танец, переходы клинка разворотом. */
-	TALWAR("talwar");
+	TALWAR("talwar"),
+	/** Хищные Дуссаки (Кровь): короткие одноручные тесаки — тычок, разрыв, росчерк; R — парирование с ответом. */
+	DUSSAK("dussak");
 
 	public final String id;
 
@@ -35,7 +37,8 @@ public enum Archetype {
 					ModItems.WAVE_GREATSWORD, SCIMITAR,
 					ModItems.HUNTER_GREATSWORD, EXECUTIONER,
 					ModItems.HUNTER_SABER, SCIMITAR,
-					ModItems.BLOOD_TALVAR, TALWAR);
+					ModItems.BLOOD_TALVAR, TALWAR,
+					ModItems.BLOOD_DUSSAK, DUSSAK);
 		}
 		return items;
 	}
