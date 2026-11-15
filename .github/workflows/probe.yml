@@ -17,6 +17,10 @@ jobs:
             javap -p -c -classpath "$j" net.minecraft.client.renderer.entity.ItemRenderer 2>/dev/null | grep -n "ItemTransform.apply\|public void render(" | head
             javap -p -classpath "$j" net.minecraft.client.renderer.ItemInHandRenderer 2>/dev/null | grep renderArmWithItem
             javap -p -classpath "$j" net.minecraft.client.Minecraft 2>/dev/null | grep "startAttack\|continueAttack\|LocalPlayer player\|HitResult hitResult"
+            javap -p -c -classpath "$j" net.minecraft.client.renderer.entity.layers.ItemInHandLayer 2>/dev/null | grep -n "renderArmWithItem\|renderItem\|translateToHand" | head
+            javap -p -classpath "$j" net.minecraft.client.renderer.block.model.ItemTransforms 2>/dev/null | grep "getTransform\|firstPerson"
+            javap -p -classpath "$j" net.minecraft.client.renderer.block.model.BakedQuad 2>/dev/null | grep "getVertices"
+            javap -p -classpath "$j" net.minecraft.client.renderer.entity.ItemRenderer 2>/dev/null | grep "getModel"
           done
             javap -p -classpath "$j" net.minecraft.client.model.HumanoidModel 2>/dev/null | grep "setupAnim\|ModelPart\|attackTime\|setupAttackAnimation"
             javap -p -classpath "$j" net.minecraft.client.model.PlayerModel 2>/dev/null | grep "setupAnim"
