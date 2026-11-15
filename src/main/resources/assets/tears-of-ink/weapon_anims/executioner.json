@@ -70,6 +70,7 @@
     },
     "attack1": {
       "length": 0.7,
+      "smooth": "tight",
       "keyframes": [
         {
           "t": 0.18,
@@ -122,6 +123,7 @@
       "length": 0.6,
       "hold": 0.4,
       "return": 0.3,
+      "smooth": "tight",
       "keyframes": [
         {
           "t": 0.0,
@@ -184,6 +186,7 @@
     },
     "attack3": {
       "length": 1.0,
+      "smooth": "tight",
       "keyframes": [
         {
           "t": 0.0,
@@ -274,6 +277,7 @@
     },
     "ability": {
       "length": 1.2,
+      "smooth": "tight",
       "keyframes": [
         {
           "t": 0.45,
@@ -322,6 +326,7 @@
     },
     "guillotine_chop": {
       "length": 0.5,
+      "smooth": "tight",
       "keyframes": [
         {
           "t": 0.1,
@@ -370,6 +375,7 @@
     },
     "guillotine_end": {
       "length": 0.9,
+      "smooth": "tight",
       "keyframes": [
         {
           "t": 0.28,
@@ -439,6 +445,7 @@
       "hold": 0.5,
       "return": 0.4,
       "impact": 0.26,
+      "smooth": "tight",
       "keyframes": [
         {
           "t": 0.12,
@@ -488,6 +495,7 @@
       "length": 1.2,
       "hold": 0.9,
       "return": 0.4,
+      "smooth": "tight",
       "keyframes": [
         {
           "t": 0.08,
@@ -556,6 +564,7 @@
       "length": 1.2,
       "hold": 0.9,
       "return": 0.4,
+      "smooth": "tight",
       "keyframes": [
         {
           "t": 0,
@@ -607,6 +616,7 @@
     },
     "dual_fall": {
       "length": 1.0,
+      "smooth": "tight",
       "keyframes": [
         {
           "t": 0,

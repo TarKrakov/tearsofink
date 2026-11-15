@@ -44,6 +44,15 @@ REST = dict(t=0, rot=np.zeros(3), pos=np.zeros(3), ease='ease_in_out')
 def spline(p0,p1,p2,p3,u):
     return 0.5*(2*p1+(-p0+p2)*u+(2*p0-5*p1+4*p2-p3)*u*u+(-p0+3*p1-3*p2+p3)*u**3)
 
+def _slope(b, a):
+    m = (b+a)/2; lim = 3*np.minimum(abs(b), abs(a))
+    return np.where(b*a <= 0, 0, np.sign(m)*np.minimum(abs(m), lim))
+
+def tight(p0,p1,p2,p3,ue,uh):  # "smooth": "tight" — не перелетает позы (как WeaponAnims.tight)
+    u=uh; h00=2*u**3-3*u**2+1; h10=u**3-2*u**2+u; h01=-2*u**3+3*u**2; h11=u**3-u**2
+    s1=_slope(p1-p0,p2-p1); s2=_slope(p2-p1,p3-p2)
+    return np.where((s1==0)&(s2==0), p1+(p2-p1)*ue, h00*p1+h10*s1+h01*p2+h11*s2)
+
 def sample(c, t):
     keys = [key(k) for k in c['keyframes']]; keys.sort(key=lambda k: k['t'])
     hold = c.get('hold',0); back = c.get('return',0.3); L = c['length']
@@ -60,10 +69,13 @@ def sample(c, t):
     while i < len(pts)-2 and pts[i+1]['t'] <= t: i += 1
     a = pts[i]; b = pts[min(i+1,len(pts)-1)]
     u = min(1,max(0,(t-a['t'])/(b['t']-a['t']))) if b['t'] > a['t'] else 1
-    u = ease(a['ease'], u)
+    raw = u; u = ease(a['ease'], u)
     if not c.get('smooth'):
         return a['rot']+(b['rot']-a['rot'])*u, a['pos']+(b['pos']-a['pos'])*u
     a0 = pts[max(i-1,0)]; b1 = pts[min(i+2,len(pts)-1)]
+    if c.get('smooth') == 'tight':
+        uh = raw if a['ease'] == 'ease_in_out' else u
+        return tight(a0['rot'],a['rot'],b['rot'],b1['rot'],u,uh), tight(a0['pos'],a['pos'],b['pos'],b1['pos'],u,uh)
     return spline(a0['rot'],a['rot'],b['rot'],b1['rot'],u), spline(a0['pos'],a['pos'],b['pos'],b1['pos'],u)
 
 def end_time(c):

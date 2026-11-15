@@ -41,7 +41,7 @@ public final class WeaponAnims {
 	 * hold — сколько секунд клинок стоит в последней позе (следующий удар начнётся прямо из неё),
 	 * back — за сколько потом возвращается в стойку. Без hold движение идёт к стойке к моменту length.
 	 */
-	public record Clip(float length, boolean absolute, List<Key> keys, float hold, float back, float impact, boolean smooth, ThirdFix third) {}
+	public record Clip(float length, boolean absolute, List<Key> keys, float hold, float back, float impact, boolean smooth, boolean tight, ThirdFix third) {}
 
 	/**
 	 * Поправки третьего лица для одного движения (блок "third" внутри движения):
@@ -165,7 +165,8 @@ public final class WeaponAnims {
 			out.put(e.getKey(), new Clip(o.get("length").getAsFloat(), absolute, keys,
 					o.has("hold") ? o.get("hold").getAsFloat() : 0f, o.has("return") ? o.get("return").getAsFloat() : 0.3f,
 					o.has("impact") ? o.get("impact").getAsFloat() : -1f,
-					o.has("smooth") && o.get("smooth").getAsBoolean(),
+					o.has("smooth") && (o.get("smooth").getAsJsonPrimitive().isString() || o.get("smooth").getAsBoolean()),
+					o.has("smooth") && o.get("smooth").getAsJsonPrimitive().isString() && "tight".equals(o.get("smooth").getAsString()),
 					o.has("third") ? fix(o.getAsJsonObject("third")) : ThirdFix.NONE));
 		}
 		return out;
@@ -295,12 +296,42 @@ public final class WeaponAnims {
 		while (i < pts.size() - 2 && pts.get(i + 1).t() <= t) i++;
 		Key a = pts.get(i), b = pts.get(Math.min(i + 1, pts.size() - 1));
 		float u = b.t() > a.t() ? Mth.clamp((t - a.t()) / (b.t() - a.t()), 0, 1) : 1;
+		float raw = u;
 		u = ease(a.ease(), u);
 		if (!c.smooth()) return new Key(t, lerp(a.rot(), b.rot(), u), lerp(a.pos(), b.pos(), u), lerp(a.scale(), b.scale(), u), Ease.LINEAR);
 		// smooth: кривая через все позы — клинок не останавливается в каждой
 		Key a0 = pts.get(Math.max(i - 1, 0)), b1 = pts.get(Math.min(i + 2, pts.size() - 1));
+		if (c.tight()) {
+			float uh = a.ease() == Ease.EASE_IN_OUT ? raw : u; // кривая сама тормозит — без двойного торможения
+			return new Key(t, tight(a0.rot(), a.rot(), b.rot(), b1.rot(), u, uh), tight(a0.pos(), a.pos(), b.pos(), b1.pos(), u, uh),
+					tight(a0.scale(), a.scale(), b.scale(), b1.scale(), u, uh), Ease.LINEAR);
+		}
 		return new Key(t, spline(a0.rot(), a.rot(), b.rot(), b1.rot(), u), spline(a0.pos(), a.pos(), b.pos(), b1.pos(), u),
 				spline(a0.scale(), a.scale(), b.scale(), b1.scale(), u), Ease.LINEAR);
+	}
+
+	/**
+	 * "smooth": "tight" — тугая кривая: не перелетает позы. Где клинок разворачивается (оба конца отрезка — крайние позы),
+	 * идёт как без кривой, со своим ease; где проходит позу насквозь — не останавливается в ней
+	 * (касательные ограничены — Фрич–Карлсон). ue — время с ease, uh — для кривой.
+	 */
+	static Vector3f tight(Vector3f p0, Vector3f p1, Vector3f p2, Vector3f p3, float ue, float uh) {
+		float u2 = uh * uh, u3 = u2 * uh;
+		float h00 = 2 * u3 - 3 * u2 + 1, h10 = u3 - 2 * u2 + uh, h01 = -2 * u3 + 3 * u2, h11 = u3 - u2;
+		Vector3f r = new Vector3f();
+		for (int k = 0; k < 3; k++) {
+			float v0 = p0.get(k), v1 = p1.get(k), v2 = p2.get(k), v3 = p3.get(k);
+			float s1 = slope(v1 - v0, v2 - v1), s2 = slope(v2 - v1, v3 - v2);
+			r.setComponent(k, s1 == 0 && s2 == 0 ? v1 + (v2 - v1) * ue : h00 * v1 + h10 * s1 + h01 * v2 + h11 * s2);
+		}
+		return r;
+	}
+
+	private static float slope(float before, float after) {
+		if (before * after <= 0) return 0;
+		float m = (before + after) / 2;
+		float lim = 3 * Math.min(Math.abs(before), Math.abs(after));
+		return Math.copySign(Math.min(Math.abs(m), lim), m);
 	}
 
 	/** Кривая Катмулла–Рома: проходит через a и b, касательные — по соседям. */

@@ -285,6 +285,7 @@
     "ability": {
       "length": 0.7,
       "impact": 0.3,
+      "smooth": "tight",
       "keyframes": [
         {
           "t": 0.12,
@@ -335,6 +336,7 @@
       "hold": 0.15,
       "return": 0.35,
       "impact": 0.28,
+      "smooth": "tight",
       "keyframes": [
         {
           "t": 0.12,
