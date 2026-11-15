@@ -58,13 +58,12 @@ public class AtonementItem extends Item {
 			player.playNotifySound(SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.25f, 1.8f);
 			return stack;
 		}
-		if (data.soulMax() >= InkData.SOUL_START) {
+		if (data.sold() <= 0) {
 			player.sendSystemMessage(Component.translatable("message.tears-of-ink.soul_whole").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
 			return stack;
 		}
-		int newMax = Math.min(InkData.SOUL_START, data.soulMax() + SOUL_RETURNED);
-		InkData after = data.withSoulMax(newMax);
-		InkPowers.update(player, after.withSoul(after.soul() + (newMax - data.soulMax())));
+		InkData after = data.withSold(data.sold() - SOUL_RETURNED / InkData.SOUL_STEP);
+		InkPowers.update(player, after.withSoul(after.soul() + (after.soulMax() - data.soulMax())));
 
 		player.sendSystemMessage(Component.translatable("message.tears-of-ink.atonement").withStyle(ChatFormatting.AQUA, ChatFormatting.ITALIC));
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.2f, 0.8f);

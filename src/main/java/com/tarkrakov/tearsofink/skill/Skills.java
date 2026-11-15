@@ -58,6 +58,7 @@ public final class Skills {
 	public static void init() {
 		PayloadTypeRegistry.playC2S().register(SkillPayloads.Use.TYPE, SkillPayloads.Use.CODEC);
 		PayloadTypeRegistry.playS2C().register(SkillPayloads.NotEnough.TYPE, SkillPayloads.NotEnough.CODEC);
+		PayloadTypeRegistry.playS2C().register(SkillPayloads.Boost.TYPE, SkillPayloads.Boost.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(SkillPayloads.Use.TYPE, (payload, context) ->
 				context.player().server.execute(() -> use(context.player(), payload)));
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> COOLDOWNS.remove(handler.getPlayer().getUUID()));
@@ -90,6 +91,9 @@ public final class Skills {
 	// ----- Запуск по клавише -----
 	private static void use(ServerPlayer player, SkillPayloads.Use payload) {
 		Skill skill = get(payload.skill());
+		// одна клавиша — у каждого пути своё: на Пути Души рывок — Могучая поступь
+		if (skill == ModSkills.DASH && com.tarkrakov.tearsofink.vow.Vows.vow(player) == com.tarkrakov.tearsofink.vow.Vow.SOUL
+				&& knows(player, ModSkills.STRIDE)) skill = ModSkills.STRIDE;
 		if (skill == null || !skill.isActive() || !knows(player, skill)) return;
 		if (!player.isAlive() || player.isSpectator() || player.isPassenger() || player.isSleeping()) return;
 
@@ -110,6 +114,10 @@ public final class Skills {
 		}
 
 		if (com.tarkrakov.tearsofink.weapon.blood.Parry.active(player)) return false; // в стойке парирования — ничего другого
+		if (!com.tarkrakov.tearsofink.vow.Vows.allows(player, skill)) { // книга чужого пути спит
+			com.tarkrakov.tearsofink.vow.Vows.asleep(player, skill, false);
+			return false;
+		}
 		int now = player.server.getTickCount();
 		Map<ResourceLocation, Integer> cooldowns = COOLDOWNS.computeIfAbsent(player.getUUID(), k -> new HashMap<>());
 		if (cooldowns.getOrDefault(skill.id(), 0) > now) return false;

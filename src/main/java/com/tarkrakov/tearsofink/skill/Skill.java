@@ -44,6 +44,11 @@ public abstract class Skill {
 		return 0;
 	}
 
+	/** Чей это путь (обеты): NONE — общий (оружие), INK — чёрные книги, SOUL — белые. Чужой путь спит. */
+	public com.tarkrakov.tearsofink.vow.Vow path() {
+		return com.tarkrakov.tearsofink.vow.Vow.NONE;
+	}
+
 	/** Есть ли у навыка клавиша (активный) или он работает сам (пассивный). */
 	public boolean isActive() {
 		return true;

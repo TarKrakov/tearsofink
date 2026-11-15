@@ -49,6 +49,11 @@ public class DashSkill extends Skill {
 		});
 	}
 
+	@Override
+	public com.tarkrakov.tearsofink.vow.Vow path() {
+		return com.tarkrakov.tearsofink.vow.Vow.INK;
+	}
+
 	public boolean isInvulnerable(ServerPlayer player) {
 		Dash dash = active.get(player.getUUID());
 		return dash != null && dash.invulnerableLeft() > 0;

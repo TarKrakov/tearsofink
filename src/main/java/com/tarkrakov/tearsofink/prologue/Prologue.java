@@ -109,7 +109,12 @@ public final class Prologue {
 						TRANSIT.put(p.getUUID(), left);
 					}
 				} else if (p.getBoundingBox().intersects(v.gate().inflate(0.2))) {
-					startTransit(p);
+					if (com.tarkrakov.tearsofink.vow.Vows.mayPass(p)) startTransit(p);
+					else { // без обета дальше не пройти — назад от ворот и окно выбора
+						BlockPos a = v.arrival();
+						p.teleportTo(a.getX() + 0.5, a.getY(), a.getZ() + 0.5);
+						if (com.tarkrakov.tearsofink.vow.Vows.prompt(p)) com.tarkrakov.tearsofink.travel.Guide.say(p, "vow.gate");
+					}
 				}
 				else if (p.getY() < level.getMinBuildHeight() + 20) { // упал с островка — обратно
 					BlockPos a = v.arrival();

@@ -148,6 +148,14 @@ public final class ModItems {
 	/** Книга Рывка (название и текст — рабочие, автор придумает свои). */
 	public static final Item SKILL_BOOK_DASH = register("skill_book_dash",
 			new SkillBookItem(() -> ModSkills.DASH, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON)));
+	/** Чёрная книга (Путь Чернил): Чернильный прыжок. */
+	public static final Item SKILL_BOOK_INK_JUMP = register("skill_book_ink_jump",
+			new SkillBookItem(() -> ModSkills.INK_JUMP, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON)));
+	/** Белые книги (Путь Души): Могучая поступь и Вознесение духа. */
+	public static final Item SKILL_BOOK_STRIDE = register("skill_book_stride",
+			new SkillBookItem(() -> ModSkills.STRIDE, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON)));
+	public static final Item SKILL_BOOK_ASCENSION = register("skill_book_ascension",
+			new SkillBookItem(() -> ModSkills.ASCENSION, new Item.Properties().stacksTo(1).rarity(Rarity.UNCOMMON)));
 
 	private ModItems() {}
 

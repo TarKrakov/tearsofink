@@ -46,6 +46,10 @@ public class SkillBookItem extends Item {
 		}
 		Skill s = skill();
 		Component name = Component.translatable(s.nameKey());
+		if (!com.tarkrakov.tearsofink.vow.Vows.allows(serverPlayer, s)) { // «Строки расплываются…»
+			com.tarkrakov.tearsofink.vow.Vows.asleep(serverPlayer, s, true);
+			return InteractionResultHolder.fail(stack);
+		}
 		if (!Skills.learn(serverPlayer, s)) {
 			serverPlayer.sendSystemMessage(Component.translatable("message.tears-of-ink.skill_known", name).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
 			return InteractionResultHolder.fail(stack);
@@ -70,6 +74,15 @@ public class SkillBookItem extends Item {
 
 	@Override
 	public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
+		com.tarkrakov.tearsofink.vow.Vow path = skill().path();
+		if (path != com.tarkrakov.tearsofink.vow.Vow.NONE) {
+			tooltip.add(Component.translatable("vow.tears-of-ink.book_path." + path.id)
+					.withStyle(path == com.tarkrakov.tearsofink.vow.Vow.SOUL ? ChatFormatting.AQUA : ChatFormatting.DARK_PURPLE));
+			com.tarkrakov.tearsofink.vow.Vow mine = com.tarkrakov.tearsofink.vow.Vow.CLIENT;
+			if (mine != com.tarkrakov.tearsofink.vow.Vow.NONE && mine != path) {
+				tooltip.add(Component.translatable("vow.tears-of-ink.book_other").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+			}
+		}
 		String base = getDescriptionId() + ".desc";
 		for (int i = 1; i <= MAX_DESC_LINES; i++) {
 			String key = base + i;

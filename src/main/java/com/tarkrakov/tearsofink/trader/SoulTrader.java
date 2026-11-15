@@ -47,16 +47,26 @@ public final class SoulTrader {
 	public static final int IDLE_TICKS = 20 * 30, MAX_LIFE = 20 * 180;
 	public static final double RADIUS = 8, TRADE_RANGE = 6;
 
-	public static final int ACTION_SELL = 1, ACTION_CONTRACTS = 2, ACTION_LEAVE = 3, ACTION_BOARD = 4, ACTION_ABANDON = 20;
+	public static final int ACTION_SELL = 1, ACTION_CONTRACTS = 2, ACTION_LEAVE = 3, ACTION_BOARD = 4, ACTION_EXCHANGE = 5, ACTION_VOW = 6, ACTION_ABANDON = 20;
 	/** Взять контракт с доски: ACTION_TAKE + номер (0 лёгкий … 2 сложный). */
 	public static final int ACTION_TAKE = 10;
 
-	/** Сервер → клиент: открыть (или обновить) окно Торговки. */
-	public record Open(int entity, int soulMax, int inkMax, int contracts) implements CustomPacketPayload {
+	/**
+	 * Сервер → клиент: открыть (или обновить) окно Торговки.
+	 * vow — обеты, упаковано: путь (0–2) | цена смены в Пигменте &lt;&lt; 2 | обменяно Души &lt;&lt; 10 | продано шагов &lt;&lt; 16 | причина «нельзя обменять» &lt;&lt; 24.
+	 */
+	public record Open(int entity, int soulMax, int inkMax, int contracts, int vow) implements CustomPacketPayload {
 		public static final Type<Open> TYPE = new Type<>(TearsOfInk.id("trader_open"));
 		public static final StreamCodec<RegistryFriendlyByteBuf, Open> CODEC = StreamCodec.composite(
 				ByteBufCodecs.VAR_INT, Open::entity, ByteBufCodecs.VAR_INT, Open::soulMax,
-				ByteBufCodecs.VAR_INT, Open::inkMax, ByteBufCodecs.VAR_INT, Open::contracts, Open::new);
+				ByteBufCodecs.VAR_INT, Open::inkMax, ByteBufCodecs.VAR_INT, Open::contracts, ByteBufCodecs.VAR_INT, Open::vow, Open::new);
+
+		public com.tarkrakov.tearsofink.vow.Vow path() { return com.tarkrakov.tearsofink.vow.Vow.byIndex(vow & 3); }
+		public int changeCost() { return (vow >> 2) & 0xFF; }
+		public int exchanged() { return (vow >> 10) & 0x3F; }
+		public int sold() { return (vow >> 16) & 0xFF; }
+		/** 0 — обменять можно; 1 — душа продана; 2 — предел обмена; 3 — мало Чернил. */
+		public int exchangeBlock() { return (vow >> 24) & 0xF; }
 
 		@Override
 		public Type<? extends CustomPacketPayload> type() {
@@ -159,7 +169,12 @@ public final class SoulTrader {
 
 	public static void sendOpen(ServerPlayer p, SoulTraderEntity trader) {
 		InkData d = InkPowers.get(p);
-		ServerPlayNetworking.send(p, new Open(trader.getId(), d.soulMax(), d.inkMax(), contracts(p)));
+		var v = com.tarkrakov.tearsofink.vow.Vows.get(p);
+		String block = com.tarkrakov.tearsofink.vow.Vows.exchangeBlock(p);
+		int b = block == null ? 0 : switch (block) { case "sold" -> 1; case "limit" -> 2; default -> 3; };
+		int packed = v.vow().ordinal() | (Math.min(255, com.tarkrakov.tearsofink.vow.Vows.changeCost(p)) << 2)
+				| (Math.min(63, v.exchanged()) << 10) | (d.sold() << 16) | (b << 24);
+		ServerPlayNetworking.send(p, new Open(trader.getId(), d.soulMax(), d.inkMax(), contracts(p), packed));
 	}
 
 	private static void act(ServerPlayer p, Action a) {
@@ -168,6 +183,8 @@ public final class SoulTrader {
 		trader.keepAlive();
 		switch (a.action()) {
 			case ACTION_SELL -> sell(p, trader);
+			case ACTION_EXCHANGE -> exchange(p, trader);
+			case ACTION_VOW -> changeVow(p, trader);
 			case ACTION_CONTRACTS -> takeContracts(p, trader);
 			case ACTION_LEAVE -> trader.farewell(p);
 			case ACTION_BOARD -> com.tarkrakov.tearsofink.hunt.HuntContracts.send(p, trader);
@@ -183,12 +200,19 @@ public final class SoulTrader {
 	private static void sell(ServerPlayer p, SoulTraderEntity trader) {
 		InkData d = InkPowers.get(p);
 		if (!d.inside()) return;
-		if (d.soulMax() - InkData.SOUL_STEP < InkData.SOUL_MIN) {
+		if (com.tarkrakov.tearsofink.vow.Vows.unexchange(p)) { // Душа выше 100 от обмена — обратный ход с потерей
+			InkData now = InkPowers.get(p);
+			p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.SOUL_ESCAPE.value(), SoundSource.PLAYERS, 1.0f, 0.7f);
+			say(p, "unexchanged", now.soulMax(), now.inkMax());
+			sendOpen(p, trader);
+			return;
+		}
+		if (d.sold() >= (InkData.SOUL_START - InkData.SOUL_MIN) / InkData.SOUL_STEP) {
 			say(p, "nothing_left");
 			sendOpen(p, trader);
 			return;
 		}
-		InkData after = d.withSoulMax(d.soulMax() - InkData.SOUL_STEP);
+		InkData after = d.withSold(d.sold() + 1);
 		after = after.withSoul(Math.min(after.soul(), after.soulMax())).withInk(after.ink() + InkData.INK_PER_SOUL_STEP);
 		InkPowers.update(p, after); // достижение «Суть Проклятья» выдаёт InkPowers
 		ServerLevel level = p.serverLevel();
@@ -197,6 +221,36 @@ public final class SoulTrader {
 		level.playSound(null, p.blockPosition(), SoundEvents.SOUL_ESCAPE.value(), SoundSource.PLAYERS, 1.0f, 0.5f);
 		level.playSound(null, p.blockPosition(), SoundEvents.SCULK_SHRIEKER_SHRIEK, SoundSource.PLAYERS, 0.3f, 1.6f);
 		say(p, "sold", after.soulMax(), after.inkMax());
+		sendOpen(p, trader);
+	}
+
+	/** Обменять Чернила на Душу (обеты): −10 к запасу Чернил → +5 Души. */
+	private static void exchange(ServerPlayer p, SoulTraderEntity trader) {
+		String block = com.tarkrakov.tearsofink.vow.Vows.exchangeBlock(p);
+		if (block != null || !com.tarkrakov.tearsofink.vow.Vows.exchange(p)) {
+			say(p, "exchange.no_" + (block == null ? "ink" : block));
+			sendOpen(p, trader);
+			return;
+		}
+		InkData d = InkPowers.get(p);
+		ServerLevel level = p.serverLevel();
+		level.sendParticles(ParticleTypes.SQUID_INK, p.getX(), p.getY() + 1.0, p.getZ(), 20, 0.3, 0.6, 0.3, 0.03);
+		level.sendParticles(com.tarkrakov.tearsofink.particle.ModParticles.TEAR_GLINT, p.getX(), p.getY() + 1.2, p.getZ(), 20, 0.3, 0.5, 0.3, 0.02);
+		level.playSound(null, p.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.2f, 0.9f);
+		level.playSound(null, p.blockPosition(), SoundEvents.BREWING_STAND_BREW, SoundSource.PLAYERS, 0.6f, 1.2f);
+		say(p, "exchanged", d.soulMax(), d.inkMax());
+		sendOpen(p, trader);
+	}
+
+	/** Сменить обет (первая смена бесплатно, дальше — Пигмент). */
+	private static void changeVow(ServerPlayer p, SoulTraderEntity trader) {
+		int cost = com.tarkrakov.tearsofink.vow.Vows.changeCost(p);
+		if (!com.tarkrakov.tearsofink.vow.Vows.change(p)) {
+			say(p, "vow.no_pigment", cost);
+			sendOpen(p, trader);
+			return;
+		}
+		say(p, "vow.changed." + com.tarkrakov.tearsofink.vow.Vows.vow(p).id);
 		sendOpen(p, trader);
 	}
 

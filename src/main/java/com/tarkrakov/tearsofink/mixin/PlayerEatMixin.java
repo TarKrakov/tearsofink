@@ -12,7 +12,7 @@ import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-/** Проданная душа: еда даёт меньше голода и насыщения. */
+/** Проданная душа: еда даёт меньше голода и насыщения; высокая Душа — больше. */
 @Mixin(Player.class)
 public abstract class PlayerEatMixin {
 	@WrapOperation(method = "eat(Lnet/minecraft/world/level/Level;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/food/FoodProperties;)Lnet/minecraft/world/item/ItemStack;",
@@ -22,7 +22,7 @@ public abstract class PlayerEatMixin {
 		Player self = (Player) (Object) this;
 		food = SoulPenalty.rawMeatBonus(self, stack, food);
 		float m = SoulPenalty.multiplier(self);
-		if (m >= 1f) {
+		if (m == 1f) {
 			original.call(foodData, food);
 			return;
 		}

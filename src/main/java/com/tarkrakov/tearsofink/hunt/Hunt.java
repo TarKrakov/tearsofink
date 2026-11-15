@@ -857,6 +857,7 @@ public final class Hunt {
 					+ lands.random.nextInt(HuntTuning.PREFIX_BONUS_PIGMENT_MAX - HuntTuning.PREFIX_BONUS_PIGMENT_MIN + 1)));
 		}
 		p.sendSystemMessage(Component.translatable("hunt.tears-of-ink.your_reward", contracts).withStyle(ChatFormatting.GOLD));
+		if (a.contract() && p.getUUID().equals(a.owner)) com.tarkrakov.tearsofink.vow.Vows.awaken(p, "contract_" + a.rank, com.tarkrakov.tearsofink.vow.Vows.AWAKENING);
 		p.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.7f, 0.8f);
 	}
 

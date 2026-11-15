@@ -133,6 +133,26 @@ public final class ModCommands {
 									Skills.forgetAll(ctx.getSource().getPlayerOrException());
 									return skills(ctx);
 								})))
+						.then(Commands.literal("vow")
+								.executes(ModCommands::vow)
+								.then(Commands.literal("ink").executes(ctx -> setVow(ctx, com.tarkrakov.tearsofink.vow.Vow.INK)))
+								.then(Commands.literal("soul").executes(ctx -> setVow(ctx, com.tarkrakov.tearsofink.vow.Vow.SOUL)))
+								.then(Commands.literal("reset").executes(ctx -> {
+									com.tarkrakov.tearsofink.vow.Vows.reset(ctx.getSource().getPlayerOrException());
+									com.tarkrakov.tearsofink.vow.Vows.sync(ctx.getSource().getPlayerOrException());
+									return vow(ctx);
+								}))
+								.then(Commands.literal("choose").executes(ctx -> { // открыть окно выбора (сбрось обет перед этим)
+									com.tarkrakov.tearsofink.vow.Vows.prompt(ctx.getSource().getPlayerOrException());
+									return 1;
+								}))
+								.then(Commands.literal("awaken").then(Commands.argument("id", com.mojang.brigadier.arguments.StringArgumentType.word())
+										.executes(ctx -> {
+											boolean ok = com.tarkrakov.tearsofink.vow.Vows.awaken(ctx.getSource().getPlayerOrException(),
+													com.mojang.brigadier.arguments.StringArgumentType.getString(ctx, "id"), com.tarkrakov.tearsofink.vow.Vows.AWAKENING);
+											if (!ok) ctx.getSource().sendFailure(Component.literal("Не пробудилось: не Путь Души или это пробуждение уже было."));
+											return vow(ctx);
+										}))))
 						.then(Commands.literal("soul")
 								.then(Commands.literal("max").then(Commands.argument("value", IntegerArgumentType.integer(InkData.SOUL_MIN, InkData.SOUL_START))
 										.executes(ctx -> change(ctx, d -> d.withSoulMax(IntegerArgumentType.getInteger(ctx, "value"))))))
@@ -151,6 +171,23 @@ public final class ModCommands {
 		return powers(ctx);
 	}
 
+	private static int setVow(CommandContext<CommandSourceStack> ctx, com.tarkrakov.tearsofink.vow.Vow v) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+		ServerPlayer p = ctx.getSource().getPlayerOrException();
+		p.setAttached(com.tarkrakov.tearsofink.vow.Vows.DATA, com.tarkrakov.tearsofink.vow.Vows.get(p).withVow(v));
+		com.tarkrakov.tearsofink.vow.Vows.sync(p);
+		return vow(ctx);
+	}
+
+	private static int vow(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+		ServerPlayer p = ctx.getSource().getPlayerOrException();
+		var v = com.tarkrakov.tearsofink.vow.Vows.get(p);
+		InkData d = InkPowers.get(p);
+		ctx.getSource().sendSuccess(() -> Component.literal("Обет: " + v.vow().id + " (смен: " + v.changes() + ")"
+				+ "\nДуша: " + d.soulMax() + " (продано шагов " + d.sold() + ", сверх 100: " + d.extra() + ", из них обменом " + v.exchanged() + ")"
+				+ "\nПробуждения: " + (v.awakenings().isEmpty() ? "—" : String.join(", ", v.awakenings()))), false);
+		return 1;
+	}
+
 	private static int skills(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
 		var learned = Skills.learned(ctx.getSource().getPlayerOrException());
 		ctx.getSource().sendSuccess(() -> learned.isEmpty()
@@ -162,7 +199,7 @@ public final class ModCommands {
 	private static int powers(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
 		InkData d = InkPowers.get(ctx.getSource().getPlayerOrException());
 		ctx.getSource().sendSuccess(() -> Component.literal("Душа: " + (int) d.soul() + " / " + d.soulMax()
-				+ " (продано шагов: " + d.soldSteps() + ")"
+				+ " (продано шагов: " + d.soldSteps() + ", сверх 100: " + d.extra() + ")"
 				+ "\nЧернила: " + (int) d.ink() + " / " + d.inkMax()
 				+ " (прибавка от фонтанов/сердец: " + d.inkBonus() + ", потолок " + InkData.INK_CAP + ")"
 				+ "\nСилы чернил: " + (d.inside() ? "пробуждены (ты в Чернильных Землях)" : "спят (ты снаружи)")), false);

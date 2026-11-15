@@ -107,6 +107,21 @@
           "type": "minecraft:item",
           "name": "tears-of-ink:atonement",
           "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:skill_book_ink_jump",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:skill_book_stride",
+          "weight": 2
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:skill_book_ascension",
+          "weight": 2
         }
       ]
     }

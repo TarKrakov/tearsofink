@@ -112,10 +112,12 @@ public final class InkHud {
 			int inkX = soulX + FRAME_W + BAR_GAP;
 			g.setColor(1f, 1f, 1f, alpha);
 
-			// Душа: заполнение — текущая душа из 100; проданная часть — трещины сверху
+			// Душа: заполнение — текущая душа из 100 (или из своего максимума выше 100); проданная часть — трещины сверху
 			drawFrame(g, soulX, y);
-			int lost = Math.round(FILL_H * (InkData.SOUL_START - soulMax) / (float) InkData.SOUL_START);
-			int soulH = Math.round(FILL_H * Mth.clamp(soulShown / InkData.SOUL_START, 0f, 1f));
+			// Душа выше 100 (Путь Души): полоска считается от своего максимума
+			float scale = Math.max(InkData.SOUL_START, soulMax);
+			int lost = Math.round(FILL_H * Math.max(0, InkData.SOUL_START - soulMax) / (float) InkData.SOUL_START);
+			int soulH = Math.round(FILL_H * Mth.clamp(soulShown / scale, 0f, 1f));
 			drawFromBottom(g, SOUL_FILL, soulX, y, soulH);
 			if (lost > 0) drawFromTop(g, SOUL_LOST, soulX, y, lost);
 

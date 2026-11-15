@@ -69,8 +69,8 @@ public final class InkPowers {
 		player.setAttached(DATA, fresh);
 		if (old != null) {
 			if (fresh.inside() && !old.inside()) ModAdvancements.grant(player, ModAdvancements.INK_LANDS);
-			if (fresh.soulMax() < old.soulMax()) ModAdvancements.grant(player, ModAdvancements.CURSE_ESSENCE);
-			if (fresh.soulMax() > old.soulMax()) ModAdvancements.grant(player, ModAdvancements.ATONEMENT);
+			if (fresh.sold() > old.sold()) ModAdvancements.grant(player, ModAdvancements.CURSE_ESSENCE);
+			if (fresh.sold() < old.sold()) ModAdvancements.grant(player, ModAdvancements.ATONEMENT);
 		}
 	}
 
@@ -98,7 +98,7 @@ public final class InkPowers {
 			float soul = Math.min(data.soulMax(), data.soul() + InkData.SOUL_REGEN_PER_SECOND / 20f);
 			float ink = Math.min(data.inkMax(), data.ink() + InkData.INK_REGEN_PER_SECOND / 20f);
 			if (soul != data.soul() || ink != data.ink()) {
-				set(player, new InkData(data.soulMax(), soul, data.inkBonus(), ink, true));
+				set(player, new InkData(data.sold(), data.extra(), soul, data.inkBonus(), ink, true));
 				if (player.tickCount % SYNC_INTERVAL == 0 || (soul == data.soulMax() && ink == data.inkMax())) {
 					sync(player);
 				}
@@ -148,6 +148,7 @@ public final class InkPowers {
 		if (inside == data.inside()) return;
 
 		update(player, data.withInside(inside));
+		if (inside) com.tarkrakov.tearsofink.vow.Vows.prompt(player); // прошедшие пролог без обета — выбор при входе
 		if (announce) {
 			Component message = inside
 					? Component.translatable("message.tears-of-ink.enter").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC)

@@ -153,6 +153,9 @@ public final class ModCreativeTab {
 						output.accept(ModItems.TEARBLOOM_BREW);
 						output.accept(ModItems.STRONG_TEARBLOOM_BREW);
 						output.accept(ModItems.SKILL_BOOK_DASH);
+						output.accept(ModItems.SKILL_BOOK_INK_JUMP);
+						output.accept(ModItems.SKILL_BOOK_STRIDE);
+						output.accept(ModItems.SKILL_BOOK_ASCENSION);
 					})
 					.build());
 

@@ -1,0 +1,128 @@
+package com.tarkrakov.tearsofink.client.vow;
+
+import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.client.prologue.FitText;
+import com.tarkrakov.tearsofink.vow.Vow;
+import com.tarkrakov.tearsofink.vow.Vows;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvents;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Выбор обета (у Г-на Проводника, после приветствия; прошедшим пролог — при входе в Земли).
+ * Главная страница — два пути; выбрал путь — страница с описанием и «Принять обет» / «Назад». Закрыть без выбора нельзя.
+ * Лист — как у дневника (gui/diary.png, 192×232); свой фон автор нарисует — gui/vow.png того же размера.
+ * Тексты — vow.tears-of-ink.choose.* в ru_ru.json (заглушки Claude).
+ */
+public class VowScreen extends Screen {
+	private static final ResourceLocation PAGE = TearsOfInk.id("textures/gui/diary.png");
+	private static final int W = 192, H = 232, M = 18, LINE = 12;
+	private static final int TEXT = 0x2A1E2C, TITLE = 0x5A1E2C, OPTION = 0x3A2A30, HOVER = 0x8A2A40, INK = 0x3A1E5A, SOUL = 0x1E6A72;
+
+	/** Какой путь сейчас рассматривает (NONE — главная страница). */
+	private Vow looking = Vow.NONE;
+	private final List<Option> options = new ArrayList<>();
+
+	private record Option(int x, int y, int w, int h, Runnable click) {}
+
+	public VowScreen() {
+		super(Component.translatable("vow.tears-of-ink.choose.title"));
+	}
+
+	public static void open() {
+		Minecraft mc = Minecraft.getInstance();
+		if (Vow.CLIENT != Vow.NONE || mc.screen instanceof VowScreen) return;
+		mc.setScreen(new VowScreen());
+	}
+
+	@Override
+	public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+		super.render(g, mouseX, mouseY, partialTick);
+		int l = (width - W) / 2, t = (height - H) / 2, textW = W - M * 2;
+		g.blit(PAGE, l, t, 0, 0, W, H, 256, 256);
+		options.clear();
+		FitText.drawCentered(g, font, Component.translatable("vow.tears-of-ink.choose.title"), l + W / 2, t + M, textW, TITLE);
+		int y = t + M + 16;
+		if (looking == Vow.NONE) {
+			y = paragraph(g, Component.translatable("vow.tears-of-ink.choose.text"), l + M, y, textW, TEXT) + 10;
+			y = option(g, Component.translatable("vow.tears-of-ink.ink.name"), l + M, y, INK, () -> look(Vow.INK), mouseX, mouseY);
+			y = paragraph(g, Component.translatable("vow.tears-of-ink.ink.short"), l + M + 8, y, textW - 8, TEXT) + 8;
+			y = option(g, Component.translatable("vow.tears-of-ink.soul.name"), l + M, y, SOUL, () -> look(Vow.SOUL), mouseX, mouseY);
+			paragraph(g, Component.translatable("vow.tears-of-ink.soul.short"), l + M + 8, y, textW - 8, TEXT);
+			return;
+		}
+		int color = looking == Vow.SOUL ? SOUL : INK;
+		FitText.drawCentered(g, font, Component.translatable("vow.tears-of-ink." + looking.id + ".name"), l + W / 2, y, textW, color);
+		y += 16;
+		y = paragraph(g, Component.translatable("vow.tears-of-ink." + looking.id + ".text"), l + M, y, textW, TEXT) + 10;
+		y = Math.max(y, t + H - M - 30);
+		Vow chosen = looking;
+		y = option(g, Component.translatable("vow.tears-of-ink.choose.accept"), l + M, y, color, () -> accept(chosen), mouseX, mouseY);
+		option(g, Component.translatable("vow.tears-of-ink.choose.back"), l + M, y, OPTION, () -> look(Vow.NONE), mouseX, mouseY);
+	}
+
+	private void look(Vow v) {
+		looking = v;
+		minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1f));
+	}
+
+	private void accept(Vow v) {
+		ClientPlayNetworking.send(new Vows.Choose(v.ordinal()));
+		minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 0.7f));
+		minecraft.setScreen(null);
+	}
+
+	private int paragraph(GuiGraphics g, Component text, int x, int y, int w, int color) {
+		for (var line : font.split(text, w)) {
+			g.drawString(font, line, x, y, color, false);
+			y += 10;
+		}
+		return y;
+	}
+
+	private int option(GuiGraphics g, Component text, int x, int y, int color, Runnable click, int mx, int my) {
+		Component line = Component.literal("› ").append(text);
+		int w = Math.min(font.width(line), W - M * 2);
+		boolean hover = mx >= x && mx < x + w && my >= y - 1 && my < y + 10;
+		g.drawString(font, line, x, y, hover ? HOVER : color, false);
+		options.add(new Option(x, y, w, 10, click));
+		return y + LINE;
+	}
+
+	@Override
+	public boolean mouseClicked(double mx, double my, int button) {
+		if (button == 0) {
+			for (Option o : List.copyOf(options)) {
+				if (mx >= o.x() && mx < o.x() + o.w() && my >= o.y() - 1 && my < o.y() + o.h()) {
+					o.click().run();
+					return true;
+				}
+			}
+		}
+		return super.mouseClicked(mx, my, button);
+	}
+
+	/** Без выбора не закрыть. */
+	@Override
+	public boolean shouldCloseOnEsc() {
+		return false;
+	}
+
+	@Override
+	public void renderBackground(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
+		this.renderTransparentBackground(g);
+	}
+
+	@Override
+	public boolean isPauseScreen() {
+		return false;
+	}
+}

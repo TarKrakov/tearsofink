@@ -99,6 +99,17 @@ public class TearsOfInkClient implements ClientModInitializer {
 				com.tarkrakov.tearsofink.client.prologue.GateOverlay.render(g, counter.getGameTimeDeltaPartialTick(false)));
 		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.hunt.HuntContracts.BoardData.TYPE, (payload, context) ->
 				context.client().execute(() -> com.tarkrakov.tearsofink.client.trader.SoulTraderScreen.board(payload)));
+		ClientPlayNetworking.registerGlobalReceiver(SkillPayloads.Boost.TYPE, (payload, context) -> context.client().execute(() -> {
+			var pl = context.client().player;
+			if (pl == null) return;
+			var v = pl.getDeltaMovement();
+			pl.setDeltaMovement(v.x, payload.up(), v.z);
+			pl.fallDistance = 0;
+		}));
+		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.vow.Vows.Sync.TYPE, (payload, context) ->
+				context.client().execute(() -> com.tarkrakov.tearsofink.vow.Vow.CLIENT = com.tarkrakov.tearsofink.vow.Vow.byIndex(payload.vow())));
+		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.vow.Vows.Open.TYPE, (payload, context) ->
+				context.client().execute(com.tarkrakov.tearsofink.client.vow.VowScreen::open));
 		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.trader.SoulTrader.Open.TYPE, (payload, context) ->
 				context.client().execute(() -> com.tarkrakov.tearsofink.client.trader.SoulTraderScreen.open(payload)));
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.trader.SoulTraderModel.LAYER,

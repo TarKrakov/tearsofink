@@ -172,6 +172,7 @@ public class GuideEntity extends PathfinderMob {
 			st[0] = tickCount + LINE_TICKS;
 			if (st[1] > GREET_LINES) {
 				markGreeted(p);
+				com.tarkrakov.tearsofink.vow.Vows.prompt(p); // договорил — выбор обета
 				// все договорили — растворяется
 				if (talks.values().stream().allMatch(v -> v[1] > GREET_LINES)) vanishAt = tickCount + VANISH_DELAY;
 			}

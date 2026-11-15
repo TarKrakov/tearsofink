@@ -42,6 +42,17 @@ public final class SkillPayloads {
 		}
 	}
 
+	/** Сервер → клиент: подбросить вверх (прыжки путей) — скорость по горизонтали клиент сохраняет свою. */
+	public record Boost(float up) implements CustomPacketPayload {
+		public static final Type<Boost> TYPE = new Type<>(TearsOfInk.id("skill_boost"));
+		public static final StreamCodec<ByteBuf, Boost> CODEC = StreamCodec.composite(ByteBufCodecs.FLOAT, Boost::up, Boost::new);
+
+		@Override
+		public Type<? extends CustomPacketPayload> type() {
+			return TYPE;
+		}
+	}
+
 	/** Сервер → клиент: на навык не хватило Чернил или Души — полоска пульсирует. */
 	public record NotEnough(boolean soul) implements CustomPacketPayload {
 		public static final Type<NotEnough> TYPE = new Type<>(TearsOfInk.id("not_enough"));
