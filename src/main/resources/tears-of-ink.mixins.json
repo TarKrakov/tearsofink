@@ -6,6 +6,7 @@
 		"NoiseGeneratorSettingsMixin",
 		"PlayerEatMixin",
 		"HealEffectsMixin",
+		"VisibilityMixin",
 		"NaturalSpawnerMixin",
 		"SlotMixin",
 		"ContainerMenuMixin",

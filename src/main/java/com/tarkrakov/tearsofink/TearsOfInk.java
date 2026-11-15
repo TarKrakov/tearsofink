@@ -48,6 +48,7 @@ public class TearsOfInk implements ModInitializer {
 		com.tarkrakov.tearsofink.weapon.shield.ShieldStance.init();
 		com.tarkrakov.tearsofink.weapon.shield.Resonance.init();
 		com.tarkrakov.tearsofink.vow.Vows.init();
+		com.tarkrakov.tearsofink.vow.Aura.init();
 		com.tarkrakov.tearsofink.entity.faction.VanillaAggro.init();
 		com.tarkrakov.tearsofink.world.ruins.Ruins.init();
 		com.tarkrakov.tearsofink.world.sanctuary.Sanctuary.init();
