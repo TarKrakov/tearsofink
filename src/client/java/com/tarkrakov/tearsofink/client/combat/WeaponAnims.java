@@ -89,11 +89,14 @@ public final class WeaponAnims {
 			@Override
 			public void onResourceManagerReload(ResourceManager manager) {
 				CLIPS.clear();
+				GRIP.clear();
 				for (Archetype a : Archetype.values()) {
 					var res = manager.getResource(TearsOfInk.id("weapon_anims/" + a.id + ".json"));
 					if (res.isEmpty()) continue;
 					try (Reader r = res.get().openAsReader()) {
-						CLIPS.put(a.id, parse(JsonParser.parseReader(r).getAsJsonObject()));
+						JsonObject root = JsonParser.parseReader(r).getAsJsonObject();
+						CLIPS.put(a.id, parse(root));
+						if (root.has("grip")) GRIP.put(a.id, vec(root, "grip", new Vector3f(8, 8, 8)));
 					} catch (Exception e) {
 						TearsOfInk.LOGGER.error("Движения {} не прочитались: {}", a.id, e.toString());
 					}
@@ -101,6 +104,13 @@ public final class WeaponAnims {
 			}
 		});
 	}
+
+	/**
+	 * Рукоять архетипа (поле "grip" в файле движений): точка модели в пикселях Blockbench, где рука держит оружие.
+	 * Если задана — движения крутят клинок вокруг рукояти (как кистью). Нет — вокруг точки крепления в руке (Палачи,
+	 * Скимитары, Дуссак настроены так).
+	 */
+	private static final Map<String, Vector3f> GRIP = new HashMap<>();
 
 	private static Map<String, Clip> parse(JsonObject root) {
 		Map<String, Clip> out = new HashMap<>();
@@ -188,7 +198,7 @@ public final class WeaponAnims {
 			float since = t - lastT(c) - c.hold();
 			Key to = since <= 0 ? last : restKey;
 			float u0 = since <= 0 ? 0 : ease(Ease.EASE_IN_OUT, Mth.clamp(since / Math.max(0.01f, c.back()), 0, 1));
-			put(c, rest, left, pose, lerp(last.rot(), to.rot(), u0), lerp(last.pos(), to.pos(), u0), lerp(last.scale(), to.scale(), u0));
+			put(c, GRIP.get(p.archetype.id), rest, left, pose, lerp(last.rot(), to.rot(), u0), lerp(last.pos(), to.pos(), u0), lerp(last.scale(), to.scale(), u0));
 			return true;
 		}
 		Key a = restKey, b = null;
@@ -206,17 +216,28 @@ public final class WeaponAnims {
 		if (b == null) b = new Key(c.length(), restKey.rot(), restKey.pos(), restKey.scale(), Ease.EASE_IN_OUT);
 		float u = tb > ta ? Mth.clamp((t - ta) / (tb - ta), 0, 1) : 1;
 		u = ease(a.ease(), u);
-		put(c, rest, left, pose, lerp(a.rot(), b.rot(), u), lerp(a.pos(), b.pos(), u), lerp(a.scale(), b.scale(), u));
+		put(c, GRIP.get(p.archetype.id), rest, left, pose, lerp(a.rot(), b.rot(), u), lerp(a.pos(), b.pos(), u), lerp(a.scale(), b.scale(), u));
 		return true;
 	}
 
-	private static void put(Clip c, ItemTransform rest, boolean left, PoseStack pose, Vector3f rot, Vector3f pos, Vector3f scl) {
+	/** Где рукоять оказывается в руке при обычной стойке (Display): та же цепочка, что у ItemTransform + сдвиг модели на −0,5. */
+	private static Vector3f gripPoint(Vector3f grip, ItemTransform rest, float m) {
+		Vector3f v = new Vector3f(grip).div(16f).sub(0.5f, 0.5f, 0.5f).mul(rest.scale);
+		new Quaternionf().rotationXYZ(rest.rotation.x * Mth.DEG_TO_RAD, m * rest.rotation.y * Mth.DEG_TO_RAD,
+				m * rest.rotation.z * Mth.DEG_TO_RAD).transform(v);
+		return v.add(m * rest.translation.x, rest.translation.y, rest.translation.z);
+	}
+
+	private static void put(Clip c, Vector3f grip, ItemTransform rest, boolean left, PoseStack pose, Vector3f rot, Vector3f pos, Vector3f scl) {
 		if (c.absolute()) {
 			new ItemTransform(rot, pos.mul(0.0625f), scl).apply(left, pose);
 		} else {
 			float m = left ? -1 : 1;
 			pose.translate(m * pos.x / 16f, pos.y / 16f, pos.z / 16f);
+			Vector3f g = grip == null ? null : gripPoint(grip, rest, m);
+			if (g != null) pose.translate(g.x, g.y, g.z); // крутить вокруг рукояти
 			pose.mulPose(new Quaternionf().rotationXYZ(rot.x * Mth.DEG_TO_RAD, m * rot.y * Mth.DEG_TO_RAD, m * rot.z * Mth.DEG_TO_RAD));
+			if (g != null) pose.translate(-g.x, -g.y, -g.z);
 			pose.scale(scl.x, scl.y, scl.z);
 			rest.apply(left, pose);
 		}
