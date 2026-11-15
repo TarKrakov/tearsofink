@@ -150,6 +150,12 @@ public final class HuntTuning {
 	/** Враг без видимого замаха (зомби, паук): шанс × это, бросок не чаще раза в столько тиков. */
 	public static final float PARRY_PLAIN = 0.5f;
 	public static final int PARRY_PLAIN_EVERY = 20;
+	/**
+	 * Кровавый со своим оружием (первые бои, 15 ноя): побеждал 56/84/94% против обычной цели при цели 41/52/70 —
+	 * кровотечение с возвратом здоровья, парирование и дуга по откату тянут вверх. Грубая поправка до большого баланса:
+	 * здоровье ×BLOOD_HP, перезарядки дуги, креста и стойки ×BLOOD_SKILL_COOLDOWN.
+	 */
+	public static final float BLOOD_HP = 0.85f, BLOOD_SKILL_COOLDOWN = 1.8f;
 	/** С какого расстояния (блоки до края врага) охотник ещё парирует. */
 	public static final double PARRY_RANGE = 3.5;
 }

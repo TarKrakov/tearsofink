@@ -140,7 +140,7 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		entityData.set(RANK, rank);
 		entityData.set(GEAR, random.nextInt()); // зерно брони: какие куски надеты — решает модель по рангу
 		float hp = HuntTuning.HUNTER_HP[rank] * (1 + (random.nextFloat() * 2 - 1) * HuntTuning.HUNTER_HP_SPREAD)
-				* (type == HunterType.SPIRE ? HuntTuning.SPIRE_HP : 1f);
+				* (type == HunterType.SPIRE ? HuntTuning.SPIRE_HP : type == HunterType.BLOOD ? HuntTuning.BLOOD_HP : 1f);
 		getAttribute(Attributes.MAX_HEALTH).setBaseValue(hp);
 		setHealth(hp);
 		int pieces = HuntTuning.GEAR_SLOTS[Math.min(rank, HuntTuning.GEAR_SLOTS.length - 1)][0];
@@ -462,7 +462,7 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		anim(Archetype.TALWAR, (offhand ? "off:" : "") + combo.abilityAnim(), combo.scaled(combo.abilityTicks()), combo.tempo());
 		level.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1f, 1.2f);
 		level.playSound(null, blockPosition(), SoundEvents.HONEY_BLOCK_SLIDE, SoundSource.HOSTILE, 0.8f, 0.6f);
-		skillReady = now + (long) cd(BloodTuning.ARC_COOLDOWN);
+		skillReady = now + (long) (cd(BloodTuning.ARC_COOLDOWN) * HuntTuning.BLOOD_SKILL_COOLDOWN);
 		skillDone(now, combo.scaled(combo.abilityTicks()));
 		return true;
 	}
@@ -477,7 +477,7 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		hurtMarked = true;
 		level.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1f, 0.8f);
 		level.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.HOSTILE, 1f, 0.7f);
-		techReady = now + (long) cd(BloodTuning.CROSS_COOLDOWN);
+		techReady = now + (long) (cd(BloodTuning.CROSS_COOLDOWN) * HuntTuning.BLOOD_SKILL_COOLDOWN);
 		skillDone(now, 14);
 	}
 
@@ -504,7 +504,7 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		if (random.nextFloat() >= chance) return false;
 		boolean pair = mainD && offD;
 		com.tarkrakov.tearsofink.weapon.blood.Parry.start(this, pair, !mainD);
-		parryReady = now + (long) cd(pair ? BloodTuning.DOUBLE_PARRY_COOLDOWN : BloodTuning.PARRY_COOLDOWN);
+		parryReady = now + (long) (cd(pair ? BloodTuning.DOUBLE_PARRY_COOLDOWN : BloodTuning.PARRY_COOLDOWN) * HuntTuning.BLOOD_SKILL_COOLDOWN);
 		busyUntil = Math.max(busyUntil, now + (pair ? BloodTuning.DOUBLE_PARRY_TICKS : BloodTuning.PARRY_TICKS));
 		getNavigation().stop();
 		return true;
