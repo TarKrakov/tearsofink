@@ -455,5 +455,11 @@
   "item.tears-of-ink.skill_book_stride.desc2": "A heavy step forward: shields stay raised, enemies are pushed aside.",
   "item.tears-of-ink.skill_book_ascension": "Teaching of Ascension",
   "item.tears-of-ink.skill_book_ascension.desc1": "The spirit is lighter than the body.",
-  "item.tears-of-ink.skill_book_ascension.desc2": "Jump and hold the jump — your spirit lifts you higher. The fall won't hurt."
+  "item.tears-of-ink.skill_book_ascension.desc2": "Shift + jump from the ground — your spirit lifts you high. The fall won't hurt.",
+  "vow.tears-of-ink.heart.contract_0": "First easy contract fulfilled. A small Ink Heart answers: Ink reserve +%s.",
+  "vow.tears-of-ink.heart.contract_1": "First medium contract fulfilled. Small Ink Heart: Ink reserve +%s.",
+  "vow.tears-of-ink.heart.contract_2": "First hard contract fulfilled. Small Ink Heart: Ink reserve +%s.",
+  "vow.tears-of-ink.heart.miniboss": "The guardian's Ink Heart answers your call. Ink reserve +%s — and there is less of you.",
+  "vow.tears-of-ink.heart.vanguard": "Ink Heart. Ink reserve +%s.",
+  "vow.tears-of-ink.heart.final": "Ink Heart. Ink reserve +%s."
 }

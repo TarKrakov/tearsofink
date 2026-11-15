@@ -50,7 +50,11 @@ public final class Bleeding {
 		float before = e.getHealth();
 		e.hurt(level.damageSources().source(DAMAGE, null, owner), dmg);
 		float dealt = Math.max(0, before - e.getHealth());
-		if (owner instanceof LivingEntity o && o.isAlive() && dealt > 0) o.heal(dealt * BloodTuning.BLEED_LIFESTEAL);
+		if (owner instanceof LivingEntity o && o.isAlive() && dealt > 0) {
+			// Кровь — чужая сила: высокая Душа её лечение не усиливает (штраф проданной души — остаётся)
+			float m = com.tarkrakov.tearsofink.ink.SoulPenalty.multiplier(o);
+			o.heal(dealt * BloodTuning.BLEED_LIFESTEAL / Math.max(1f, m));
+		}
 		level.sendParticles(ModParticles.BLOOD_DRIP_FALL, e.getX(), e.getY() + e.getBbHeight() * 0.5, e.getZ(),
 				3 + amplifier * 2, e.getBbWidth() * 0.35, e.getBbHeight() * 0.2, e.getBbWidth() * 0.35, 0);
 		if (!e.isAlive() || e.getEffect(com.tarkrakov.tearsofink.effect.ModEffects.BLEEDING) == null) OWNER.remove(e.getUUID());

@@ -53,6 +53,14 @@ public final class Vows {
 	public static final int CHANGE_PIGMENT = 10;
 	/** Пробуждение Души — обычное +5, у Авангарда и финального босса +10. */
 	public static final int AWAKENING = 5, AWAKENING_GREAT = 10;
+	/** Путь Чернил: прибавка к запасу Чернил за сам выбор пути (зеркало стартового света паломника). */
+	public static final int INK_PATH_BONUS = 10;
+	/** Жажда (Путь Чернил): столько Чернил возвращает удар серии Чернильным оружием, если задел хоть кого-то. */
+	public static final float THIRST = 1.5f;
+	/** Малое сердце (Путь Чернил, заглушка до боссов): первый контракт каждой сложности — +5 к запасу, без цены. */
+	public static final int SMALL_HEART = 5;
+	/** Чернильное сердце: +10/+15/+25 к запасу Чернил и −5 к максимуму Души (Чернила занимают место в тебе). */
+	public static final int HEART_SOUL_COST = 5;
 	/** Как часто напоминать о выборе тем, кто в Землях без обета (тики). */
 	private static final int REMIND_TICKS = 20 * 30;
 
@@ -158,9 +166,47 @@ public final class Vows {
 		}
 	}
 
+	/** Прибавка Чернил Пути Чернил: снять со старого пути, дать новому. */
+	private static void pathBonus(ServerPlayer p, Vow from, Vow to) {
+		int delta = (to == Vow.INK ? INK_PATH_BONUS : 0) - (from == Vow.INK ? INK_PATH_BONUS : 0);
+		if (delta == 0) return;
+		InkData ink = InkPowers.get(p);
+		InkPowers.update(p, ink.withInkBonus(ink.inkBonus() + delta).withInk(ink.ink() + Math.max(0, delta)));
+	}
+
+	/** Жажда: удар серии Чернильным оружием возвращает немного Чернил (только Путь Чернил). */
+	public static void thirst(ServerPlayer p, ItemStack weapon) {
+		if (vow(p) != Vow.INK) return;
+		if (!(weapon.getItem() instanceof com.tarkrakov.tearsofink.weapon.InkGreatswordItem)
+				&& !(weapon.getItem() instanceof com.tarkrakov.tearsofink.weapon.InkLongknifeItem)) return;
+		InkData ink = InkPowers.get(p);
+		if (!ink.inside() || ink.ink() >= ink.inkMax()) return;
+		InkPowers.update(p, ink.withInk(ink.ink() + THIRST));
+	}
+
+	/**
+	 * Чернильное сердце (Путь Чернил; на Пути Души молчит). Раз за игру на каждый id.
+	 * soulCost — сколько шагов души оно занимает (большие сердца — 1, малые — 0).
+	 */
+	public static boolean heart(ServerPlayer p, String id, int inkAmount, int soulSteps) {
+		VowData d = get(p);
+		String key = "heart:" + id;
+		if (d.vow() != Vow.INK || d.awakenings().contains(key)) return false;
+		set(p, d.withAwakening(key));
+		InkData ink = InkPowers.get(p);
+		InkPowers.update(p, ink.withInkBonus(ink.inkBonus() + inkAmount).withTaint(ink.taint() + soulSteps).withInk(ink.ink() + inkAmount));
+		p.sendSystemMessage(Component.translatable("vow.tears-of-ink.heart." + id, inkAmount).withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
+		ServerLevel level = p.serverLevel();
+		level.sendParticles(ParticleTypes.SQUID_INK, p.getX(), p.getY() + 1.0, p.getZ(), 30, 0.4, 0.7, 0.4, 0.03);
+		level.playSound(null, p.blockPosition(), SoundEvents.WARDEN_HEARTBEAT, SoundSource.PLAYERS, 1.2f, 0.8f);
+		level.playSound(null, p.blockPosition(), SoundEvents.SCULK_CATALYST_BLOOM, SoundSource.PLAYERS, 0.8f, 0.6f);
+		return true;
+	}
+
 	private static void choose(ServerPlayer p, Vow v) {
 		if (v == Vow.NONE || vow(p) != Vow.NONE) return;
 		set(p, get(p).withVow(v));
+		pathBonus(p, Vow.NONE, v);
 		Guide.say(p, "vow.chosen." + v.id);
 		mark(p, v);
 	}
@@ -226,7 +272,7 @@ public final class Vows {
 	public static String exchangeBlock(ServerPlayer p) {
 		InkData ink = InkPowers.get(p);
 		VowData d = get(p);
-		if (ink.sold() > 0) return "sold";
+		if (ink.sold() + ink.taint() > 0) return "sold";
 		if (d.exchanged() >= EXCHANGE_LIMIT) return "limit";
 		if (ink.inkMax() - EXCHANGE_INK < EXCHANGE_INK_FLOOR) return "ink";
 		return null;
@@ -275,6 +321,7 @@ public final class Vows {
 		}
 		Vow next = d.vow().other();
 		set(p, d.withVow(next).withChanges(d.changes() + 1));
+		pathBonus(p, d.vow(), next);
 		mark(p, next);
 		return true;
 	}
@@ -289,6 +336,7 @@ public final class Vows {
 	/** Сбросить обет (команда для тестов). */
 	public static void reset(ServerPlayer p) {
 		VowData d = get(p);
+		pathBonus(p, d.vow(), Vow.NONE);
 		InkData ink = InkPowers.get(p);
 		int awakened = ink.extra() - d.exchanged();
 		InkPowers.update(p, ink.withExtra(0).withInkBonus(ink.inkBonus() + d.exchanged() / EXCHANGE_SOUL * EXCHANGE_INK));

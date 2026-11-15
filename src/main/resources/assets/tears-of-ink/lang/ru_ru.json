@@ -479,5 +479,11 @@
   "item.tears-of-ink.skill_book_stride.desc2": "Тяжёлый шаг вперёд: щиты остаются поднятыми, врагов отталкивает.",
   "item.tears-of-ink.skill_book_ascension": "Наставление о Вознесении",
   "item.tears-of-ink.skill_book_ascension.desc1": "Дух легче тела.",
-  "item.tears-of-ink.skill_book_ascension.desc2": "Прыгните и держите прыжок — дух поднимет выше. Падение не ранит."
+  "item.tears-of-ink.skill_book_ascension.desc2": "Shift + прыжок с земли — дух поднимет высоко. Падение не ранит.",
+  "vow.tears-of-ink.heart.contract_0": "Первый исполненный лёгкий контракт. В груди отзывается малое Чернильное сердце: запас Чернил +%s.",
+  "vow.tears-of-ink.heart.contract_1": "Первый исполненный средний контракт. Малое Чернильное сердце: запас Чернил +%s.",
+  "vow.tears-of-ink.heart.contract_2": "Первый исполненный сложный контракт. Малое Чернильное сердце: запас Чернил +%s.",
+  "vow.tears-of-ink.heart.miniboss": "Чернильное сердце стража откликается на ваш зов. Запас Чернил +%s — и в вас стало меньше вас.",
+  "vow.tears-of-ink.heart.vanguard": "Чернильное сердце. Запас Чернил +%s.",
+  "vow.tears-of-ink.heart.final": "Чернильное сердце. Запас Чернил +%s."
 }

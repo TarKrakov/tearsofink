@@ -173,7 +173,7 @@ public final class SoulTrader {
 		String block = com.tarkrakov.tearsofink.vow.Vows.exchangeBlock(p);
 		int b = block == null ? 0 : switch (block) { case "sold" -> 1; case "limit" -> 2; default -> 3; };
 		int packed = v.vow().ordinal() | (Math.min(255, com.tarkrakov.tearsofink.vow.Vows.changeCost(p)) << 2)
-				| (Math.min(63, v.exchanged()) << 10) | (d.sold() << 16) | (b << 24);
+				| (Math.min(63, v.exchanged()) << 10) | ((d.sold() + d.taint()) << 16) | (b << 24);
 		ServerPlayNetworking.send(p, new Open(trader.getId(), d.soulMax(), d.inkMax(), contracts(p), packed));
 	}
 
@@ -207,7 +207,7 @@ public final class SoulTrader {
 			sendOpen(p, trader);
 			return;
 		}
-		if (d.sold() >= (InkData.SOUL_START - InkData.SOUL_MIN) / InkData.SOUL_STEP) {
+		if (d.sold() + d.taint() >= (InkData.SOUL_START - InkData.SOUL_MIN) / InkData.SOUL_STEP) {
 			say(p, "nothing_left");
 			sendOpen(p, trader);
 			return;

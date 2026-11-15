@@ -98,7 +98,7 @@ public final class InkPowers {
 			float soul = Math.min(data.soulMax(), data.soul() + InkData.SOUL_REGEN_PER_SECOND / 20f);
 			float ink = Math.min(data.inkMax(), data.ink() + InkData.INK_REGEN_PER_SECOND / 20f);
 			if (soul != data.soul() || ink != data.ink()) {
-				set(player, new InkData(data.sold(), data.extra(), soul, data.inkBonus(), ink, true));
+				set(player, new InkData(data.sold(), data.extra(), soul, data.inkBonus(), ink, true, data.taint()));
 				if (player.tickCount % SYNC_INTERVAL == 0 || (soul == data.soulMax() && ink == data.inkMax())) {
 					sync(player);
 				}

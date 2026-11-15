@@ -375,6 +375,7 @@ public final class Combat {
 			}
 		}
 		if (hitAny) {
+			com.tarkrakov.tearsofink.vow.Vows.thirst(p, weapon); // Путь Чернил: бой кормит бой
 			weapon.hurtAndBreak(1, p, EquipmentSlot.MAINHAND);
 			level.sendParticles(ParticleTypes.SWEEP_ATTACK, eye.x + flat.x * 1.6, eye.y - 0.4, eye.z + flat.z * 1.6, 1, 0, 0, 0, 0);
 			level.playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 0.8f, 0.8f);
