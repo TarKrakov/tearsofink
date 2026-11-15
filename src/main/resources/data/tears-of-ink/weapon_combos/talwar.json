@@ -30,7 +30,7 @@
     {
       "anim": "attack3",
       "duration": 11,
-      "hit": 5,
+      "hit": 4,
       "damage": 1.4,
       "reach": 3.4,
       "arc": 130,
@@ -65,7 +65,7 @@
       "anim": "dual_cross",
       "off_anim": "dual_cross",
       "duration": 10,
-      "hit": 5,
+      "hit": 4,
       "damage": 1.8,
       "reach": 3.3,
       "arc": 100,
