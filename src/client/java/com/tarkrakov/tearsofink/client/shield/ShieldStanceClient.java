@@ -37,7 +37,7 @@ public final class ShieldStanceClient {
 	/** id сущности → заряд щитов. */
 	private static final Map<Integer, Integer> CHARGE = new HashMap<>();
 	/** Поза рук в стойке (градусы, для правой руки; левая — зеркально): front — рука, что держит блок, side — вторая, сбоку. */
-	private static Vector3f front = new Vector3f(-55, -25, 0), side = new Vector3f(-25, 30, 55);
+	private static Vector3f front = new Vector3f(-55, -25, 0), side = new Vector3f(45, 40, 10);
 	private static float look = 0.5f;
 
 	private ShieldStanceClient() {}
@@ -48,6 +48,7 @@ public final class ShieldStanceClient {
 			else CHARGE.put(payload.entity(), payload.charge());
 		}));
 		ClientPlayConnectionEvents.DISCONNECT.register((h, c) -> CHARGE.clear());
+		net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(ShieldStanceClient::tick);
 		ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 			@Override
 			public ResourceLocation getFabricId() {
@@ -118,6 +119,88 @@ public final class ShieldStanceClient {
 		int glow = Math.min(15, ShieldTuning.GLOW + ShieldTuning.GLOW_PER_CHARGE * charge(e));
 		int block = Math.max(LightTexture.block(light), glow);
 		return LightTexture.pack(block, LightTexture.sky(light));
+	}
+
+	/**
+	 * Ореол: щит рисуется второй раз чуть крупнее «светящимся» слоем (как глаза паука — сложение света, без теней).
+	 * Свет на блоки без сторонних модов не бросить, но сам щит выглядит светящимся. Ярче с зарядом.
+	 */
+	public static void halo(net.minecraft.client.renderer.ItemInHandRenderer renderer, LivingEntity e, ItemStack stack,
+							net.minecraft.world.item.ItemDisplayContext ctx, boolean left, com.mojang.blaze3d.vertex.PoseStack pose,
+							net.minecraft.client.renderer.MultiBufferSource buffers) {
+		if (!(stack.getItem() instanceof SoulShieldItem) || !dual(e)) return;
+		float f = Math.min(0.75f, HALO + HALO_PER_CHARGE * charge(e));
+		net.minecraft.client.renderer.RenderType glow = net.minecraft.client.renderer.RenderType.eyes(
+				net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS);
+		net.minecraft.client.renderer.MultiBufferSource tinted = type -> new Tint(buffers.getBuffer(glow), f);
+		pose.pushPose();
+		pose.scale(HALO_SCALE, HALO_SCALE, HALO_SCALE);
+		renderer.renderItem(e, stack, ctx, left, pose, tinted, LightTexture.FULL_BRIGHT);
+		pose.popPose();
+	}
+
+	/** Сила ореола (0–1) и насколько он крупнее щита. */
+	private static final float HALO = 0.18f, HALO_PER_CHARGE = 0.1f, HALO_SCALE = 1.06f;
+
+	/** Приглушает цвет вершин (сила ореола). */
+	private record Tint(com.mojang.blaze3d.vertex.VertexConsumer to, float f) implements com.mojang.blaze3d.vertex.VertexConsumer {
+		@Override
+		public com.mojang.blaze3d.vertex.VertexConsumer addVertex(float x, float y, float z) {
+			to.addVertex(x, y, z);
+			return this;
+		}
+
+		@Override
+		public com.mojang.blaze3d.vertex.VertexConsumer setColor(int r, int g, int b, int a) {
+			to.setColor((int) (r * f), (int) (g * f), (int) (b * f), a);
+			return this;
+		}
+
+		@Override
+		public com.mojang.blaze3d.vertex.VertexConsumer setUv(float u, float v) {
+			to.setUv(u, v);
+			return this;
+		}
+
+		@Override
+		public com.mojang.blaze3d.vertex.VertexConsumer setUv1(int u, int v) {
+			to.setUv1(u, v);
+			return this;
+		}
+
+		@Override
+		public com.mojang.blaze3d.vertex.VertexConsumer setUv2(int u, int v) {
+			to.setUv2(u, v);
+			return this;
+		}
+
+		@Override
+		public com.mojang.blaze3d.vertex.VertexConsumer setNormal(float x, float y, float z) {
+			to.setNormal(x, y, z);
+			return this;
+		}
+	}
+
+	/** Искорки вокруг щитов у всех, кто держит два щита Души (чаще с зарядом). */
+	public static void tick(net.minecraft.client.Minecraft mc) {
+		if (mc.level == null || mc.isPaused() || !ModDimensions.isLands(mc.level)) return;
+		var cam = mc.gameRenderer.getMainCamera().getPosition();
+		for (Player p : mc.level.players()) {
+			if (!dual(p) || p.distanceToSqr(cam) > 48 * 48) continue;
+			int c = charge(p);
+			if (p.tickCount % Math.max(1, 4 - c / 2) != 0) continue;
+			boolean self = p == mc.player && mc.options.getCameraType().isFirstPerson();
+			float yaw = p.yBodyRot * Mth.DEG_TO_RAD;
+			double rx = -Mth.cos(yaw), rz = -Mth.sin(yaw); // вправо от тела
+			for (int side = -1; side <= 1; side += 2) {
+				double ox = rx * side * 0.55, oz = rz * side * 0.55;
+				double x = p.getX() + ox + (p.getRandom().nextDouble() - 0.5) * 0.7;
+				double y = p.getY() + (self ? 1.0 : 0.7) + p.getRandom().nextDouble() * 0.9;
+				double z = p.getZ() + oz + (p.getRandom().nextDouble() - 0.5) * 0.7;
+				mc.level.addParticle(com.tarkrakov.tearsofink.particle.ModParticles.TEAR_GLINT, x, y, z,
+						(p.getRandom().nextDouble() - 0.5) * 0.01, 0.01 + p.getRandom().nextDouble() * 0.015, (p.getRandom().nextDouble() - 0.5) * 0.01);
+			}
+		}
 	}
 
 	/** Видимость в тумане с двумя щитами (как ручной фонарь). 0 — щитов нет. */

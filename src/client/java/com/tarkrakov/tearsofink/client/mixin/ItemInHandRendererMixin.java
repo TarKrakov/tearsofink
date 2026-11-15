@@ -27,6 +27,17 @@ public abstract class ItemInHandRendererMixin {
 		return com.tarkrakov.tearsofink.client.shield.ShieldStanceClient.light(entity, stack, light);
 	}
 
+	/** Ореол щитов Души парой и от первого лица. */
+	@Inject(method = "renderArmWithItem", require = 0, at = @At(value = "INVOKE", shift = At.Shift.AFTER,
+			target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"))
+	private void tearsofink$shieldHalo(AbstractClientPlayer player, float partialTicks, float pitch, InteractionHand hand, float swingProgress,
+									   ItemStack stack, float equippedProgress, PoseStack poseStack, MultiBufferSource buffer, int light, CallbackInfo ci) {
+		boolean left = (hand == InteractionHand.MAIN_HAND) == (player.getMainArm() == net.minecraft.world.entity.HumanoidArm.LEFT);
+		com.tarkrakov.tearsofink.client.shield.ShieldStanceClient.halo((ItemInHandRenderer) (Object) this, player, stack,
+				left ? net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_LEFT_HAND : net.minecraft.world.item.ItemDisplayContext.FIRST_PERSON_RIGHT_HAND,
+				left, poseStack, buffer);
+	}
+
 	@Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$ownMotion(AbstractClientPlayer player, float partialTicks, float pitch, InteractionHand hand, float swingProgress,
 									  ItemStack stack, float equippedProgress, PoseStack poseStack, MultiBufferSource buffer, int light, CallbackInfo ci) {

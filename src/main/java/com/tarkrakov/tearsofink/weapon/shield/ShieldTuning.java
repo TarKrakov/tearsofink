@@ -28,6 +28,10 @@ public final class ShieldTuning {
 	/** Выброс сбивает замах на столько тиков. */
 	public static final int BURST_STAGGER = 20;
 
+	/** На полном заряде принятый удар звучит хором (не чаще раза в столько тиков) и с такой громкостью. */
+	public static final int CHOIR_EVERY = 50;
+	public static final float CHOIR_VOLUME = 0.45f;
+
 	// ===== Свет =====
 	/** Свечение щитов в темноте (0–15): основа + за каждый заряд. */
 	public static final int GLOW = 9, GLOW_PER_CHARGE = 1;

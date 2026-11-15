@@ -16,6 +16,18 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 /** Третье лицо: во время удара клинок архетипа поворачивается в руке «кистью» (только Чернильные земли, см. ThirdPerson). */
 @Mixin(ItemInHandLayer.class)
 public abstract class ItemInHandLayerMixin {
+	@org.spongepowered.asm.mixin.Shadow
+	@org.spongepowered.asm.mixin.Final
+	private net.minecraft.client.renderer.ItemInHandRenderer itemInHandRenderer;
+
+	/** Ореол щитов Души парой (после самого щита). */
+	@Inject(method = "renderArmWithItem", at = @At(value = "INVOKE", shift = At.Shift.AFTER,
+			target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"))
+	private void tearsofink$shieldHalo(LivingEntity entity, ItemStack stack, ItemDisplayContext context, HumanoidArm arm, PoseStack pose,
+									   MultiBufferSource buffers, int light, CallbackInfo ci) {
+		com.tarkrakov.tearsofink.client.shield.ShieldStanceClient.halo(itemInHandRenderer, entity, stack, context, arm == HumanoidArm.LEFT, pose, buffers);
+	}
+
 	@Inject(method = "renderArmWithItem", at = @At(value = "INVOKE",
 			target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"))
 	private void tearsofink$wrist(LivingEntity entity, ItemStack stack, ItemDisplayContext context, HumanoidArm arm, PoseStack pose,
