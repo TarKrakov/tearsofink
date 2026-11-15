@@ -7,7 +7,10 @@ COMBO = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../src/main
 def hand_pose(arch, model, grip, c, t, m, tune):
     disp = model['display']; side = 'right' if m == 1 else 'left'
     fp = disp['firstperson_'+side+'hand']; tp = disp['thirdperson_'+side+'hand']
-    handle, tip = axis(model, disp['firstperson_righthand'], grip)
+    if tune.get('centre'):  # щит — за середину
+        pts = model_points(model); cc = (pts.min(0)+pts.max(0))/2; handle, tip = cc, cc+np.array([0,8,0])
+    else:
+        handle, tip = axis(model, disp['firstperson_righthand'], grip)
     rot, pos = sample(c, t); w = weight(c, t)
     src = c.get('third', {}).get('source')
     if src: c = dict(c, keyframes=json.load(open(f'{REPO}/weapon_anims/{arch}.json'))['animations'][src]['keyframes'])  # третье лицо — по другому движению

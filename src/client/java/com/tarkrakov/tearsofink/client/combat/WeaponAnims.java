@@ -56,8 +56,8 @@ public final class WeaponAnims {
 	}
 
 	/** Третье лицо архетипа (поле "third" в файле движений): как поза первого лица переводится в руку Стива. */
-	public record ThirdTune(float reach, float lead, float body, float look) {
-		static final ThirdTune DEFAULT = new ThirdTune(1.3f, 0.5f, 0.3f, 0.6f);
+	public record ThirdTune(float reach, float lead, float body, float look, boolean centre) {
+		static final ThirdTune DEFAULT = new ThirdTune(1.3f, 0.5f, 0.3f, 0.6f, false);
 	}
 
 	private static final Map<String, ThirdTune> THIRD = new HashMap<>();
@@ -129,7 +129,8 @@ public final class WeaponAnims {
 						if (root.has("third")) {
 							JsonObject t = root.getAsJsonObject("third");
 							ThirdTune d = ThirdTune.DEFAULT;
-							THIRD.put(a.id, new ThirdTune(f(t, "reach", d.reach()), f(t, "lead", d.lead()), f(t, "body", d.body()), f(t, "look", d.look())));
+							THIRD.put(a.id, new ThirdTune(f(t, "reach", d.reach()), f(t, "lead", d.lead()), f(t, "body", d.body()), f(t, "look", d.look()),
+									t.has("centre") && t.get("centre").getAsBoolean()));
 						}
 					} catch (Exception e) {
 						TearsOfInk.LOGGER.error("Движения {} не прочитались: {}", a.id, e.toString());

@@ -234,7 +234,8 @@ public final class ThirdPerson {
 		ItemTransforms tr = baked.getTransforms();
 		ItemTransform tp = tr.getTransform(left ? ItemDisplayContext.THIRD_PERSON_LEFT_HAND : ItemDisplayContext.THIRD_PERSON_RIGHT_HAND);
 		Vector3f grip = WeaponAnims.grip(archetype);
-		Vector3f[] ax = axis(baked, tr.getTransform(ItemDisplayContext.FIRST_PERSON_RIGHT_HAND), grip);
+		// щит держат за середину (centre): рука тянется к середине, кисть крутит вокруг неё
+		Vector3f[] ax = tune.centre() ? centre(baked) : axis(baked, tr.getTransform(ItemDisplayContext.FIRST_PERSON_RIGHT_HAND), grip);
 		// mirror: левая рука считается как правая и отражается — парный удар синхронно
 		boolean mirror = fix.mirror() && left;
 		HumanoidArm calc = mirror ? HumanoidArm.RIGHT : side;
@@ -380,6 +381,19 @@ public final class ThirdPerson {
 		}
 		AXES.put(baked, out);
 		return out;
+	}
+
+	/** [середина модели, точка над ней] — для щитов: их держат за середину, а не за край. */
+	private static Vector3f[] centre(BakedModel baked) {
+		List<Vector3f> pts = points(baked);
+		if (pts.isEmpty()) return new Vector3f[]{new Vector3f(8, 8, 8), new Vector3f(8, 16, 8)};
+		Vector3f lo = new Vector3f(Float.MAX_VALUE), hi = new Vector3f(-Float.MAX_VALUE);
+		for (Vector3f p : pts) {
+			lo.min(p);
+			hi.max(p);
+		}
+		Vector3f c = new Vector3f(lo).add(hi).mul(0.5f);
+		return new Vector3f[]{c, new Vector3f(c).add(0, 8, 0)};
 	}
 
 	private static List<Vector3f> points(BakedModel baked) {
