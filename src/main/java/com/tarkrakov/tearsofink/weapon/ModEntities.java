@@ -17,6 +17,11 @@ public final class ModEntities {
 			EntityType.Builder.<InkBlotEntity>of(InkBlotEntity::new, MobCategory.MISC)
 					.sized(0.3f, 0.3f).clientTrackingRange(6).updateInterval(5).build("ink_blot"));
 
+	public static final EntityType<com.tarkrakov.tearsofink.weapon.blood.BloodArcEntity> BLOOD_ARC = Registry.register(BuiltInRegistries.ENTITY_TYPE,
+			TearsOfInk.id("blood_arc"),
+			EntityType.Builder.<com.tarkrakov.tearsofink.weapon.blood.BloodArcEntity>of(com.tarkrakov.tearsofink.weapon.blood.BloodArcEntity::new, MobCategory.MISC)
+					.sized(1.6f, 0.9f).clientTrackingRange(6).updateInterval(1).noSave().build("blood_arc"));
+
 	private ModEntities() {}
 
 	public static void init() {}

@@ -399,5 +399,11 @@
   "item.tears-of-ink.blood_talvar": "Парящий Тальвар",
   "item.tears-of-ink.blood_talvar.desc1": "Кровь · одноручное. Грациозные режущие взмахи.",
   "item.tears-of-ink.blood_dussak": "Хищный Дуссак",
-  "item.tears-of-ink.blood_dussak.desc1": "Кровь · одноручное. Принимает удар и возвращает порез."
+  "item.tears-of-ink.blood_dussak.desc1": "Кровь · одноручное. Принимает удар и возвращает порез.",
+  "effect.tears-of-ink.bleeding": "Кровотечение",
+  "death.attack.tears-of-ink.bleeding": "%1$s истёк кровью",
+  "death.attack.tears-of-ink.bleeding.player": "%1$s истёк кровью от ран, нанесённых %2$s",
+  "message.tears-of-ink.no_blood": "Кровью платить нечем",
+  "skill.tears-of-ink.blood_arc": "Кровавая дуга",
+  "skill.tears-of-ink.talwar_cross": "Кровавый крест"
 }

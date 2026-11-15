@@ -16,7 +16,9 @@ public enum Archetype {
 	/** Клинки Палачей: длинные прямые двуручные, тяжёлые и плавные. Пример — Меч Рассечения. */
 	EXECUTIONER("executioner"),
 	/** Разрывающие Скимитары: изогнутые одноручные, быстрые «танцующие» удары. Пример — Меч Волны. */
-	SCIMITAR("scimitar");
+	SCIMITAR("scimitar"),
+	/** Парящие Тальвары (Кровь): одноручные режущие, удары-танец, переходы клинка разворотом. */
+	TALWAR("talwar");
 
 	public final String id;
 
@@ -32,7 +34,8 @@ public enum Archetype {
 					ModItems.CLEAVE_GREATSWORD, EXECUTIONER,
 					ModItems.WAVE_GREATSWORD, SCIMITAR,
 					ModItems.HUNTER_GREATSWORD, EXECUTIONER,
-					ModItems.HUNTER_SABER, SCIMITAR);
+					ModItems.HUNTER_SABER, SCIMITAR,
+					ModItems.BLOOD_TALVAR, TALWAR);
 		}
 		return items;
 	}

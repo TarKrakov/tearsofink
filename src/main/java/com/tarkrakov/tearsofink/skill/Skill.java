@@ -39,6 +39,11 @@ public abstract class Skill {
 		return cooldownTicks;
 	}
 
+	/** Цена здоровьем (оружие Крови платит собой). 0 — не платит. */
+	public float healthCost() {
+		return 0;
+	}
+
 	/** Есть ли у навыка клавиша (активный) или он работает сам (пассивный). */
 	public boolean isActive() {
 		return true;

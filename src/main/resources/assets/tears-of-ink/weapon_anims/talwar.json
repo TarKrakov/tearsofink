@@ -1,0 +1,919 @@
+{
+  "_comment": "Движения Парящих Тальваров от первого лица (числа — как в executioner.json: rotation [наклон, поворот, крен], translation [вправо, вверх, к тебе], от обычной стойки). attack1 кончается внизу с развёрнутым клинком (hold — ждёт), attack2 стартует оттуда и в конце сам взводит «жало» — attack3 бьёт из этой позы. ability — росчерк справа к центру и вверх (кровавая дуга). Пара: dual_sweep — росчерк ЛЕВЫМ поперёк (зеркалится сам, ждёт), dual_flow — правый наплывает сверху вниз, dual_cross — крест-накрест обоими; cross_burst — ПКМ парой. Позы черновые — правь сам: Ctrl+F9 → F3+T.",
+  "animations": {
+    "equip": {
+      "length": 0.5,
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            -20,
+            0,
+            100
+          ],
+          "translation": [
+            3,
+            -11,
+            0
+          ],
+          "ease": "back_out"
+        },
+        {
+          "t": 0.32,
+          "rotation": [
+            0,
+            0,
+            -10
+          ],
+          "translation": [
+            0,
+            1,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.5,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    "attack1": {
+      "length": 0.75,
+      "hold": 0.5,
+      "return": 0.3,
+      "impact": 0.3,
+      "keyframes": [
+        {
+          "t": 0.12,
+          "rotation": [
+            25,
+            0,
+            -30
+          ],
+          "translation": [
+            5,
+            7,
+            1
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -35,
+            0,
+            25
+          ],
+          "translation": [
+            -1,
+            -2,
+            -3
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.45,
+          "rotation": [
+            -55,
+            0,
+            40
+          ],
+          "translation": [
+            -3,
+            -6,
+            -2
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.72,
+          "rotation": [
+            -50,
+            120,
+            35
+          ],
+          "translation": [
+            -2,
+            -6,
+            -1
+          ]
+        }
+      ],
+      "third": {
+        "impact": 0.3,
+        "keyframes": [
+          {
+            "t": 0.12,
+            "arm": [
+              -150,
+              -20,
+              20
+            ],
+            "body": [
+              0,
+              -15,
+              0
+            ],
+            "ease": "ease_in_out"
+          },
+          {
+            "t": 0.3,
+            "arm": [
+              -50,
+              20,
+              -10
+            ],
+            "body": [
+              0,
+              15,
+              0
+            ],
+            "ease": "ease_out"
+          },
+          {
+            "t": 0.45,
+            "arm": [
+              -25,
+              30,
+              -15
+            ],
+            "body": [
+              0,
+              20,
+              0
+            ],
+            "ease": "ease_in_out"
+          },
+          {
+            "t": 0.72,
+            "arm": [
+              -30,
+              30,
+              -40
+            ],
+            "body": [
+              0,
+              20,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    "attack2": {
+      "length": 0.6,
+      "hold": 0.45,
+      "return": 0.3,
+      "impact": 0.18,
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            -50,
+            120,
+            35
+          ],
+          "translation": [
+            -2,
+            -6,
+            -1
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.08,
+          "rotation": [
+            -62,
+            120,
+            35
+          ],
+          "translation": [
+            -2,
+            -8,
+            0
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.18,
+          "rotation": [
+            40,
+            120,
+            -20
+          ],
+          "translation": [
+            4,
+            8,
+            -4
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.32,
+          "rotation": [
+            50,
+            60,
+            -15
+          ],
+          "translation": [
+            4,
+            9,
+            -1
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.55,
+          "rotation": [
+            70,
+            0,
+            -10
+          ],
+          "translation": [
+            3,
+            10,
+            2
+          ]
+        }
+      ],
+      "third": {
+        "impact": 0.18,
+        "keyframes": [
+          {
+            "t": 0,
+            "arm": [
+              -30,
+              30,
+              -40
+            ],
+            "body": [
+              0,
+              20,
+              0
+            ],
+            "ease": "ease_in"
+          },
+          {
+            "t": 0.08,
+            "arm": [
+              -15,
+              30,
+              -30
+            ],
+            "body": [
+              0,
+              22,
+              0
+            ],
+            "ease": "ease_in"
+          },
+          {
+            "t": 0.18,
+            "arm": [
+              -160,
+              -15,
+              10
+            ],
+            "body": [
+              0,
+              -15,
+              0
+            ],
+            "ease": "ease_out"
+          },
+          {
+            "t": 0.32,
+            "arm": [
+              -150,
+              -10,
+              0
+            ],
+            "body": [
+              0,
+              -10,
+              0
+            ],
+            "ease": "ease_in_out"
+          },
+          {
+            "t": 0.55,
+            "arm": [
+              -165,
+              0,
+              0
+            ],
+            "body": [
+              -5,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    "attack3": {
+      "length": 0.7,
+      "return": 0.35,
+      "impact": 0.24,
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            70,
+            0,
+            -10
+          ],
+          "translation": [
+            3,
+            10,
+            2
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            85,
+            0,
+            -15
+          ],
+          "translation": [
+            3,
+            11,
+            4
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.24,
+          "rotation": [
+            -30,
+            0,
+            10
+          ],
+          "translation": [
+            0,
+            2,
+            -12
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.42,
+          "rotation": [
+            -25,
+            0,
+            12
+          ],
+          "translation": [
+            0,
+            1,
+            -10
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "third": {
+        "impact": 0.24,
+        "keyframes": [
+          {
+            "t": 0,
+            "arm": [
+              -165,
+              0,
+              0
+            ],
+            "body": [
+              -5,
+              0,
+              0
+            ],
+            "ease": "ease_in"
+          },
+          {
+            "t": 0.12,
+            "arm": [
+              -175,
+              0,
+              0
+            ],
+            "body": [
+              -10,
+              0,
+              0
+            ],
+            "ease": "ease_in"
+          },
+          {
+            "t": 0.24,
+            "arm": [
+              -80,
+              5,
+              0
+            ],
+            "body": [
+              18,
+              5,
+              0
+            ],
+            "ease": "ease_out"
+          },
+          {
+            "t": 0.42,
+            "arm": [
+              -85,
+              5,
+              0
+            ],
+            "body": [
+              15,
+              5,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    "ability": {
+      "length": 0.7,
+      "impact": 0.3,
+      "keyframes": [
+        {
+          "t": 0.12,
+          "rotation": [
+            -40,
+            0,
+            -35
+          ],
+          "translation": [
+            6,
+            -4,
+            1
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            30,
+            0,
+            20
+          ],
+          "translation": [
+            -1,
+            7,
+            -4
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.45,
+          "rotation": [
+            35,
+            0,
+            25
+          ],
+          "translation": [
+            -1,
+            8,
+            -3
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "third": {
+        "impact": 0.3,
+        "keyframes": [
+          {
+            "t": 0.12,
+            "arm": [
+              -30,
+              -50,
+              0
+            ],
+            "body": [
+              0,
+              -20,
+              0
+            ],
+            "ease": "ease_in_out"
+          },
+          {
+            "t": 0.3,
+            "arm": [
+              -150,
+              20,
+              0
+            ],
+            "body": [
+              0,
+              15,
+              0
+            ],
+            "ease": "ease_out"
+          },
+          {
+            "t": 0.45,
+            "arm": [
+              -155,
+              20,
+              0
+            ],
+            "body": [
+              0,
+              15,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    "dual_sweep": {
+      "length": 1.2,
+      "hold": 0.9,
+      "return": 0.3,
+      "impact": 0.25,
+      "keyframes": [
+        {
+          "t": 0.1,
+          "rotation": [
+            0,
+            30,
+            80
+          ],
+          "translation": [
+            9,
+            1,
+            1
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.25,
+          "rotation": [
+            0,
+            -35,
+            85
+          ],
+          "translation": [
+            -8,
+            1,
+            -4
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.35,
+          "rotation": [
+            0,
+            -40,
+            85
+          ],
+          "translation": [
+            -9,
+            2,
+            -3
+          ]
+        }
+      ],
+      "third": {
+        "impact": 0.25,
+        "keyframes": [
+          {
+            "t": 0.1,
+            "arm": [
+              -80,
+              -55,
+              0
+            ],
+            "body": [
+              0,
+              -20,
+              0
+            ],
+            "ease": "ease_in"
+          },
+          {
+            "t": 0.25,
+            "arm": [
+              -80,
+              45,
+              0
+            ],
+            "body": [
+              0,
+              25,
+              0
+            ],
+            "ease": "ease_out"
+          },
+          {
+            "t": 0.35,
+            "arm": [
+              -75,
+              50,
+              0
+            ],
+            "body": [
+              0,
+              25,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    "dual_flow": {
+      "length": 0.8,
+      "hold": 0.4,
+      "return": 0.3,
+      "impact": 0.3,
+      "keyframes": [
+        {
+          "t": 0.15,
+          "rotation": [
+            30,
+            0,
+            -20
+          ],
+          "translation": [
+            4,
+            9,
+            2
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -50,
+            0,
+            20
+          ],
+          "translation": [
+            0,
+            -4,
+            -6
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.42,
+          "rotation": [
+            -52,
+            0,
+            22
+          ],
+          "translation": [
+            0,
+            -5,
+            -5
+          ]
+        }
+      ],
+      "third": {
+        "impact": 0.3,
+        "keyframes": [
+          {
+            "t": 0.15,
+            "arm": [
+              -160,
+              -10,
+              10
+            ],
+            "body": [
+              -5,
+              0,
+              0
+            ],
+            "ease": "ease_in_out"
+          },
+          {
+            "t": 0.3,
+            "arm": [
+              -45,
+              10,
+              0
+            ],
+            "body": [
+              15,
+              0,
+              0
+            ],
+            "ease": "ease_out"
+          },
+          {
+            "t": 0.42,
+            "arm": [
+              -40,
+              10,
+              0
+            ],
+            "body": [
+              12,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    "dual_cross": {
+      "length": 0.45,
+      "impact": 0.14,
+      "keyframes": [
+        {
+          "t": 0.05,
+          "rotation": [
+            20,
+            20,
+            -45
+          ],
+          "translation": [
+            7,
+            6,
+            0
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.14,
+          "rotation": [
+            -40,
+            -20,
+            50
+          ],
+          "translation": [
+            -6,
+            -5,
+            -5
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.25,
+          "rotation": [
+            -42,
+            -22,
+            52
+          ],
+          "translation": [
+            -7,
+            -6,
+            -4
+          ]
+        }
+      ],
+      "third": {
+        "impact": 0.14,
+        "keyframes": [
+          {
+            "t": 0.05,
+            "arm": [
+              -150,
+              -40,
+              0
+            ],
+            "body": [
+              -5,
+              0,
+              0
+            ],
+            "ease": "ease_in"
+          },
+          {
+            "t": 0.14,
+            "arm": [
+              -60,
+              35,
+              0
+            ],
+            "body": [
+              15,
+              0,
+              0
+            ],
+            "ease": "ease_out"
+          },
+          {
+            "t": 0.25,
+            "arm": [
+              -55,
+              40,
+              0
+            ],
+            "body": [
+              12,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    },
+    "cross_burst": {
+      "length": 0.7,
+      "impact": 0.2,
+      "keyframes": [
+        {
+          "t": 0.1,
+          "rotation": [
+            30,
+            20,
+            -50
+          ],
+          "translation": [
+            7,
+            8,
+            1
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.2,
+          "rotation": [
+            -45,
+            -25,
+            55
+          ],
+          "translation": [
+            -6,
+            -6,
+            -6
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.45,
+          "rotation": [
+            -30,
+            -20,
+            40
+          ],
+          "translation": [
+            -4,
+            -4,
+            -2
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "third": {
+        "impact": 0.2,
+        "keyframes": [
+          {
+            "t": 0.1,
+            "arm": [
+              -165,
+              -40,
+              0
+            ],
+            "body": [
+              -8,
+              0,
+              0
+            ],
+            "ease": "ease_in"
+          },
+          {
+            "t": 0.2,
+            "arm": [
+              -55,
+              35,
+              0
+            ],
+            "body": [
+              15,
+              0,
+              0
+            ],
+            "ease": "ease_out"
+          },
+          {
+            "t": 0.45,
+            "arm": [
+              -40,
+              30,
+              0
+            ],
+            "body": [
+              5,
+              0,
+              0
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

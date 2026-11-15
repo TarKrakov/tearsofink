@@ -120,7 +120,20 @@ public final class Skills {
 			return false;
 		}
 
+		if (!creative && skill.healthCost() > 0 && player.getHealth() <= skill.healthCost()) { // кровью платить нечем
+			player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.tears-of-ink.no_blood")
+					.withStyle(net.minecraft.ChatFormatting.DARK_RED), true);
+			player.playNotifySound(SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.25f, 1.8f);
+			return false;
+		}
+
 		if (!skill.activate(player, input)) return false;
+
+		if (!creative && skill.healthCost() > 0) { // заплатить кровью
+			player.setHealth(Math.max(1f, player.getHealth() - skill.healthCost()));
+			player.serverLevel().sendParticles(com.tarkrakov.tearsofink.particle.ModParticles.BLOOD_DRIP_FALL,
+					player.getX(), player.getY() + 1.0, player.getZ(), 8, 0.25, 0.4, 0.25, 0);
+		}
 
 		cooldowns.put(skill.id(), now + skill.cooldownTicks());
 		if (!creative) {

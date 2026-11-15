@@ -35,6 +35,10 @@ public final class ModEffects {
 	public static final Holder<MobEffect> WEAKENED_SOUL = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
 			TearsOfInk.id("weakened_soul"), new MarkerEffect(MobEffectCategory.HARMFUL, 0x6E5A7A));
 
+	/** «Кровотечение» — оружие Крови: урон раз в секунду (I–III), часть возвращается тому, кто наложил. */
+	public static final Holder<MobEffect> BLEEDING = Registry.registerForHolder(BuiltInRegistries.MOB_EFFECT,
+			TearsOfInk.id("bleeding"), new com.tarkrakov.tearsofink.weapon.blood.BleedingEffect());
+
 	private ModEffects() {}
 
 	public static void init() {}

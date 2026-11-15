@@ -321,6 +321,7 @@ public final class Combat {
 			float dmg = EnchantmentHelper.modifyDamage(level, weapon, t, src, (float) base);
 			if (t.hurt(src, dmg)) {
 				hitAny = true;
+				com.tarkrakov.tearsofink.weapon.blood.Bleeding.onWeaponHit(p, weapon, t);
 				if (step.knockback() > 0) t.knockback(step.knockback(), -flat.x, -flat.z);
 				EnchantmentHelper.doPostAttackEffects(level, t, src);
 				p.setLastHurtMob(t);

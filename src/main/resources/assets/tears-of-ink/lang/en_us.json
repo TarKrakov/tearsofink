@@ -375,5 +375,11 @@
   "item.tears-of-ink.blood_katana": "Blood Katana",
   "item.tears-of-ink.blood_obsi_club": "Dragon Tongue",
   "item.tears-of-ink.blood_talvar": "Soaring Talwar",
-  "item.tears-of-ink.blood_dussak": "Predatory Dussak"
+  "item.tears-of-ink.blood_dussak": "Predatory Dussak",
+  "effect.tears-of-ink.bleeding": "Bleeding",
+  "death.attack.tears-of-ink.bleeding": "%1$s bled out",
+  "death.attack.tears-of-ink.bleeding.player": "%1$s bled out from wounds by %2$s",
+  "message.tears-of-ink.no_blood": "No blood to pay with",
+  "skill.tears-of-ink.blood_arc": "Blood Arc",
+  "skill.tears-of-ink.talwar_cross": "Blood Cross"
 }

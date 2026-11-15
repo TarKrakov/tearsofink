@@ -96,17 +96,17 @@ public final class ModItems {
 
 	/** Оружие из перечня автора (архетипы и приёмы — по мере готовности движений). */
 	public static final Item ROARING_AXE = register("roaring_axe",
-			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), true));
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE));
 	public static final Item RAPID_KNIFE = register("rapid_knife",
-			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false));
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE));
 	public static final Item BLOOD_KATANA = register("blood_katana",
-			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), true));
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD));
 	public static final Item BLOOD_OBSI_CLUB = register("blood_obsi_club",
-			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), true));
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD));
 	public static final Item BLOOD_TALVAR = register("blood_talvar",
-			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false));
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD, () -> com.tarkrakov.tearsofink.weapon.blood.BloodAbilities.BLOOD_ARC));
 	public static final Item BLOOD_DUSSAK = register("blood_dussak",
-			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false));
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD));
 
 	// ===== Добыча с фауны =====
 	/** Шёлковая нить (бледные гусеницы) — работает в рецептах вместо ванильной нити. */

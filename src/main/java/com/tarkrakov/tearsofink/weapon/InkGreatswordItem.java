@@ -70,6 +70,12 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 			player.startUsingItem(hand);
 			return net.minecraft.world.InteractionResultHolder.consume(stack);
 		}
+		if (a == com.tarkrakov.tearsofink.weapon.combat.Archetype.TALWAR) { // крест-накрест кровью и отскок
+			if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
+				com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.weapon.blood.BloodAbilities.TALWAR_CROSS, input);
+			}
+			return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+		}
 		// Чернильный Росчерк: одно нажатие
 		if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
 			com.tarkrakov.tearsofink.skill.Skills.activate(sp, WeaponAbilities.FLOURISH, input);
