@@ -99,6 +99,12 @@ public class TearsOfInkClient implements ClientModInitializer {
 				com.tarkrakov.tearsofink.client.prologue.GateOverlay.render(g, counter.getGameTimeDeltaPartialTick(false)));
 		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.hunt.HuntContracts.BoardData.TYPE, (payload, context) ->
 				context.client().execute(() -> com.tarkrakov.tearsofink.client.trader.SoulTraderScreen.board(payload)));
+		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.weapon.blood.Parry.Lock.TYPE, (payload, context) -> context.client().execute(() -> {
+			com.tarkrakov.tearsofink.weapon.blood.Parry.CLIENT_LOCK = payload.on();
+			var pl = context.client().player;
+			if (payload.on() && pl != null && pl.isUsingItem()) context.client().gameMode.releaseUsingItem(pl); // щит опускается
+		}));
+		net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((h, c) -> com.tarkrakov.tearsofink.weapon.blood.Parry.CLIENT_LOCK = false);
 		ClientPlayNetworking.registerGlobalReceiver(SkillPayloads.Boost.TYPE, (payload, context) -> context.client().execute(() -> {
 			var pl = context.client().player;
 			if (pl == null) return;

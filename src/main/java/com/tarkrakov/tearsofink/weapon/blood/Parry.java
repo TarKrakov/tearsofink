@@ -38,13 +38,40 @@ public final class Parry {
 
 	private static final Map<UUID, State> STANCE = new HashMap<>();
 
+	/** Сервер → клиент: игрок в стойке (true) / вышел (false). Пока стоишь — только ходить. */
+	public record Lock(boolean on) implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+		public static final Type<Lock> TYPE = new Type<>(com.tarkrakov.tearsofink.TearsOfInk.id("parry_lock"));
+		public static final net.minecraft.network.codec.StreamCodec<net.minecraft.network.RegistryFriendlyByteBuf, Lock> CODEC =
+				net.minecraft.network.codec.StreamCodec.composite(net.minecraft.network.codec.ByteBufCodecs.BOOL, Lock::on, Lock::new);
+
+		@Override
+		public Type<? extends net.minecraft.network.protocol.common.custom.CustomPacketPayload> type() {
+			return TYPE;
+		}
+	}
+
+	/** Свой игрок на клиенте в стойке (ставит клиент по Lock). */
+	public static volatile boolean CLIENT_LOCK;
+
 	private Parry() {}
+
+	/** Каст Дуссака: ничего, кроме движения — ни ударов (любой рукой), ни щита, ни предметов, ни блоков. */
+	private static boolean locked(net.minecraft.world.entity.player.Player player, net.minecraft.world.level.Level world) {
+		return world.isClientSide ? CLIENT_LOCK : active(player);
+	}
 
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(Parry::tick);
-		// в стойке бить нельзя (даже оружием в другой руке): либо время выйдет, либо спарировал и ответил
-		net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register((player, world, hand, entity, hit) ->
-				!world.isClientSide && active(player) ? net.minecraft.world.InteractionResult.FAIL : net.minecraft.world.InteractionResult.PASS);
+		net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playS2C().register(Lock.TYPE, Lock.CODEC);
+		var FAIL = net.minecraft.world.InteractionResult.FAIL;
+		var PASS = net.minecraft.world.InteractionResult.PASS;
+		// в стойке бить нельзя (даже оружием или щитом в другой руке): либо время выйдет, либо спарировал и ответил
+		net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register((player, world, hand, entity, hit) -> locked(player, world) ? FAIL : PASS);
+		net.fabricmc.fabric.api.event.player.AttackBlockCallback.EVENT.register((player, world, hand, pos, dir) -> locked(player, world) ? FAIL : PASS);
+		net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register((player, world, hand, hit) -> locked(player, world) ? FAIL : PASS);
+		net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, world, hand) ->
+				locked(player, world) ? net.minecraft.world.InteractionResultHolder.fail(player.getItemInHand(hand)) : net.minecraft.world.InteractionResultHolder.pass(player.getItemInHand(hand)));
+		net.fabricmc.fabric.api.event.player.UseEntityCallback.EVENT.register((player, world, hand, entity, hit) -> locked(player, world) ? FAIL : PASS);
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
 			if (STANCE.isEmpty()) return true;
 			State s = STANCE.get(entity.getUUID());
@@ -92,6 +119,10 @@ public final class Parry {
 		s.mob = mob;
 		s.until = now + (dual ? BloodTuning.DOUBLE_PARRY_TICKS : BloodTuning.PARRY_TICKS);
 		STANCE.put(e.getUUID(), s);
+		if (e instanceof ServerPlayer sp) { // щит опущен, остальное заперто
+			if (sp.isUsingItem()) sp.stopUsingItem();
+			net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(sp, new Lock(true));
+		}
 		// ДЗЫНЬ
 		e.level().playSound(null, e.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.45f, 1.9f);
 		e.level().playSound(null, e.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1f, 1.6f);
@@ -159,6 +190,7 @@ public final class Parry {
 			boolean alive = p != null && p.isAlive() && !p.isRemoved();
 			if (!alive || !holding(p, s) || now >= s.until) {
 				it.remove();
+				if (p instanceof ServerPlayer sp) net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(sp, new Lock(false));
 				if (alive) anim(p, s, "parry_release", 4);
 				continue;
 			}
