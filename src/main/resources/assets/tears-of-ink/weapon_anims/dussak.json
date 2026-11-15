@@ -107,7 +107,7 @@
       "length": 0.6,
       "hold": 0.4,
       "return": 0.3,
-      "impact": 0.2,
+      "impact": 0.14,
       "keyframes": [
         {
           "t": 0,
@@ -121,38 +121,66 @@
             0,
             -4
           ],
-          "ease": "ease_in"
+          "ease": "linear"
         },
         {
-          "t": 0.06,
+          "t": 0.05,
           "rotation": [
-            -72,
-            0,
-            10
+            -66.8,
+            3.9,
+            7.3
           ],
           "translation": [
-            -1,
-            -1,
-            -5
+            -0.93,
+            -0.06,
+            -4.02
           ],
-          "ease": "ease_in"
+          "ease": "linear"
         },
         {
-          "t": 0.2,
+          "t": 0.11,
           "rotation": [
-            50,
-            0,
-            10
+            -51.2,
+            62.7,
+            15.9
           ],
           "translation": [
-            0,
-            9,
-            -4
+            -8.22,
+            -0.47,
+            -4.22
           ],
-          "ease": "ease_out"
+          "ease": "linear"
         },
         {
-          "t": 0.42,
+          "t": 0.16,
+          "rotation": [
+            -96.9,
+            67.9,
+            70.7
+          ],
+          "translation": [
+            -11.34,
+            -1.61,
+            -2.13
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.21,
+          "rotation": [
+            -35.5,
+            -11.3,
+            62.1
+          ],
+          "translation": [
+            -7.02,
+            0.14,
+            -3.6
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.3,
           "rotation": [
             0,
             -35,
@@ -162,9 +190,11 @@
             -7,
             3,
             -2
-          ]
+          ],
+          "ease": "linear"
         }
-      ]
+      ],
+      "smooth": true
     },
     "attack3": {
       "length": 0.6,

@@ -138,6 +138,7 @@ public final class Combat {
 
 	private static void swing(ServerPlayer p) {
 		if (!p.isAlive() || p.isSpectator()) return;
+		if (com.tarkrakov.tearsofink.weapon.blood.Parry.active(p)) return; // в стойке парирования бить нельзя
 		ItemStack weapon = p.getMainHandItem();
 		Archetype a = Archetype.of(weapon);
 		if (a == null) return;

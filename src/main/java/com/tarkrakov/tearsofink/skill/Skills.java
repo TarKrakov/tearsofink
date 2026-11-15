@@ -109,6 +109,7 @@ public final class Skills {
 			return false;
 		}
 
+		if (com.tarkrakov.tearsofink.weapon.blood.Parry.active(player)) return false; // в стойке парирования — ничего другого
 		int now = player.server.getTickCount();
 		Map<ResourceLocation, Integer> cooldowns = COOLDOWNS.computeIfAbsent(player.getUUID(), k -> new HashMap<>());
 		if (cooldowns.getOrDefault(skill.id(), 0) > now) return false;

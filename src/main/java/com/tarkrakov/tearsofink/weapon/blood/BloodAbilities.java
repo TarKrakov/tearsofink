@@ -89,7 +89,10 @@ public final class BloodAbilities {
 		@Override
 		public boolean activate(ServerPlayer player, SkillInput input) {
 			if (Parry.active(player)) return false;
-			Parry.start(player, false); // движение стойки — ability_anim из dussak.json
+			// Дуссак в левой (Shift+R), в правой другое — стойка левой рукой
+			boolean off = com.tarkrakov.tearsofink.weapon.combat.Archetype.of(player.getMainHandItem()) != com.tarkrakov.tearsofink.weapon.combat.Archetype.DUSSAK
+					&& com.tarkrakov.tearsofink.weapon.combat.Archetype.of(player.getOffhandItem()) == com.tarkrakov.tearsofink.weapon.combat.Archetype.DUSSAK;
+			Parry.start(player, false, off); // движение стойки — ability_anim из dussak.json (нужной рукой)
 			return true;
 		}
 	}

@@ -42,6 +42,9 @@ public final class Parry {
 
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(Parry::tick);
+		// в стойке бить нельзя (даже оружием в другой руке): либо время выйдет, либо спарировал и ответил
+		net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register((player, world, hand, entity, hit) ->
+				!world.isClientSide && active(player) ? net.minecraft.world.InteractionResult.FAIL : net.minecraft.world.InteractionResult.PASS);
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
 			if (STANCE.isEmpty()) return true;
 			State s = STANCE.get(entity.getUUID());
@@ -65,7 +68,12 @@ public final class Parry {
 
 	/** Игрок встаёт в стойку. dual — парой (движение обеих рук задаёт сам вызов; одиночной — ability_anim). */
 	public static void start(ServerPlayer p, boolean dual) {
-		begin(p, dual, false, null);
+		start(p, dual, false);
+	}
+
+	/** off — одиночная стойка Дуссаком в левой руке (Shift+R, в правой другое оружие). */
+	public static void start(ServerPlayer p, boolean dual, boolean off) {
+		begin(p, dual, off, null);
 		if (dual) Combat.play(p, Archetype.DUSSAK, "parry", "parry", BloodTuning.DOUBLE_PARRY_TICKS);
 	}
 
@@ -99,7 +107,9 @@ public final class Parry {
 	private static void riposte(LivingEntity p, LivingEntity by, State s, long now) {
 		s.nextRiposte = now + BloodTuning.RIPOSTE_GAP;
 		s.resumeAt = now + BloodTuning.RIPOSTE_GAP;
-		double base = p instanceof HunterEntity h ? h.riposteBase() : p.getAttributeValue(Attributes.ATTACK_DAMAGE);
+		// Дуссак в левой бьёт так же, как в правой: урон самого Дуссака, а не того, что в правой руке
+		double base = p instanceof HunterEntity h ? h.riposteBase()
+				: s.off ? weaponDamage(p.getOffhandItem()) : p.getAttributeValue(Attributes.ATTACK_DAMAGE);
 		float dmg = (float) (base * (s.dual ? BloodTuning.DOUBLE_RIPOSTE_MULT : BloodTuning.RIPOSTE_MULT));
 		DamageSource src = p instanceof ServerPlayer sp ? sp.damageSources().playerAttack(sp) : p.damageSources().mobAttack(p);
 		if (by.isAlive() && by.distanceTo(p) <= BloodTuning.RIPOSTE_REACH && by.hurt(src, dmg)) {
@@ -108,11 +118,28 @@ public final class Parry {
 			by.knockback(0.4, -d.x, -d.z);
 		}
 		anim(p, s, s.dual ? "dual_riposte" : "riposte", BloodTuning.RIPOSTE_GAP);
+		if (!s.dual) { // одиночная стойка: спарировал и ответил — стойка окончена (усиленная парой держится до конца)
+			s.until = now + BloodTuning.RIPOSTE_GAP;
+			s.resumeAt = -1;
+		}
 		if (p.level() instanceof ServerLevel level) {
 			level.sendParticles(ParticleTypes.CRIT, by.getX(), by.getY() + by.getBbHeight() * 0.6, by.getZ(), 12, 0.3, 0.3, 0.3, 0.2);
 			level.playSound(null, p.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.35f, 2.0f);
 			level.playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1f, 1.1f);
 		}
+	}
+
+	/** Урон оружия как в руке игрока: 1 (кулак) + прибавка урона самого предмета. */
+	private static double weaponDamage(net.minecraft.world.item.ItemStack stack) {
+		double dmg = 1;
+		var mods = stack.getOrDefault(net.minecraft.core.component.DataComponents.ATTRIBUTE_MODIFIERS,
+				net.minecraft.world.item.component.ItemAttributeModifiers.EMPTY);
+		for (var e : mods.modifiers()) {
+			if (e.attribute().is(Attributes.ATTACK_DAMAGE) && e.modifier().operation() == net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE) {
+				dmg += e.modifier().amount();
+			}
+		}
+		return dmg;
 	}
 
 	/** Дуссак ещё в нужной руке (руках)? */

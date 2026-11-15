@@ -88,6 +88,7 @@ public final class HiltStrike {
 	/** Нажатие ПКМ на сервере. false — не вышло (перезарядка, клинок посреди удара). */
 	public static boolean use(ServerPlayer p, ItemStack stack) {
 		if (p.getCooldowns().isOnCooldown(stack.getItem())) return false;
+		if (com.tarkrakov.tearsofink.weapon.blood.Parry.active(p)) return false;
 		if (Combat.hitPending(p)) return false; // удар связки ещё не дошёл — не рвём его
 		Archetype a = Archetype.of(stack);
 		p.getCooldowns().addCooldown(stack.getItem(), COOLDOWN);
