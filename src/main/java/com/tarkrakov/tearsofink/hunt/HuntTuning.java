@@ -91,12 +91,12 @@ public final class HuntTuning {
 	public static final double FERAL_AGGRO = 6;
 
 	// ===== Уворот от рывка щитоносца =====
-	/** За сколько тиков до конца замаха охотник уходит вбок (по рангу: Новичок поздно, Легендарный заранее). */
-	public static final int[] DODGE_LEAD = {3, 6, 10};
-	/** Уже бежит на него ближе этого — тоже уворот. */
-	public static final double DODGE_RUN_DIST = 7;
+	/** Шанс увернуться от рывка щитоносца по рангу (бросок один на рывок): Новичок, Опытный, Легендарный. */
+	public static final float[] DODGE_CHANCE = {0.25f, 0.5f, 0.75f};
+	/** Уходит вбок, когда до удара осталось столько тиков (щитоносец уже бежит; раньше — тот довернёт следом). */
+	public static final int DODGE_REACT_TICKS = 5;
 	/** Рывок на откате — шаг-прыжок вбок с такой силой. */
-	public static final double SIDESTEP = 0.55;
+	public static final double SIDESTEP = 0.8;
 
 	// ===== Стили боя =====
 	/** Кровавый: враг убегает дальше этого — рывок вдогонку. */

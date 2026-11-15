@@ -550,34 +550,49 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 
 	private long dodgeLock;
 
-	/** Щитоносец разгоняется на охотника — уйти вбок: рывком, а если рывок на откате — шагом-прыжком. */
+	/** Какой рывок уже «бросал кубик» на уворот и что выпало (бросок — один на рывок). */
+	private int dodgeFor = -1;
+	private boolean dodgeWins;
+
+	/**
+	 * Щитоносец бежит на охотника — в последний момент (за DODGE_REACT_TICKS до удара) уйти вбок: рывком,
+	 * а если рывок на откате — шагом-прыжком. Раньше нельзя: рывок доворачивает следом. Шанс — по рангу.
+	 */
 	private void dodgeCharges(ServerLevel level, long now) {
+		int windup = com.tarkrakov.tearsofink.entity.patrol.SquadTuning.CHARGE_WINDUP;
+		double speed = com.tarkrakov.tearsofink.entity.patrol.SquadTuning.CHARGE_SPEED;
 		for (var sb : level.getEntitiesOfClass(com.tarkrakov.tearsofink.entity.patrol.PaleShieldbearerEntity.class,
-				getBoundingBox().inflate(14), e -> e.isAlive() && e.chargeTicks() >= 0)) {
+				getBoundingBox().inflate(10), e -> e.isAlive() && e.chargeTicks() >= windup)) {
 			Vec3 dir = sb.chargeDirection();
 			Vec3 toMe = position().subtract(sb.position()).multiply(1, 0, 1);
 			double dist = toMe.length();
 			if (dist < 1.0e-3) continue;
-			boolean aimed = sb.getTarget() == this || dir.dot(toMe.scale(1 / dist)) > 0.85;
+			boolean aimed = sb.getTarget() == this || dir.dot(toMe.scale(1 / dist)) > 0.8;
 			if (!aimed) continue;
-			int windup = com.tarkrakov.tearsofink.entity.patrol.SquadTuning.CHARGE_WINDUP;
-			boolean running = sb.chargeTicks() >= windup;
-			boolean now_ = running ? dist < HuntTuning.DODGE_RUN_DIST : sb.chargeTicks() >= windup - HuntTuning.DODGE_LEAD[rank()];
-			if (!now_) continue;
+			double ticksToHit = Math.max(0, dist - (sb.getBbWidth() + getBbWidth()) / 2) / speed;
+			if (ticksToHit > HuntTuning.DODGE_REACT_TICKS) continue;
+			if (dodgeFor != sb.getId()) { // бросок — один на этот рывок
+				dodgeFor = sb.getId();
+				dodgeWins = random.nextFloat() < HuntTuning.DODGE_CHANCE[rank()];
+			}
+			if (!dodgeWins) continue;
 			// вбок — в ту сторону, где охотник и так стоит от линии рывка
 			Vec3 side = new Vec3(-dir.z, 0, dir.x);
 			if (side.dot(toMe) < 0) side = side.scale(-1);
-			dodgeLock = now + 30;
+			dodgeLock = now + 20;
 			busyUntil = Math.max(busyUntil, now + 6);
 			getNavigation().stop();
 			if (now >= dashReady) {
 				dashDir(level, side);
 			} else {
-				setDeltaMovement(side.x * HuntTuning.SIDESTEP, 0.3, side.z * HuntTuning.SIDESTEP);
+				setDeltaMovement(side.x * HuntTuning.SIDESTEP, 0.35, side.z * HuntTuning.SIDESTEP);
 				hurtMarked = true;
 			}
 			return;
 		}
+		// рывок закончился — забыть бросок
+		if (dodgeFor >= 0 && !(level.getEntity(dodgeFor) instanceof com.tarkrakov.tearsofink.entity.patrol.PaleShieldbearerEntity sb2
+				&& sb2.chargeTicks() >= 0)) dodgeFor = -1;
 	}
 
 	private void tickDash(ServerLevel level) {
