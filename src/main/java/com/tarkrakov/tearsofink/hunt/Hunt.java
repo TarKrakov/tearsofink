@@ -251,7 +251,15 @@ public final class Hunt {
 	}
 
 	/** Начать мировую Охоту. who — рядом с кем (null — случайный подходящий игрок). Ответ — удалось ли. */
+	/** Заказанная Охота (команда для тестов): что не задано (null) — как обычно, случайно. */
+	public record Spec(@Nullable HunterType type, int rank, @Nullable ItemStack main, @Nullable ItemStack off,
+					   @Nullable HuntTargets.Target target, @Nullable PreyPrefix prefix) {}
+
 	public static boolean start(ServerLevel lands, @Nullable ServerPlayer who) {
+		return start(lands, who, null);
+	}
+
+	public static boolean start(ServerLevel lands, @Nullable ServerPlayer who, @Nullable Spec spec) {
 		if (world() != null) return false;
 		List<ServerPlayer> candidates = new ArrayList<>();
 		if (who != null) candidates.add(who);
@@ -261,16 +269,19 @@ public final class Hunt {
 		if (candidates.isEmpty()) return false; // все в храмах — ждём
 		RandomSource random = lands.random;
 		ServerPlayer target = candidates.get(random.nextInt(candidates.size()));
-		HuntTargets.Target t = HuntTargets.pick(random);
+		HuntTargets.Target t = spec != null && spec.target() != null ? spec.target() : HuntTargets.pick(random);
 		if (t == null) return false;
 		BlockPos at = spot(lands, target, random);
 		if (at == null) return false;
 		Active a = new Active(nextId++, null);
 		a.target = t;
-		a.rank = pickRank(random);
-		a.type = HunterType.byIndex(random.nextInt(HunterType.values().length));
-		a.prefix = pickPrefix(random);
+		a.rank = spec != null && spec.rank() >= 0 ? spec.rank() : pickRank(random);
+		a.type = spec != null && spec.type() != null ? spec.type() : HunterType.byIndex(random.nextInt(HunterType.values().length));
+		a.prefix = spec != null && spec.prefix() != null ? spec.prefix() : pickPrefix(random);
 		ItemStack[] arms = loadout(a.type, a.rank, random);
+		if (spec != null && spec.main() != null) {
+			arms = new ItemStack[]{spec.main(), spec.off() != null ? spec.off() : ItemStack.EMPTY};
+		}
 		a.main = arms[0];
 		a.off = arms[1];
 		a.weapon = (!a.off.isEmpty() && random.nextBoolean() ? a.off : a.main).copy(); // контракт помнит одно из двух

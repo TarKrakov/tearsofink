@@ -57,6 +57,7 @@ public final class ModCommands {
 									if (!ok) ctx.getSource().sendFailure(Component.literal("Не нашлось места для цели — отойдите от храма или воды."));
 									return ok ? 1 : 0;
 								}))
+								.then(com.tarkrakov.tearsofink.hunt.HuntTestCommand.build())
 								.then(Commands.literal("stop").executes(ctx -> {
 									var lands = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());
 									if (lands != null) com.tarkrakov.tearsofink.hunt.Hunt.stop(lands);
