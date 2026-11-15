@@ -123,6 +123,12 @@ public final class ModCreativeTab {
 						output.accept(ModItems.REPEL_SHIELD);
 						output.accept(ModItems.WAVE_GREATSWORD);
 						output.accept(ModItems.CLEAVE_GREATSWORD);
+						output.accept(ModItems.ROARING_AXE);
+						output.accept(ModItems.RAPID_KNIFE);
+						output.accept(ModItems.BLOOD_KATANA);
+						output.accept(ModItems.BLOOD_OBSI_CLUB);
+						output.accept(ModItems.BLOOD_TALVAR);
+						output.accept(ModItems.BLOOD_DUSSAK);
 						for (var line : com.tarkrakov.tearsofink.hunt.HunterType.values()) {
 							for (int tier = 0; tier < com.tarkrakov.tearsofink.hunt.HunterWeaponItem.TIERS; tier++) {
 								output.accept(((com.tarkrakov.tearsofink.hunt.HunterWeaponItem) ModItems.HUNTER_GREATSWORD).make(line, tier));

@@ -18,11 +18,17 @@ import java.util.Map;
  * Подмену в окнах делает ItemRendererMixin.
  */
 public final class ShieldIcons {
-	private static final Map<Item, String> ICONS = Map.of(
-			ModItems.RAM_SHIELD, "ram_shield", ModItems.RADIANT_SHIELD, "radiant_shield",
-			ModItems.MERCY_SHIELD, "mercy_shield", ModItems.REPEL_SHIELD, "repel_shield",
-			ModItems.WAVE_GREATSWORD, "wave_greatsword", ModItems.CLEAVE_GREATSWORD, "cleave_greatsword",
-			ModItems.INK_LONGKNIFE, "ink_longknife");
+	private static final Map<Item, String> ICONS = Map.ofEntries(
+			Map.entry(ModItems.RAM_SHIELD, "ram_shield"), Map.entry(ModItems.RADIANT_SHIELD, "radiant_shield"),
+			Map.entry(ModItems.MERCY_SHIELD, "mercy_shield"), Map.entry(ModItems.REPEL_SHIELD, "repel_shield"),
+			Map.entry(ModItems.WAVE_GREATSWORD, "wave_greatsword"), Map.entry(ModItems.CLEAVE_GREATSWORD, "cleave_greatsword"),
+			Map.entry(ModItems.INK_LONGKNIFE, "ink_longknife"),
+			Map.entry(ModItems.ROARING_AXE, "roaring_axe"),
+			Map.entry(ModItems.RAPID_KNIFE, "rapid_knife"),
+			Map.entry(ModItems.BLOOD_KATANA, "blood_katana"),
+			Map.entry(ModItems.BLOOD_OBSI_CLUB, "blood_obsi_club"),
+			Map.entry(ModItems.BLOOD_TALVAR, "blood_talvar"),
+			Map.entry(ModItems.BLOOD_DUSSAK, "blood_dussak"));
 
 	private ShieldIcons() {}
 

@@ -94,6 +94,20 @@ public final class ModItems {
 	public static final Item HUNTER_SABER = register("hunter_saber",
 			new com.tarkrakov.tearsofink.hunt.HunterWeaponItem(new Item.Properties(), false));
 
+	/** Оружие из перечня автора (архетипы и приёмы — по мере готовности движений). */
+	public static final Item ROARING_AXE = register("roaring_axe",
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), true));
+	public static final Item RAPID_KNIFE = register("rapid_knife",
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false));
+	public static final Item BLOOD_KATANA = register("blood_katana",
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), true));
+	public static final Item BLOOD_OBSI_CLUB = register("blood_obsi_club",
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), true));
+	public static final Item BLOOD_TALVAR = register("blood_talvar",
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false));
+	public static final Item BLOOD_DUSSAK = register("blood_dussak",
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false));
+
 	// ===== Добыча с фауны =====
 	/** Шёлковая нить (бледные гусеницы) — работает в рецептах вместо ванильной нити. */
 	public static final Item SILK_THREAD = register("silk_thread", new Item(new Item.Properties()));

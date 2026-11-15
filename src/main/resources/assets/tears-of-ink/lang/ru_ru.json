@@ -387,5 +387,17 @@
   "hunt.tears-of-ink.contract_timeout": "Контракт сгорел: время вышло.",
   "hunt.tears-of-ink.contract_found": "Ты на месте. %s уже здесь — Охота начинается!",
   "hunt.tears-of-ink.contract_lost": "%s опередил тебя. Контракт сорван.",
-  "trader.tears-of-ink.board.accepted": "Договорились. %1$s — твоя добыча. Иди по метке, у тебя %2$s минут."
+  "trader.tears-of-ink.board.accepted": "Договорились. %1$s — твоя добыча. Иди по метке, у тебя %2$s минут.",
+  "item.tears-of-ink.roaring_axe": "Ревущая Секира",
+  "item.tears-of-ink.roaring_axe.desc1": "Шпиль · двуручное. Медленные могучие удары пробивают блок.",
+  "item.tears-of-ink.rapid_knife": "Разящий Кинжал",
+  "item.tears-of-ink.rapid_knife.desc1": "Шпиль · одноручное. Молниеносный налёт и быстрый отход.",
+  "item.tears-of-ink.blood_katana": "Кровавая Катана",
+  "item.tears-of-ink.blood_katana.desc1": "Кровь · двуручное. Плавные удары, кровоточащие раны.",
+  "item.tears-of-ink.blood_obsi_club": "Язык Дракона",
+  "item.tears-of-ink.blood_obsi_club.desc1": "Кровь · двуручное. Дубина с обсидиановыми осколками.",
+  "item.tears-of-ink.blood_talvar": "Парящий Тальвар",
+  "item.tears-of-ink.blood_talvar.desc1": "Кровь · одноручное. Грациозные режущие взмахи.",
+  "item.tears-of-ink.blood_dussak": "Хищный Дуссак",
+  "item.tears-of-ink.blood_dussak.desc1": "Кровь · одноручное. Принимает удар и возвращает порез."
 }

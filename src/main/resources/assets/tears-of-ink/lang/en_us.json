@@ -369,5 +369,11 @@
   "hunt.tears-of-ink.contract_timeout": "The contract burned out: time is up.",
   "hunt.tears-of-ink.contract_found": "You are there. %s is here — the Hunt begins!",
   "hunt.tears-of-ink.contract_lost": "%s got there first. The contract is lost.",
-  "trader.tears-of-ink.board.accepted": "Agreed. %1$s is yours. Follow the mark, you have %2$s minutes."
+  "trader.tears-of-ink.board.accepted": "Agreed. %1$s is yours. Follow the mark, you have %2$s minutes.",
+  "item.tears-of-ink.roaring_axe": "Roaring Axe",
+  "item.tears-of-ink.rapid_knife": "Striking Dagger",
+  "item.tears-of-ink.blood_katana": "Blood Katana",
+  "item.tears-of-ink.blood_obsi_club": "Dragon Tongue",
+  "item.tears-of-ink.blood_talvar": "Soaring Talwar",
+  "item.tears-of-ink.blood_dussak": "Predatory Dussak"
 }
