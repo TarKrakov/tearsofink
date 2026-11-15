@@ -9,6 +9,8 @@ def hand_pose(arch, model, grip, c, t, m, tune):
     fp = disp['firstperson_'+side+'hand']; tp = disp['thirdperson_'+side+'hand']
     handle, tip = axis(model, disp['firstperson_righthand'], grip)
     rot, pos = sample(c, t); w = weight(c, t)
+    src = c.get('third', {}).get('source')
+    if src: c = dict(c, keyframes=json.load(open(f'{REPO}/weapon_anims/{arch}.json'))['animations'][src]['keyframes'])  # третье лицо — по другому движению
     x, y, W, P = solve4(disp, m, c, t, tune, c.get('third', {}), grip, handle, tip)
     v0 = VANILLA_ARM
     arm = (v0[0]+(x-v0[0])*w, y*w, 0)

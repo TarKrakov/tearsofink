@@ -48,10 +48,11 @@ public final class WeaponAnims {
 	 * wrist_hold — клинок в руке не крутится: поворот кисти берётся из позы на этой секунде движения (0 — с начала) и держится,
 	 * клинок просто следует за рукой; mirror — левая рука повторяет правую зеркально (парные удары синхронно);
 	 * center — руки ближе к середине (0.5 — вдвое); lateral — множитель движения рук влево-вправо (−1 — наоборот:
-	 * сводятся в центр и расходятся в края); no_cross — руки не заходят за середину (не перекрещиваются).
+	 * сводятся в центр и расходятся в края); no_cross — руки не заходят за середину (не перекрещиваются);
+	 * source — третье лицо считается по другому движению (первое лицо правят, а третье остаётся как было).
 	 */
-	public record ThirdFix(float wristHold, boolean mirror, float center, float lateral, boolean noCross) {
-		static final ThirdFix NONE = new ThirdFix(-1, false, 1, 1, false);
+	public record ThirdFix(float wristHold, boolean mirror, float center, float lateral, boolean noCross, @org.jetbrains.annotations.Nullable String source) {
+		static final ThirdFix NONE = new ThirdFix(-1, false, 1, 1, false, null);
 	}
 
 	/** Третье лицо архетипа (поле "third" в файле движений): как поза первого лица переводится в руку Стива. */
@@ -170,7 +171,8 @@ public final class WeaponAnims {
 
 	private static ThirdFix fix(JsonObject t) {
 		return new ThirdFix(f(t, "wrist_hold", -1), t.has("mirror") && t.get("mirror").getAsBoolean(), f(t, "center", 1),
-				f(t, "lateral", 1), t.has("no_cross") && t.get("no_cross").getAsBoolean());
+				f(t, "lateral", 1), t.has("no_cross") && t.get("no_cross").getAsBoolean(),
+				t.has("source") ? t.get("source").getAsString() : null);
 	}
 
 	private static float f(JsonObject o, String key, float def) {

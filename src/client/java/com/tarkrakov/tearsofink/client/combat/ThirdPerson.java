@@ -238,8 +238,13 @@ public final class ThirdPerson {
 		// mirror: левая рука считается как правая и отражается — парный удар синхронно
 		boolean mirror = fix.mirror() && left;
 		HumanoidArm calc = mirror ? HumanoidArm.RIGHT : side;
-		Base b = base(tr, calc, clip, t, tune, fix, grip, ax);
-		Base bw = fix.wristHold() >= 0 ? base(tr, calc, clip, fix.wristHold(), tune, fix, grip, ax) : b;
+		WeaponAnims.Clip pose = clip;
+		if (fix.source() != null) { // третье лицо — по другому движению
+			WeaponAnims.Clip src = WeaponAnims.clip(archetype, fix.source());
+			if (src != null) pose = src;
+		}
+		Base b = base(tr, calc, pose, t, tune, fix, grip, ax);
+		Base bw = fix.wristHold() >= 0 ? base(tr, calc, pose, fix.wristHold(), tune, fix, grip, ax) : b;
 		if (mirror) {
 			b = b.mirrored();
 			bw = bw.mirrored();
