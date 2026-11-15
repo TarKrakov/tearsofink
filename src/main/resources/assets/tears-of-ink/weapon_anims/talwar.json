@@ -383,8 +383,11 @@
       "length": 0.75,
       "hold": 0.1,
       "return": 0.3,
-      "impact": 0.17,
+      "impact": 0.15,
       "smooth": true,
+      "third": {
+        "mirror": true
+      },
       "keyframes": [
         {
           "t": 0,
@@ -401,43 +404,43 @@
           "ease": "linear"
         },
         {
-          "t": 0.07,
+          "t": 0.06,
           "rotation": [
-            5,
-            -15,
-            40
+            46.9,
+            -46.0,
+            115.5
           ],
           "translation": [
-            -5,
-            3,
-            -3
+            -9,
+            0,
+            -2
           ],
           "ease": "linear"
         },
         {
           "t": 0.14,
           "rotation": [
-            0,
-            0,
-            -20
+            68.7,
+            -18.5,
+            123.2
           ],
           "translation": [
-            0,
-            3,
+            2,
+            1,
             -4
           ],
           "ease": "linear"
         },
         {
-          "t": 0.21,
+          "t": 0.22,
           "rotation": [
-            -5,
-            5,
-            -75
+            66.2,
+            -24.2,
+            105.2
           ],
           "translation": [
-            8,
-            1,
+            12,
+            2,
             -3
           ],
           "ease": "linear"
@@ -445,21 +448,18 @@
         {
           "t": 0.3,
           "rotation": [
-            -8,
-            8,
-            -95
+            56.7,
+            -30.3,
+            91.7
           ],
           "translation": [
-            15,
-            -1,
+            18,
+            3,
             -2
           ],
           "ease": "linear"
         }
-      ],
-      "third": {
-        "mirror": true
-      }
+      ]
     },
     "cross_burst": {
       "length": 0.7,
