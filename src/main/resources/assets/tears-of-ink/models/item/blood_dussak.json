@@ -395,13 +395,13 @@
 			"translation": [1, 4, -1.25]
 		},
 		"firstperson_righthand": {
-			"rotation": [95.21, 68.49, -82.64],
-			"translation": [-2.87, 6.2, 2.88],
+			"rotation": [77.51, 68, -50.5],
+			"translation": [-0.37, 6.2, 2.63],
 			"scale": [0.68, 0.68, 0.68]
 		},
 		"firstperson_lefthand": {
-			"rotation": [-38.41, -60.77, -90.62],
-			"translation": [-1.37, 5.2, 1.88],
+			"rotation": [-14.64, -73.19, -65.39],
+			"translation": [-0.87, 5.45, 2.13],
 			"scale": [0.68, 0.68, 0.68]
 		}
 	},
