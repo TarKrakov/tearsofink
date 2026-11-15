@@ -31,6 +31,8 @@ jobs:
           for j in $(find ~/.gradle/caches .gradle -name "minecraft-*loom.mappings*.jar" 2>/dev/null); do
             echo "JAR $j"
             javap -p -classpath "$j" net.minecraft.world.entity.LivingEntity 2>/dev/null | grep "canAttack" || true
+            javap -p -classpath "$j" net.minecraft.world.entity.LivingEntity 2>/dev/null | grep "getVisibilityPercent" || true
+            javap -p -classpath "$j" net.minecraft.world.entity.player.Player 2>/dev/null | grep "getVisibilityPercent" || true
             javap -p -classpath "$j" net.minecraft.world.entity.Mob 2>/dev/null | grep "isSunBurnTick" || true
             javap -p -classpath "$j" net.minecraft.world.entity.ai.attributes.Attributes 2>/dev/null | grep " SCALE" || true
             javap -p -classpath "$j" net.minecraft.world.entity.OwnableEntity 2>/dev/null | grep "getOwnerUUID" || true
