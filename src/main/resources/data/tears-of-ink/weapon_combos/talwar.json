@@ -10,7 +10,7 @@
     {
       "anim": "attack1",
       "duration": 14,
-      "hit": 5,
+      "hit": 4,
       "damage": 0.9,
       "reach": 3.2,
       "arc": 110,
