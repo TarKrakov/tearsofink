@@ -58,6 +58,11 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 	public net.minecraft.world.InteractionResultHolder<ItemStack> use(net.minecraft.world.level.Level level,
 			net.minecraft.world.entity.player.Player player, net.minecraft.world.InteractionHand hand) {
 		ItemStack stack = player.getItemInHand(hand);
+		// одноручный клинок, левая рука пустая — удар эфесом (только в Чернильных землях, не по блоку)
+		if (com.tarkrakov.tearsofink.weapon.combat.HiltStrike.applies(player, stack, hand)) {
+			return com.tarkrakov.tearsofink.weapon.combat.HiltStrike.useFromItem(level, player, stack)
+					? net.minecraft.world.InteractionResultHolder.consume(stack) : net.minecraft.world.InteractionResultHolder.fail(stack);
+		}
 		if (hand != net.minecraft.world.InteractionHand.MAIN_HAND || !dual(player, stack)) return net.minecraft.world.InteractionResultHolder.pass(stack);
 		var a = com.tarkrakov.tearsofink.weapon.combat.Archetype.of(stack);
 		var input = new com.tarkrakov.tearsofink.skill.SkillInput(0, 0, false);

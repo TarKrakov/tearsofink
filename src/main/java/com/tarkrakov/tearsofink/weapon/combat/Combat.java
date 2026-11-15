@@ -104,6 +104,32 @@ public final class Combat {
 		return STATES.computeIfAbsent(p.getUUID(), u -> new State());
 	}
 
+	/** Удар связки ещё не дошёл (урон впереди). */
+	public static boolean hitPending(ServerPlayer p) {
+		State s = STATES.get(p.getUUID());
+		return s != null && (s.hitAt >= 0 || !s.extra.isEmpty());
+	}
+
+	/**
+	 * Сбить замах игрока (удар эфесом в PvP): удар, который ещё не дошёл, пропадает, Гильотина обрывается,
+	 * клинок занят stagger тиков. false — сбивать было нечего.
+	 */
+	public static boolean interrupt(ServerPlayer p, int stagger) {
+		State s = STATES.get(p.getUUID());
+		boolean using = p.isUsingItem() && Archetype.of(p.getUseItem()) != null;
+		if ((s == null || (s.hitAt < 0 && s.extra.isEmpty())) && !using) return false;
+		if (s != null) {
+			s.hitAt = -1;
+			s.extra.clear();
+			s.queued = false;
+			s.next = 0;
+			s.busyUntil = p.serverLevel().getGameTime() + stagger;
+			s.lastEnd = s.busyUntil;
+		}
+		if (using) p.stopUsingItem();
+		return true;
+	}
+
 	/** Сейчас идёт удар или приём (клинок занят). */
 	public static boolean busy(ServerPlayer p) {
 		State s = STATES.get(p.getUUID());

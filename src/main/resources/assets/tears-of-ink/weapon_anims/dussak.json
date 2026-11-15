@@ -549,6 +549,57 @@
           ]
         }
       ]
+    },
+    "hilt": {
+      "length": 0.5,
+      "hold": 0.1,
+      "return": 0.22,
+      "impact": 0.15,
+      "smooth": true,
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.07,
+          "rotation": [
+            22.5,
+            -9.9,
+            -1.7
+          ],
+          "translation": [
+            1.33,
+            0.6,
+            2.56
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.15,
+          "rotation": [
+            51.3,
+            -21.7,
+            1.9
+          ],
+          "translation": [
+            -0.99,
+            4.92,
+            -5.0
+          ],
+          "ease": "linear"
+        }
+      ]
     }
   }
 }

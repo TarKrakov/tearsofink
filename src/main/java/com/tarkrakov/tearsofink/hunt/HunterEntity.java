@@ -45,7 +45,8 @@ import java.util.List;
  * охотник Шпиля бьёт и отходит, играет от приёмов.
  * Живёт только пока идёт Охота: в мир не сохраняется.
  */
-public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsofink.entity.faction.FactionMember {
+public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsofink.entity.faction.FactionMember,
+		com.tarkrakov.tearsofink.weapon.combat.Interruptible {
 	private static final EntityDataAccessor<Integer> TYPE = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.INT);
 	private static final EntityDataAccessor<Integer> RANK = SynchedEntityData.defineId(HunterEntity.class, EntityDataSerializers.INT);
 	/** Какие навески gear_* видны (биты по местам навесок). */
@@ -606,6 +607,21 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 			setDeltaMovement(v.x * 0.3, v.y, v.z * 0.3);
 		}
 		hurtMarked = true;
+	}
+
+	/** Удар эфесом: сбивает приём или удар, который ещё не дошёл (замах Рассечения, Гильотина, удар связки), и рывок. */
+	@Override
+	public boolean interrupt(LivingEntity by, int stagger) {
+		if (!(level() instanceof ServerLevel level)) return false;
+		boolean winding = !timed.isEmpty() || dashTicks > 0;
+		if (!winding) return false;
+		timed.clear();
+		dashTicks = 0;
+		long now = level.getGameTime();
+		busyUntil = Math.max(busyUntil, now + stagger);
+		getNavigation().stop();
+		setDeltaMovement(getDeltaMovement().multiply(0.2, 1, 0.2));
+		return true;
 	}
 
 	// ===== Служебное =====

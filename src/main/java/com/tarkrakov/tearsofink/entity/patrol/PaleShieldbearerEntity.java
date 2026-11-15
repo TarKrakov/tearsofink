@@ -30,7 +30,7 @@ import java.util.EnumSet;
  * Бледный щитовик — танк отряда. Крупный, медленный, крепкий. Поднимает щит (спереди почти неуязвим,
  * топор выбивает щит), бьёт щитом вблизи, делает рывок по прямой (сносит мягкие блоки, промахнулся — тупит).
  */
-public class PaleShieldbearerEntity extends PaleSoldier {
+public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov.tearsofink.weapon.combat.Interruptible {
 	public static final int ACT_BLOCK = 1, ACT_BASH = 2, ACT_CHARGE_WINDUP = 3, ACT_CHARGE = 4, ACT_STUN = 5;
 
 	// анимации (клиент)
@@ -106,6 +106,18 @@ public class PaleShieldbearerEntity extends PaleSoldier {
 
 	public boolean shieldRaised() {
 		return shieldUp > 0 && shieldDisabled <= 0;
+	}
+
+	/** Удар эфесом: сбивает рывок (замах и разбег) и удар щитом до попадания — тупит, как после промаха. */
+	@Override
+	public boolean interrupt(LivingEntity by, int stagger) {
+		boolean winding = chargeTicks >= 0 || (bashTicks >= 0 && bashTicks < SquadTuning.BASH_HIT_TICK);
+		if (!winding) return false;
+		if (chargeTicks >= 0) endCharge(false);
+		bashTicks = -1;
+		stun = Math.max(stun, stagger);
+		this.getNavigation().stop();
+		return true;
 	}
 
 	boolean busy() {

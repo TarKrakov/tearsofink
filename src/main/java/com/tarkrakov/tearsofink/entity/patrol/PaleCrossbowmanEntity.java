@@ -25,7 +25,7 @@ import java.util.EnumSet;
  * Если игрок подбежал — один раз за цикл отпрыгивает (можно прервать даже перезарядку),
  * дальше обязан дозарядиться и выстрелить — тут его и ловить. Бегущий игрок его догонит.
  */
-public class PaleCrossbowmanEntity extends PaleSoldier {
+public class PaleCrossbowmanEntity extends PaleSoldier implements com.tarkrakov.tearsofink.weapon.combat.Interruptible {
 	public static final int ACT_AIM = 1, ACT_SHOOT = 2, ACT_RELOAD = 3, ACT_DODGE = 4;
 	private static final int PHASE_AIM = 0, PHASE_SHOOT = 1, PHASE_RELOAD = 2;
 
@@ -69,6 +69,15 @@ public class PaleCrossbowmanEntity extends PaleSoldier {
 	}
 	boolean dodgedThisCycle;
 	int dodgeTicks = -1, dodgeCooldown;
+
+	/** Удар эфесом: сбивает прицел — целится заново. */
+	@Override
+	public boolean interrupt(LivingEntity by, int stagger) {
+		if (phase != PHASE_AIM || phaseTicks <= 0) return false;
+		phaseTicks = -stagger; // потерялся, потом целится с нуля
+		this.getNavigation().stop();
+		return true;
+	}
 	private Vec3 dodgeAway = Vec3.ZERO;
 
 	public PaleCrossbowmanEntity(EntityType<? extends Monster> type, Level level) {

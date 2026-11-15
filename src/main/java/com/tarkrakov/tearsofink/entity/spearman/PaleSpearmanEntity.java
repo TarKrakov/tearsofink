@@ -27,8 +27,8 @@ import net.minecraft.world.phys.Vec3;
  * Спокоен: ходит по дороге между фонарями, копьё на плече. Заметил игрока: встаёт в стойку,
  * держит дистанцию копья, тычет (урон на 0,5 с анимации), отпрыгивает назад, если к нему лезут.
  */
-public class PaleSpearmanEntity extends com.tarkrakov.tearsofink.entity.patrol.PaleSoldier {
-	private static final byte THRUST_EVENT = 4, DODGE_EVENT = 5;
+public class PaleSpearmanEntity extends com.tarkrakov.tearsofink.entity.patrol.PaleSoldier implements com.tarkrakov.tearsofink.weapon.combat.Interruptible {
+	private static final byte THRUST_EVENT = 4, DODGE_EVENT = 5, STAGGER_EVENT = 71;
 
 	// анимации (клиент)
 	public final AnimationState idleState = new AnimationState();
@@ -84,6 +84,17 @@ public class PaleSpearmanEntity extends com.tarkrakov.tearsofink.entity.patrol.P
 
 	public boolean busy() {
 		return thrustTicks >= 0 || dodgeTicks >= 0;
+	}
+
+	/** Удар эфесом: сбивает тычок, пока копьё не дошло; копейщик на время теряется. */
+	@Override
+	public boolean interrupt(LivingEntity by, int stagger) {
+		if (thrustTicks < 0 || thrustTicks >= SpearmanTuning.THRUST_HIT_TICK) return false;
+		thrustTicks = -1;
+		attackCooldown = Math.max(attackCooldown, stagger);
+		this.getNavigation().stop();
+		this.level().broadcastEntityEvent(this, STAGGER_EVENT);
+		return true;
 	}
 
 	/** Начать тычок (сервер). */
@@ -190,6 +201,9 @@ public class PaleSpearmanEntity extends com.tarkrakov.tearsofink.entity.patrol.P
 		if (id == THRUST_EVENT) {
 			thrustAnimLeft = SpearmanTuning.THRUST_TICKS;
 			thrustState.start(this.tickCount);
+		} else if (id == STAGGER_EVENT) {
+			thrustAnimLeft = 0;
+			thrustState.stop();
 		} else if (id == DODGE_EVENT) {
 			dodgeAnimLeft = SpearmanTuning.DODGE_TICKS;
 			dodgeState.start(this.tickCount);
