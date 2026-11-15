@@ -22,7 +22,9 @@ public enum Archetype {
 	/** Хищные Дуссаки (Кровь): короткие одноручные тесаки — тычок, разрыв, росчерк; R — парирование с ответом. */
 	DUSSAK("dussak"),
 	/** Бастион — удары двумя щитами Души (Путь Души, работает только парой щитов и в Землях): толчок правым, левым, рубящий обоими. */
-	BASTION("bastion");
+	BASTION("bastion"),
+	/** Ревущая Секира (Шпиль): одной рукой и парой. */
+	AXE("axe");
 
 	public final String id;
 
@@ -47,7 +49,8 @@ public enum Archetype {
 					Map.entry(ModItems.MERCY_SHIELD, BASTION),
 					Map.entry(ModItems.REPEL_SHIELD, BASTION),
 					Map.entry(ModItems.WORN_RAM_SHIELD, BASTION),
-					Map.entry(ModItems.WORN_MERCY_SHIELD, BASTION));
+					Map.entry(ModItems.WORN_MERCY_SHIELD, BASTION),
+					Map.entry(ModItems.ROARING_AXE, AXE));
 		}
 		return items;
 	}

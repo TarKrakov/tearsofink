@@ -100,8 +100,10 @@ public final class ModItems {
 			new com.tarkrakov.tearsofink.hunt.HunterWeaponItem(new Item.Properties(), false));
 
 	/** Оружие из перечня автора (архетипы и приёмы — по мере готовности движений). */
-	public static final Item ROARING_AXE = register("roaring_axe",
-			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE));
+	/** Ревущая Секира (Шпиль, одноручная, парой — тоже): урон 6, скорость 1,2; R — рывок с рассекающим взмахом (Чернила). Модель автора 15 ноя. */
+	public static final Item ROARING_AXE = register("spire_roaring_axe",
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE,
+					() -> com.tarkrakov.tearsofink.weapon.combat.AxeMoves.RUSH, 3, -2.8f));
 	public static final Item RAPID_KNIFE = register("rapid_knife",
 			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE));
 	public static final Item BLOOD_KATANA = register("blood_katana",

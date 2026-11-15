@@ -18,6 +18,12 @@ public class ArsenalWeaponItem extends InkGreatswordItem {
 		this.line = line;
 	}
 
+	/** Свой урон (сверх материала) и скорость атаки. */
+	public ArsenalWeaponItem(Properties properties, boolean twoHanded, HunterType line, Supplier<Skill> ability, int damage, float speed) {
+		super(ability, properties, twoHanded, damage, speed);
+		this.line = line;
+	}
+
 	public ArsenalWeaponItem(Properties properties, boolean twoHanded, HunterType line) {
 		this(properties, twoHanded, line, () -> null);
 	}

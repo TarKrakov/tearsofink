@@ -44,6 +44,7 @@ public class TearsOfInk implements ModInitializer {
 		com.tarkrakov.tearsofink.trader.SoulTrader.init();
 		com.tarkrakov.tearsofink.weapon.combat.Combat.init();
 		com.tarkrakov.tearsofink.weapon.combat.HiltStrike.init();
+		com.tarkrakov.tearsofink.weapon.combat.AxeMoves.init();
 		com.tarkrakov.tearsofink.sound.ModSounds.init();
 		com.tarkrakov.tearsofink.weapon.shield.ShieldStance.init();
 		com.tarkrakov.tearsofink.weapon.shield.Resonance.init();

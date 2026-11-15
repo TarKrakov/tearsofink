@@ -36,8 +36,13 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 
 	/** damage — урон сверх материала (Тусклый скимитар: ONE_HANDED_DAMAGE − 1 → итого 4). */
 	public InkGreatswordItem(Supplier<Skill> ability, Properties properties, boolean twoHanded, int damage) {
+		this(ability, properties, twoHanded, damage, twoHanded ? ATTACK_SPEED : ONE_HANDED_SPEED);
+	}
+
+	/** Свой урон и скорость атаки (оружие из перечня: Секира и др.). */
+	public InkGreatswordItem(Supplier<Skill> ability, Properties properties, boolean twoHanded, int damage, float speed) {
 		super(ModTiers.ASPHODA, properties.attributes(SwordItem.createAttributes(ModTiers.ASPHODA,
-				damage, twoHanded ? ATTACK_SPEED : ONE_HANDED_SPEED).withTooltip(false)));
+				damage, speed).withTooltip(false)));
 		this.ability = ability;
 		this.twoHanded = twoHanded;
 	}
@@ -80,6 +85,14 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 			player.startUsingItem(hand);
 			return net.minecraft.world.InteractionResultHolder.consume(stack);
 		}
+		if (a == com.tarkrakov.tearsofink.weapon.combat.Archetype.AXE) { // казнь: держать — топоры расходятся, отпустил — прыжок и двойной удар
+			if (player instanceof net.minecraft.server.level.ServerPlayer sp
+					&& !com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.weapon.combat.AxeMoves.EXECUTION, input)) {
+				return net.minecraft.world.InteractionResultHolder.fail(stack);
+			}
+			player.startUsingItem(hand);
+			return net.minecraft.world.InteractionResultHolder.consume(stack);
+		}
 		if (a == com.tarkrakov.tearsofink.weapon.combat.Archetype.DUSSAK) { // усиленная стойка парирования
 			if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
 				com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.weapon.blood.BloodAbilities.DOUBLE_PARRY, input);
@@ -117,6 +130,10 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 			return;
 		}
 		int used = getUseDuration(stack, entity) - remaining;
+		if (com.tarkrakov.tearsofink.weapon.combat.Archetype.of(stack) == com.tarkrakov.tearsofink.weapon.combat.Archetype.AXE) {
+			if (used >= com.tarkrakov.tearsofink.weapon.combat.AxeMoves.MAX_HOLD_TICKS) sp.releaseUsingItem(); // развёл до предела — бьёт сам
+			return;
+		}
 		int every = com.tarkrakov.tearsofink.weapon.combat.Combat.chopInterval();
 		if (used % every != 1) return;
 		int n = used / every;
@@ -131,6 +148,10 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 	public void releaseUsing(ItemStack stack, net.minecraft.world.level.Level level, net.minecraft.world.entity.LivingEntity entity, int timeLeft) {
 		if (!(entity instanceof net.minecraft.server.level.ServerPlayer sp) || !dual(sp, stack)) return;
 		int used = getUseDuration(stack, entity) - timeLeft;
+		if (com.tarkrakov.tearsofink.weapon.combat.Archetype.of(stack) == com.tarkrakov.tearsofink.weapon.combat.Archetype.AXE) {
+			com.tarkrakov.tearsofink.weapon.combat.AxeMoves.strike(sp, used);
+			return;
+		}
 		if (used >= 2) com.tarkrakov.tearsofink.weapon.combat.Combat.guillotineEnd(sp); // хоть один удар был — казнь сверху
 	}
 

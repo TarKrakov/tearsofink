@@ -388,8 +388,8 @@
   "hunt.tears-of-ink.contract_found": "Ты на месте. %s уже здесь — Охота начинается!",
   "hunt.tears-of-ink.contract_lost": "%s опередил тебя. Контракт сорван.",
   "trader.tears-of-ink.board.accepted": "Договорились. %1$s — твоя добыча. Иди по метке, у тебя %2$s минут.",
-  "item.tears-of-ink.roaring_axe": "Ревущая Секира",
-  "item.tears-of-ink.roaring_axe.desc1": "Шпиль · двуручное. Медленные могучие удары пробивают блок.",
+  "item.tears-of-ink.spire_roaring_axe": "Ревущая Секира",
+  "item.tears-of-ink.spire_roaring_axe.desc1": "Шпиль · одноручное, можно парой. R — рывок и рассекающий взмах; парой ПКМ — казнь.",
   "item.tears-of-ink.rapid_knife": "Разящий Кинжал",
   "item.tears-of-ink.rapid_knife.desc1": "Шпиль · одноручное. Молниеносный налёт и быстрый отход.",
   "item.tears-of-ink.blood_katana": "Кровавая Катана",
@@ -496,5 +496,7 @@
   "item.tears-of-ink.pilgrim_bundle": "Котомка паломника",
   "item.tears-of-ink.pilgrim_bundle.desc1": "ПКМ — развязать.",
   "skill.tears-of-ink.dim_wave": "Тусклая Волна",
-  "guide.tears-of-ink.vow.ask": "Прежде чем я вручу вам то, что положено, — скажите, какой дорогой пойдёте."
+  "guide.tears-of-ink.vow.ask": "Прежде чем я вручу вам то, что положено, — скажите, какой дорогой пойдёте.",
+  "skill.tears-of-ink.axe_rush": "Рывок Секиры",
+  "skill.tears-of-ink.axe_execution": "Казнь"
 }

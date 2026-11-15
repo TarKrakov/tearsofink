@@ -25,7 +25,7 @@ public final class ShieldIcons {
 			Map.entry(ModItems.DIM_SCIMITAR, "dim_scimitar"),
 			Map.entry(ModItems.WAVE_GREATSWORD, "spire_shadow_scimitar"), Map.entry(ModItems.CLEAVE_GREATSWORD, "spire_torturer_greatsword"),
 			Map.entry(ModItems.INK_LONGKNIFE, "ink_longknife"),
-			Map.entry(ModItems.ROARING_AXE, "roaring_axe"),
+			Map.entry(ModItems.ROARING_AXE, "spire_roaring_axe"),
 			Map.entry(ModItems.RAPID_KNIFE, "rapid_knife"),
 			Map.entry(ModItems.BLOOD_KATANA, "blood_katana"),
 			Map.entry(ModItems.BLOOD_OBSI_CLUB, "blood_obsi_club"),
