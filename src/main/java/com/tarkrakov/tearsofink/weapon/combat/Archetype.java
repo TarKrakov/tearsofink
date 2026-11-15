@@ -24,7 +24,9 @@ public enum Archetype {
 	/** Бастион — удары двумя щитами Души (Путь Души, работает только парой щитов и в Землях): толчок правым, левым, рубящий обоими. */
 	BASTION("bastion"),
 	/** Ревущая Секира (Шпиль): одной рукой и парой. */
-	AXE("axe");
+	AXE("axe"),
+	/** Разящий Кинжал (Шпиль): быстрые уколы, пируэт, рывок с уколом; парой — росчерки и рывок с вонзанием. */
+	DAGGER("dagger");
 
 	public final String id;
 
@@ -50,7 +52,8 @@ public enum Archetype {
 					Map.entry(ModItems.REPEL_SHIELD, BASTION),
 					Map.entry(ModItems.WORN_RAM_SHIELD, BASTION),
 					Map.entry(ModItems.WORN_MERCY_SHIELD, BASTION),
-					Map.entry(ModItems.ROARING_AXE, AXE));
+					Map.entry(ModItems.ROARING_AXE, AXE),
+					Map.entry(ModItems.RAPID_KNIFE, DAGGER));
 		}
 		return items;
 	}

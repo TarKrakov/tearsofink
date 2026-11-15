@@ -104,8 +104,10 @@ public final class ModItems {
 	public static final Item ROARING_AXE = register("spire_roaring_axe",
 			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE,
 					() -> com.tarkrakov.tearsofink.weapon.combat.AxeMoves.RUSH, 5, -2.9f));
-	public static final Item RAPID_KNIFE = register("rapid_knife",
-			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE));
+	/** Разящий Кинжал (Шпиль, одноручный): урон 4, скорость 2,0; R — рывок с уколом (Чернила). Модель автора 15 ноя. */
+	public static final Item RAPID_KNIFE = register("spire_rapid_knife",
+			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE,
+					() -> com.tarkrakov.tearsofink.weapon.combat.DaggerMoves.RUSH, 1, -2.0f));
 	public static final Item BLOOD_KATANA = register("blood_katana",
 			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD));
 	public static final Item BLOOD_OBSI_CLUB = register("blood_obsi_club",

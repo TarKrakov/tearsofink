@@ -85,6 +85,11 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 			player.startUsingItem(hand);
 			return net.minecraft.world.InteractionResultHolder.consume(stack);
 		}
+		if (a == com.tarkrakov.tearsofink.weapon.combat.Archetype.DAGGER) { // рывок с двумя клинками
+			if (player instanceof net.minecraft.server.level.ServerPlayer sp)
+				com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.weapon.combat.DaggerMoves.DUAL_RUSH, input);
+			return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+		}
 		if (a == com.tarkrakov.tearsofink.weapon.combat.Archetype.AXE) { // казнь: держать — топоры расходятся, отпустил — прыжок и двойной удар
 			if (player instanceof net.minecraft.server.level.ServerPlayer sp
 					&& !com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.weapon.combat.AxeMoves.EXECUTION, input)) {

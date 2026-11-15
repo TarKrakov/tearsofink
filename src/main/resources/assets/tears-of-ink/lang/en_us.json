@@ -371,7 +371,7 @@
   "hunt.tears-of-ink.contract_lost": "%s got there first. The contract is lost.",
   "trader.tears-of-ink.board.accepted": "Agreed. %1$s is yours. Follow the mark, you have %2$s minutes.",
   "item.tears-of-ink.spire_roaring_axe": "Roaring Axe",
-  "item.tears-of-ink.rapid_knife": "Striking Dagger",
+  "item.tears-of-ink.spire_rapid_knife": "Striking Dagger",
   "item.tears-of-ink.blood_katana": "Blood Katana",
   "item.tears-of-ink.blood_obsi_club": "Dragon Tongue",
   "item.tears-of-ink.blood_talvar": "Soaring Talwar",
@@ -474,5 +474,7 @@
   "skill.tears-of-ink.dim_wave": "Dim Wave",
   "guide.tears-of-ink.vow.ask": "Before I hand you what is due — tell me which road you will take.",
   "skill.tears-of-ink.axe_rush": "Axe Rush",
-  "skill.tears-of-ink.axe_execution": "Execution"
+  "skill.tears-of-ink.axe_execution": "Execution",
+  "skill.tears-of-ink.dagger_rush": "Lunging Stab",
+  "skill.tears-of-ink.dagger_dual_rush": "Piercing Rush"
 }

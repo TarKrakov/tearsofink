@@ -40,6 +40,15 @@ public final class Skills {
 	/** Перезарядки: игрок → навык → тик сервера, когда снова можно. В память, не сохраняются. */
 	private static final Map<UUID, Map<ResourceLocation, Integer>> COOLDOWNS = new HashMap<>();
 
+	/** Срезать оставшуюся перезарядку навыка: keep — какая доля остаётся (0,5 — вдвое короче). */
+	public static void cutCooldown(ServerPlayer player, Skill skill, float keep) {
+		Map<ResourceLocation, Integer> cd = COOLDOWNS.get(player.getUUID());
+		if (cd == null || !cd.containsKey(skill.id())) return;
+		int now = player.server.getTickCount();
+		int left = cd.get(skill.id()) - now;
+		if (left > 0) cd.put(skill.id(), now + Math.round(left * keep));
+	}
+
 	private Skills() {}
 
 	public static <T extends Skill> T register(T skill) {

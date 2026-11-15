@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "tears-of-ink:item/rapid_knife"
+    "layer0": "tears-of-ink:item/spire_rapid_knife"
   }
 }

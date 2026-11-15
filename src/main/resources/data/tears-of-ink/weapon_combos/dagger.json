@@ -1,0 +1,78 @@
+{
+  "_comment": "Связки Разящего Кинжала (архетип dagger). Поля — как у других (duration/hit — тики, damage — множитель урона оружия 4). R — рывок с уколом (DaggerMoves.RUSH), ability_anim — его движение. Парой ПКМ — рывок с вонзанием (числа в DaggerMoves).",
+  "tempo": 1.0,
+  "min_strength": 0.8,
+  "reset_ticks": 24,
+  "early_ticks": 6,
+  "ability_anim": "dash",
+  "ability_ticks": 9,
+  "steps": [
+    {
+      "anim": "attack1",
+      "duration": 6,
+      "hit": 2,
+      "damage": 0.9,
+      "reach": 3.1,
+      "arc": 30,
+      "knockback": 0.2,
+      "speed": 2.0
+    },
+    {
+      "anim": "attack2",
+      "duration": 9,
+      "hit": 4,
+      "damage": 1.0,
+      "reach": 2.8,
+      "arc": 140,
+      "knockback": 0.2,
+      "speed": 1.8,
+      "late": 10
+    },
+    {
+      "anim": "attack3",
+      "duration": 7,
+      "hit": 5,
+      "damage": 1.3,
+      "reach": 3.2,
+      "arc": 40,
+      "knockback": 0.4,
+      "speed": 1.6
+    }
+  ],
+  "dual_steps": [
+    {
+      "anim": "dual_slash_low",
+      "off_anim": "dual_slash_high",
+      "duration": 6,
+      "hit": 3,
+      "damage": 0.8,
+      "reach": 3.0,
+      "arc": 120,
+      "knockback": 0.2,
+      "speed": 2.0
+    },
+    {
+      "anim": "dual_cross_low",
+      "off_anim": "dual_cross_high",
+      "duration": 8,
+      "hit": 4,
+      "damage": 0.9,
+      "reach": 3.0,
+      "arc": 160,
+      "knockback": 0.2,
+      "speed": 1.8,
+      "late": 12
+    },
+    {
+      "anim": "dual_pierce",
+      "off_anim": "dual_pierce",
+      "duration": 7,
+      "hit": 2,
+      "damage": 1.6,
+      "reach": 3.4,
+      "arc": 40,
+      "knockback": 0.5,
+      "speed": 1.5
+    }
+  ]
+}

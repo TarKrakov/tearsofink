@@ -390,8 +390,8 @@
   "trader.tears-of-ink.board.accepted": "Договорились. %1$s — твоя добыча. Иди по метке, у тебя %2$s минут.",
   "item.tears-of-ink.spire_roaring_axe": "Ревущая Секира",
   "item.tears-of-ink.spire_roaring_axe.desc1": "Шпиль · двуручное, можно парой. R — рывок и рассекающий взмах; парой ПКМ — казнь.",
-  "item.tears-of-ink.rapid_knife": "Разящий Кинжал",
-  "item.tears-of-ink.rapid_knife.desc1": "Шпиль · одноручное. Молниеносный налёт и быстрый отход.",
+  "item.tears-of-ink.spire_rapid_knife": "Разящий Кинжал",
+  "item.tears-of-ink.spire_rapid_knife.desc1": "Шпиль · одноручное, можно парой. R — рывок с уколом; парой ПКМ — рывок с вонзанием.",
   "item.tears-of-ink.blood_katana": "Кровавая Катана",
   "item.tears-of-ink.blood_katana.desc1": "Кровь · двуручное. Плавные удары, кровоточащие раны.",
   "item.tears-of-ink.blood_obsi_club": "Язык Дракона",
@@ -498,5 +498,7 @@
   "skill.tears-of-ink.dim_wave": "Тусклая Волна",
   "guide.tears-of-ink.vow.ask": "Прежде чем я вручу вам то, что положено, — скажите, какой дорогой пойдёте.",
   "skill.tears-of-ink.axe_rush": "Рывок Секиры",
-  "skill.tears-of-ink.axe_execution": "Казнь"
+  "skill.tears-of-ink.axe_execution": "Казнь",
+  "skill.tears-of-ink.dagger_rush": "Рывок с уколом",
+  "skill.tears-of-ink.dagger_dual_rush": "Рывок с вонзанием"
 }
