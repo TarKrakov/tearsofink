@@ -408,5 +408,16 @@
   "skill.tears-of-ink.talwar_cross": "Кровавый крест",
   "skill.tears-of-ink.dussak_parry": "Парирование",
   "skill.tears-of-ink.dussak_double_parry": "Двойное парирование",
-  "subtitles.tears-of-ink.shield_choir": "Щиты поют светом"
+  "subtitles.tears-of-ink.shield_choir": "Щиты поют светом",
+  "skill.tears-of-ink.shield_resonance": "Резонанс",
+  "resonance.tears-of-ink.avalanche": "Резонанс: Лавина",
+  "resonance.tears-of-ink.sun": "Резонанс: Солнце",
+  "resonance.tears-of-ink.grace": "Резонанс: Благодать",
+  "resonance.tears-of-ink.shockwave": "Резонанс: Ударная волна",
+  "resonance.tears-of-ink.advance": "Резонанс: Наступление",
+  "resonance.tears-of-ink.phalanx": "Резонанс: Фаланга",
+  "resonance.tears-of-ink.intercessor": "Резонанс: Заступник",
+  "resonance.tears-of-ink.halo": "Резонанс: Ореол",
+  "resonance.tears-of-ink.flash": "Резонанс: Вспышка",
+  "resonance.tears-of-ink.veil": "Резонанс: Покров"
 }

@@ -71,6 +71,12 @@ public final class WeaponAbilities {
 
 	private static void use(ServerPlayer player, SkillPayloads.UseWeapon payload) {
 		if (!player.isAlive() || player.isSpectator()) return;
+		// два щита Души: R — Хлопок и Резонанс; одиночные абилки щитов молчат; Shift+R — пока свободно
+		if (com.tarkrakov.tearsofink.weapon.shield.ShieldStance.dual(player)) {
+			if (!payload.offhand()) Skills.activate(player, com.tarkrakov.tearsofink.weapon.shield.Resonance.SKILL,
+					new SkillInput(payload.strafe(), payload.forward(), false));
+			return;
+		}
 		ItemStack stack = payload.offhand() ? player.getOffhandItem() : player.getMainHandItem();
 		if (!(stack.getItem() instanceof AbilityWeapon weapon) || weapon.ability() == null) return;
 		// двуручник (Палачи) занимает обе руки: щит в левой молчит

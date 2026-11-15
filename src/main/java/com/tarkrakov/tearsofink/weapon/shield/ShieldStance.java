@@ -210,6 +210,13 @@ public final class ShieldStance {
 		level.playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1f, 0.6f);
 	}
 
+	/** Забрать весь заряд (Резонанс тратит его на силу). */
+	public static int takeCharge(ServerPlayer p) {
+		int c = charge(p);
+		if (c > 0) setCharge(p, 0);
+		return c;
+	}
+
 	private static void setCharge(ServerPlayer p, int c) {
 		Integer old = CHARGE.get(p.getUUID());
 		if (c <= 0) CHARGE.remove(p.getUUID());

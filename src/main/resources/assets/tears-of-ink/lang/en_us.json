@@ -384,5 +384,16 @@
   "skill.tears-of-ink.talwar_cross": "Blood Cross",
   "skill.tears-of-ink.dussak_parry": "Parry",
   "skill.tears-of-ink.dussak_double_parry": "Double Parry",
-  "subtitles.tears-of-ink.shield_choir": "Shields sing with light"
+  "subtitles.tears-of-ink.shield_choir": "Shields sing with light",
+  "skill.tears-of-ink.shield_resonance": "Resonance",
+  "resonance.tears-of-ink.avalanche": "Resonance: Avalanche",
+  "resonance.tears-of-ink.sun": "Resonance: Sun",
+  "resonance.tears-of-ink.grace": "Resonance: Grace",
+  "resonance.tears-of-ink.shockwave": "Resonance: Shockwave",
+  "resonance.tears-of-ink.advance": "Resonance: Advance",
+  "resonance.tears-of-ink.phalanx": "Resonance: Phalanx",
+  "resonance.tears-of-ink.intercessor": "Resonance: Intercessor",
+  "resonance.tears-of-ink.halo": "Resonance: Halo",
+  "resonance.tears-of-ink.flash": "Resonance: Flash",
+  "resonance.tears-of-ink.veil": "Resonance: Veil"
 }
