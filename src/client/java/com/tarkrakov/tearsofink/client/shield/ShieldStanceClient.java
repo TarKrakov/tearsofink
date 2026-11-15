@@ -39,6 +39,8 @@ public final class ShieldStanceClient {
 	/** Поза рук в стойке (градусы, для правой руки; левая — зеркально): front — рука, что держит блок, side — вторая, сбоку. */
 	private static Vector3f front = new Vector3f(-55, -25, 0), side = new Vector3f(45, 40, 10);
 	private static float look = 0.5f;
+	/** Доворот щита в отведённой руке (градусы, для левой руки) — чтобы стоял ровно, а не по наклону руки. */
+	private static Vector3f sideItem = new Vector3f(70.5f, 31.1f, 40.7f);
 
 	private ShieldStanceClient() {}
 
@@ -64,6 +66,7 @@ public final class ShieldStanceClient {
 					if (o.has("front")) front = vec(o.getAsJsonArray("front"));
 					if (o.has("side")) side = vec(o.getAsJsonArray("side"));
 					if (o.has("look")) look = o.get("look").getAsFloat();
+					sideItem = o.has("side_item") ? vec(o.getAsJsonArray("side_item")) : new Vector3f();
 				} catch (Exception e) {
 					TearsOfInk.LOGGER.error("Поза стойки щитов не прочиталась: {}", e.toString());
 				}
@@ -111,6 +114,15 @@ public final class ShieldStanceClient {
 		part.xRot = deg.x * Mth.DEG_TO_RAD + pitch;
 		part.yRot = m * deg.y * Mth.DEG_TO_RAD;
 		part.zRot = m * deg.z * Mth.DEG_TO_RAD;
+	}
+
+	/** ItemInHandLayer: щит в отведённой руке довернуть, чтобы стоял ровно (side_item). */
+	public static void sideItem(LivingEntity e, HumanoidArm arm, com.mojang.blaze3d.vertex.PoseStack pose) {
+		if (!stance(e)) return;
+		HumanoidArm using = e.getUsedItemHand() == net.minecraft.world.InteractionHand.MAIN_HAND ? e.getMainArm() : e.getMainArm().getOpposite();
+		if (arm == using) return;
+		float m = arm == HumanoidArm.LEFT ? 1 : -1; // числа заданы для левой руки
+		pose.mulPose(new org.joml.Quaternionf().rotationXYZ(sideItem.x * Mth.DEG_TO_RAD, m * sideItem.y * Mth.DEG_TO_RAD, m * sideItem.z * Mth.DEG_TO_RAD));
 	}
 
 	/** Свечение щита в руке: щиты Души парой светятся в темноте, ярче с зарядом. */

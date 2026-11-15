@@ -33,6 +33,7 @@ public abstract class ItemInHandLayerMixin {
 	private void tearsofink$wrist(LivingEntity entity, ItemStack stack, ItemDisplayContext context, HumanoidArm arm, PoseStack pose,
 								  MultiBufferSource buffers, int light, CallbackInfo ci) {
 		ThirdPerson.wrist(entity, arm, pose);
+		com.tarkrakov.tearsofink.client.shield.ShieldStanceClient.sideItem(entity, arm, pose);
 	}
 
 	/** Щиты Души парой светятся в темноте (ярче с зарядом). */
