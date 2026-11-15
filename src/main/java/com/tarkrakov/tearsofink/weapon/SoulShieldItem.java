@@ -22,8 +22,18 @@ import java.util.function.Supplier;
 public class SoulShieldItem extends ShieldItem implements AbilityWeapon {
 	private final Supplier<Skill> ability;
 
+	/** Бастион (два щита): урон удара щитом (итого с кулаком 5) и скорость атаки (1,0 — медленно и крепко). */
+	public static final double BASH_DAMAGE = 4, BASH_SPEED = -3.0;
+
 	public SoulShieldItem(Supplier<Skill> ability, Properties properties) {
-		super(properties);
+		super(properties.attributes(net.minecraft.world.item.component.ItemAttributeModifiers.builder()
+				.add(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE, new net.minecraft.world.entity.ai.attributes.AttributeModifier(
+						BASE_ATTACK_DAMAGE_ID, BASH_DAMAGE, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE),
+						net.minecraft.world.entity.EquipmentSlotGroup.MAINHAND)
+				.add(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED, new net.minecraft.world.entity.ai.attributes.AttributeModifier(
+						BASE_ATTACK_SPEED_ID, BASH_SPEED, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE),
+						net.minecraft.world.entity.EquipmentSlotGroup.MAINHAND)
+				.build()));
 		this.ability = ability;
 	}
 

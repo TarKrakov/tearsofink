@@ -20,7 +20,9 @@ public enum Archetype {
 	/** Парящие Тальвары (Кровь): одноручные режущие, удары-танец, переходы клинка разворотом. */
 	TALWAR("talwar"),
 	/** Хищные Дуссаки (Кровь): короткие одноручные тесаки — тычок, разрыв, росчерк; R — парирование с ответом. */
-	DUSSAK("dussak");
+	DUSSAK("dussak"),
+	/** Бастион — удары двумя щитами Души (Путь Души, работает только парой щитов и в Землях): толчок правым, левым, рубящий обоими. */
+	BASTION("bastion");
 
 	public final String id;
 
@@ -38,7 +40,11 @@ public enum Archetype {
 					ModItems.HUNTER_GREATSWORD, EXECUTIONER,
 					ModItems.HUNTER_SABER, SCIMITAR,
 					ModItems.BLOOD_TALVAR, TALWAR,
-					ModItems.BLOOD_DUSSAK, DUSSAK);
+					ModItems.BLOOD_DUSSAK, DUSSAK,
+					ModItems.RAM_SHIELD, BASTION,
+					ModItems.RADIANT_SHIELD, BASTION,
+					ModItems.MERCY_SHIELD, BASTION,
+					ModItems.REPEL_SHIELD, BASTION);
 		}
 		return items;
 	}

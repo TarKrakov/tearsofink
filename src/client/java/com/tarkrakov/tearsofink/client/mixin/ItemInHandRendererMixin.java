@@ -42,6 +42,7 @@ public abstract class ItemInHandRendererMixin {
 	private void tearsofink$ownMotion(AbstractClientPlayer player, float partialTicks, float pitch, InteractionHand hand, float swingProgress,
 									  ItemStack stack, float equippedProgress, PoseStack poseStack, MultiBufferSource buffer, int light, CallbackInfo ci) {
 		if (tearsofink$inner || Archetype.of(stack) == null || (swingProgress == 0 && equippedProgress == 0)) return;
+		if (Archetype.of(stack) == Archetype.BASTION && !com.tarkrakov.tearsofink.weapon.combat.Combat.bastion(player)) return; // один щит — по-ванильному
 		if (player.isUsingItem() && player.getUsedItemHand() == hand) return; // своё использование (если будет) — по-ванильному
 		var gm = net.minecraft.client.Minecraft.getInstance().gameMode;
 		if (hand == InteractionHand.MAIN_HAND && gm != null && gm.isDestroying()) return; // копает — ванильный мах «палкой-копалкой»

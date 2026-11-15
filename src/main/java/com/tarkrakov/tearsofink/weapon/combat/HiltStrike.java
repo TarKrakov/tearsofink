@@ -64,6 +64,7 @@ public final class HiltStrike {
 		if (hand != InteractionHand.MAIN_HAND || p.getMainHandItem() != stack) return false;
 		if (!ModDimensions.isLands(p.level()) || p.isSpectator()) return false;
 		if (Archetype.of(stack) == null || InkGreatswordItem.twoHanded(stack)) return false;
+		if (stack.getItem() instanceof com.tarkrakov.tearsofink.weapon.SoulShieldItem) return false;
 		if (!p.getOffhandItem().isEmpty()) return false;
 		return !aimsAtBlock(p);
 	}

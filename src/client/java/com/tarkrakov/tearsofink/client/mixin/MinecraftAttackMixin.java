@@ -25,6 +25,7 @@ public abstract class MinecraftAttackMixin {
 	@Inject(method = "startAttack", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$comboSwing(CallbackInfoReturnable<Boolean> cir) {
 		if (player == null || player.isSpectator() || Archetype.of(player.getMainHandItem()) == null) return;
+		if (Archetype.of(player.getMainHandItem()) == Archetype.BASTION && !com.tarkrakov.tearsofink.weapon.combat.Combat.bastion(player)) return;
 		CombatClient.requestSwing();
 		cir.setReturnValue(false);
 	}
@@ -32,6 +33,7 @@ public abstract class MinecraftAttackMixin {
 	@Inject(method = "continueAttack", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$holdToMine(boolean leftClick, CallbackInfo ci) {
 		if (!leftClick || player == null || Archetype.of(player.getMainHandItem()) == null) return;
+		if (Archetype.of(player.getMainHandItem()) == Archetype.BASTION && !com.tarkrakov.tearsofink.weapon.combat.Combat.bastion(player)) return;
 		if (CombatClient.attackHeld() < CombatClient.MINING_HOLD) ci.cancel();
 	}
 }

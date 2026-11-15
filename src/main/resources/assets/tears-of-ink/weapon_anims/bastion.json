@@ -1,0 +1,144 @@
+{
+  "_comment": "Бастион — удары двумя щитами Души (ЛКМ, только парой и в Землях). Числа — как в остальных weapon_anims: rotation [наклон, поворот, крен], translation [вправо, вверх, к тебе], от обычной стойки. bash — толчок плоскостью щита (правым; левой рукой — то же зеркально), slam — рубящий сверху кромками обоих. Заглушка Claude — крути сам: Ctrl+F9 → F3+T.",
+  "third": {
+    "reach": 1.3,
+    "lead": 0.3,
+    "body": 0.3,
+    "look": 0.6
+  },
+  "animations": {
+    "bash": {
+      "length": 0.7,
+      "hold": 0.25,
+      "return": 0.3,
+      "impact": 0.18,
+      "smooth": true,
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.1,
+          "rotation": [
+            8,
+            -10,
+            0
+          ],
+          "translation": [
+            2,
+            -1,
+            4
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.18,
+          "rotation": [
+            -6,
+            15,
+            0
+          ],
+          "translation": [
+            -4,
+            1,
+            -9
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.26,
+          "rotation": [
+            -4,
+            14,
+            0
+          ],
+          "translation": [
+            -4,
+            1,
+            -8
+          ],
+          "ease": "linear"
+        }
+      ]
+    },
+    "slam": {
+      "length": 0.9,
+      "hold": 0.25,
+      "return": 0.35,
+      "impact": 0.3,
+      "smooth": true,
+      "third": {
+        "mirror": true
+      },
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.16,
+          "rotation": [
+            50,
+            -85,
+            0
+          ],
+          "translation": [
+            0,
+            9,
+            3
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -55,
+            -85,
+            0
+          ],
+          "translation": [
+            -2,
+            -5,
+            -9
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.4,
+          "rotation": [
+            -57,
+            -85,
+            0
+          ],
+          "translation": [
+            -2,
+            -6,
+            -8
+          ],
+          "ease": "linear"
+        }
+      ]
+    }
+  }
+}

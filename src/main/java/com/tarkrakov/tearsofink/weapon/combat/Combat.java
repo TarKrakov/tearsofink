@@ -116,7 +116,8 @@ public final class Combat {
 	 */
 	public static boolean interrupt(ServerPlayer p, int stagger) {
 		State s = STATES.get(p.getUUID());
-		boolean using = p.isUsingItem() && Archetype.of(p.getUseItem()) != null;
+		boolean using = p.isUsingItem() && Archetype.of(p.getUseItem()) != null
+				&& !(p.getUseItem().getItem() instanceof com.tarkrakov.tearsofink.weapon.SoulShieldItem); // стойку щитов эфес не сбивает
 		if ((s == null || (s.hitAt < 0 && s.extra.isEmpty())) && !using) return false;
 		if (s != null) {
 			s.hitAt = -1;
@@ -128,6 +129,11 @@ public final class Combat {
 		}
 		if (using) p.stopUsingItem();
 		return true;
+	}
+
+	/** Бастион работает только с двумя щитами Души и в Чернильных землях. */
+	public static boolean bastion(net.minecraft.world.entity.player.Player p) {
+		return com.tarkrakov.tearsofink.weapon.shield.ShieldStance.dual(p) && com.tarkrakov.tearsofink.world.ModDimensions.isLands(p.level());
 	}
 
 	/** Сейчас идёт удар или приём (клинок занят). */
@@ -142,6 +148,7 @@ public final class Combat {
 		ItemStack weapon = p.getMainHandItem();
 		Archetype a = Archetype.of(weapon);
 		if (a == null) return;
+		if (a == Archetype.BASTION && !bastion(p)) return; // щит один или вне Земель — обычный удар
 		State s = state(p);
 		long now = p.serverLevel().getGameTime();
 		Combos.Combo combo = Combos.get(a);
