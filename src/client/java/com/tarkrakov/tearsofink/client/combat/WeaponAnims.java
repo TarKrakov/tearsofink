@@ -51,8 +51,9 @@ public final class WeaponAnims {
 	 * сводятся в центр и расходятся в края); no_cross — руки не заходят за середину (не перекрещиваются);
 	 * source — третье лицо считается по другому движению (первое лицо правят, а третье остаётся как было).
 	 */
-	public record ThirdFix(float wristHold, boolean mirror, float center, float lateral, boolean noCross, @org.jetbrains.annotations.Nullable String source) {
-		static final ThirdFix NONE = new ThirdFix(-1, false, 1, 1, false, null);
+	public record ThirdFix(float wristHold, boolean mirror, float center, float lateral, boolean noCross, @org.jetbrains.annotations.Nullable String source,
+						   float pushRight, float pushLeft, float turn) {
+		static final ThirdFix NONE = new ThirdFix(-1, false, 1, 1, false, null, 0, 0, 0);
 	}
 
 	/** Третье лицо архетипа (поле "third" в файле движений): как поза первого лица переводится в руку Стива. */
@@ -173,7 +174,15 @@ public final class WeaponAnims {
 	private static ThirdFix fix(JsonObject t) {
 		return new ThirdFix(f(t, "wrist_hold", -1), t.has("mirror") && t.get("mirror").getAsBoolean(), f(t, "center", 1),
 				f(t, "lateral", 1), t.has("no_cross") && t.get("no_cross").getAsBoolean(),
-				t.has("source") ? t.get("source").getAsString() : null);
+				t.has("source") ? t.get("source").getAsString() : null,
+				push(t, 0), push(t, 1), f(t, "turn", 0));
+	}
+
+	/** "push": 3 — обеим рукам; "push": [правая, левая] — по-разному. */
+	private static float push(JsonObject t, int i) {
+		if (!t.has("push")) return 0;
+		com.google.gson.JsonElement e = t.get("push");
+		return e.isJsonArray() ? e.getAsJsonArray().get(i).getAsFloat() : e.getAsFloat();
 	}
 
 	private static float f(JsonObject o, String key, float def) {

@@ -259,8 +259,9 @@ public final class ThirdPerson {
 		float[] aw = bw == b ? a : angles(look.transform(new Vector3f(bw.dir)));
 		Quaternionf armQ = new Quaternionf().rotationY(aw[1]).rotateX(aw[0]);
 		Quaternionf wrist = new Quaternionf(armQ).mul(LAYER).conjugate()
-				.mul(look).mul(bw.item).mul(rot(tp, m).conjugate());
-		return new Solved(a[0], a[1], wrist, at(ax[0], tp, m), a[1] * tune.body(), b.hand, tune.push() / 16f);
+				.mul(look).mul(new Quaternionf().rotationY(-m * fix.turn() * Mth.DEG_TO_RAD)) // turn — к центру
+				.mul(bw.item).mul(rot(tp, m).conjugate());
+		return new Solved(a[0], a[1], wrist, at(ax[0], tp, m), a[1] * tune.body(), b.hand, (tune.push() + (left ? fix.pushLeft() : fix.pushRight())) / 16f);
 	}
 
 	/** Поза первого лица в пространстве модели (до поворота головы): куда тянется рука и как лежит оружие. */

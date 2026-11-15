@@ -352,6 +352,7 @@ def base4(disp, m, clip, t, tune, fix, grip, handle, tip):
     return d, item, h
 
 SX = np.diag([-1.,1,1])
+TURN_SIGN = -1  # turn: + — передние края щитов к центру
 def angles(d):
     x = -math.acos(max(-1,min(1,d[1])))
     y = math.atan2(-d[0], -d[2]) if abs(math.sin(x)) > 1e-3 else 0
@@ -369,5 +370,5 @@ def solve4(disp, m, clip, t, tune, fix, grip, handle, tip):
         b = (SX@b[0], SX@b[1]@SX@RY, SX@b[2]); bw = (SX@bw[0], SX@bw[1]@SX@RY, SX@bw[2])
     x, y = angles(b[0]); xw, yw = angles(bw[0])
     A = Ry(yw) @ Rx(xw)
-    W = np.linalg.inv(A @ C) @ bw[1] @ np.linalg.inv(dR(tp, m))
+    W = np.linalg.inv(A @ C) @ Ry(D(TURN_SIGN*m*fix.get('turn', 0))) @ bw[1] @ np.linalg.inv(dR(tp, m))  # turn — к центру
     return x, y, W, b[2]
