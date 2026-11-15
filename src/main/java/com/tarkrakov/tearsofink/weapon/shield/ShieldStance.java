@@ -55,6 +55,10 @@ public final class ShieldStance {
 
 	/** Заряд щитов у игрока (сервер). */
 	private static final Map<UUID, Integer> CHARGE = new HashMap<>();
+	/** Сколько урона щиты поглотили в этой стойке (сгорает вместе с зарядом). */
+	private static final Map<UUID, Float> ABSORBED = new HashMap<>();
+	/** До какого тика открыт ответ после своевременного блока. */
+	private static final Map<UUID, Long> RIPOSTE = new HashMap<>();
 	/** Когда у игрока последний раз звучал хор. */
 	private static final Map<UUID, Long> CHOIR = new HashMap<>();
 	/** Отражённые снаряды — развернуть на следующем тике (игра сама гасит их после блока). */
@@ -135,6 +139,7 @@ public final class ShieldStance {
 			InkPowers.update(p, d.withSoul(d.soul() - cost));
 		}
 		setCharge(p, Math.min(ShieldTuning.CHARGE_MAX, charge(p) + 1));
+		ABSORBED.merge(p.getUUID(), amount, Float::sum);
 		if (charge(p) >= ShieldTuning.CHARGE_MAX) { // полный заряд — щиты поют
 			long now = level.getGameTime();
 			Long last = CHOIR.get(p.getUUID());
@@ -147,6 +152,7 @@ public final class ShieldStance {
 		level.playSound(null, p.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1f, perfect ? 1.4f : 0.9f);
 		Entity by = source.getEntity(), direct = source.getDirectEntity();
 		if (perfect) {
+			RIPOSTE.put(p.getUUID(), level.getGameTime() + ShieldTuning.RIPOSTE_TICKS); // ответ открыт
 			level.playSound(null, p.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1f, 1.6f);
 			level.sendParticles(ParticleTypes.END_ROD, p.getX() + look.x * 0.8, p.getY() + 1.2, p.getZ() + look.z * 0.8, 10, 0.3, 0.3, 0.3, 0.05);
 			if (direct instanceof Projectile proj) {
@@ -159,6 +165,24 @@ public final class ShieldStance {
 		// Скала: щитоносец упирается в стойку и отскакивает оглушённым
 		if (by instanceof PaleShieldbearerEntity sb && sb.chargeTicks() >= 0) sb.interrupt(p, ShieldTuning.PERFECT_STAGGER * 2);
 		return false;
+	}
+
+	/** Сильнее против сильных: множитель урона Бастиона и выброса по этой цели. */
+	public static float strongMult(LivingEntity t) {
+		return t.getMaxHealth() >= ShieldTuning.STRONG_HP ? ShieldTuning.STRONG_MULT : 1f;
+	}
+
+	/** Ответ после своевременного блока: открыт — забрать (один удар). */
+	public static boolean takeRiposte(ServerPlayer p) {
+		Long until = RIPOSTE.remove(p.getUUID());
+		return until != null && until >= p.serverLevel().getGameTime();
+	}
+
+	/** Сбить цель ответом (для удара Бастиона). */
+	public static void riposteHit(ServerPlayer p, LivingEntity t) {
+		stagger(p, t, ShieldTuning.PERFECT_STAGGER, 0.6f);
+		p.serverLevel().playSound(null, t.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.4f, 1.8f);
+		p.serverLevel().sendParticles(ParticleTypes.END_ROD, t.getX(), t.getY() + t.getBbHeight() * 0.6, t.getZ(), 10, 0.3, 0.3, 0.3, 0.08);
 	}
 
 	/** Сбить нападающего: замах — сорвать, иначе — отбросить и замедлить. */
@@ -185,18 +209,21 @@ public final class ShieldStance {
 	public static void release(ServerPlayer p) {
 		int c = charge(p);
 		if (c <= 0 || !ModDimensions.isLands(p.level()) || !dual(p)) return;
+		float absorbed = ABSORBED.getOrDefault(p.getUUID(), 0f);
 		setCharge(p, 0);
 		ServerLevel level = p.serverLevel();
 		Vec3 look = p.getLookAngle().multiply(1, 0, 1);
 		look = look.lengthSqr() < 1.0e-4 ? new Vec3(0, 0, 1) : look.normalize();
-		float dmg = ShieldTuning.BURST_DAMAGE + ShieldTuning.BURST_DAMAGE_PER_CHARGE * c;
+		// превозмогание: чем сильнее били — тем сильнее ответ
+		float dmg = ShieldTuning.BURST_DAMAGE + ShieldTuning.BURST_DAMAGE_PER_CHARGE * c
+				+ Math.min(ShieldTuning.ABSORB_BURST_CAP, absorbed * ShieldTuning.ABSORB_TO_BURST);
 		float knock = ShieldTuning.BURST_KNOCKBACK + ShieldTuning.BURST_KNOCKBACK_PER_CHARGE * c;
 		double r = ShieldTuning.BURST_RANGE;
 		for (LivingEntity t : level.getEntitiesOfClass(LivingEntity.class, p.getBoundingBox().inflate(r), e -> e != p && e.isAlive())) {
 			Vec3 d = t.position().subtract(p.position()).multiply(1, 0, 1);
 			if (d.length() > r + t.getBbWidth() / 2) continue;
 			if (d.lengthSqr() > 1.0e-4 && Math.toDegrees(Math.acos(Mth.clamp(look.dot(d.normalize()), -1, 1))) > ShieldTuning.BURST_HALF_ANGLE) continue;
-			if (t.hurt(p.damageSources().playerAttack(p), dmg)) t.invulnerableTime = 0;
+			if (t.hurt(p.damageSources().playerAttack(p), dmg * strongMult(t))) t.invulnerableTime = 0;
 			stagger(p, t, ShieldTuning.BURST_STAGGER, knock);
 		}
 		for (int i = 0; i < 8 + c * 6; i++) {
@@ -219,7 +246,10 @@ public final class ShieldStance {
 
 	private static void setCharge(ServerPlayer p, int c) {
 		Integer old = CHARGE.get(p.getUUID());
-		if (c <= 0) CHARGE.remove(p.getUUID());
+		if (c <= 0) {
+			CHARGE.remove(p.getUUID());
+			ABSORBED.remove(p.getUUID());
+		}
 		else CHARGE.put(p.getUUID(), c);
 		if ((old == null ? 0 : old) == c) return;
 		Glow msg = new Glow(p.getId(), c);
