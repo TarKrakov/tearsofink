@@ -41,6 +41,8 @@ public final class ShieldStanceClient {
 	private static float look = 0.5f;
 	/** Доворот щита в отведённой руке (градусы, для левой руки) — чтобы стоял ровно, а не по наклону руки. */
 	private static Vector3f sideItem = new Vector3f(70.5f, 31.1f, 40.7f);
+	/** Сдвиг щита в отведённой руке после доворота (пиксели; посчитан так, чтобы щит поднимался ровно вверх). */
+	private static Vector3f sideOffset = new Vector3f(0, 4.6f, 4.6f);
 
 	private ShieldStanceClient() {}
 
@@ -67,6 +69,7 @@ public final class ShieldStanceClient {
 					if (o.has("side")) side = vec(o.getAsJsonArray("side"));
 					if (o.has("look")) look = o.get("look").getAsFloat();
 					sideItem = o.has("side_item") ? vec(o.getAsJsonArray("side_item")) : new Vector3f();
+					sideOffset = o.has("side_offset") ? vec(o.getAsJsonArray("side_offset")) : new Vector3f();
 				} catch (Exception e) {
 					TearsOfInk.LOGGER.error("Поза стойки щитов не прочиталась: {}", e.toString());
 				}
@@ -123,6 +126,7 @@ public final class ShieldStanceClient {
 		if (arm == using) return;
 		float m = arm == HumanoidArm.LEFT ? 1 : -1; // числа заданы для левой руки
 		pose.mulPose(new org.joml.Quaternionf().rotationXYZ(sideItem.x * Mth.DEG_TO_RAD, m * sideItem.y * Mth.DEG_TO_RAD, m * sideItem.z * Mth.DEG_TO_RAD));
+		pose.translate(m * sideOffset.x / 16f, sideOffset.y / 16f, sideOffset.z / 16f);
 	}
 
 	/** Свечение щита в руке: щиты Души парой светятся в темноте, ярче с зарядом. */
