@@ -229,45 +229,85 @@ public final class ThirdPerson {
 		float m = left ? -1 : 1;
 		Archetype archetype = Archetype.of(stack);
 		WeaponAnims.ThirdTune tune = WeaponAnims.thirdTune(archetype);
+		WeaponAnims.ThirdFix fix = clip.third();
 		BakedModel baked = Minecraft.getInstance().getItemRenderer().getModel(stack, entity.level(), entity, entity.getId());
 		ItemTransforms tr = baked.getTransforms();
-		ItemTransform fp = tr.getTransform(left ? ItemDisplayContext.FIRST_PERSON_LEFT_HAND : ItemDisplayContext.FIRST_PERSON_RIGHT_HAND);
 		ItemTransform tp = tr.getTransform(left ? ItemDisplayContext.THIRD_PERSON_LEFT_HAND : ItemDisplayContext.THIRD_PERSON_RIGHT_HAND);
 		Vector3f grip = WeaponAnims.grip(archetype);
 		Vector3f[] ax = axis(baked, tr.getTransform(ItemDisplayContext.FIRST_PERSON_RIGHT_HAND), grip);
+		// mirror: левая рука считается как правая и отражается — парный удар синхронно
+		boolean mirror = fix.mirror() && left;
+		HumanoidArm calc = mirror ? HumanoidArm.RIGHT : side;
+		Base b = base(tr, calc, clip, t, tune, fix, grip, ax);
+		Base bw = fix.wristHold() >= 0 ? base(tr, calc, clip, fix.wristHold(), tune, fix, grip, ax) : b;
+		if (mirror) {
+			b = b.mirrored();
+			bw = bw.mirrored();
+		}
+		Quaternionf look = look(model, tune.look());
+		float[] a = angles(look.transform(new Vector3f(b.dir)));
+		// кисть: оружие от третьего лица лежит как от первого (wrist_hold — как в позе на той секунде, относительно руки)
+		float[] aw = bw == b ? a : angles(look.transform(new Vector3f(bw.dir)));
+		Quaternionf armQ = new Quaternionf().rotationY(aw[1]).rotateX(aw[0]);
+		Quaternionf wrist = new Quaternionf(armQ).mul(LAYER).conjugate()
+				.mul(look).mul(bw.item).mul(rot(tp, m).conjugate());
+		return new Solved(a[0], a[1], wrist, at(ax[0], tp, m), a[1] * tune.body(), b.hand);
+	}
 
+	/** Поза первого лица в пространстве модели (до поворота головы): куда тянется рука и как лежит оружие. */
+	private record Base(Vector3f dir, Quaternionf item, Vector3f hand) {
+		Base mirrored() {
+			// отражение по x; модель оружия плоская — переворот вокруг её оси y возвращает её «лицом», без выворота
+			return new Base(new Vector3f(-dir.x, dir.y, dir.z), new Quaternionf(item.x, -item.y, -item.z, item.w).rotateY(Mth.PI),
+					new Vector3f(-hand.x, hand.y, hand.z));
+		}
+	}
+
+	private static Base base(ItemTransforms tr, HumanoidArm side, WeaponAnims.Clip clip, float t, WeaponAnims.ThirdTune tune,
+							 WeaponAnims.ThirdFix fix, @Nullable Vector3f grip, Vector3f[] ax) {
+		boolean left = side == HumanoidArm.LEFT;
+		float m = left ? -1 : 1;
+		ItemTransform fp = tr.getTransform(left ? ItemDisplayContext.FIRST_PERSON_LEFT_HAND : ItemDisplayContext.FIRST_PERSON_RIGHT_HAND);
 		WeaponAnims.Key k = WeaponAnims.sample(clip, t);
 		Quaternionf rel = new Quaternionf().rotationXYZ(k.rot().x * Mth.DEG_TO_RAD, m * k.rot().y * Mth.DEG_TO_RAD, m * k.rot().z * Mth.DEG_TO_RAD);
-		Quaternionf ofp = new Quaternionf(rel).mul(rot(fp, m));
-		Vector3f o = new Vector3f(m * 0.56f + m * k.pos().x / 16f, -0.52f + k.pos().y / 16f, -0.72f + k.pos().z / 16f);
-		Vector3f hand, tip;
+		Vector3f[] ht = handTip(fp, m, rel, new Vector3f(m * k.pos().x / 16f, k.pos().y / 16f, k.pos().z / 16f), grip, ax);
+		Vector3f target = new Vector3f(ht[1]).sub(ht[0]).mul(tune.lead()).add(ht[0]);
+		if (fix.lateral() != 1) {
+			Vector3f[] r = handTip(fp, m, new Quaternionf(), new Vector3f(), grip, ax);
+			float restX = r[0].x + (r[1].x - r[0].x) * tune.lead();
+			target.x = restX + fix.lateral() * (target.x - restX);
+		}
+		target.x *= fix.center();
+		if (fix.noCross()) target.x = m * Math.max(m * target.x, 0.08f);
+		Vector3f v = new Vector3f(target).sub(m * 5 / 16f, -0.245f, 0);
+		v.mul(tune.reach(), tune.reach(), 1).normalize();
+		Vector3f dir = new Vector3f(-v.x, -v.y, v.z);
+		Quaternionf item = new Quaternionf(CAM_TO_MODEL).mul(rel).mul(rot(fp, m));
+		return new Base(dir, item, ht[0]);
+	}
+
+	/** [рукоять, кончик] от первого лица (пространство камеры). */
+	private static Vector3f[] handTip(ItemTransform fp, float m, Quaternionf rel, Vector3f pos, @Nullable Vector3f grip, Vector3f[] ax) {
+		Vector3f o = new Vector3f(m * 0.56f, -0.52f, -0.72f).add(pos);
 		if (grip != null) {
 			Vector3f g = at(grip, fp, m);
-			hand = rel.transform(at(ax[0], fp, m).sub(g)).add(g).add(o);
-			tip = rel.transform(at(ax[1], fp, m).sub(g)).add(g).add(o);
-		} else {
-			hand = rel.transform(at(ax[0], fp, m)).add(o);
-			tip = rel.transform(at(ax[1], fp, m)).add(o);
+			return new Vector3f[]{rel.transform(at(ax[0], fp, m).sub(g)).add(g).add(o), rel.transform(at(ax[1], fp, m).sub(g)).add(g).add(o)};
 		}
-		Vector3f target = new Vector3f(tip).sub(hand).mul(tune.lead()).add(hand);
-		float[] a = aim(model, target, m, tune.reach(), tune.look());
-		Quaternionf armQ = new Quaternionf().rotationY(a[1]).rotateX(a[0]);
-		// кисть: оружие от третьего лица должно лежать как от первого
-		Quaternionf wrist = new Quaternionf(armQ).mul(LAYER).conjugate()
-				.mul(look(model, tune.look())).mul(CAM_TO_MODEL).mul(ofp).mul(rot(tp, m).conjugate());
-		float body = a[1] * tune.body();
-		return new Solved(a[0], a[1], wrist, at(ax[0], tp, m), body, hand);
+		return new Vector3f[]{rel.transform(at(ax[0], fp, m)).add(o), rel.transform(at(ax[1], fp, m)).add(o)};
+	}
+
+	/** Углы руки (x, y), чтобы она смотрела по направлению d (пространство модели). */
+	private static float[] angles(Vector3f d) {
+		float x = -(float) Math.acos(Mth.clamp(d.y, -1, 1));
+		float y = Math.abs(Mth.sin(x)) > 1e-3f ? (float) Mth.atan2(-d.x, -d.z) : 0;
+		return new float[]{x, y};
 	}
 
 	/** Углы руки (x, y), чтобы она смотрела из плеча на точку p (пространство камеры, от глаз). */
 	private static float[] aim(HumanoidModel<?> model, Vector3f p, float m, float reach, float look) {
 		Vector3f v = new Vector3f(p).sub(m * 5 / 16f, -0.245f, 0);
 		v.mul(reach, reach, 1).normalize();
-		Vector3f d = new Vector3f(-v.x, -v.y, v.z);
-		look(model, look).transform(d);
-		float x = -(float) Math.acos(Mth.clamp(d.y, -1, 1));
-		float y = Math.abs(Mth.sin(x)) > 1e-3f ? (float) Mth.atan2(-d.x, -d.z) : 0;
-		return new float[]{x, y};
+		return angles(look(model, look).transform(new Vector3f(-v.x, -v.y, v.z)));
 	}
 
 	/** Куда смотрит голова относительно корпуса: рука следует за взглядом. */

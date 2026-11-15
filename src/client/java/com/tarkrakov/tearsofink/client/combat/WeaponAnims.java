@@ -41,7 +41,18 @@ public final class WeaponAnims {
 	 * hold — сколько секунд клинок стоит в последней позе (следующий удар начнётся прямо из неё),
 	 * back — за сколько потом возвращается в стойку. Без hold движение идёт к стойке к моменту length.
 	 */
-	public record Clip(float length, boolean absolute, List<Key> keys, float hold, float back, float impact, boolean smooth) {}
+	public record Clip(float length, boolean absolute, List<Key> keys, float hold, float back, float impact, boolean smooth, ThirdFix third) {}
+
+	/**
+	 * Поправки третьего лица для одного движения (блок "third" внутри движения):
+	 * wrist_hold — клинок в руке не крутится: поворот кисти берётся из позы на этой секунде движения (0 — с начала) и держится,
+	 * клинок просто следует за рукой; mirror — левая рука повторяет правую зеркально (парные удары синхронно);
+	 * center — руки ближе к середине (0.5 — вдвое); lateral — множитель движения рук влево-вправо (−1 — наоборот:
+	 * сводятся в центр и расходятся в края); no_cross — руки не заходят за середину (не перекрещиваются).
+	 */
+	public record ThirdFix(float wristHold, boolean mirror, float center, float lateral, boolean noCross) {
+		static final ThirdFix NONE = new ThirdFix(-1, false, 1, 1, false);
+	}
 
 	/** Третье лицо архетипа (поле "third" в файле движений): как поза первого лица переводится в руку Стива. */
 	public record ThirdTune(float reach, float lead, float body, float look) {
@@ -151,9 +162,15 @@ public final class WeaponAnims {
 			out.put(e.getKey(), new Clip(o.get("length").getAsFloat(), absolute, keys,
 					o.has("hold") ? o.get("hold").getAsFloat() : 0f, o.has("return") ? o.get("return").getAsFloat() : 0.3f,
 					o.has("impact") ? o.get("impact").getAsFloat() : -1f,
-					o.has("smooth") && o.get("smooth").getAsBoolean()));
+					o.has("smooth") && o.get("smooth").getAsBoolean(),
+					o.has("third") ? fix(o.getAsJsonObject("third")) : ThirdFix.NONE));
 		}
 		return out;
+	}
+
+	private static ThirdFix fix(JsonObject t) {
+		return new ThirdFix(f(t, "wrist_hold", -1), t.has("mirror") && t.get("mirror").getAsBoolean(), f(t, "center", 1),
+				f(t, "lateral", 1), t.has("no_cross") && t.get("no_cross").getAsBoolean());
 	}
 
 	private static float f(JsonObject o, String key, float def) {
