@@ -9,4 +9,9 @@ public interface Interruptible {
 	 * false — замаха не было (тогда просто лёгкое отбрасывание).
 	 */
 	boolean interrupt(LivingEntity by, int stagger);
+
+	/** Замахивается прямо сейчас (удар ещё не дошёл) — по этому охотник с Дуссаком решает, встать ли в стойку. */
+	default boolean windingUp() {
+		return false;
+	}
 }

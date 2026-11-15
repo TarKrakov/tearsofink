@@ -120,6 +120,11 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 		return true;
 	}
 
+	@Override
+	public boolean windingUp() {
+		return (chargeTicks >= 0 && chargeTicks < SquadTuning.CHARGE_WINDUP + SquadTuning.CHARGE_RUN) || (bashTicks >= 0 && bashTicks < SquadTuning.BASH_HIT_TICK);
+	}
+
 	boolean busy() {
 		return bashTicks >= 0 || chargeTicks >= 0 || stun > 0;
 	}

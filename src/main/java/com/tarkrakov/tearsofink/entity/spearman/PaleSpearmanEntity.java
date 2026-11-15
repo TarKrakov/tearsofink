@@ -97,6 +97,11 @@ public class PaleSpearmanEntity extends com.tarkrakov.tearsofink.entity.patrol.P
 		return true;
 	}
 
+	@Override
+	public boolean windingUp() {
+		return thrustTicks >= 0 && thrustTicks < SpearmanTuning.THRUST_HIT_TICK;
+	}
+
 	/** Начать тычок (сервер). */
 	void startThrust() {
 		thrustTicks = 0;

@@ -389,6 +389,7 @@ public final class Hunt {
 
 	/** Оружие охотника: один меч / пара одинаковых / клинок + двуручник в левой (правило рук игрока). {правая, левая} */
 	static ItemStack[] loadout(HunterType type, int rank, RandomSource random) {
+		if (type == HunterType.BLOOD) return bloodLoadout(rank, random);
 		HunterWeaponItem great = (HunterWeaponItem) ModItems.HUNTER_GREATSWORD, saber = (HunterWeaponItem) ModItems.HUNTER_SABER;
 		HunterWeaponItem kind = random.nextBoolean() ? great : saber;
 		ItemStack weapon = kind.make(type, rank), offWeapon = ItemStack.EMPTY;
@@ -402,6 +403,23 @@ public final class Hunt {
 			offWeapon = kind.make(type, rank);
 		}
 		return new ItemStack[]{weapon, offWeapon};
+	}
+
+	/** Кровавый охотник — только оружие Крови (веса — HuntTuning.BLOOD_LOADOUT). */
+	static ItemStack[] bloodLoadout(int rank, RandomSource random) {
+		int[] w = HuntTuning.BLOOD_LOADOUT[Math.max(0, Math.min(rank, HuntTuning.BLOOD_LOADOUT.length - 1))];
+		int total = 0;
+		for (int x : w) total += x;
+		int r = random.nextInt(Math.max(1, total)), pick = 0;
+		while (pick < w.length - 1 && r >= w[pick]) r -= w[pick++];
+		ItemStack t = new ItemStack(ModItems.BLOOD_TALVAR), d = new ItemStack(ModItems.BLOOD_DUSSAK);
+		return switch (pick) {
+			case 0 -> new ItemStack[]{t, ItemStack.EMPTY};
+			case 1 -> new ItemStack[]{d, ItemStack.EMPTY};
+			case 2 -> random.nextBoolean() ? new ItemStack[]{t, d} : new ItemStack[]{d, t};
+			case 3 -> new ItemStack[]{t, t.copy()};
+			default -> new ItemStack[]{d, d.copy()};
+		};
 	}
 
 	static PreyPrefix pickPrefix(RandomSource random) {
@@ -841,8 +859,10 @@ public final class Hunt {
 		CompoundTag tag = new CompoundTag();
 		tag.putInt(C_DIFF, difficulty);
 		tag.putString(C_KIND, BuiltInRegistries.ITEM.getKey(weapon.getItem()).toString());
-		tag.putInt(C_LINE, HunterWeaponItem.line(weapon).ordinal());
-		tag.putInt(C_TIER, HunterWeaponItem.tier(weapon));
+		if (weapon.getItem() instanceof HunterWeaponItem) { // у оружия Крови ступеней и линий нет — само по себе
+			tag.putInt(C_LINE, HunterWeaponItem.line(weapon).ordinal());
+			tag.putInt(C_TIER, HunterWeaponItem.tier(weapon));
+		}
 		c.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
 		return c;
 	}
@@ -861,6 +881,7 @@ public final class Hunt {
 		CompoundTag tag = d.copyTag();
 		if (!tag.contains(C_KIND)) return ItemStack.EMPTY;
 		var item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(tag.getString(C_KIND)));
+		if (item instanceof com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem) return new ItemStack(item); // настоящее оружие (Кровь)
 		if (!(item instanceof HunterWeaponItem w)) return ItemStack.EMPTY;
 		return w.make(HunterType.byIndex(tag.getInt(C_LINE)), tag.getInt(C_TIER));
 	}

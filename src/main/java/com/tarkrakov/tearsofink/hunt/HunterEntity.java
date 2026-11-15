@@ -6,6 +6,8 @@ import com.tarkrakov.tearsofink.weapon.WeaponAbilities;
 import com.tarkrakov.tearsofink.weapon.combat.Archetype;
 import com.tarkrakov.tearsofink.weapon.combat.Combat;
 import com.tarkrakov.tearsofink.weapon.combat.Combos;
+import com.tarkrakov.tearsofink.weapon.blood.BloodArcEntity;
+import com.tarkrakov.tearsofink.weapon.blood.BloodTuning;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.particles.ParticleTypes;
@@ -73,7 +75,11 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 	private int swingsSinceSkill, swingsWanted = 2;
 
 	// перезарядки (время, когда снова можно)
-	private long skillReady, offSkillReady, techReady, dashReady;
+	private long skillReady, offSkillReady, techReady, dashReady, parryReady;
+	// Кровь: связка парой Тальваров закончена — добить крестом; по какому замаху уже бросал кубик на парирование
+	private boolean finisher;
+	private int parryRolledFor = -1;
+	private long parryRolledAt = -100;
 
 	// рывок
 	private int dashTicks;
@@ -275,6 +281,7 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 			else getNavigation().stop();
 			return;
 		}
+		if (dashTicks <= 0 && timed.isEmpty() && tryParry(f, dist, now)) return;
 		if (dashTicks > 0 || now < busyUntil) return;
 
 		// стрелок держит дистанцию — догнать рывком (у всех типов)
@@ -291,13 +298,25 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 
 	/** Кровавый: давит; несколько ударов — приём; рывок (не чаще раза в 5 с) — отскочить от удара или догнать. */
 	private void blood(ServerLevel level, LivingEntity f, double dist, boolean fleeing, long now) {
-		if (now >= dashReady) {
-			if (now - lastHurt < 8 && dist < 3) { // ударили вблизи — отскок
+		boolean dualTalwar = dual() && mainArch() == Archetype.TALWAR;
+		if (now - lastHurt < 8 && dist < 3) { // ударили вблизи — отскок; рывок на откате — крест с отскоком (пара Тальваров)
+			if (now >= dashReady) {
 				dash(level, f.position(), -1);
 				return;
 			}
-			if (fleeing && dist > HuntTuning.BLOOD_CHASE) { // убегает — догнать
-				dash(level, f.position(), 1);
+			if (dualTalwar && now >= techReady) {
+				talwarCross(level, f, now);
+				return;
+			}
+		}
+		if (now >= dashReady && fleeing && dist > HuntTuning.BLOOD_CHASE) { // убегает — догнать
+			dash(level, f.position(), 1);
+			return;
+		}
+		if (finisher) { // связка парой Тальваров закончена — добить крестом (навесить кровотечение)
+			finisher = false;
+			if (dualTalwar && now >= techReady && dist < BloodTuning.ARC_RANGE - 1) {
+				talwarCross(level, f, now);
 				return;
 			}
 		}
@@ -380,6 +399,7 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		lastSwing = now;
 		boolean last = step % steps.size() == steps.size() - 1;
 		busyUntil = now + duration + (last ? pause : 2);
+		if (last && dual() && a == Archetype.TALWAR) finisher = true;
 		step = last ? 0 : step + 1;
 		swingsSinceSkill++;
 		timed.add(new Timed(now + combo.scaled(s.hit()), () -> strike(s, 1f)));
@@ -398,6 +418,7 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		if (angle > s.arc() / 2 + 25) return;
 		if (f.hurt(damageSources().mobAttack(this), baseDamage * s.damage() * mult)) {
 			if (s.knockback() > 0) f.knockback(s.knockback(), -to.x, -to.z);
+			com.tarkrakov.tearsofink.weapon.blood.Bleeding.onWeaponHit(this, getMainHandItem(), f);
 			// охотник Шпиля иногда подбивает врага — короткое окно, чтобы отойти
 			if (hunterType() == HunterType.SPIRE && random.nextFloat() < HuntTuning.SPIRE_LAUNCH_CHANCE) {
 				f.push(0, HuntTuning.SPIRE_LAUNCH, 0);
@@ -420,11 +441,84 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 			if (m == Archetype.SCIMITAR && dist < 16) return wave(level, f, now, false);
 			if (m == Archetype.EXECUTIONER && dist < 4) return cleave(level, now, false, 1f);
 		}
+		// Тальвар (в любой руке) — кровавая дуга; Дуссак — стойка парирования (её решает tryParry)
+		if (now >= skillReady && dist < BloodTuning.ARC_RANGE - 1) {
+			if (m == Archetype.TALWAR) return bloodArc(level, f, now, false);
+			if (o == Archetype.TALWAR && m != Archetype.TALWAR) return bloodArc(level, f, now, true);
+		}
 		// клинок в правой, двуручник в левой — приём левой рукой, слабее
 		if (!dual() && o == Archetype.EXECUTIONER && m == Archetype.SCIMITAR && now >= offSkillReady && dist < 4) {
 			return cleave(level, now, true, WeaponAbilities.OFFHAND_TWO_HANDED_POWER);
 		}
 		return false;
+	}
+
+	// ===== Кровь =====
+
+	/** Тальвар (R): кровавая дуга по врагу. Охотник здоровьем не платит. */
+	private boolean bloodArc(ServerLevel level, LivingEntity f, long now, boolean offhand) {
+		Combos.Combo combo = Combos.get(Archetype.TALWAR);
+		level.addFreshEntity(new BloodArcEntity(level, this, flatTo(f), false, BloodTuning.ARC_DAMAGE * skillScale(), BloodTuning.ARC_BLEED).onlyTarget(f));
+		anim(Archetype.TALWAR, (offhand ? "off:" : "") + combo.abilityAnim(), combo.scaled(combo.abilityTicks()), combo.tempo());
+		level.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1f, 1.2f);
+		level.playSound(null, blockPosition(), SoundEvents.HONEY_BLOCK_SLIDE, SoundSource.HOSTILE, 0.8f, 0.6f);
+		skillReady = now + (long) cd(BloodTuning.ARC_COOLDOWN);
+		skillDone(now, combo.scaled(combo.abilityTicks()));
+		return true;
+	}
+
+	/** Пара Тальваров (ПКМ): кровавый крест вперёд и отскок назад. */
+	private void talwarCross(ServerLevel level, LivingEntity f, long now) {
+		Vec3 dir = flatTo(f);
+		level.addFreshEntity(new BloodArcEntity(level, this, dir, true, BloodTuning.CROSS_DAMAGE * skillScale(), BloodTuning.CROSS_BLEED).onlyTarget(f));
+		anim(Archetype.TALWAR, "cross_burst", 14, 1f);
+		anim(Archetype.TALWAR, "off:cross_burst", 14, 1f);
+		setDeltaMovement(-dir.x * BloodTuning.CROSS_BACKSTEP, 0.3, -dir.z * BloodTuning.CROSS_BACKSTEP);
+		hurtMarked = true;
+		level.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1f, 0.8f);
+		level.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.HOSTILE, 1f, 0.7f);
+		techReady = now + (long) cd(BloodTuning.CROSS_COOLDOWN);
+		skillDone(now, 14);
+	}
+
+	/**
+	 * Дуссак: стойка парирования, когда враг замахивается. Шанс — по опыту (HuntTuning.PARRY_CHANCE), бросок — один на замах.
+	 * Враг без видимого замаха (зомби, паук) — бросок реже и с половинным шансом, пока он рядом и целится в охотника.
+	 */
+	private boolean tryParry(LivingEntity f, double dist, long now) {
+		boolean mainD = mainArch() == Archetype.DUSSAK, offD = offArch() == Archetype.DUSSAK;
+		if ((!mainD && !offD) || now < parryReady || dist > HuntTuning.PARRY_RANGE + f.getBbWidth() / 2
+				|| com.tarkrakov.tearsofink.weapon.blood.Parry.active(this)) return false;
+		float chance = HuntTuning.PARRY_CHANCE[rank()];
+		if (f instanceof com.tarkrakov.tearsofink.weapon.combat.Interruptible i && i.windingUp()) {
+			if (parryRolledFor == f.getId() && now - parryRolledAt < 30) return false; // этот замах уже разыгран
+			parryRolledFor = f.getId();
+			parryRolledAt = now;
+		} else {
+			if (!(f instanceof net.minecraft.world.entity.Mob mob) || mob.getTarget() != this || dist > 2.5 + f.getBbWidth() / 2
+					|| now - parryRolledAt < HuntTuning.PARRY_PLAIN_EVERY) return false;
+			parryRolledFor = -1;
+			parryRolledAt = now;
+			chance *= HuntTuning.PARRY_PLAIN;
+		}
+		if (random.nextFloat() >= chance) return false;
+		boolean pair = mainD && offD;
+		com.tarkrakov.tearsofink.weapon.blood.Parry.start(this, pair, !mainD);
+		parryReady = now + (long) cd(pair ? BloodTuning.DOUBLE_PARRY_COOLDOWN : BloodTuning.PARRY_COOLDOWN);
+		busyUntil = Math.max(busyUntil, now + (pair ? BloodTuning.DOUBLE_PARRY_TICKS : BloodTuning.PARRY_TICKS));
+		getNavigation().stop();
+		return true;
+	}
+
+	/** Урон ответа из стойки (как урон оружия у игрока). */
+	public float riposteBase() {
+		return baseDamage;
+	}
+
+	/** Движение клинков у всех, кто видит охотника (для стойки парирования). null — эта рука не двигается. */
+	public void playAnim(Archetype a, @Nullable String main, @Nullable String off, int ticks) {
+		if (main != null) anim(a, main, ticks, 1f);
+		if (off != null) anim(a, "off:" + off, ticks, 1f);
 	}
 
 	private void skillDone(long now, int busy) {

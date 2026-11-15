@@ -35,6 +35,14 @@ public class BloodArcEntity extends Entity {
 	private int bleed;
 	private double travelled;
 	private final Set<UUID> hit = new HashSet<>();
+	/** Задевает только эту цель (дуги охотников бьют только их врага). */
+	@org.jetbrains.annotations.Nullable
+	private UUID only;
+
+	public BloodArcEntity onlyTarget(LivingEntity target) {
+		only = target.getUUID();
+		return this;
+	}
 
 	public BloodArcEntity(EntityType<? extends BloodArcEntity> type, Level level) {
 		super(type, level);
@@ -75,7 +83,7 @@ public class BloodArcEntity extends Entity {
 		Entity owner = ownerId == null ? null : level.getEntity(ownerId);
 		Vec3 side = new Vec3(-v.z, 0, v.x).normalize().scale(BloodTuning.ARC_HALF_WIDTH);
 		AABB box = new AABB(position().subtract(side).add(0, -0.8, 0), next.add(side).add(0, 1.0, 0)).inflate(0.3);
-		for (LivingEntity t : level.getEntitiesOfClass(LivingEntity.class, box, t -> t != owner && t.isAlive())) {
+		for (LivingEntity t : level.getEntitiesOfClass(LivingEntity.class, box, t -> t != owner && t.isAlive() && (only == null || only.equals(t.getUUID())))) {
 			if (!hit.add(t.getUUID())) continue;
 			boolean hurt = owner instanceof ServerPlayer p ? t.hurt(p.damageSources().playerAttack(p), damage)
 					: owner instanceof LivingEntity mob ? t.hurt(level.damageSources().mobAttack(mob), damage)

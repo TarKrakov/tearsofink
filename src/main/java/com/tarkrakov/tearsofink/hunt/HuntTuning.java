@@ -135,4 +135,21 @@ public final class HuntTuning {
 	public static final int CONTRACT_AUDIENCE = 128;
 
 	private HuntTuning() {}
+
+	// ===== Кровь: своё оружие (15 ноя) =====
+	/**
+	 * Пул оружия Кровавого охотника по рангу (веса): [один Тальвар, один Дуссак, Тальвар + Дуссак, пара Тальваров, пара Дуссаков].
+	 * Новичок — без пар; опытный — пара только Тальваров; легендарный — что угодно.
+	 */
+	public static final int[][] BLOOD_LOADOUT = {
+			{40, 40, 20, 0, 0},
+			{30, 30, 20, 20, 0},
+			{20, 20, 20, 20, 20}};
+	/** Шанс встать в стойку парирования, когда враг замахивается: новичок / опытный / легендарный. */
+	public static final float[] PARRY_CHANCE = {0.2f, 0.4f, 0.6f};
+	/** Враг без видимого замаха (зомби, паук): шанс × это, бросок не чаще раза в столько тиков. */
+	public static final float PARRY_PLAIN = 0.5f;
+	public static final int PARRY_PLAIN_EVERY = 20;
+	/** С какого расстояния (блоки до края врага) охотник ещё парирует. */
+	public static final double PARRY_RANGE = 3.5;
 }
