@@ -57,7 +57,7 @@ public final class ThirdPerson {
 	private static final Quaternionf CAM_TO_MODEL = new Quaternionf().rotationZ(Mth.PI);
 
 	/** Поза одной руки: углы руки, поворот кисти и точка, вокруг которой крутится оружие. */
-	private record Pose(float x, float y, float z, Quaternionf wrist, Vector3f pivot) {}
+	private record Pose(float x, float y, float z, Quaternionf wrist, Vector3f pivot, float push) {}
 
 	private static final class Playing {
 		final WeaponAnims.Clip clip;
@@ -146,17 +146,19 @@ public final class ThirdPerson {
 			ModelPart arm = arm(model, side);
 			float x = Mth.lerp(w, arm.xRot, s.x), y = Mth.lerp(w, arm.yRot, s.y), z = Mth.lerp(w, arm.zRot, 0);
 			Quaternionf wrist = new Quaternionf().slerp(s.wrist, w);
+			float push = s.push * w;
 			if (p.from != null && p.real() < BLEND) {
 				float u = WeaponAnims.ease(WeaponAnims.Ease.EASE_OUT, p.real() / BLEND);
 				x = Mth.lerp(u, p.from.x, x);
 				y = Mth.lerp(u, p.from.y, y);
 				z = Mth.lerp(u, p.from.z, z);
 				wrist = new Quaternionf(p.from.wrist).slerp(wrist, u);
+				push = Mth.lerp(u, p.from.push, push);
 			}
 			arm.xRot = x;
 			arm.yRot = y;
 			arm.zRot = z;
-			shown[i] = new Pose(x, y, z, wrist, s.pivot);
+			shown[i] = new Pose(x, y, z, wrist, s.pivot, push);
 			body += s.body * w;
 			if (InkGreatswordItem.twoHanded(stack) && stackIn(entity, side.getOpposite()).isEmpty()) {
 				supportFor = side;
@@ -198,6 +200,7 @@ public final class ThirdPerson {
 		if (shown == null) return;
 		Pose p = shown[side.ordinal()];
 		if (p == null) return;
+		if (p.push != 0) pose.translate(0, 0, -p.push); // third.push — вперёд вдоль руки (щит не насаживается на кулак)
 		pose.translate(p.pivot.x, p.pivot.y, p.pivot.z);
 		pose.mulPose(p.wrist);
 		pose.translate(-p.pivot.x, -p.pivot.y, -p.pivot.z);
@@ -222,7 +225,7 @@ public final class ThirdPerson {
 
 	// ---------------- перевод позы первого лица ----------------
 
-	private record Solved(float x, float y, Quaternionf wrist, Vector3f pivot, float body, Vector3f hand) {}
+	private record Solved(float x, float y, Quaternionf wrist, Vector3f pivot, float body, Vector3f hand, float push) {}
 
 	private static Solved solve(HumanoidModel<?> model, LivingEntity entity, ItemStack stack, HumanoidArm side, WeaponAnims.Clip clip, float t) {
 		boolean left = side == HumanoidArm.LEFT;
@@ -247,8 +250,8 @@ public final class ThirdPerson {
 		Base b = base(tr, calc, pose, t, tune, fix, grip, ax);
 		Base bw = fix.wristHold() >= 0 ? base(tr, calc, pose, fix.wristHold(), tune, fix, grip, ax) : b;
 		if (mirror) {
-			b = b.mirrored();
-			bw = bw.mirrored();
+			b = b.mirrored(!tune.centre());
+			bw = bw.mirrored(!tune.centre());
 		}
 		Quaternionf look = look(model, tune.look());
 		float[] a = angles(look.transform(new Vector3f(b.dir)));
@@ -257,14 +260,17 @@ public final class ThirdPerson {
 		Quaternionf armQ = new Quaternionf().rotationY(aw[1]).rotateX(aw[0]);
 		Quaternionf wrist = new Quaternionf(armQ).mul(LAYER).conjugate()
 				.mul(look).mul(bw.item).mul(rot(tp, m).conjugate());
-		return new Solved(a[0], a[1], wrist, at(ax[0], tp, m), a[1] * tune.body(), b.hand);
+		return new Solved(a[0], a[1], wrist, at(ax[0], tp, m), a[1] * tune.body(), b.hand, tune.push() / 16f);
 	}
 
 	/** Поза первого лица в пространстве модели (до поворота головы): куда тянется рука и как лежит оружие. */
 	private record Base(Vector3f dir, Quaternionf item, Vector3f hand) {
-		Base mirrored() {
-			// отражение по x; модель оружия плоская — переворот вокруг её оси y возвращает её «лицом», без выворота
-			return new Base(new Vector3f(-dir.x, dir.y, dir.z), new Quaternionf(item.x, -item.y, -item.z, item.w).rotateY(Mth.PI),
+		Base mirrored(boolean flip) {
+			// отражение по x; плоский клинок переворачиваем вокруг его оси y — лезвие «лицом», без выворота.
+			// Щит (flip=false) не переворачиваем: иначе он развернётся к врагу тылом.
+			Quaternionf q = new Quaternionf(item.x, -item.y, -item.z, item.w);
+			if (flip) q.rotateY(Mth.PI);
+			return new Base(new Vector3f(-dir.x, dir.y, dir.z), q,
 					new Vector3f(-hand.x, hand.y, hand.z));
 		}
 	}

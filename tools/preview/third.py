@@ -291,8 +291,9 @@ def solve3(rot, pos, fp, tp, grip, handle, tip, tune, m):
     W = np.linalg.inv(A @ C) @ (MF @ Ofp) @ np.linalg.inv(dR(tp, m))
     return x, y, W, P
 
-def tp_item_m(am, tp, handle, W, m):
+def tp_item_m(am, tp, handle, W, m, push=0):
     mm = am @ M4(R=C) @ T([m/16, .125, -.625])
+    if push: mm = mm @ T([0, 0, -push/16])  # third.push — щит вперёд вдоль руки
     if W is not None:
         g = gp(handle, tp, m); mm = mm @ T(g) @ M4(R=W) @ T(-g)
     return mm @ T(dT(tp, m)) @ M4(R=dR(tp, m)) @ M4(s=dS(tp)) @ T([-.5,-.5,-.5])
@@ -364,7 +365,7 @@ def solve4(disp, m, clip, t, tune, fix, grip, handle, tip):
     b = base4(disp, cm, clip, t, tune, fix, grip, handle, tip)
     bw = base4(disp, cm, clip, fix['wrist_hold'], tune, fix, grip, handle, tip) if fix.get('wrist_hold', -1) >= 0 else b
     if mirror:
-        RY = Ry(math.pi)
+        RY = np.eye(3) if fix.get('_keep_face') else Ry(math.pi)  # щиты: без переворота, лицо остаётся наружу
         b = (SX@b[0], SX@b[1]@SX@RY, SX@b[2]); bw = (SX@bw[0], SX@bw[1]@SX@RY, SX@bw[2])
     x, y = angles(b[0]); xw, yw = angles(bw[0])
     A = Ry(yw) @ Rx(xw)

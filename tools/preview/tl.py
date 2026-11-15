@@ -14,7 +14,9 @@ def hand_pose(arch, model, grip, c, t, m, tune):
     rot, pos = sample(c, t); w = weight(c, t)
     src = c.get('third', {}).get('source')
     if src: c = dict(c, keyframes=json.load(open(f'{REPO}/weapon_anims/{arch}.json'))['animations'][src]['keyframes'])  # третье лицо — по другому движению
-    x, y, W, P = solve4(disp, m, c, t, tune, c.get('third', {}), grip, handle, tip)
+    fx = dict(c.get('third', {}))
+    if tune.get('centre'): fx['_keep_face'] = True
+    x, y, W, P = solve4(disp, m, c, t, tune, fx, grip, handle, tip)
     v0 = VANILLA_ARM
     arm = (v0[0]+(x-v0[0])*w, y*w, 0)
     fq = item_quads(model, fp_item_m(fp, rot, pos, grip, m), (190,40,50) if m == 1 else (150,30,90))
@@ -48,7 +50,7 @@ def build(arch, steps, dual, out, fps=20, tune=None):
             arm, W, tp, handle, q, by, P, w = hand_pose(arch, model, grip, c, t, m, tune)
             s = 'R' if m == 1 else 'L'
             arms[s] = arm
-            items[s] = (model, (lambda tp, W, m, handle: (lambda am: tp_item_m(am, tp, handle, W, m)))(tp, W, m, handle))
+            items[s] = (model, (lambda tp, W, m, handle: (lambda am: tp_item_m(am, tp, handle, W, m, tune.get('push', 0))))(tp, W, m, handle))
             fq += q; body += by*tune['body']; labels.append(nm)
             if m == 1: Pmain, wmain = P, w
         if not dual and arch in TWO and Pmain is not None:
