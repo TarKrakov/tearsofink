@@ -60,10 +60,11 @@
       ]
     },
     "attack1": {
-      "length": 0.7,
-      "hold": 0.35,
-      "return": 0.35,
+      "length": 0.8,
+      "hold": 0.3,
+      "return": 0.3,
       "impact": 0.2,
+      "smooth": true,
       "keyframes": [
         {
           "t": 0,
@@ -80,63 +81,62 @@
           "ease": "linear"
         },
         {
-          "t": 0.12,
+          "t": 0.1,
           "rotation": [
-            0,
-            185,
-            35
+            22,
+            -8,
+            -30
           ],
           "translation": [
             5,
-            2,
-            0
+            4,
+            1
           ],
           "ease": "linear"
         },
         {
           "t": 0.2,
           "rotation": [
-            -10,
-            180,
-            -15
+            -15,
+            0,
+            30
           ],
           "translation": [
-            1,
             0,
-            -3
+            1,
+            -4
           ],
           "ease": "linear"
         },
         {
-          "t": 0.3,
+          "t": 0.28,
           "rotation": [
-            -15,
-            175,
-            -50
+            -28,
+            -5,
+            58
           ],
           "translation": [
-            -5,
+            -8,
             -2,
             -3
           ],
           "ease": "linear"
         },
         {
-          "t": 0.42,
+          "t": 0.38,
           "rotation": [
-            -10,
-            188,
-            -60
+            -30,
+            -8,
+            64
           ],
           "translation": [
-            -6,
+            -9,
             -3,
-            0
+            -1
           ],
           "ease": "linear"
         }
-      ],
-      "smooth": true
+      ]
     },
     "attack2": {
       "length": 0.75,
@@ -147,14 +147,14 @@
         {
           "t": 0,
           "rotation": [
-            -10,
-            188,
-            -60
+            -30,
+            -8,
+            64
           ],
           "translation": [
-            -6,
+            -9,
             -3,
-            0
+            -1
           ],
           "ease": "linear"
         },
