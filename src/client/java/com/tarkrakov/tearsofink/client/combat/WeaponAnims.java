@@ -41,7 +41,11 @@ public final class WeaponAnims {
 	 * hold — сколько секунд клинок стоит в последней позе (следующий удар начнётся прямо из неё),
 	 * back — за сколько потом возвращается в стойку. Без hold движение идёт к стойке к моменту length.
 	 */
-	public record Clip(float length, boolean absolute, List<Key> keys, float hold, float back, float impact, ThirdPerson.Track third) {}
+	public record Clip(float length, boolean absolute, List<Key> keys, float hold, float back, float impact, ThirdPerson.Track third,
+			boolean smooth) {}
+
+	/** smooth: сколько секунд новое движение перетекает из позы, где клинок реально был (без скачка между ударами). */
+	private static final float BLEND = 0.12f;
 
 	private static final Map<String, Map<String, Clip>> CLIPS = new HashMap<>();
 
@@ -51,6 +55,7 @@ public final class WeaponAnims {
 		final long start;
 		final float busy; // сколько секунд клинок занят (по серверу, реальное время)
 		final float tempo; // общая скорость архетипа: движение идёт быстрее/медленнее
+		Key from; // smooth: поза, из которой перетекаем в начале
 
 		Playing(Clip clip, Archetype archetype, int busyTicks, float tempo) {
 			this.clip = clip;
@@ -129,7 +134,8 @@ public final class WeaponAnims {
 			out.put(e.getKey(), new Clip(o.get("length").getAsFloat(), absolute, keys,
 					o.has("hold") ? o.get("hold").getAsFloat() : 0f, o.has("return") ? o.get("return").getAsFloat() : 0.3f,
 					o.has("impact") ? o.get("impact").getAsFloat() : -1f,
-					o.has("third") ? ThirdPerson.parse(o.getAsJsonObject("third")) : null));
+					o.has("third") ? ThirdPerson.parse(o.getAsJsonObject("third")) : null,
+					o.has("smooth") && o.get("smooth").getAsBoolean()));
 		}
 		return out;
 	}
@@ -154,7 +160,13 @@ public final class WeaponAnims {
 	public static void play(HumanoidArm arm, Archetype a, String anim, int busyTicks, float tempo) {
 		Map<String, Clip> m = CLIPS.get(a.id);
 		Clip clip = m == null ? null : m.get(anim);
-		ARMS[arm.ordinal()] = clip == null ? null : new Playing(clip, a, busyTicks, tempo);
+		Playing prev = ARMS[arm.ordinal()];
+		Playing next = clip == null ? null : new Playing(clip, a, busyTicks, tempo);
+		if (next != null && clip.smooth() && !clip.absolute() && prev != null && prev.archetype == a && !prev.clip.absolute()
+				&& prev.time() < prev.end()) {
+			next.from = sample(prev, REST);
+		}
+		ARMS[arm.ordinal()] = next;
 	}
 
 	private static float lastT(Clip c) {
@@ -191,6 +203,21 @@ public final class WeaponAnims {
 		Key restKey = c.absolute()
 				? new Key(0, new Vector3f(rest.rotation), new Vector3f(rest.translation).mul(16), new Vector3f(rest.scale), Ease.EASE_IN_OUT)
 				: new Key(0, new Vector3f(), new Vector3f(), new Vector3f(1, 1, 1), Ease.EASE_IN_OUT);
+		Key now = sample(p, restKey);
+		if (p.from != null && p.real() < BLEND) {
+			float u = ease(Ease.EASE_OUT, p.real() / BLEND);
+			now = new Key(0, lerp(p.from.rot(), now.rot(), u), lerp(p.from.pos(), now.pos(), u), lerp(p.from.scale(), now.scale(), u), Ease.LINEAR);
+		}
+		put(c, GRIP.get(p.archetype.id), rest, left, pose, now.rot(), now.pos(), now.scale());
+		return true;
+	}
+
+	private static final Key REST = new Key(0, new Vector3f(), new Vector3f(), new Vector3f(1, 1, 1), Ease.EASE_IN_OUT);
+
+	/** Поза движения в текущий момент. */
+	private static Key sample(Playing p, Key restKey) {
+		Clip c = p.clip;
+		float t = p.time();
 		List<Key> keys = c.keys();
 		if (c.hold() > 0 && !keys.isEmpty() && t >= lastT(c)) {
 			// замер в последней позе, потом мягкий возврат в стойку
@@ -198,26 +225,35 @@ public final class WeaponAnims {
 			float since = t - lastT(c) - c.hold();
 			Key to = since <= 0 ? last : restKey;
 			float u0 = since <= 0 ? 0 : ease(Ease.EASE_IN_OUT, Mth.clamp(since / Math.max(0.01f, c.back()), 0, 1));
-			put(c, GRIP.get(p.archetype.id), rest, left, pose, lerp(last.rot(), to.rot(), u0), lerp(last.pos(), to.pos(), u0), lerp(last.scale(), to.scale(), u0));
-			return true;
+			return new Key(t, lerp(last.rot(), to.rot(), u0), lerp(last.pos(), to.pos(), u0), lerp(last.scale(), to.scale(), u0), Ease.LINEAR);
 		}
-		Key a = restKey, b = null;
-		float ta = 0, tb = c.length();
-		for (Key k : keys) {
-			if (k.t() <= t) {
-				a = k;
-				ta = k.t();
-			} else {
-				b = k;
-				tb = k.t();
-				break;
-			}
-		}
-		if (b == null) b = new Key(c.length(), restKey.rot(), restKey.pos(), restKey.scale(), Ease.EASE_IN_OUT);
-		float u = tb > ta ? Mth.clamp((t - ta) / (tb - ta), 0, 1) : 1;
+		// точки пути: стойка в начале (если первой позы в 0 нет), позы, стойка в конце (если нет hold)
+		List<Key> pts = new ArrayList<>(keys.size() + 2);
+		if (keys.isEmpty() || keys.get(0).t() > 0) pts.add(restKey);
+		pts.addAll(keys);
+		if (c.hold() <= 0 || keys.isEmpty())
+			pts.add(new Key(c.length(), restKey.rot(), restKey.pos(), restKey.scale(), Ease.EASE_IN_OUT));
+		int i = 0;
+		while (i < pts.size() - 2 && pts.get(i + 1).t() <= t) i++;
+		Key a = pts.get(i), b = pts.get(Math.min(i + 1, pts.size() - 1));
+		float u = b.t() > a.t() ? Mth.clamp((t - a.t()) / (b.t() - a.t()), 0, 1) : 1;
 		u = ease(a.ease(), u);
-		put(c, GRIP.get(p.archetype.id), rest, left, pose, lerp(a.rot(), b.rot(), u), lerp(a.pos(), b.pos(), u), lerp(a.scale(), b.scale(), u));
-		return true;
+		if (!c.smooth()) return new Key(t, lerp(a.rot(), b.rot(), u), lerp(a.pos(), b.pos(), u), lerp(a.scale(), b.scale(), u), Ease.LINEAR);
+		// smooth: кривая через все позы — клинок не останавливается в каждой
+		Key a0 = pts.get(Math.max(i - 1, 0)), b1 = pts.get(Math.min(i + 2, pts.size() - 1));
+		return new Key(t, spline(a0.rot(), a.rot(), b.rot(), b1.rot(), u), spline(a0.pos(), a.pos(), b.pos(), b1.pos(), u),
+				spline(a0.scale(), a.scale(), b.scale(), b1.scale(), u), Ease.LINEAR);
+	}
+
+	/** Кривая Катмулла–Рома: проходит через a и b, касательные — по соседям. */
+	static Vector3f spline(Vector3f p0, Vector3f p1, Vector3f p2, Vector3f p3, float u) {
+		float u2 = u * u, u3 = u2 * u;
+		Vector3f r = new Vector3f();
+		for (int k = 0; k < 3; k++) {
+			float v0 = p0.get(k), v1 = p1.get(k), v2 = p2.get(k), v3 = p3.get(k);
+			r.setComponent(k, 0.5f * (2 * v1 + (-v0 + v2) * u + (2 * v0 - 5 * v1 + 4 * v2 - v3) * u2 + (-v0 + 3 * v1 - 3 * v2 + v3) * u3));
+		}
+		return r;
 	}
 
 	/** Где рукоять оказывается в руке при обычной стойке (Display): та же цепочка, что у ItemTransform + сдвиг модели на −0,5. */
