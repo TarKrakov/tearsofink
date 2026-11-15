@@ -12,6 +12,7 @@
 		"ItemInHandRendererInvoker",
 		"ItemInHandRendererMixin",
 		"HumanoidModelMixin",
+		"ItemInHandLayerMixin",
 		"LivingEntityRendererMixin"
 	],
 	"injectors": {

@@ -41,8 +41,23 @@ public final class WeaponAnims {
 	 * hold — сколько секунд клинок стоит в последней позе (следующий удар начнётся прямо из неё),
 	 * back — за сколько потом возвращается в стойку. Без hold движение идёт к стойке к моменту length.
 	 */
-	public record Clip(float length, boolean absolute, List<Key> keys, float hold, float back, float impact, ThirdPerson.Track third,
-			boolean smooth) {}
+	public record Clip(float length, boolean absolute, List<Key> keys, float hold, float back, float impact, boolean smooth) {}
+
+	/** Третье лицо архетипа (поле "third" в файле движений): как поза первого лица переводится в руку Стива. */
+	public record ThirdTune(float reach, float lead, float body, float look) {
+		static final ThirdTune DEFAULT = new ThirdTune(1.3f, 0.5f, 0.3f, 0.6f);
+	}
+
+	private static final Map<String, ThirdTune> THIRD = new HashMap<>();
+
+	public static ThirdTune thirdTune(Archetype a) {
+		return THIRD.getOrDefault(a.id, ThirdTune.DEFAULT);
+	}
+
+	@org.jetbrains.annotations.Nullable
+	public static Vector3f grip(Archetype a) {
+		return GRIP.get(a.id);
+	}
 
 	/** smooth: сколько секунд новое движение перетекает из позы, где клинок реально был (без скачка между ударами). */
 	private static final float BLEND = 0.12f;
@@ -69,11 +84,6 @@ public final class WeaponAnims {
 			return (System.nanoTime() - start) / 1e9f;
 		}
 
-		float end() {
-			if (clip.hold() <= 0) return clip.length();
-			return lastT(clip) + clip.hold() + clip.back();
-		}
-
 		/** Время внутри движения (с учётом общей скорости). */
 		float time() {
 			return real() * tempo;
@@ -95,6 +105,8 @@ public final class WeaponAnims {
 			public void onResourceManagerReload(ResourceManager manager) {
 				CLIPS.clear();
 				GRIP.clear();
+				THIRD.clear();
+				ThirdPerson.clear();
 				for (Archetype a : Archetype.values()) {
 					var res = manager.getResource(TearsOfInk.id("weapon_anims/" + a.id + ".json"));
 					if (res.isEmpty()) continue;
@@ -102,6 +114,11 @@ public final class WeaponAnims {
 						JsonObject root = JsonParser.parseReader(r).getAsJsonObject();
 						CLIPS.put(a.id, parse(root));
 						if (root.has("grip")) GRIP.put(a.id, vec(root, "grip", new Vector3f(8, 8, 8)));
+						if (root.has("third")) {
+							JsonObject t = root.getAsJsonObject("third");
+							ThirdTune d = ThirdTune.DEFAULT;
+							THIRD.put(a.id, new ThirdTune(f(t, "reach", d.reach()), f(t, "lead", d.lead()), f(t, "body", d.body()), f(t, "look", d.look())));
+						}
 					} catch (Exception e) {
 						TearsOfInk.LOGGER.error("Движения {} не прочитались: {}", a.id, e.toString());
 					}
@@ -134,10 +151,13 @@ public final class WeaponAnims {
 			out.put(e.getKey(), new Clip(o.get("length").getAsFloat(), absolute, keys,
 					o.has("hold") ? o.get("hold").getAsFloat() : 0f, o.has("return") ? o.get("return").getAsFloat() : 0.3f,
 					o.has("impact") ? o.get("impact").getAsFloat() : -1f,
-					o.has("third") ? ThirdPerson.parse(o.getAsJsonObject("third")) : null,
 					o.has("smooth") && o.get("smooth").getAsBoolean()));
 		}
 		return out;
+	}
+
+	private static float f(JsonObject o, String key, float def) {
+		return o.has(key) ? o.get(key).getAsFloat() : def;
 	}
 
 	private static Vector3f vec(JsonObject o, String key, Vector3f def) {
@@ -163,8 +183,8 @@ public final class WeaponAnims {
 		Playing prev = ARMS[arm.ordinal()];
 		Playing next = clip == null ? null : new Playing(clip, a, busyTicks, tempo);
 		if (next != null && clip.smooth() && !clip.absolute() && prev != null && prev.archetype == a && !prev.clip.absolute()
-				&& prev.time() < prev.end()) {
-			next.from = sample(prev, REST);
+				&& prev.time() < end(prev.clip)) {
+			next.from = sample(prev.clip, prev.time(), REST);
 		}
 		ARMS[arm.ordinal()] = next;
 	}
@@ -194,7 +214,7 @@ public final class WeaponAnims {
 		Playing p = ARMS[arm.ordinal()];
 		if (p == null) return false;
 		float t = p.time();
-		if (t >= p.end() || Archetype.of(stack) != p.archetype) {
+		if (t >= end(p.clip) || Archetype.of(stack) != p.archetype) {
 			ARMS[arm.ordinal()] = null;
 			return false;
 		}
@@ -203,7 +223,7 @@ public final class WeaponAnims {
 		Key restKey = c.absolute()
 				? new Key(0, new Vector3f(rest.rotation), new Vector3f(rest.translation).mul(16), new Vector3f(rest.scale), Ease.EASE_IN_OUT)
 				: new Key(0, new Vector3f(), new Vector3f(), new Vector3f(1, 1, 1), Ease.EASE_IN_OUT);
-		Key now = sample(p, restKey);
+		Key now = sample(c, t, restKey);
 		if (p.from != null && p.real() < BLEND) {
 			float u = ease(Ease.EASE_OUT, p.real() / BLEND);
 			now = new Key(0, lerp(p.from.rot(), now.rot(), u), lerp(p.from.pos(), now.pos(), u), lerp(p.from.scale(), now.scale(), u), Ease.LINEAR);
@@ -214,10 +234,19 @@ public final class WeaponAnims {
 
 	private static final Key REST = new Key(0, new Vector3f(), new Vector3f(), new Vector3f(1, 1, 1), Ease.EASE_IN_OUT);
 
-	/** Поза движения в текущий момент. */
-	private static Key sample(Playing p, Key restKey) {
-		Clip c = p.clip;
-		float t = p.time();
+	/** Когда движение заканчивается (секунды движения, с учётом hold и возврата). */
+	public static float end(Clip c) {
+		if (c.hold() <= 0) return c.length();
+		return lastT(c) + c.hold() + c.back();
+	}
+
+	/** Поза относительного движения в момент t (секунды движения): поворот, сдвиг, масштаб от обычной стойки. */
+	public static Key sample(Clip c, float t) {
+		return sample(c, t, REST);
+	}
+
+	/** Поза движения в момент t. */
+	private static Key sample(Clip c, float t, Key restKey) {
 		List<Key> keys = c.keys();
 		if (c.hold() > 0 && !keys.isEmpty() && t >= lastT(c)) {
 			// замер в последней позе, потом мягкий возврат в стойку
