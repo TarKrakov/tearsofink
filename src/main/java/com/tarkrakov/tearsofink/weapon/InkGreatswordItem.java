@@ -31,8 +31,13 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 	}
 
 	public InkGreatswordItem(Supplier<Skill> ability, Properties properties, boolean twoHanded) {
+		this(ability, properties, twoHanded, twoHanded ? DAMAGE : ONE_HANDED_DAMAGE);
+	}
+
+	/** damage — урон сверх материала (Тусклый скимитар: ONE_HANDED_DAMAGE − 1 → итого 4). */
+	public InkGreatswordItem(Supplier<Skill> ability, Properties properties, boolean twoHanded, int damage) {
 		super(ModTiers.ASPHODA, properties.attributes(SwordItem.createAttributes(ModTiers.ASPHODA,
-				twoHanded ? DAMAGE : ONE_HANDED_DAMAGE, twoHanded ? ATTACK_SPEED : ONE_HANDED_SPEED).withTooltip(false)));
+				damage, twoHanded ? ATTACK_SPEED : ONE_HANDED_SPEED).withTooltip(false)));
 		this.ability = ability;
 		this.twoHanded = twoHanded;
 	}

@@ -479,5 +479,22 @@
   "item.tears-of-ink.skill_book_stride.desc2": "Тяжёлый шаг вперёд: щиты остаются поднятыми, врагов отталкивает.",
   "item.tears-of-ink.skill_book_ascension": "Наставление о Вознесении",
   "item.tears-of-ink.skill_book_ascension.desc1": "Дух легче тела.",
-  "item.tears-of-ink.skill_book_ascension.desc2": "Прыгните и держите прыжок — дух поднимет выше. Падение не ранит."
+  "item.tears-of-ink.skill_book_ascension.desc2": "Shift + прыжок с земли — дух поднимет высоко. Падение не ранит.",
+  "vow.tears-of-ink.heart.contract_0": "Первый исполненный лёгкий контракт. В груди отзывается малое Чернильное сердце: запас Чернил +%s.",
+  "vow.tears-of-ink.heart.contract_1": "Первый исполненный средний контракт. Малое Чернильное сердце: запас Чернил +%s.",
+  "vow.tears-of-ink.heart.contract_2": "Первый исполненный сложный контракт. Малое Чернильное сердце: запас Чернил +%s.",
+  "vow.tears-of-ink.heart.miniboss": "Чернильное сердце стража откликается на ваш зов. Запас Чернил +%s — и в вас стало меньше вас.",
+  "vow.tears-of-ink.heart.vanguard": "Чернильное сердце. Запас Чернил +%s.",
+  "vow.tears-of-ink.heart.final": "Чернильное сердце. Запас Чернил +%s.",
+  "item.tears-of-ink.worn_ram_shield": "Потёртый щит-таран",
+  "item.tears-of-ink.worn_ram_shield.desc1": "Щит паломника. Видал лучшие дни.",
+  "item.tears-of-ink.worn_mercy_shield": "Потёртый щит Милосердия",
+  "item.tears-of-ink.worn_mercy_shield.desc1": "Щит паломника. Свет в нём ещё теплится.",
+  "item.tears-of-ink.dim_scimitar": "Тусклый скимитар",
+  "item.tears-of-ink.dim_scimitar.desc1": "Чернила в клинке едва дышат.",
+  "item.tears-of-ink.dim_scimitar.desc2": "Волна (R): слабее и дороже, чем у настоящего скимитара.",
+  "item.tears-of-ink.pilgrim_bundle": "Котомка паломника",
+  "item.tears-of-ink.pilgrim_bundle.desc1": "ПКМ — развязать.",
+  "skill.tears-of-ink.dim_wave": "Тусклая Волна",
+  "guide.tears-of-ink.vow.ask": "Прежде чем я вручу вам то, что положено, — скажите, какой дорогой пойдёте."
 }

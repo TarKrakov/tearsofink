@@ -107,7 +107,7 @@ public final class Resonance {
 			if (kind == null) return false;
 			if (p.isUsingItem()) p.stopUsingItem(); // из стойки — без выброса: заряд уйдёт в Резонанс
 			int charge = ShieldStance.takeCharge(p);
-			float power = 1 + ResonanceTuning.POWER_PER_CHARGE * charge;
+			float power = (1 + ResonanceTuning.POWER_PER_CHARGE * charge) * com.tarkrakov.tearsofink.weapon.SoulShieldItem.pairPower(p); // потёртые — слабее
 			PENDING.put(p.getUUID(), new Pending(kind, ResonanceTuning.CLAP_TICKS, power));
 			Combat.dualAnim(p, Archetype.BASTION, "clap", "clap", ResonanceTuning.CLAP_TICKS + 8);
 			p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.ARMOR_EQUIP_IRON.value(), SoundSource.PLAYERS, 0.8f, 0.7f);

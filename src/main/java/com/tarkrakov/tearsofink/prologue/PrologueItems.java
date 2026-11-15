@@ -70,7 +70,7 @@ public final class PrologueItems {
 				stack.consume(1, sp);
 				give(sp, ModItems.DIARY);
 				DiaryEntries.unlock(sp, DiaryEntries.INTRO);
-				give(sp, ModItems.INK_LONGKNIFE);
+				give(sp, ModItems.DIM_SCIMITAR); // 15 ноя: стартовое оружие Пути Чернил (раньше — нож)
 				give(sp, ModItems.SALVATION_PENDANT);
 				give(sp, ModItems.DIM_HAND_LANTERN);
 				level.playSound(null, sp.blockPosition(), SoundEvents.ARMOR_EQUIP_LEATHER.value(), SoundSource.PLAYERS, 1f, 0.8f);
@@ -78,6 +78,41 @@ public final class PrologueItems {
 			}
 			return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide);
 		}
+	}
+
+	/** Котомка паломника (Путь Души): Дневник, два потёртых щита, местная еда. Фонаря нет — паломник светит сам. */
+	public static class PilgrimBundle extends Item {
+		public PilgrimBundle(Properties p) { super(p); }
+
+		@Override
+		public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+			ItemStack stack = player.getItemInHand(hand);
+			if (player instanceof ServerPlayer sp) {
+				stack.consume(1, sp);
+				give(sp, ModItems.DIARY);
+				DiaryEntries.unlock(sp, DiaryEntries.INTRO);
+				give(sp, ModItems.WORN_RAM_SHIELD);
+				give(sp, ModItems.WORN_MERCY_SHIELD);
+				ItemStack berries = new ItemStack(ModItems.ROASTED_FLESHBERRY, 6), meat = new ItemStack(ModItems.COOKED_CATERPILLAR_MEAT, 4);
+				if (!sp.getInventory().add(berries)) sp.drop(berries, false);
+				if (!sp.getInventory().add(meat)) sp.drop(meat, false);
+				level.playSound(null, sp.blockPosition(), SoundEvents.ARMOR_EQUIP_LEATHER.value(), SoundSource.PLAYERS, 1f, 1.1f);
+				level.playSound(null, sp.blockPosition(), SoundEvents.BUNDLE_DROP_CONTENTS, SoundSource.PLAYERS, 0.8f, 1.0f);
+			}
+			return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide);
+		}
+	}
+
+	/** Стартовый набор по обету — один раз (метка на игроке). Без обета — ничего. */
+	public static final String KIT_TAG = "tearsofink.kit";
+
+	public static boolean giveKit(ServerPlayer p) {
+		var vow = com.tarkrakov.tearsofink.vow.Vows.vow(p);
+		if (vow == com.tarkrakov.tearsofink.vow.Vow.NONE || p.getTags().contains(KIT_TAG)) return false;
+		p.addTag(KIT_TAG);
+		give(p, vow == com.tarkrakov.tearsofink.vow.Vow.SOUL ? ModItems.PILGRIM_BUNDLE : ModItems.WORN_SATCHEL);
+		p.playNotifySound(SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.8f, 0.8f);
+		return true;
 	}
 
 	/** Дневник: ПКМ — окно-книга (записи открываются по событиям). */

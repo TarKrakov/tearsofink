@@ -57,7 +57,8 @@ public final class Travel {
 
 	/** Начальный набор и предметы пролога: не теряются при смерти (но в сундук класть можно). */
 	public static boolean keptOnDeath(ItemStack s) {
-		return s.is(ModItems.DIARY) || s.is(ModItems.INK_LONGKNIFE) || s.is(ModItems.SALVATION_PENDANT)
+		return s.is(ModItems.DIARY) || s.is(ModItems.INK_LONGKNIFE) || s.is(ModItems.SALVATION_PENDANT) || s.is(ModItems.DIM_SCIMITAR)
+				|| s.is(ModItems.WORN_RAM_SHIELD) || s.is(ModItems.WORN_MERCY_SHIELD) || s.is(ModItems.PILGRIM_BUNDLE)
 				|| s.is(ModItems.DIM_HAND_LANTERN) || s.is(ModItems.WORN_SATCHEL) || s.is(ModItems.SEALED_LETTER)
 				|| s.is(ModItems.INVITATION_LETTER);
 	}

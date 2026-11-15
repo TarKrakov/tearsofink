@@ -37,6 +37,8 @@ public final class WeaponAbilities {
 	public static final RamAbility RAM = new RamAbility();
 	public static final RadianceAbility RADIANCE = new RadianceAbility();
 	public static final WaveAbility WAVE = new WaveAbility();
+	/** Тусклый скимитар (стартовый Пути Чернил): Волна слабее и дороже. */
+	public static final DimWaveAbility DIM_WAVE = new DimWaveAbility();
 	public static final CleaveAbility CLEAVE = new CleaveAbility();
 	/** Двуручный клинок в ЛЕВОЙ руке (когда в правой одноручный): урон его абилки ×это. */
 	public static final float OFFHAND_TWO_HANDED_POWER = 0.6f;
@@ -153,8 +155,9 @@ public final class WeaponAbilities {
 				AABB box = player.getBoundingBox().inflate(0.8, 0.2, 0.8).move(r.dx() * 0.6, 0, r.dz() * 0.6);
 				for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, box, t -> t != player && t.isAlive())) {
 					if (!r.hit().add(target.getUUID())) continue;
-					target.hurt(player.damageSources().playerAttack(player), DAMAGE);
-					target.knockback(KNOCKBACK, -r.dx(), -r.dz());
+					float f = SoulShieldItem.factor(player, RAM); // потёртый щит слабее
+					target.hurt(player.damageSources().playerAttack(player), DAMAGE * f);
+					target.knockback(KNOCKBACK * f, -r.dx(), -r.dz());
 					target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, SLOW_TICKS, 2));
 					level.playSound(null, target.blockPosition(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1f, 0.8f);
 				}
@@ -227,6 +230,25 @@ public final class WeaponAbilities {
 			player.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
 			level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1f, 0.6f);
 			level.playSound(null, player.blockPosition(), SoundEvents.SQUID_SQUIRT, SoundSource.PLAYERS, 0.8f, 0.6f);
+			return true;
+		}
+	}
+
+	/** Тусклая Волна: 10 Чернил вместо 8, урон ×0,8. */
+	public static class DimWaveAbility extends Skill {
+		public static final float DAMAGE = InkWaveEntity.DAMAGE * 0.8f;
+
+		DimWaveAbility() {
+			super(TearsOfInk.id("dim_wave"), 10, 0, 40);
+		}
+
+		@Override
+		public boolean activate(ServerPlayer player, SkillInput input) {
+			ServerLevel level = player.serverLevel();
+			level.addFreshEntity(new InkWaveEntity(level, player, flatLook(player), false, DAMAGE, 0.35));
+			player.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
+			level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.9f, 0.7f);
+			level.playSound(null, player.blockPosition(), SoundEvents.SQUID_SQUIRT, SoundSource.PLAYERS, 0.7f, 0.7f);
 			return true;
 		}
 	}
@@ -426,7 +448,7 @@ public final class WeaponAbilities {
 				if (t % 20 == 0) {
 					for (ServerPlayer ally : level.getEntitiesOfClass(ServerPlayer.class, player.getBoundingBox().inflate(RADIUS),
 							p -> p.isAlive() && p.distanceToSqr(player) <= RADIUS * RADIUS)) {
-						ally.heal(HEAL_PER_SECOND * com.tarkrakov.tearsofink.ink.SoulPenalty.multiplier(ally));
+						ally.heal(HEAL_PER_SECOND * SoulShieldItem.factor(player, MERCY) * com.tarkrakov.tearsofink.ink.SoulPenalty.multiplier(ally));
 						level.sendParticles(ParticleTypes.HEART, ally.getX(), ally.getY() + 1.9, ally.getZ(), 1, 0.2, 0.1, 0.2, 0);
 					}
 					com.tarkrakov.tearsofink.ink.InkPowers.sync(player);

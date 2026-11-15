@@ -455,5 +455,22 @@
   "item.tears-of-ink.skill_book_stride.desc2": "A heavy step forward: shields stay raised, enemies are pushed aside.",
   "item.tears-of-ink.skill_book_ascension": "Teaching of Ascension",
   "item.tears-of-ink.skill_book_ascension.desc1": "The spirit is lighter than the body.",
-  "item.tears-of-ink.skill_book_ascension.desc2": "Jump and hold the jump — your spirit lifts you higher. The fall won't hurt."
+  "item.tears-of-ink.skill_book_ascension.desc2": "Shift + jump from the ground — your spirit lifts you high. The fall won't hurt.",
+  "vow.tears-of-ink.heart.contract_0": "First easy contract fulfilled. A small Ink Heart answers: Ink reserve +%s.",
+  "vow.tears-of-ink.heart.contract_1": "First medium contract fulfilled. Small Ink Heart: Ink reserve +%s.",
+  "vow.tears-of-ink.heart.contract_2": "First hard contract fulfilled. Small Ink Heart: Ink reserve +%s.",
+  "vow.tears-of-ink.heart.miniboss": "The guardian's Ink Heart answers your call. Ink reserve +%s — and there is less of you.",
+  "vow.tears-of-ink.heart.vanguard": "Ink Heart. Ink reserve +%s.",
+  "vow.tears-of-ink.heart.final": "Ink Heart. Ink reserve +%s.",
+  "item.tears-of-ink.worn_ram_shield": "Worn Ram Shield",
+  "item.tears-of-ink.worn_ram_shield.desc1": "A pilgrim's shield. It has seen better days.",
+  "item.tears-of-ink.worn_mercy_shield": "Worn Mercy Shield",
+  "item.tears-of-ink.worn_mercy_shield.desc1": "A pilgrim's shield. Light still smoulders in it.",
+  "item.tears-of-ink.dim_scimitar": "Dim Scimitar",
+  "item.tears-of-ink.dim_scimitar.desc1": "The Ink in the blade barely breathes.",
+  "item.tears-of-ink.dim_scimitar.desc2": "Wave (R): weaker and costlier than a true scimitar's.",
+  "item.tears-of-ink.pilgrim_bundle": "Pilgrim's Bundle",
+  "item.tears-of-ink.pilgrim_bundle.desc1": "Right-click to untie.",
+  "skill.tears-of-ink.dim_wave": "Dim Wave",
+  "guide.tears-of-ink.vow.ask": "Before I hand you what is due — tell me which road you will take."
 }

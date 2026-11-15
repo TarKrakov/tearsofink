@@ -34,17 +34,20 @@ public enum Archetype {
 
 	private static Map<Item, Archetype> items() {
 		if (items == null) {
-			items = Map.of(
-					ModItems.CLEAVE_GREATSWORD, EXECUTIONER,
-					ModItems.WAVE_GREATSWORD, SCIMITAR,
-					ModItems.HUNTER_GREATSWORD, EXECUTIONER,
-					ModItems.HUNTER_SABER, SCIMITAR,
-					ModItems.BLOOD_TALVAR, TALWAR,
-					ModItems.BLOOD_DUSSAK, DUSSAK,
-					ModItems.RAM_SHIELD, BASTION,
-					ModItems.RADIANT_SHIELD, BASTION,
-					ModItems.MERCY_SHIELD, BASTION,
-					ModItems.REPEL_SHIELD, BASTION);
+			items = Map.ofEntries(
+					Map.entry(ModItems.CLEAVE_GREATSWORD, EXECUTIONER),
+					Map.entry(ModItems.WAVE_GREATSWORD, SCIMITAR),
+					Map.entry(ModItems.DIM_SCIMITAR, SCIMITAR),
+					Map.entry(ModItems.HUNTER_GREATSWORD, EXECUTIONER),
+					Map.entry(ModItems.HUNTER_SABER, SCIMITAR),
+					Map.entry(ModItems.BLOOD_TALVAR, TALWAR),
+					Map.entry(ModItems.BLOOD_DUSSAK, DUSSAK),
+					Map.entry(ModItems.RAM_SHIELD, BASTION),
+					Map.entry(ModItems.RADIANT_SHIELD, BASTION),
+					Map.entry(ModItems.MERCY_SHIELD, BASTION),
+					Map.entry(ModItems.REPEL_SHIELD, BASTION),
+					Map.entry(ModItems.WORN_RAM_SHIELD, BASTION),
+					Map.entry(ModItems.WORN_MERCY_SHIELD, BASTION));
 		}
 		return items;
 	}

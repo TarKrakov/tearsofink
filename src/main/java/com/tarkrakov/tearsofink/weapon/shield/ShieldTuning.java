@@ -27,6 +27,16 @@ public final class ShieldTuning {
 	public static final float BURST_KNOCKBACK = 0.4f, BURST_KNOCKBACK_PER_CHARGE = 0.2f;
 	/** Выброс сбивает замах на столько тиков. */
 	public static final int BURST_STAGGER = 20;
+	// --- Превозмогание (15 ноя): вытерпленное становится ударом ---
+	/** Выброс бьёт ещё и такой долей урона, который щиты поглотили в этой стойке… */
+	public static final float ABSORB_TO_BURST = 0.4f;
+	/** …но не больше этой прибавки. */
+	public static final float ABSORB_BURST_CAP = 20f;
+	/** Ответ: после своевременного блока столько тиков следующий удар Бастиона — ×RIPOSTE_MULT и сбивает. */
+	public static final int RIPOSTE_TICKS = 20;
+	public static final float RIPOSTE_MULT = 2f;
+	/** Сильнее против сильных: враги с запасом здоровья от STRONG_HP получают от Бастиона и выброса ×STRONG_MULT. */
+	public static final float STRONG_HP = 30f, STRONG_MULT = 1.3f;
 
 	/** На полном заряде принятый удар звучит хором (не чаще раза в столько тиков) и с такой громкостью. */
 	public static final int CHOIR_EVERY = 50;

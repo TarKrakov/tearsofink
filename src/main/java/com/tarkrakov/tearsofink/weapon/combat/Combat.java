@@ -351,6 +351,9 @@ public final class Combat {
 		double half = Math.toRadians(step.arc() / 2);
 		double base = p.getAttributeValue(Attributes.ATTACK_DAMAGE) * step.damage() * scale;
 		boolean hitAny = false;
+		// Бастион — превозмогание: ответ после своевременного блока (×2 и сбивает), сильнее против сильных
+		boolean bastion = Archetype.of(weapon) == Archetype.BASTION;
+		boolean riposte = bastion && com.tarkrakov.tearsofink.weapon.shield.ShieldStance.takeRiposte(p);
 		for (LivingEntity t : level.getEntitiesOfClass(LivingEntity.class, p.getBoundingBox().inflate(step.reach() + 1))) {
 			if (t == p || !t.isAlive() || t.isSpectator() || t.isAlliedTo(p)) continue;
 			if (t instanceof OwnableEntity own && p.getUUID().equals(own.getOwnerUUID())) continue;
@@ -366,8 +369,11 @@ public final class Combat {
 			if (!p.hasLineOfSight(t)) continue;
 			DamageSource src = p.damageSources().playerAttack(p);
 			float dmg = EnchantmentHelper.modifyDamage(level, weapon, t, src, (float) base);
+			if (bastion) dmg *= com.tarkrakov.tearsofink.weapon.shield.ShieldStance.strongMult(t)
+					* (riposte ? com.tarkrakov.tearsofink.weapon.shield.ShieldTuning.RIPOSTE_MULT : 1f);
 			if (t.hurt(src, dmg)) {
 				hitAny = true;
+				if (riposte) com.tarkrakov.tearsofink.weapon.shield.ShieldStance.riposteHit(p, t);
 				com.tarkrakov.tearsofink.weapon.blood.Bleeding.onWeaponHit(p, weapon, t);
 				if (step.knockback() > 0) t.knockback(step.knockback(), -flat.x, -flat.z);
 				EnchantmentHelper.doPostAttackEffects(level, t, src);
@@ -375,6 +381,7 @@ public final class Combat {
 			}
 		}
 		if (hitAny) {
+			com.tarkrakov.tearsofink.vow.Vows.thirst(p, weapon); // Путь Чернил: бой кормит бой
 			weapon.hurtAndBreak(1, p, EquipmentSlot.MAINHAND);
 			level.sendParticles(ParticleTypes.SWEEP_ATTACK, eye.x + flat.x * 1.6, eye.y - 0.4, eye.z + flat.z * 1.6, 1, 0, 0, 0, 0);
 			level.playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 0.8f, 0.8f);

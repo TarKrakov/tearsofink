@@ -159,12 +159,18 @@ public class GuideEntity extends PathfinderMob {
 			anyTalking = true;
 			getLookControl().setLookAt(p, 30f, 30f);
 			if (tickCount < st[0]) continue;
+			if (st[1] == GIFT_LINE && com.tarkrakov.tearsofink.vow.Vows.vow(p) == com.tarkrakov.tearsofink.vow.Vow.NONE) {
+				// сначала обет — потом набор: ждём выбора (окно открывается, напоминаем раз в несколько секунд)
+				if (com.tarkrakov.tearsofink.vow.Vows.prompt(p)) Guide.say(p, "vow.ask");
+				setAction(ACT_TALK);
+				st[0] = tickCount + 20;
+				continue;
+			}
 			Guide.say(p, "greet." + st[1]);
 			level.playSound(null, blockPosition(), SoundEvents.ALLAY_AMBIENT_WITHOUT_ITEM, SoundSource.NEUTRAL, 0.4f, 0.4f);
 			if (st[1] == GIFT_LINE) {
 				setAction(ACT_GIFT);
-				PrologueItems.give(p, ModItems.WORN_SATCHEL);
-				p.playNotifySound(SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.8f, 0.8f);
+				PrologueItems.giveKit(p); // набор по обету: саквояж или котомка
 			} else {
 				setAction(ACT_TALK);
 			}

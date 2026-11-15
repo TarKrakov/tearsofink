@@ -31,9 +31,9 @@ import java.util.UUID;
  */
 public class MightyStrideSkill extends Skill {
 	// ===== Настройки — крутить здесь =====
-	/** Скорость шага (блоков за тик) и сколько тиков: 0.5 × 5 ≈ 2,5 блока. */
-	public static final double SPEED = 0.5;
-	public static final int DURATION_TICKS = 5;
+	/** Скорость шага (блоков за тик) и сколько тиков: 0.75 × 6 ≈ 4,5 блока — как Рывок. */
+	public static final double SPEED = 0.75;
+	public static final int DURATION_TICKS = 6;
 	/** Отбрасывание врагов, задетых шагом. */
 	public static final double KNOCKBACK = 1.1;
 	/** Сколько скорости остаётся после шага. */
