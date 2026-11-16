@@ -20,6 +20,9 @@
 		"client": [
 			"com.tarkrakov.tearsofink.client.TearsOfInkClient"
 		],
+		"jei_mod_plugin": [
+			"com.tarkrakov.tearsofink.client.jei.TearsOfInkJei"
+		],
 		"fabric-datagen": [
 			"com.tarkrakov.tearsofink.client.TearsOfInkDataGenerator"
 		]
@@ -36,5 +39,8 @@
 		"minecraft": "~1.21.1",
 		"java": ">=21",
 		"fabric-api": "*"
+	},
+	"suggests": {
+		"jei": "*"
 	}
 }

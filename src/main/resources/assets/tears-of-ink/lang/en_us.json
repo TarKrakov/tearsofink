@@ -505,5 +505,18 @@
   "gear.tears-of-ink.tier_line": "Tier: %s",
   "gear.tears-of-ink.sharp_line": "Edge: %s%%",
   "gear.tears-of-ink.dull": "%s is dulling — sharpen it with Pigment at an Ink Anvil.",
-  "gear.tears-of-ink.degraded": "%s went dull and fell to %s. That tier's properties sleep."
+  "gear.tears-of-ink.degraded": "%s went dull and fell to %s. That tier's properties sleep.",
+  "jei.tears-of-ink.forging": "Forging",
+  "jei.tears-of-ink.alchemy": "Alchemy",
+  "jei.tears-of-ink.info.pale_ore": "Found underground in the Pale Forest (Y 0–72). A stone pickaxe is enough. Drops Raw Pale Metal.",
+  "jei.tears-of-ink.info.raw_pale_metal": "From Pale Ore and pale Spire soldiers. Smelt into a Pale Ingot.",
+  "jei.tears-of-ink.info.blood_ore": "Found shallow under Bloodwood valleys (Y 10–60). Needs an iron pickaxe. Drops Raw Blood Metal.",
+  "jei.tears-of-ink.info.raw_blood_metal": "From Blood Ore. Smelt into a Blood Ingot.",
+  "jei.tears-of-ink.info.raw_ink_metal": "No ore: sometimes dropped by foes slain in the Inkwood, and found in deep ruin chests. Smelt into an Ink Ingot.",
+  "jei.tears-of-ink.info.ink_anvil": "Forges hunter weapons in a 3×3 grid. Also sharpening: a Contrast or Rubric weapon plus Pigment, one per slot; each restores a quarter of the edge.",
+  "jei.tears-of-ink.info.pigment": "The main forging currency: sharpening, ink weapons, tier ascension, changing vows. The Soul Trader pays it for Fulfilled Contracts.",
+  "jei.tears-of-ink.info.asphoda": "Mined from asphoda ore anywhere underground; found in chests. Used in hunter weapons and stations.",
+  "jei.tears-of-ink.info.blood_clot": "From blood caterpillars and the Blood Collector tank. Blood weapon material.",
+  "jei.tears-of-ink.info.ink": "From ink caterpillars. Spire weapon and Ink Anvil material.",
+  "jei.tears-of-ink.info.fulfilled_contract": "Reward for a Hunt contract. The Soul Trader pays Pigment for it and may give the hunter's weapon."
 }

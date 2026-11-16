@@ -39,6 +39,15 @@ public class ForgingRecipe implements Recipe<CraftingInput> {
 		this.result = result;
 	}
 
+	/** Для JEI: размер раскладки (ингредиенты — getIngredients(), строками). */
+	public int width() {
+		return pattern.width();
+	}
+
+	public int height() {
+		return pattern.height();
+	}
+
 	@Override
 	public boolean matches(CraftingInput input, Level level) {
 		return pattern.matches(input);
