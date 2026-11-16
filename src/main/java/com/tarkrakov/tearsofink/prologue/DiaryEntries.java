@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.prologue;
 
 import com.mojang.serialization.Codec;
 import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.block.fountain.InkFountainBlock;
 import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
@@ -33,7 +34,7 @@ import java.util.Set;
 
 /**
  * Записи Дневника: вступление (саквояж открыт), прибытие в Земли, получение
- * бледного металла и первое убийство каждого вида врага.
+ * бледного металла, знакомство с фонтаном и Пигментом, первое убийство существ.
  * Тексты — diary.tears-of-ink.entry.&lt;id&gt;.title / .text в локализациях.
  * Новая запись о существе = добавить его id (имя сущности без мода) в {@link #CREATURES} и тексты.
  */
@@ -44,7 +45,9 @@ public final class DiaryEntries {
 	public static final String INTRO = "intro";
 	public static final String FIRST_STEPS = "first_steps";
 	public static final String PALE_METAL = "pale_metal";
-	/** Проверять инвентарь не чаще раза в 5 секунд и только до открытия записи. */
+	public static final String FOUNTAIN_HUNT = "fountain_hunt";
+	public static final String ASCENSION_FONT = "ascension_font";
+	/** Проверка новых материалов и знаний не чаще раза в 5 секунд. */
 	private static final int INVENTORY_CHECK_TICKS = 100;
 	/** Глава о гусеницах: общая часть + страница на каждый вид (pale, blood, ink), открываются по убийствам. */
 	public static final String CATERPILLAR = "caterpillar";
@@ -85,7 +88,7 @@ public final class DiaryEntries {
 		// печь и перенос из контейнеров без нового Mixin.
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (server.getTickCount() % INVENTORY_CHECK_TICKS != 0) return;
-			for (ServerPlayer p : server.getPlayerList().getPlayers()) checkPaleMetal(p);
+			for (ServerPlayer p : server.getPlayerList().getPlayers()) checkGuidance(p);
 		});
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			if (!(source.getEntity() instanceof ServerPlayer p)) return;
@@ -105,16 +108,44 @@ public final class DiaryEntries {
 		if (ModDimensions.isLands(p.level())) unlock(p, FIRST_STEPS);
 	}
 
-	private static void checkPaleMetal(ServerPlayer p) {
-		if (p.getAttachedOrCreate(DATA).contains(PALE_METAL)) return;
+	/** Небоевые открытия на основе уже сохранённых посещений и текущих предметов. */
+	private static void checkGuidance(ServerPlayer p) {
+		List<String> have = p.getAttachedOrCreate(DATA);
+		boolean needMetal = !have.contains(PALE_METAL);
+		boolean needHunt = !have.contains(FOUNTAIN_HUNT);
+		boolean needFont = !have.contains(ASCENSION_FONT);
+		if (!needMetal && !needHunt && !needFont) return;
+
+		List<String> discovered = new ArrayList<>(3);
+		// Первое испитие фонтана даёт возможность призвать Торговку. Проверка
+		// сохранённого VISITED открывает запись и для персонажей из старых миров.
+		if (needHunt && !p.getAttachedOrCreate(InkFountainBlock.VISITED).isEmpty()) {
+			discovered.add(FOUNTAIN_HUNT);
+			needHunt = false;
+		}
+
 		var inventory = p.getInventory();
 		for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
 			ItemStack stack = inventory.getItem(slot);
-			if (stack.is(ModItems.RAW_PALE_METAL) || stack.is(ModItems.PALE_INGOT)) {
-				unlock(p, PALE_METAL);
-				return;
+			if (needMetal && (stack.is(ModItems.RAW_PALE_METAL) || stack.is(ModItems.PALE_INGOT))) {
+				discovered.add(PALE_METAL);
+				needMetal = false;
 			}
+			// Контракт или Пигмент также подсказывают, где найти Торговку,
+			// если предмет попал к игроку до посещения фонтана.
+			if (needHunt && (stack.is(ModItems.FULFILLED_CONTRACT) || stack.is(ModItems.PIGMENT))) {
+				discovered.add(FOUNTAIN_HUNT);
+				needHunt = false;
+			}
+			if (needFont && (stack.is(ModItems.PIGMENT) || stack.is(ModItems.VALOR_SIGIL)
+					|| stack.is(ModItems.CRIMSON_FLOWER) || stack.is(ModItems.HOPE_MOTE))) {
+				discovered.add(ASCENSION_FONT);
+				needFont = false;
+			}
+			if (!needMetal && !needHunt && !needFont) break;
 		}
+		// За один цикл — один Sync и одно уведомление даже для нескольких страниц.
+		if (!discovered.isEmpty()) unlock(p, discovered.toArray(String[]::new));
 	}
 
 	public static void unlock(ServerPlayer p, String... entries) {
