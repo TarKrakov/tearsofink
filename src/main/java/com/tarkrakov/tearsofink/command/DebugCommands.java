@@ -164,6 +164,19 @@ public final class DebugCommands {
 		var rs = level.getChunkSource().randomState();
 		StringBuilder out = new StringBuilder("d,x,z,deck,deckBlock,a1,a2,a3,prof,bridge,sl,sr,gl,gr,nl,nr,biome\n");
 		double dStart = InkLandsLayout.RADIUS * InkLandsLayout.ROAD_START_FRACTION;
+		// близость дороги к стволам Вестников (центрам пятен) — без генерации
+		java.util.Map<Long, double[]> closest = new java.util.HashMap<>();
+		for (double d = dStart; d > InkLandsLayout.ROAD_END_RADIUS; d -= 1) {
+			double[] p = layout.roadPoint(road, d);
+			long[] b = layout.nearestBloodBlob((int) p[0], (int) p[1]);
+			if (b == null) continue;
+			double dist = Math.hypot(p[0] - b[0], p[1] - b[1]);
+			long key = b[0] * 100000L + b[1];
+			double[] c = closest.get(key);
+			if (c == null || dist < c[0]) closest.put(key, new double[]{dist, d, b[0], b[1], b[2]});
+		}
+		for (double[] c : closest.values()) if (c[0] < 120)
+			TearsOfInk.LOGGER.info("[roadblob] " + (road + 1) + " ближе всего " + (int) c[0] + " к пятну " + (int) c[2] + " " + (int) c[3] + " r=" + (int) c[4] + " на d=" + (int) c[1]);
 		long t0 = System.currentTimeMillis();
 		for (double d = dStart; d > InkLandsLayout.ROAD_END_RADIUS - 24 && dStart - d < length; d -= 2) {
 			double[] p = layout.roadPoint(road, d);

@@ -39,7 +39,7 @@ jobs:
               for i in $(seq 1 3000); do sleep 5; if [ "$(grep -c "дамп дороги $r:" run-server/logs/latest.log 2>/dev/null)" -ge 1 ]; then break; fi; done
             done
             echo "stop"
-          } | ./gradlew runServer --console=plain 2>&1 | tee server.log | grep --line-buffered -E "\[check\]|\[roadcsv\]|\[roadhole\]|дамп|ERROR|Exception|Caused by|Done \(" || true
+          } | ./gradlew runServer --console=plain 2>&1 | tee server.log | grep --line-buffered -E "\[check\]|\[roadcsv\]|\[roadhole\]|\[roadblob\]|дамп|ERROR|Exception|Caused by|Done \(" || true
       - uses: actions/upload-artifact@v7
         if: always()
         with:
