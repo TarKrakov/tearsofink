@@ -30,6 +30,8 @@ public final class DebugCommands {
 								.then(Commands.argument("length", IntegerArgumentType.integer(16, 100000))
 										.executes(ctx -> checkRoad(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "road") - 1,
 												IntegerArgumentType.getInteger(ctx, "length"))))))
+						.then(Commands.literal("dump").then(Commands.argument("road", IntegerArgumentType.integer(1, InkLandsLayout.ROADS))
+								.executes(ctx -> dumpRoad(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "road") - 1))))
 						.then(Commands.literal("terrain").executes(ctx -> checkTerrain(ctx.getSource())))
 						.then(Commands.literal("start").executes(ctx -> checkStart(ctx.getSource()))))));
 	}
@@ -144,6 +146,67 @@ public final class DebugCommands {
 		say(src, "Дорога " + (road + 1) + ": точек " + n + ", без полотна " + missing + ", ступеней >1 " + steps
 				+ ", завалов " + blocked + ", мостом " + bridge + ", высота " + minY + "…" + maxY);
 		for (String e : examples) say(src, "  " + e);
+		return 1;
+	}
+
+	/**
+	 * Разбор дороги для Claude: road_<n>.csv в папке сервера — по каждому блоку пути от края до конца: полотно, что над ним,
+	 * высота по профилю, земля по бокам (±8 от оси, до и после генерации), биом. Для поиска висящих кусков, траншей, завалов.
+	 */
+	private static int dumpRoad(CommandSourceStack src, int road) {
+		ServerLevel level = ModDimensions.lands(src.getServer());
+		InkLandsLayout layout = level == null ? null : InkLandsLayout.of(level);
+		if (layout == null) { say(src, "нет измерения"); return 0; }
+		var gen = level.getChunkSource().getGenerator();
+		var rs = level.getChunkSource().randomState();
+		StringBuilder out = new StringBuilder("d,x,z,deck,deckBlock,a1,a2,a3,prof,bridge,sl,sr,gl,gr,nl,nr,biome\n");
+		double dStart = InkLandsLayout.RADIUS * InkLandsLayout.ROAD_START_FRACTION;
+		long t0 = System.currentTimeMillis();
+		for (double d = dStart; d > InkLandsLayout.ROAD_END_RADIUS - 24; d -= 1) {
+			double[] p = layout.roadPoint(road, d);
+			int x = (int) Math.floor(p[0]), z = (int) Math.floor(p[1]);
+			if (layout.depthInside(x, z) < 0) continue;
+			if (((int) d) % 128 == 0) TearsOfInk.LOGGER.info("[check] … дамп дороги " + (road + 1) + ": d=" + (int) d + ", " + (System.currentTimeMillis() - t0) / 1000 + " с");
+			level.getChunk(x >> 4, z >> 4);
+			int top = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z) + 1;
+			int y = Integer.MIN_VALUE;
+			String deckBlock = "-";
+			for (int yy = top; yy > level.getMinBuildHeight(); yy--) {
+				BlockState s = level.getBlockState(new BlockPos(x, yy, z));
+				if (s.is(ModBlocks.ASHEN_PATH) || s.is(ModBlocks.PALE_PLANKS)) { y = yy; deckBlock = s.is(ModBlocks.PALE_PLANKS) ? "planks" : "path"; break; }
+			}
+			String[] above = {"-", "-", "-"};
+			if (y != Integer.MIN_VALUE) for (int h = 1; h <= 3; h++) {
+				BlockState s = level.getBlockState(new BlockPos(x, y + h, z));
+				if (!s.isAir()) above[h - 1] = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(s.getBlock()).getPath();
+			}
+			double[] dir = layout.roadDirection(road, d);
+			int lx = (int) Math.floor(p[0] - dir[1] * 8), lz = (int) Math.floor(p[1] + dir[0] * 8);
+			int rx = (int) Math.floor(p[0] + dir[1] * 8), rz = (int) Math.floor(p[1] - dir[0] * 8);
+			level.getChunk(lx >> 4, lz >> 4);
+			level.getChunk(rx >> 4, rz >> 4);
+			int sl = level.getHeight(Heightmap.Types.WORLD_SURFACE, lx, lz) - 1, sr = level.getHeight(Heightmap.Types.WORLD_SURFACE, rx, rz) - 1;
+			int gl = level.getHeight(Heightmap.Types.OCEAN_FLOOR, lx, lz) - 1, gr = level.getHeight(Heightmap.Types.OCEAN_FLOOR, rx, rz) - 1;
+			int nl = gen.getBaseHeight(lx, lz, Heightmap.Types.WORLD_SURFACE_WG, level, rs) - 1;
+			int nr = gen.getBaseHeight(rx, rz, Heightmap.Types.WORLD_SURFACE_WG, level, rs) - 1;
+			double prof = layout.roadHeight(road, d,
+					(bx, bz) -> gen.getBaseHeight(bx, bz, Heightmap.Types.WORLD_SURFACE_WG, level, rs) - 1,
+					(bx, bz) -> gen.getBaseHeight(bx, bz, Heightmap.Types.OCEAN_FLOOR_WG, level, rs) - 1, gen.getSeaLevel());
+			boolean br = layout.roadBridge(road, d);
+			String biome = level.getBiome(new BlockPos(x, 64, z)).unwrapKey().map(k -> k.location().getPath()).orElse("?");
+			out.append((int) d).append(',').append(x).append(',').append(z).append(',').append(y == Integer.MIN_VALUE ? "" : String.valueOf(y))
+					.append(',').append(deckBlock).append(',').append(above[0]).append(',').append(above[1]).append(',').append(above[2])
+					.append(',').append(String.format(java.util.Locale.ROOT, "%.1f", prof)).append(',').append(br ? 1 : 0)
+					.append(',').append(sl).append(',').append(sr).append(',').append(gl).append(',').append(gr)
+					.append(',').append(nl).append(',').append(nr).append(',').append(biome).append('\n');
+		}
+		try {
+			java.nio.file.Path f = java.nio.file.Path.of("road_" + (road + 1) + ".csv");
+			java.nio.file.Files.writeString(f, out);
+			say(src, "дамп дороги " + (road + 1) + ": " + f.toAbsolutePath());
+		} catch (java.io.IOException e) {
+			say(src, "не записалось: " + e);
+		}
 		return 1;
 	}
 
