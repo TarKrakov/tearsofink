@@ -96,12 +96,12 @@ public final class InkLandsLayout {
 	/** Насколько дорога может подниматься над рельефом насыпью (вниз — режет без ограничений). */
 	public static final int ROAD_MAX_FILL = 6;
 	/** Максимальный уклон дороги: подъём в блоках на 1 блок пути. */
-	public static final double ROAD_MAX_GRADE = 0.3; // 16 ноя: было 0,2 — в холмах дорога резала выемки до 40 блоков
+	public static final double ROAD_MAX_GRADE = 0.35; // 16 ноя: было 0,2 — в холмах дорога резала выемки до 40 блоков
 	/** Мост идёт на столько блоков выше воды. */
 	public static final int BRIDGE_CLEARANCE = 2;
 	/** Шаг выборки высоты вдоль дороги и ширина сглаживания (в шагах). */
 	public static final int ROAD_PROFILE_STEP = 8;
-	public static final int ROAD_SMOOTHING = 8;
+	public static final int ROAD_SMOOTHING = 5; // 16 ноя: было 8 — дорога точнее идёт по рельефу, меньше глубоких выемок
 	/** Если полотно выше земли больше чем на столько — вместо насыпи эстакада (мост на опорах). */
 	public static final int ROAD_VIADUCT_HEIGHT = 6;
 	/** Обочина за краем полотна: на ней перила мостов, фонарные столбы, откосы насыпи. */
