@@ -30,7 +30,7 @@ jobs:
           for j in $(find ~/.gradle/caches .gradle -name "minecraft-*loom.mappings*.jar" 2>/dev/null); do
             echo "JAR $j"
             javap -p -classpath "$j" net.minecraft.client.gui.screens.worldselection.WorldOpenFlows 2>/dev/null || true
-            javap -p -c -classpath "$j" net.minecraft.client.gui.screens.worldselection.WorldOpenFlows 2>/dev/null | grep -n "Lifecycle\|askForBackup\|confirmWorldCreation\|worldGenSettingsLifecycle\|isStable\|stable" | head -40 || true
+            javap -p -c -classpath "$j" net.minecraft.client.gui.screens.worldselection.WorldOpenFlows 2>/dev/null | grep -E "^  [a-z].*\(|worldGenSettingsLifecycle" | grep -B1 "worldGenSettingsLifecycle" || true
             javap -p -classpath "$j" net.minecraft.world.level.storage.PrimaryLevelData 2>/dev/null | grep -i "lifecycle" || true
             javap -p -classpath "$j" net.minecraft.world.level.storage.WorldData 2>/dev/null | grep -i "lifecycle" || true
           done
