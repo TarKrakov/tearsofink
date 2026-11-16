@@ -164,7 +164,8 @@ public final class Gear {
 		// своё оружие: удар рукой или снаряд приёма мода (Волна, дуга…) — ступень и пробуждения
 		boolean modProjectile = direct != null && direct != attacker
 				&& TearsOfInk.MOD_ID.equals(BuiltInRegistries.ENTITY_TYPE.getKey(direct.getType()).getNamespace());
-		if (ours(held) && (direct == attacker || modProjectile)) {
+		// только игроки: урон охотников-NPC уже задан рангом (HuntTuning), ступень сверху задвоила бы рост
+		if (user instanceof Player && ours(held) && (direct == attacker || modProjectile)) {
 			float out = amount * TIER_MULT[tier(held)];
 			if (user instanceof ServerPlayer sp) {
 				out *= Awakening.damageMult(sp, held, target);
