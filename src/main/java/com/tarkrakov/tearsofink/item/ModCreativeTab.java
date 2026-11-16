@@ -105,6 +105,9 @@ public final class ModCreativeTab {
 						output.accept(com.tarkrakov.tearsofink.block.ModBlocks.CURSED_ALTAR);
 						output.accept(ModItems.MADNESS_SHARD);
 						output.accept(ModItems.INK_ECHO);
+						output.accept(ModItems.CRIMSON_FLOWER);
+						output.accept(ModItems.VALOR_SIGIL);
+						output.accept(ModItems.HOPE_MOTE);
 						output.accept(ModItems.FULFILLED_CONTRACT);
 						output.accept(ModBlocks.PALE_LOG);
 						output.accept(ModBlocks.STRIPPED_PALE_LOG);

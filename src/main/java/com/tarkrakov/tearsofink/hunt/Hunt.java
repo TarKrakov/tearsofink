@@ -861,6 +861,8 @@ public final class Hunt {
 					+ lands.random.nextInt(HuntTuning.PREFIX_BONUS_PIGMENT_MAX - HuntTuning.PREFIX_BONUS_PIGMENT_MIN + 1)));
 		}
 		p.sendSystemMessage(Component.translatable("hunt.tears-of-ink.your_reward", contracts).withStyle(ChatFormatting.GOLD));
+		if (a.contract() && p.getUUID().equals(a.owner) && a.rank == 2)
+			com.tarkrakov.tearsofink.weapon.forge.AscensionFont.onHardContract(p); // Символ Доблести — каждые 5 сложных
 		if (a.contract() && p.getUUID().equals(a.owner)) {
 			com.tarkrakov.tearsofink.vow.Vows.awaken(p, "contract_" + a.rank, com.tarkrakov.tearsofink.vow.Vows.AWAKENING);
 			com.tarkrakov.tearsofink.vow.Vows.heart(p, "contract_" + a.rank, com.tarkrakov.tearsofink.vow.Vows.SMALL_HEART, 0); // малое сердце (заглушка до боссов)

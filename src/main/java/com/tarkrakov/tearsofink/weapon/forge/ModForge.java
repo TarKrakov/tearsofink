@@ -44,5 +44,6 @@ public final class ModForge {
 
 	public static void init() {
 		Gear.init();
+		AscensionFont.init();
 	}
 }

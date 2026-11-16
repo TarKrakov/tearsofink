@@ -133,6 +133,14 @@ public final class ModItems {
 	/** Чернильный отголосок — усиливает чернильное свойство на уровень (редко с врагов Чернолесья; гарантированно — особые заказы, позже). */
 	public static final Item INK_ECHO = register("ink_echo", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.UNCOMMON)));
 
+	// ===== Возвышение в Купели (16 ноя): ресурсы линий =====
+	/** Багряный Цветок — Кровь (Алая Жатва, позже). */
+	public static final Item CRIMSON_FLOWER = register("crimson_flower", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)));
+	/** Символ Доблести — Шпиль (каждые 5 сложных контрактов). */
+	public static final Item VALOR_SIGIL = register("valor_sigil", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)));
+	/** Частичка Надежды — Чернила (особые заказы Торговки, позже). */
+	public static final Item HOPE_MOTE = register("hope_mote", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)));
+
 	// ===== Обычное оружие линий (16 ноя; модели — заглушки-перекраски, автор нарисует) =====
 	// итоговый урон / скорость: Бледное и Кровавое 5 и 8, Чернильное 6 и 9; Бледное быстрее
 	public static final Item PALE_SWORD = register("pale_sword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(

@@ -81,6 +81,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 		MenuScreens.register(ModAlchemy.MENU, AlchemyScreen::new);
 		MenuScreens.register(com.tarkrakov.tearsofink.weapon.forge.ModForge.MENU, com.tarkrakov.tearsofink.client.forge.InkAnvilScreen::new);
 		MenuScreens.register(com.tarkrakov.tearsofink.weapon.forge.ModForge.ALTAR_MENU, com.tarkrakov.tearsofink.client.forge.CursedAltarScreen::new);
+		com.tarkrakov.tearsofink.client.forge.FontClient.init(); // Купель: чёрная/белая вода
 
 		// Оружие: волна без модели (видна по брызгам); щиты — модель «в блоке» и «сияет»
 		EntityRendererRegistry.register(ModEntities.INK_WAVE, NoopRenderer::new);
