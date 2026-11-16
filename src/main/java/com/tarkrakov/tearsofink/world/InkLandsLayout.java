@@ -73,9 +73,13 @@ public final class InkLandsLayout {
 	public static final int ROADS = 5;
 	/** Полуширина дороги (дорога шириной ~2×этого). */
 	public static final double ROAD_HALF_WIDTH = 2.6;
-	/** Насколько дорога петляет (в радианах) и масштаб изгибов. */
-	public static final double ROAD_MEANDER = 0.22;
-	public static final double ROAD_MEANDER_SCALE = 160.0;
+	/**
+	 * Насколько дорога петляет вбок (блоки) и масштаб изгибов (блоки пути). 16 ноя: раньше петляние было в радианах —
+	 * вбок оно росло с расстоянием от центра, и на удвоенном мире дорога у края шла почти поперёк (рвалась на куски,
+	 * висела и проваливалась). Теперь вбок не больше ROAD_MEANDER блоков, уклон изгиба ~0,4 блока вбок на блок вперёд.
+	 */
+	public static final double ROAD_MEANDER = 70;
+	public static final double ROAD_MEANDER_SCALE = 260.0;
 	/** Дороги начинаются чуть за краем области и доходят почти до центра. */
 	public static final double ROAD_START_FRACTION = 1.08;
 	/** 16 ноя: дороги обрываются у Чернолесья разрушенным мостом — дальше только лесом. */
@@ -437,7 +441,7 @@ public final class InkLandsLayout {
 
 	/** Угол дороги без обходов: направление + плавное петляние. */
 	private double baseRoadAngle(int road, double d) {
-		return roadAngles[road] + roadNoise.getValue(d / ROAD_MEANDER_SCALE, road * 10.0) * ROAD_MEANDER;
+		return roadAngles[road] + roadNoise.getValue(d / ROAD_MEANDER_SCALE, road * 10.0) * ROAD_MEANDER / Math.max(d, 200.0);
 	}
 
 	private double roadAngle(int road, double d) {
@@ -608,7 +612,7 @@ public final class InkLandsLayout {
 			if (Math.abs(diff) > Math.PI / 2 || Math.abs(Math.sin(diff)) * d > halfWidth + 14) continue;
 			// настоящее расстояние до осевой линии (с учётом изгибов)
 			double best = Double.MAX_VALUE, bestT = d;
-			for (double t = d - 10; t <= d + 10; t += 1.0) {
+			for (double t = d - 12; t <= d + 12; t += 0.5) {
 				if (t < ROAD_END_RADIUS) continue;
 				double a = roadAngle(i, t);
 				double cx = center.getX() + Math.cos(a) * t - x;

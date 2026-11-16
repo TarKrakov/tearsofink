@@ -92,9 +92,10 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 				double decay = wreck ? 1 - broken / InkLandsLayout.BROKEN_BRIDGE_LEN : 0; // 0 — целый, 1 — у обрыва
 				long h = net.minecraft.util.Mth.getSeed(x, 7, z);
 				double roll = ((h >>> 16) & 0xFFFF) / 65535.0;
-				if (wreck && (broken < 7 || roll < 0.55 * decay * decay)) {
-					// обломок внизу, на земле
-					if (roll < 0.35 && broken >= 3) level.setBlock(pos.set(x, ground + 1, z),
+				// обрыв: последние 6 блоков — пустота с рваным краем (на краю дыры редкие), внизу — обломки
+				boolean edge = broken < 6 + (int) (roll * 3);
+				if (wreck && (edge || (broken < 14 && roll < 0.25))) {
+					if (roll < 0.3 && broken < 10) level.setBlock(pos.set(x, ground + 1, z),
 							((h >>> 8) & 1) == 0 ? deck : ModBlocks.PALE_STAIRS.defaultBlockState(), 2);
 					placed = true;
 					continue;
@@ -108,9 +109,9 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 						if (bent && y - 1 > ground) level.setBlock(pos.set(x, y - 1, z), beam(layout, road, along), 2);
 					} else {
 						// перила по краю; на пролёте — столбик и опора до земли (у обрыва — перила выломаны, опоры обрублены)
-						if (!wreck || roll > decay * 0.8) level.setBlock(pos.set(x, y + 1, z), bent ? pillar : rail, 2);
+						if (!wreck || broken > 16 || roll > 0.5) level.setBlock(pos.set(x, y + 1, z), bent ? pillar : rail, 2);
 						clear(level, pos, x, z, y + 2, Math.max(surface, y + HEADROOM));
-						int stump = wreck ? (int) Math.round((y - ground) * decay * 0.7) : 0;
+						int stump = wreck && broken < 12 ? (int) Math.round((y - ground) * 0.5) : 0;
 						if (bent) for (int yy = y - 1 - stump; yy > ground; yy--) level.setBlock(pos.set(x, yy, z), pillar, 2);
 					}
 				} else if (lane) {
