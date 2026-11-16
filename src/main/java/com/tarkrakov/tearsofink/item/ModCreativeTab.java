@@ -147,6 +147,7 @@ public final class ModCreativeTab {
 						output.accept(ModItems.ROARING_AXE);
 						output.accept(ModItems.RAPID_KNIFE);
 						output.accept(ModItems.PALE_SWORD);
+						output.accept(ModItems.PALE_LONGSWORD);
 						output.accept(ModItems.PALE_GREATSWORD);
 						output.accept(ModItems.BLOOD_SWORD);
 						output.accept(ModItems.BLOOD_GREATSWORD);

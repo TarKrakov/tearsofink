@@ -151,6 +151,10 @@ public final class ModItems {
 	// итоговый урон / скорость: Бледное и Кровавое 5 и 8, Чернильное 6 и 9; Бледное быстрее
 	public static final Item PALE_SWORD = register("pale_sword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
 			new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE, 5, 1.7f));
+	/** Первый предмет утверждённой средней бледной линейки. Временный боевой профиль —
+	 * характеристики существующего PALE_SWORD до согласования собственного приёма/баланса. */
+	public static final Item PALE_LONGSWORD = register("pale_longsword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+			new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE, 5, 1.7f));
 	public static final Item PALE_GREATSWORD = register("pale_greatsword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
 			new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE, 8, 1.1f));
 	public static final Item BLOOD_SWORD = register("blood_sword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(

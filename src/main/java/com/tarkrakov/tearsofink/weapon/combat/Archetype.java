@@ -42,7 +42,8 @@ public enum Archetype {
 					Map.entry(ModItems.CLEAVE_GREATSWORD, EXECUTIONER),
 					Map.entry(ModItems.WAVE_GREATSWORD, SCIMITAR),
 					Map.entry(ModItems.DIM_SCIMITAR, SCIMITAR),
-					Map.entry(ModItems.PALE_SWORD, SCIMITAR), Map.entry(ModItems.BLOOD_SWORD, SCIMITAR), Map.entry(ModItems.INK_SWORD, SCIMITAR),
+					Map.entry(ModItems.PALE_SWORD, SCIMITAR), Map.entry(ModItems.PALE_LONGSWORD, SCIMITAR), // временно: собственный архетип ещё не утверждён
+					Map.entry(ModItems.BLOOD_SWORD, SCIMITAR), Map.entry(ModItems.INK_SWORD, SCIMITAR),
 					Map.entry(ModItems.PALE_GREATSWORD, EXECUTIONER), Map.entry(ModItems.BLOOD_GREATSWORD, EXECUTIONER),
 					Map.entry(ModItems.INK_GREATSWORD, EXECUTIONER),
 					Map.entry(ModItems.HUNTER_GREATSWORD, EXECUTIONER),
