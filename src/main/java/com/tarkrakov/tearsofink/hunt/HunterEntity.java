@@ -156,6 +156,22 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		setCustomNameVisible(true);
 	}
 
+	/** Обезумевший (особый заказ Торговки): сильнее, бьёт игрока, игрок может его ранить. */
+	private boolean mad;
+
+	public void madden(float hpMult, float damageMult, Component name) {
+		mad = true;
+		float hp = getMaxHealth() * hpMult;
+		getAttribute(Attributes.MAX_HEALTH).setBaseValue(hp);
+		setHealth(hp);
+		baseDamage *= damageMult;
+		setCustomName(name);
+	}
+
+	public boolean mad() {
+		return mad;
+	}
+
 	public float power() {
 		return getMaxHealth() * baseDamage * (getOffhandItem().isEmpty() ? 1f : 1.2f);
 	}
@@ -217,7 +233,7 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 	@Override
 	public boolean hurt(DamageSource source, float amount) {
 		// охотники Шпиля и Крови не связываются с игроками (их цель — добыча Охоты); Чернильный — уязвим
-		if (source.getEntity() instanceof Player && hunterType() != HunterType.INK) return false;
+		if (source.getEntity() instanceof Player && hunterType() != HunterType.INK && !mad) return false;
 		boolean hit = super.hurt(source, amount);
 		if (hit) {
 			lastHurt = level().getGameTime();

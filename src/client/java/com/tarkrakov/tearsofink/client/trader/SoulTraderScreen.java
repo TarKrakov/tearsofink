@@ -123,6 +123,22 @@ public class SoulTraderScreen extends Screen {
 					() -> send(SoulTrader.ACTION_CONTRACTS), data.contracts() > 0, mouseX, mouseY);
 			y = option(g, Component.translatable("trader.tears-of-ink.option.board"), l + M, y,
 					() -> { send(SoulTrader.ACTION_BOARD); click(); }, true, mouseX, mouseY);
+			// особый заказ: обезумевший охотник
+			int order = data.order();
+			if (order == 1) {
+				y = option(g, Component.translatable("trader.tears-of-ink.option.order_abandon"), l + M, y,
+						() -> send(SoulTrader.ACTION_ORDER_ABANDON), true, mouseX, mouseY);
+			} else {
+				y = option(g, order == 0 ? Component.translatable("trader.tears-of-ink.option.order")
+								: Component.translatable("trader.tears-of-ink.option.order_wait", order - 2), l + M, y,
+						() -> send(SoulTrader.ACTION_ORDER), order == 0, mouseX, mouseY);
+			}
+			int essence = essence();
+			if (essence > 0) {
+				y = option(g, Component.translatable("trader.tears-of-ink.option.essence", essence,
+								com.tarkrakov.tearsofink.hunt.MadOrders.ESSENCE_PER_MOTE), l + M, y,
+						() -> send(SoulTrader.ACTION_ESSENCE), essence >= com.tarkrakov.tearsofink.hunt.MadOrders.ESSENCE_PER_MOTE, mouseX, mouseY);
+			}
 			option(g, Component.translatable("trader.tears-of-ink.option.leave"), l + M, y, () -> { send(SoulTrader.ACTION_LEAVE); onClose(); }, true, mouseX, mouseY);
 			return;
 		}
@@ -243,6 +259,15 @@ public class SoulTraderScreen extends Screen {
 			y += 10;
 		}
 		return y;
+	}
+
+	/** Эссенций надежды в инвентаре своего игрока. */
+	private static int essence() {
+		var p = net.minecraft.client.Minecraft.getInstance().player;
+		if (p == null) return 0;
+		int n = 0;
+		for (var s : p.getInventory().items) if (s.is(com.tarkrakov.tearsofink.item.ModItems.HOPE_ESSENCE)) n += s.getCount();
+		return n;
 	}
 
 	private int option(GuiGraphics g, Component text, int x, int y, Runnable click, boolean enabled, int mx, int my) {

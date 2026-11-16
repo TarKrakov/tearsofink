@@ -47,7 +47,9 @@ public final class SoulTrader {
 	public static final int IDLE_TICKS = 20 * 30, MAX_LIFE = 20 * 180;
 	public static final double RADIUS = 8, TRADE_RANGE = 6;
 
-	public static final int ACTION_SELL = 1, ACTION_CONTRACTS = 2, ACTION_LEAVE = 3, ACTION_BOARD = 4, ACTION_EXCHANGE = 5, ACTION_VOW = 6, ACTION_ABANDON = 20;
+	public static final int ACTION_SELL = 1, ACTION_CONTRACTS = 2, ACTION_LEAVE = 3, ACTION_BOARD = 4, ACTION_EXCHANGE = 5, ACTION_VOW = 6, ACTION_ABANDON = 20,
+			/** Особый заказ: взять / отказаться / отдать эссенции надежды. */
+			ACTION_ORDER = 7, ACTION_ORDER_ABANDON = 8, ACTION_ESSENCE = 9;
 	/** Взять контракт с доски: ACTION_TAKE + номер (0 лёгкий … 2 сложный). */
 	public static final int ACTION_TAKE = 10;
 
@@ -55,11 +57,13 @@ public final class SoulTrader {
 	 * Сервер → клиент: открыть (или обновить) окно Торговки.
 	 * vow — обеты, упаковано: путь (0–2) | цена смены в Пигменте &lt;&lt; 2 | обменяно Души &lt;&lt; 10 | продано шагов &lt;&lt; 16 | причина «нельзя обменять» &lt;&lt; 24.
 	 */
-	public record Open(int entity, int soulMax, int inkMax, int contracts, int vow) implements CustomPacketPayload {
+	/** order — особый заказ: 0 можно взять, 1 идёт, 2+ — перезарядка (минут + 2). */
+	public record Open(int entity, int soulMax, int inkMax, int contracts, int vow, int order) implements CustomPacketPayload {
 		public static final Type<Open> TYPE = new Type<>(TearsOfInk.id("trader_open"));
 		public static final StreamCodec<RegistryFriendlyByteBuf, Open> CODEC = StreamCodec.composite(
 				ByteBufCodecs.VAR_INT, Open::entity, ByteBufCodecs.VAR_INT, Open::soulMax,
-				ByteBufCodecs.VAR_INT, Open::inkMax, ByteBufCodecs.VAR_INT, Open::contracts, ByteBufCodecs.VAR_INT, Open::vow, Open::new);
+				ByteBufCodecs.VAR_INT, Open::inkMax, ByteBufCodecs.VAR_INT, Open::contracts, ByteBufCodecs.VAR_INT, Open::vow,
+				ByteBufCodecs.VAR_INT, Open::order, Open::new);
 
 		public com.tarkrakov.tearsofink.vow.Vow path() { return com.tarkrakov.tearsofink.vow.Vow.byIndex(vow & 3); }
 		public int changeCost() { return (vow >> 2) & 0xFF; }
@@ -174,7 +178,8 @@ public final class SoulTrader {
 		int b = block == null ? 0 : switch (block) { case "sold" -> 1; case "limit" -> 2; default -> 3; };
 		int packed = v.vow().ordinal() | (Math.min(255, com.tarkrakov.tearsofink.vow.Vows.changeCost(p)) << 2)
 				| (Math.min(63, v.exchanged()) << 10) | ((d.sold() + d.taint()) << 16) | (b << 24);
-		ServerPlayNetworking.send(p, new Open(trader.getId(), d.soulMax(), d.inkMax(), contracts(p), packed));
+		ServerPlayNetworking.send(p, new Open(trader.getId(), d.soulMax(), d.inkMax(), contracts(p), packed,
+				com.tarkrakov.tearsofink.hunt.MadOrders.state(p)));
 	}
 
 	private static void act(ServerPlayer p, Action a) {
@@ -189,6 +194,18 @@ public final class SoulTrader {
 			case ACTION_LEAVE -> trader.farewell(p);
 			case ACTION_BOARD -> com.tarkrakov.tearsofink.hunt.HuntContracts.send(p, trader);
 			case ACTION_ABANDON -> com.tarkrakov.tearsofink.hunt.HuntContracts.abandon(p, trader);
+			case ACTION_ORDER -> {
+				com.tarkrakov.tearsofink.hunt.MadOrders.take(p);
+				sendOpen(p, trader);
+			}
+			case ACTION_ORDER_ABANDON -> {
+				com.tarkrakov.tearsofink.hunt.MadOrders.abandon(p);
+				sendOpen(p, trader);
+			}
+			case ACTION_ESSENCE -> {
+				com.tarkrakov.tearsofink.hunt.MadOrders.tradeEssence(p);
+				sendOpen(p, trader);
+			}
 			default -> {
 				if (a.action() >= ACTION_TAKE && a.action() < ACTION_TAKE + 3) {
 					com.tarkrakov.tearsofink.hunt.HuntContracts.take(p, trader, a.action() - ACTION_TAKE);
