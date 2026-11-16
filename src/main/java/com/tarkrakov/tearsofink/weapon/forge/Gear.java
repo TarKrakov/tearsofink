@@ -50,6 +50,10 @@ public final class Gear {
 
 	/** Чернильный металл: шанс с врага, убитого игроком в Чернолесье (руды нет). */
 	public static final float INK_METAL_CHANCE = 0.25f;
+	/** Чернильный отголосок: редкий шанс с тех же врагов Чернолесья. */
+	public static final float INK_ECHO_CHANCE = 0.03f;
+	/** Осколки безумия: контракт с Чернильным охотником (в награде) и убитый игроком Чернильный охотник. */
+	public static final int SHARDS_CONTRACT_MIN = 1, SHARDS_CONTRACT_MAX = 2, SHARDS_KILL_MIN = 2, SHARDS_KILL_MAX = 3;
 
 	public static final int TIERS = 3;
 	private static final String TIER = "Tier", SHARP = "Sharp", LEGACY_TIER = "HunterTier", WARNED = "SharpWarned";
@@ -58,12 +62,20 @@ public final class Gear {
 
 	public static void init() {
 		net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
-			if (!(source.getEntity() instanceof ServerPlayer) || !(entity instanceof net.minecraft.world.entity.monster.Enemy)) return;
+			if (!(source.getEntity() instanceof ServerPlayer)) return;
+			// убил Чернильного охотника — Осколки безумия
+			if (entity instanceof com.tarkrakov.tearsofink.hunt.HunterEntity h && h.hunterType() == com.tarkrakov.tearsofink.hunt.HunterType.INK) {
+				entity.spawnAtLocation(new ItemStack(com.tarkrakov.tearsofink.item.ModItems.MADNESS_SHARD,
+						SHARDS_KILL_MIN + entity.getRandom().nextInt(SHARDS_KILL_MAX - SHARDS_KILL_MIN + 1)));
+			}
+			if (!(entity instanceof net.minecraft.world.entity.monster.Enemy)) return;
 			if (!(entity.level() instanceof net.minecraft.server.level.ServerLevel level) || !ModDimensions.isLands(level)) return;
 			if (!level.getBiome(entity.blockPosition()).is(net.minecraft.resources.ResourceKey.create(
 					net.minecraft.core.registries.Registries.BIOME, TearsOfInk.id("inkwood")))) return;
 			if (entity.getRandom().nextFloat() < INK_METAL_CHANCE)
 				entity.spawnAtLocation(new ItemStack(com.tarkrakov.tearsofink.item.ModItems.RAW_INK_METAL));
+			if (entity.getRandom().nextFloat() < INK_ECHO_CHANCE)
+				entity.spawnAtLocation(new ItemStack(com.tarkrakov.tearsofink.item.ModItems.INK_ECHO));
 		});
 	}
 
@@ -148,9 +160,19 @@ public final class Gear {
 		Entity attacker = source.getEntity();
 		if (!(attacker instanceof LivingEntity user)) return amount;
 		Entity direct = source.getDirectEntity();
+		ItemStack held = user.getMainHandItem();
+		// своё оружие: удар рукой или снаряд приёма мода (Волна, дуга…) — ступень и пробуждения
+		boolean modProjectile = direct != null && direct != attacker
+				&& TearsOfInk.MOD_ID.equals(BuiltInRegistries.ENTITY_TYPE.getKey(direct.getType()).getNamespace());
+		if (ours(held) && (direct == attacker || modProjectile)) {
+			float out = amount * TIER_MULT[tier(held)];
+			if (user instanceof ServerPlayer sp) {
+				out *= Awakening.damageMult(sp, held, target);
+				Awakening.afterDamage(sp, held, out);
+			}
+			return out;
+		}
 		if (direct == attacker) {
-			ItemStack held = user.getMainHandItem();
-			if (ours(held)) return amount * TIER_MULT[tier(held)];
 			if (user instanceof Player && !(target instanceof Player) && vanillaWeapon(held)) return amount * VANILLA_WEAPON_MULT;
 			return amount;
 		}
@@ -173,6 +195,7 @@ public final class Gear {
 	public static void onWeaponHit(LivingEntity attacker, ItemStack weapon, LivingEntity target) {
 		if (!ours(weapon)) return;
 		wear(attacker, weapon, WEAR_HIT);
+		if (attacker instanceof ServerPlayer sp) Awakening.onComboHit(sp, weapon, target);
 		if (weapon.getItem() instanceof OrdinaryWeaponItem o) {
 			switch (o.line()) {
 				case BLOOD -> {

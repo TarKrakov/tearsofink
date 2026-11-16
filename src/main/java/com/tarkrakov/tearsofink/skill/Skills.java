@@ -12,6 +12,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.sounds.SoundSource;
 
 import java.util.Collection;
@@ -132,13 +133,17 @@ public final class Skills {
 		if (cooldowns.getOrDefault(skill.id(), 0) > now) return false;
 
 		boolean creative = player.getAbilities().instabuild;
-		if (!creative && (data.ink() < skill.inkCost() || data.soul() < skill.soulCost())) {
+		// оружие приёма (Shift+R — левое) и его пробуждения: Скупость — дешевле, Поток — короче перезарядка
+		ItemStack gearWeapon = weaponOf(player, skill);
+		float costMult = com.tarkrakov.tearsofink.weapon.forge.Awakening.costMult(gearWeapon);
+		float inkCost = skill.inkCost() * costMult, healthCost = skill.healthCost() * costMult;
+		if (!creative && (data.ink() < inkCost || data.soul() < skill.soulCost())) {
 			ServerPlayNetworking.send(player, new SkillPayloads.NotEnough(data.soul() < skill.soulCost()));
 			player.playNotifySound(SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.25f, 1.8f);
 			return false;
 		}
 
-		if (!creative && skill.healthCost() > 0 && player.getHealth() <= skill.healthCost()) { // кровью платить нечем
+		if (!creative && healthCost > 0 && player.getHealth() <= healthCost) { // кровью платить нечем
 			player.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.tears-of-ink.no_blood")
 					.withStyle(net.minecraft.ChatFormatting.DARK_RED), true);
 			player.playNotifySound(SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.25f, 1.8f);
@@ -147,25 +152,32 @@ public final class Skills {
 
 		if (!skill.activate(player, input)) return false;
 
-		if (!creative && skill.healthCost() > 0) { // заплатить кровью
-			player.setHealth(Math.max(1f, player.getHealth() - skill.healthCost()));
+		if (!creative && healthCost > 0) { // заплатить кровью
+			player.setHealth(Math.max(1f, player.getHealth() - healthCost));
 			player.serverLevel().sendParticles(com.tarkrakov.tearsofink.particle.ModParticles.BLOOD_DRIP_FALL,
 					player.getX(), player.getY() + 1.0, player.getZ(), 8, 0.25, 0.4, 0.25, 0);
 		}
 
-		cooldowns.put(skill.id(), now + skill.cooldownTicks());
-		// приёмы оружия тупят клинок (Gear): Shift+R — левый, остальное — правый
-		if (skill.getClass().getName().contains(".weapon.")) {
-			var off = player.getOffhandItem();
-			boolean left = off.getItem() instanceof com.tarkrakov.tearsofink.weapon.AbilityWeapon aw && aw.ability() == skill
-					&& !(player.getMainHandItem().getItem() instanceof com.tarkrakov.tearsofink.weapon.AbilityWeapon mw && mw.ability() == skill);
-			com.tarkrakov.tearsofink.weapon.forge.Gear.wear(player, left ? off : player.getMainHandItem(),
-					com.tarkrakov.tearsofink.weapon.forge.Gear.WEAR_ABILITY);
+		cooldowns.put(skill.id(), now + Math.round(skill.cooldownTicks()
+				* com.tarkrakov.tearsofink.weapon.forge.Awakening.cooldownMult(gearWeapon)));
+		if (gearWeapon != null) { // приёмы оружия тупят клинок (Gear) и открывают окно «Разящего приёма»
+			com.tarkrakov.tearsofink.weapon.forge.Gear.wear(player, gearWeapon, com.tarkrakov.tearsofink.weapon.forge.Gear.WEAR_ABILITY);
+			com.tarkrakov.tearsofink.weapon.forge.Awakening.abilityUsed(player);
 		}
 		if (!creative) {
 			InkData fresh = InkPowers.get(player);
-			InkPowers.update(player, fresh.withInk(fresh.ink() - skill.inkCost()).withSoul(fresh.soul() - skill.soulCost()));
+			InkPowers.update(player, fresh.withInk(fresh.ink() - inkCost).withSoul(fresh.soul() - skill.soulCost()));
 		}
 		return true;
+	}
+
+	/** Оружие, чей это приём: Shift+R — левое, остальное — правое; null — навык не оружейный. */
+	@org.jetbrains.annotations.Nullable
+	private static ItemStack weaponOf(ServerPlayer player, Skill skill) {
+		if (!skill.getClass().getName().contains(".weapon.")) return null;
+		ItemStack off = player.getOffhandItem();
+		boolean left = off.getItem() instanceof com.tarkrakov.tearsofink.weapon.AbilityWeapon aw && aw.ability() == skill
+				&& !(player.getMainHandItem().getItem() instanceof com.tarkrakov.tearsofink.weapon.AbilityWeapon mw && mw.ability() == skill);
+		return left ? off : player.getMainHandItem();
 	}
 }

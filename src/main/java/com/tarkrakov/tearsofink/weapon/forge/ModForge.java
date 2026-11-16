@@ -37,6 +37,9 @@ public final class ModForge {
 	public static final MenuType<InkAnvilMenu> MENU = Registry.register(BuiltInRegistries.MENU,
 			TearsOfInk.id("ink_anvil"), new MenuType<>(InkAnvilMenu::new, FeatureFlags.VANILLA_SET));
 
+	public static final MenuType<CursedAltarMenu> ALTAR_MENU = Registry.register(BuiltInRegistries.MENU,
+			TearsOfInk.id("cursed_altar"), new MenuType<>(CursedAltarMenu::new, FeatureFlags.VANILLA_SET));
+
 	private ModForge() {}
 
 	public static void init() {

@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SJS",
+    "CAC",
+    "AAA"
+  ],
+  "key": {
+    "S": {
+      "item": "tears-of-ink:madness_shard"
+    },
+    "J": {
+      "item": "tears-of-ink:ink"
+    },
+    "C": {
+      "item": "tears-of-ink:blood_clot"
+    },
+    "A": {
+      "item": "tears-of-ink:asphoda"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:cursed_altar"
+  }
+}

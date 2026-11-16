@@ -852,6 +852,10 @@ public final class Hunt {
 				.withParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.THIS_ENTITY, p)
 				.create(LootContextParamSets.GIFT);
 		for (ItemStack s : table.getRandomItems(params)) give(p, s);
+		if (a.type == HunterType.INK) { // охотник Чернил — Осколки безумия для Проклятого алтаря
+			give(p, new ItemStack(ModItems.MADNESS_SHARD, com.tarkrakov.tearsofink.weapon.forge.Gear.SHARDS_CONTRACT_MIN
+					+ lands.random.nextInt(com.tarkrakov.tearsofink.weapon.forge.Gear.SHARDS_CONTRACT_MAX - com.tarkrakov.tearsofink.weapon.forge.Gear.SHARDS_CONTRACT_MIN + 1)));
+		}
 		if (a.prefix != PreyPrefix.NONE) { // особая цель — больше Пигмента
 			give(p, new ItemStack(ModItems.PIGMENT, HuntTuning.PREFIX_BONUS_PIGMENT_MIN
 					+ lands.random.nextInt(HuntTuning.PREFIX_BONUS_PIGMENT_MAX - HuntTuning.PREFIX_BONUS_PIGMENT_MIN + 1)));

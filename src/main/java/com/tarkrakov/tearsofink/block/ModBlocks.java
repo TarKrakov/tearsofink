@@ -239,6 +239,10 @@ public final class ModBlocks {
 	public static final Block INK_ANVIL = register("ink_anvil", new com.tarkrakov.tearsofink.weapon.forge.InkAnvilBlock(
 			BlockBehaviour.Properties.ofFullCopy(Blocks.SMITHING_TABLE).mapColor(MapColor.COLOR_BLACK).requiresCorrectToolForDrops().strength(3.5f)));
 
+	/** Проклятый алтарь — пробуждения оружия кровью и чернилами. */
+	public static final Block CURSED_ALTAR = register("cursed_altar", new com.tarkrakov.tearsofink.weapon.forge.CursedAltarBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.ENCHANTING_TABLE).mapColor(MapColor.COLOR_RED).lightLevel(s -> 5)));
+
 	// ===== Ванильные руды в асфоделитовой породе (лут — ванильный) =====
 	public static final Block ASPHODELITE_COAL_ORE = register("asphodelite_coal_ore", new DropExperienceBlock(UniformInt.of(0, 2),
 			BlockBehaviour.Properties.ofFullCopy(Blocks.COAL_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE)));

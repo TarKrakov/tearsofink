@@ -371,7 +371,14 @@ public final class Combat {
 			float dmg = EnchantmentHelper.modifyDamage(level, weapon, t, src, (float) base);
 			if (bastion) dmg *= com.tarkrakov.tearsofink.weapon.shield.ShieldStance.strongMult(t)
 					* (riposte ? com.tarkrakov.tearsofink.weapon.shield.ShieldTuning.RIPOSTE_MULT : 1f);
-			if (t.hurt(src, dmg)) {
+			com.tarkrakov.tearsofink.weapon.forge.Awakening.comboHit = true; // удар связки — не приём («Разящий приём»)
+			boolean hurt;
+			try {
+				hurt = t.hurt(src, dmg);
+			} finally {
+				com.tarkrakov.tearsofink.weapon.forge.Awakening.comboHit = false;
+			}
+			if (hurt) {
 				hitAny = true;
 				if (riposte) com.tarkrakov.tearsofink.weapon.shield.ShieldStance.riposteHit(p, t);
 				com.tarkrakov.tearsofink.weapon.blood.Bleeding.onWeaponHit(p, weapon, t);

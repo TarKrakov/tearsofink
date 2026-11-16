@@ -127,6 +127,12 @@ public final class ModItems {
 	public static final Item BLOOD_INGOT = register("blood_ingot", new Item(new Item.Properties()));
 	public static final Item INK_INGOT = register("ink_ingot", new Item(new Item.Properties()));
 
+	// ===== Пробуждения (16 ноя) =====
+	/** Осколки безумия — с Чернильных охотников (контракт с ним, убийство); идут в Проклятый алтарь. */
+	public static final Item MADNESS_SHARD = register("madness_shard", new Item(new Item.Properties()));
+	/** Чернильный отголосок — усиливает чернильное свойство на уровень (редко с врагов Чернолесья; гарантированно — особые заказы, позже). */
+	public static final Item INK_ECHO = register("ink_echo", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.UNCOMMON)));
+
 	// ===== Обычное оружие линий (16 ноя; модели — заглушки-перекраски, автор нарисует) =====
 	// итоговый урон / скорость: Бледное и Кровавое 5 и 8, Чернильное 6 и 9; Бледное быстрее
 	public static final Item PALE_SWORD = register("pale_sword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(

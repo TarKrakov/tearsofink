@@ -91,6 +91,7 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 			tooltip.add(Component.translatable("gear.tears-of-ink.sharp_line",
 					Math.round(100 * com.tarkrakov.tearsofink.weapon.forge.Gear.sharpFraction(stack))).withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
 		}
+		com.tarkrakov.tearsofink.weapon.forge.Awakening.tooltip(stack, tooltip);
 		Descriptions.add(getDescriptionId(), tooltip);
 	}
 

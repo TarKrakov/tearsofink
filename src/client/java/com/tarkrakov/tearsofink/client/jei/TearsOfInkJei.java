@@ -27,7 +27,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.crafting.RecipeHolder;
-import net.minecraft.world.level.ItemLike;
 
 import java.util.List;
 
@@ -45,11 +44,6 @@ public class TearsOfInkJei implements IModPlugin {
 	public static final RecipeType<RecipeHolder<AlchemyRecipe>> ALCHEMY =
 			RecipeType.create(TearsOfInk.MOD_ID, "alchemy", (Class) RecipeHolder.class);
 
-	/** Предметы со страницей «откуда это» в JEI (ключ jei.tears-of-ink.info.<имя>). */
-	private static final List<ItemLike> INFO = List.of(
-			ModBlocks.PALE_ORE, ModItems.RAW_PALE_METAL, ModBlocks.BLOOD_ORE, ModItems.RAW_BLOOD_METAL, ModItems.RAW_INK_METAL,
-			ModBlocks.INK_ANVIL, ModItems.PIGMENT, ModItems.ASPHODA, ModItems.BLOOD_CLOT, ModItems.INK,
-			ModItems.FULFILLED_CONTRACT);
 
 	@Override
 	public ResourceLocation getPluginUid() {
@@ -70,10 +64,13 @@ public class TearsOfInkJei implements IModPlugin {
 			registration.addRecipes(FORGING, recipes.getAllRecipesFor(ModForge.TYPE));
 			registration.addRecipes(ALCHEMY, recipes.getAllRecipesFor(ModAlchemy.TYPE));
 		}
-		for (ItemLike item : INFO) {
-			String name = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item.asItem()).getPath();
-			registration.addIngredientInfo(new ItemStack(item), VanillaTypes.ITEM_STACK,
-					Component.translatable("jei.tears-of-ink.info." + name));
+		// страницы «откуда это»: у любого предмета мода, для которого в языковом файле есть jei.tears-of-ink.info.<имя>
+		for (Item item : net.minecraft.core.registries.BuiltInRegistries.ITEM) {
+			var key = net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item);
+			if (!TearsOfInk.MOD_ID.equals(key.getNamespace())) continue;
+			String lang = "jei.tears-of-ink.info." + key.getPath();
+			if (net.minecraft.locale.Language.getInstance().has(lang))
+				registration.addIngredientInfo(new ItemStack(item), VanillaTypes.ITEM_STACK, Component.translatable(lang));
 		}
 	}
 

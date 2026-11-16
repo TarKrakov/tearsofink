@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "top": "tears-of-ink:block/cursed_altar_top",
+    "side": "tears-of-ink:block/cursed_altar_side",
+    "bottom": "tears-of-ink:block/cursed_altar_bottom"
+  }
+}
