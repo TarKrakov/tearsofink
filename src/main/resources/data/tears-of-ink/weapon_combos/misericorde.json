@@ -1,0 +1,39 @@
+{
+  "_comment": "Рабочий баланс Мизерикорда: три узких колющих удара, без дуговых рассечений. Особый приём на R планируется отдельно.",
+  "tempo": 1.05,
+  "min_strength": 0.75,
+  "reset_ticks": 22,
+  "early_ticks": 6,
+  "steps": [
+    {
+      "anim": "attack1",
+      "duration": 6,
+      "hit": 3,
+      "damage": 0.9,
+      "reach": 2.6,
+      "arc": 22,
+      "knockback": 0.15,
+      "speed": 2
+    },
+    {
+      "anim": "attack3",
+      "duration": 7,
+      "hit": 4,
+      "damage": 1,
+      "reach": 2.7,
+      "arc": 26,
+      "knockback": 0.2,
+      "speed": 1.85
+    },
+    {
+      "anim": "attack1",
+      "duration": 8,
+      "hit": 5,
+      "damage": 1.15,
+      "reach": 3,
+      "arc": 30,
+      "knockback": 0.3,
+      "speed": 1.7
+    }
+  ]
+}

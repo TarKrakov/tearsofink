@@ -26,7 +26,9 @@ public enum Archetype {
 	/** Ревущая Секира (Шпиль): одной рукой и парой. */
 	AXE("axe"),
 	/** Разящий Кинжал (Шпиль): быстрые уколы, пируэт, рывок с уколом; парой — росчерки и рывок с вонзанием. */
-	DAGGER("dagger");
+	DAGGER("dagger"),
+	/** Бледный мизерикорд: колющие связки без расхода ресурсов. */
+	MISERICORDE("misericorde");
 
 	public final String id;
 
@@ -42,6 +44,7 @@ public enum Archetype {
 					Map.entry(ModItems.CLEAVE_GREATSWORD, EXECUTIONER),
 					Map.entry(ModItems.WAVE_GREATSWORD, SCIMITAR),
 					Map.entry(ModItems.DIM_SCIMITAR, SCIMITAR),
+					Map.entry(ModItems.PALE_MISERICORDE, MISERICORDE),
 					Map.entry(ModItems.PALE_SWORD, SCIMITAR), Map.entry(ModItems.PALE_LONGSWORD, SCIMITAR), // временно: собственный архетип ещё не утверждён
 					Map.entry(ModItems.BLOOD_SWORD, SCIMITAR), Map.entry(ModItems.INK_SWORD, SCIMITAR),
 					Map.entry(ModItems.PALE_GREATSWORD, EXECUTIONER), Map.entry(ModItems.BLOOD_GREATSWORD, EXECUTIONER),

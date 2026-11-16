@@ -149,6 +149,11 @@ public final class ModItems {
 
 	// ===== Обычное оружие линий (16 ноя; модели — заглушки-перекраски, автор нарисует) =====
 	// итоговый урон / скорость: Бледное и Кровавое 5 и 8, Чернильное 6 и 9; Бледное быстрее
+	/** Лёгкий клинок Бледнолесья: быстрые узкие колющие атаки.
+	 * Урон/скорость — рабочий локальный баланс; текстура и движения временные. */
+	public static final Item PALE_MISERICORDE = register("pale_misericorde",
+			new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+					new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE, 4, 2.1f));
 	public static final Item PALE_SWORD = register("pale_sword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
 			new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE, 5, 1.7f));
 	/** Первый предмет утверждённой средней бледной линейки. Временный боевой профиль —
