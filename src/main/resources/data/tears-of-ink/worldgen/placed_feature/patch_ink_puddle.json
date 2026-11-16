@@ -13,6 +13,10 @@
       "heightmap": "MOTION_BLOCKING"
     },
     {
+      "type": "tears-of-ink:away_from_road",
+      "margin": 9
+    },
+    {
       "type": "minecraft:biome"
     }
   ]

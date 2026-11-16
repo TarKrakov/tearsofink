@@ -37,7 +37,7 @@ public final class BloodHerald {
 	/** В этом радиусе от ствола ванильные монстры сами не появляются (тень кроны). */
 	public static final int NO_MONSTER_RADIUS = 90;
 	/** Дороги обходят ствол на таком расстоянии. */
-	public static final int ROAD_AVOID = 42;
+	public static final int ROAD_AVOID = 64; // 16 ноя: было 42 — корни Вестника (до ~55 от ствола) ложились на дорогу
 
 	public static final StructureType<BloodHeraldStructure> STRUCTURE_TYPE = Registry.register(
 			BuiltInRegistries.STRUCTURE_TYPE, TEMPLATE, () -> BloodHeraldStructure.CODEC);
