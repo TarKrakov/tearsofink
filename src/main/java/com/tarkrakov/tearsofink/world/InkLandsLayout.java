@@ -475,6 +475,21 @@ public final class InkLandsLayout {
 		int n = (int) (RADIUS * ROAD_START_FRACTION) + 40;
 		double[][] out = new double[ROADS][];
 		for (int road = 0; road < ROADS; road++) {
+			// 16 ноя: сторона обхода — одна на препятствие (с той, где дорога и так ближе проходит). Раньше сторона
+			// решалась на каждом шаге: если дорога шла почти через центр, сдвиги «влево» и «вправо» гасили друг друга
+			// и дорога шла прямо сквозь ствол Вестника.
+			java.util.Map<Long, double[]> sides = new java.util.HashMap<>(); // ключ препятствия → {мин. расстояние, сторона}
+			for (int i = 1; i < n; i++) {
+				double a0 = baseRoadAngle(road, i);
+				double px = center.getX() + Math.cos(a0) * i, pz = center.getZ() + Math.sin(a0) * i;
+				noteSide(sides, -1L, a0, i, px, pz, lakeCenter.getX(), lakeCenter.getZ());
+				int cellX = Math.floorDiv((int) px, BLOOD_CELL), cellZ = Math.floorDiv((int) pz, BLOOD_CELL);
+				for (int ci = -1; ci <= 1; ci++) for (int cj = -1; cj <= 1; cj++) {
+					long[] blob = bloodBlob(cellX + ci, cellZ + cj);
+					if (blob != null) noteSide(sides, blob[0] * 1_000_003L + blob[1], a0, i, px, pz, blob[0], blob[1]);
+				}
+			}
+			sideMap = sides;
 			double[] need = new double[n];
 			for (int i = 1; i < n; i++) {
 				double a0 = baseRoadAngle(road, i);
@@ -512,6 +527,25 @@ public final class InkLandsLayout {
 		return out;
 	}
 
+	/** Стороны обхода для дороги, которую сейчас считаем (buildRoadShifts). */
+	private java.util.Map<Long, double[]> sideMap;
+
+	/** Запомнить, с какой стороны дорога ближе всего проходит мимо препятствия. */
+	private void noteSide(java.util.Map<Long, double[]> sides, long key, double a0, double d, double px, double pz, double cx, double cz) {
+		double dist = Math.hypot(px - cx, pz - cz);
+		double[] cur = sides.get(key);
+		if (cur != null && cur[0] <= dist) return;
+		double phi = Math.atan2(cz - center.getZ(), cx - center.getX());
+		double diff = Mth.wrapDegrees((a0 - phi) * Mth.RAD_TO_DEG);
+		sides.put(key, new double[]{dist, diff >= 0 ? 1 : -1});
+	}
+
+	private int side(long key) {
+		java.util.Map<Long, double[]> m = sideMap;
+		double[] v = m == null ? null : m.get(key);
+		return v == null ? 0 : (int) v[1];
+	}
+
 	/** Жёсткий обход: Озеро и стволы Вестников (без сглаживания — только чтобы узнать, сколько надо сдвинуть). */
 	private double avoidObstacles(double a, double d) {
 		a = avoidLake(a, d);
@@ -521,7 +555,8 @@ public final class InkLandsLayout {
 		for (int i = -1; i <= 1; i++) {
 			for (int j = -1; j <= 1; j++) {
 				long[] blob = bloodBlob(cellX + i, cellZ + j);
-				if (blob != null) a = avoidCircle(a, d, blob[0], blob[1], com.tarkrakov.tearsofink.world.herald.BloodHerald.ROAD_AVOID);
+				if (blob != null) a = avoidCircle(a, d, blob[0], blob[1], com.tarkrakov.tearsofink.world.herald.BloodHerald.ROAD_AVOID,
+						side(blob[0] * 1_000_003L + blob[1]));
 			}
 		}
 		return a;
@@ -531,11 +566,11 @@ public final class InkLandsLayout {
 	/** Если дорога на этом радиусе попадает в Озеро — сдвигаем её вбок, на берег (в ту сторону, где она и так шла). */
 	private double avoidLake(double a, double d) {
 		if (lakeCenter == null) return a;
-		return avoidCircle(a, d, lakeCenter.getX(), lakeCenter.getZ(), LAKE_ROAD_AVOID);
+		return avoidCircle(a, d, lakeCenter.getX(), lakeCenter.getZ(), LAKE_ROAD_AVOID, side(-1L));
 	}
 
 	/** Сдвинуть дорогу (угол a на радиусе d от центра области) так, чтобы она обошла круг (cx, cz, r). */
-	private double avoidCircle(double a, double d, double cx, double cz, double r) {
+	private double avoidCircle(double a, double d, double cx, double cz, double r, int forcedSide) {
 		double lx = cx - center.getX(), lz = cz - center.getZ();
 		double dist = Math.sqrt(lx * lx + lz * lz), phi = Math.atan2(lz, lx);
 		double c = (d * d + dist * dist - r * r) / (2 * d * dist);
@@ -543,7 +578,8 @@ public final class InkLandsLayout {
 		double theta = Math.acos(c);
 		double diff = Mth.wrapDegrees((a - phi) * Mth.RAD_TO_DEG) * Mth.DEG_TO_RAD;
 		if (Math.abs(diff) >= theta) return a;
-		return phi + (diff >= 0 ? theta : -theta);
+		int s = forcedSide != 0 ? forcedSide : (diff >= 0 ? 1 : -1);
+		return phi + s * theta;
 	}
 
 	/**
