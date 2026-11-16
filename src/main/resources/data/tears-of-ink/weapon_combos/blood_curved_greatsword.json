@@ -1,0 +1,39 @@
+{
+  "_comment": "Рабочая отдельная связка Алый кривой двуручник. Специальный R-приём — отдельный этап.",
+  "tempo": 0.93,
+  "min_strength": 0.87,
+  "reset_ticks": 31,
+  "early_ticks": 6,
+  "steps": [
+    {
+      "anim": "attack1",
+      "duration": 12,
+      "hit": 6,
+      "damage": 1,
+      "reach": 3.5,
+      "arc": 145,
+      "knockback": 0.5,
+      "speed": 1
+    },
+    {
+      "anim": "attack2",
+      "duration": 14,
+      "hit": 7,
+      "damage": 1,
+      "reach": 3.5,
+      "arc": 160,
+      "knockback": 0.55,
+      "speed": 0.95
+    },
+    {
+      "anim": "attack3",
+      "duration": 18,
+      "hit": 10,
+      "damage": 1.5,
+      "reach": 3.65,
+      "arc": 80,
+      "knockback": 0.7,
+      "speed": 0.85
+    }
+  ]
+}

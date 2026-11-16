@@ -162,14 +162,36 @@ public final class ModItems {
 			new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE, 5, 1.7f));
 	public static final Item PALE_GREATSWORD = register("pale_greatsword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
 			new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE, 8, 1.1f));
+	/** Бледный линейный двуручник: рабочий локальный баланс, временный визуал. */
+	public static final Item PALE_LINEAR_GREATSWORD = register("pale_linear_greatsword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+			new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE, 8, 1.1f));
 	public static final Item BLOOD_SWORD = register("blood_sword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
 			new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD, 5, 1.5f));
 	public static final Item BLOOD_GREATSWORD = register("blood_greatsword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
 			new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD, 8, 1.0f));
+	/** Алый Катар: рабочий локальный баланс, временный визуал. */
+	public static final Item BLOOD_KATAR = register("blood_katar", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+			new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD, 4, 1.8f));
+	/** Алая Пата: рабочий локальный баланс, временный визуал. */
+	public static final Item BLOOD_PATA = register("blood_pata", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+			new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD, 5, 1.5f));
+	/** Алый кривой двуручник: рабочий локальный баланс, временный визуал. */
+	public static final Item BLOOD_CURVED_GREATSWORD = register("blood_curved_greatsword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+			new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD, 8, 1f));
 	public static final Item INK_SWORD = register("ink_sword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
 			new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.INK, 6, 1.5f));
 	public static final Item INK_GREATSWORD = register("ink_greatsword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
 			new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.INK, 9, 1.0f));
+
+	/** Чернильный Сакс: рабочий локальный баланс, временный визуал. */
+	public static final Item INK_SEAX = register("ink_seax", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+			new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.INK, 5, 1.7f));
+	/** Чернильный Фальшион: рабочий локальный баланс, временный визуал. */
+	public static final Item INK_FALCHION = register("ink_falchion", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+			new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.INK, 6, 1.4f));
+	/** Чернильный Крегсмессер: рабочий локальный баланс, временный визуал. */
+	public static final Item INK_KRIEGSMESSER = register("ink_kriegsmesser", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+			new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.INK, 9, 1f));
 
 	// ===== Добыча с фауны =====
 	/** Шёлковая нить (бледные гусеницы) — работает в рецептах вместо ванильной нити. */

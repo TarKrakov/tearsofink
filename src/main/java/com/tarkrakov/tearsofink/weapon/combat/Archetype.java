@@ -28,7 +28,23 @@ public enum Archetype {
 	/** Разящий Кинжал (Шпиль): быстрые уколы, пируэт, рывок с уколом; парой — росчерки и рывок с вонзанием. */
 	DAGGER("dagger"),
 	/** Бледный мизерикорд: колющие связки без расхода ресурсов. */
-	MISERICORDE("misericorde");
+	MISERICORDE("misericorde"),
+	/** Бледный полуторный клинок: независимый архетип для последующей авторской анимации. */
+	PALE_LONGSWORD("pale_longsword"),
+	/** Бледный линейный двуручник: независимый архетип для последующей авторской анимации. */
+	PALE_LINEAR_GREATSWORD("pale_linear_greatsword"),
+	/** Алый Катар: независимый архетип для последующей авторской анимации. */
+	BLOOD_KATAR("blood_katar"),
+	/** Алая Пата: независимый архетип для последующей авторской анимации. */
+	BLOOD_PATA("blood_pata"),
+	/** Алый кривой двуручник: независимый архетип для последующей авторской анимации. */
+	BLOOD_CURVED_GREATSWORD("blood_curved_greatsword"),
+	/** Чернильный Сакс: независимый архетип для последующей авторской анимации. */
+	INK_SEAX("ink_seax"),
+	/** Чернильный Фальшион: независимый архетип для последующей авторской анимации. */
+	INK_FALCHION("ink_falchion"),
+	/** Чернильный Крегсмессер: независимый архетип для последующей авторской анимации. */
+	INK_KRIEGSMESSER("ink_kriegsmesser");
 
 	public final String id;
 
@@ -45,8 +61,15 @@ public enum Archetype {
 					Map.entry(ModItems.WAVE_GREATSWORD, SCIMITAR),
 					Map.entry(ModItems.DIM_SCIMITAR, SCIMITAR),
 					Map.entry(ModItems.PALE_MISERICORDE, MISERICORDE),
-					Map.entry(ModItems.PALE_SWORD, SCIMITAR), Map.entry(ModItems.PALE_LONGSWORD, SCIMITAR), // временно: собственный архетип ещё не утверждён
+					Map.entry(ModItems.PALE_SWORD, SCIMITAR), Map.entry(ModItems.PALE_LONGSWORD, PALE_LONGSWORD),
 					Map.entry(ModItems.BLOOD_SWORD, SCIMITAR), Map.entry(ModItems.INK_SWORD, SCIMITAR),
+					Map.entry(ModItems.PALE_LINEAR_GREATSWORD, PALE_LINEAR_GREATSWORD),
+					Map.entry(ModItems.BLOOD_KATAR, BLOOD_KATAR),
+					Map.entry(ModItems.BLOOD_PATA, BLOOD_PATA),
+					Map.entry(ModItems.BLOOD_CURVED_GREATSWORD, BLOOD_CURVED_GREATSWORD),
+					Map.entry(ModItems.INK_SEAX, INK_SEAX),
+					Map.entry(ModItems.INK_FALCHION, INK_FALCHION),
+					Map.entry(ModItems.INK_KRIEGSMESSER, INK_KRIEGSMESSER),
 					Map.entry(ModItems.PALE_GREATSWORD, EXECUTIONER), Map.entry(ModItems.BLOOD_GREATSWORD, EXECUTIONER),
 					Map.entry(ModItems.INK_GREATSWORD, EXECUTIONER),
 					Map.entry(ModItems.HUNTER_GREATSWORD, EXECUTIONER),

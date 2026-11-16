@@ -1,0 +1,331 @@
+{
+  "_comment": "ВРЕМЕННЫЕ технические движения Алый кривой двуручник, адаптированы из архетипа talwar. Заменить по постановке автора.",
+  "third": {
+    "reach": 1.3,
+    "lead": 0.5,
+    "body": 0.3,
+    "look": 0.6
+  },
+  "animations": {
+    "equip": {
+      "length": 0.5,
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            -20,
+            0,
+            100
+          ],
+          "translation": [
+            3,
+            -11,
+            0
+          ],
+          "ease": "back_out"
+        },
+        {
+          "t": 0.32,
+          "rotation": [
+            0,
+            0,
+            -10
+          ],
+          "translation": [
+            0,
+            1,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.5,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ]
+        }
+      ]
+    },
+    "attack1": {
+      "length": 0.8,
+      "hold": 0.3,
+      "return": 0.3,
+      "impact": 0.2,
+      "smooth": true,
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.1,
+          "rotation": [
+            51.2,
+            16.7,
+            -44.5
+          ],
+          "translation": [
+            5,
+            4,
+            1
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.2,
+          "rotation": [
+            -25.9,
+            58.3,
+            16
+          ],
+          "translation": [
+            0,
+            1,
+            -4
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.28,
+          "rotation": [
+            -76.5,
+            48,
+            54.9
+          ],
+          "translation": [
+            -8,
+            -2,
+            -3
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.38,
+          "rotation": [
+            -79.5,
+            45.1,
+            63.3
+          ],
+          "translation": [
+            -9,
+            -3,
+            -1
+          ],
+          "ease": "linear"
+        }
+      ]
+    },
+    "attack2": {
+      "length": 0.75,
+      "hold": 0.4,
+      "return": 0.35,
+      "impact": 0.28,
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            -79.5,
+            45.1,
+            63.3
+          ],
+          "translation": [
+            -9,
+            -3,
+            -1
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            -48,
+            0,
+            12
+          ],
+          "translation": [
+            0,
+            -6,
+            -4
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.28,
+          "rotation": [
+            30,
+            0,
+            6
+          ],
+          "translation": [
+            0,
+            6,
+            -4
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.44,
+          "rotation": [
+            40,
+            0,
+            5
+          ],
+          "translation": [
+            0,
+            8,
+            -3
+          ],
+          "ease": "linear"
+        }
+      ],
+      "smooth": true
+    },
+    "attack3": {
+      "length": 0.7,
+      "hold": 0.06,
+      "return": 0.32,
+      "impact": 0.18,
+      "smooth": true,
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            40,
+            0,
+            5
+          ],
+          "translation": [
+            0,
+            8,
+            -3
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            5,
+            -5,
+            86
+          ],
+          "translation": [
+            -5,
+            2,
+            0
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.18,
+          "rotation": [
+            0,
+            5,
+            84
+          ],
+          "translation": [
+            5,
+            1,
+            -1
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.25,
+          "rotation": [
+            -5,
+            15,
+            80
+          ],
+          "translation": [
+            16,
+            0,
+            -1
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.32,
+          "rotation": [
+            -8,
+            22,
+            76
+          ],
+          "translation": [
+            26,
+            -1,
+            0
+          ],
+          "ease": "linear"
+        }
+      ]
+    },
+    "hilt": {
+      "length": 0.5,
+      "hold": 0.1,
+      "return": 0.22,
+      "impact": 0.15,
+      "smooth": true,
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.07,
+          "rotation": [
+            28.3,
+            -10.2,
+            -4.4
+          ],
+          "translation": [
+            0.64,
+            -0.8,
+            1.92
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.15,
+          "rotation": [
+            64.1,
+            -23.6,
+            -2.3
+          ],
+          "translation": [
+            -2.4,
+            2.4,
+            -7.2
+          ],
+          "ease": "linear"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "_comment": "Рабочая отдельная связка Алая Пата. Специальный R-приём — отдельный этап.",
+  "tempo": 1,
+  "min_strength": 0.81,
+  "reset_ticks": 24,
+  "early_ticks": 6,
+  "steps": [
+    {
+      "anim": "attack1",
+      "duration": 9,
+      "hit": 4,
+      "damage": 1,
+      "reach": 3.15,
+      "arc": 40,
+      "knockback": 0.25,
+      "speed": 1.45
+    },
+    {
+      "anim": "attack2",
+      "duration": 10,
+      "hit": 5,
+      "damage": 0.9,
+      "reach": 3.25,
+      "arc": 110,
+      "knockback": 0.32,
+      "speed": 1.35
+    },
+    {
+      "anim": "attack3",
+      "duration": 12,
+      "hit": 6,
+      "damage": 1.3,
+      "reach": 3.35,
+      "arc": 55,
+      "knockback": 0.45,
+      "speed": 1.1
+    }
+  ]
+}

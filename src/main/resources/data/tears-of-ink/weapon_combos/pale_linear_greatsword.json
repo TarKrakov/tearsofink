@@ -1,0 +1,39 @@
+{
+  "_comment": "Рабочая отдельная связка Бледный линейный двуручник. Специальный R-приём — отдельный этап.",
+  "tempo": 0.95,
+  "min_strength": 0.88,
+  "reset_ticks": 33,
+  "early_ticks": 6,
+  "steps": [
+    {
+      "anim": "attack1",
+      "duration": 12,
+      "hit": 6,
+      "damage": 1,
+      "reach": 3.6,
+      "arc": 130,
+      "knockback": 0.6,
+      "speed": 1
+    },
+    {
+      "anim": "attack2",
+      "duration": 15,
+      "hit": 7,
+      "damage": 0.95,
+      "reach": 3.4,
+      "arc": 120,
+      "knockback": 0.65,
+      "speed": 0.95
+    },
+    {
+      "anim": "attack3",
+      "duration": 19,
+      "hit": 10,
+      "damage": 1.55,
+      "reach": 3.8,
+      "arc": 45,
+      "knockback": 0.75,
+      "speed": 0.85
+    }
+  ]
+}

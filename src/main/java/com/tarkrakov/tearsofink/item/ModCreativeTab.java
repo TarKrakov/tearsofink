@@ -150,10 +150,17 @@ public final class ModCreativeTab {
 						output.accept(ModItems.PALE_SWORD);
 						output.accept(ModItems.PALE_LONGSWORD);
 						output.accept(ModItems.PALE_GREATSWORD);
+						output.accept(ModItems.PALE_LINEAR_GREATSWORD);
 						output.accept(ModItems.BLOOD_SWORD);
 						output.accept(ModItems.BLOOD_GREATSWORD);
+						output.accept(ModItems.BLOOD_KATAR);
+						output.accept(ModItems.BLOOD_PATA);
+						output.accept(ModItems.BLOOD_CURVED_GREATSWORD);
 						output.accept(ModItems.INK_SWORD);
 						output.accept(ModItems.INK_GREATSWORD);
+						output.accept(ModItems.INK_SEAX);
+						output.accept(ModItems.INK_FALCHION);
+						output.accept(ModItems.INK_KRIEGSMESSER);
 						output.accept(ModItems.BLOOD_KATANA);
 						output.accept(ModItems.BLOOD_OBSI_CLUB);
 						output.accept(ModItems.BLOOD_TALVAR);
