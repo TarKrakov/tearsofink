@@ -249,9 +249,12 @@ public final class MadOrders {
 		RandomSource r = lands.random;
 		give(owner, new ItemStack(ModItems.HOPE_ESSENCE, ESSENCE[o.rank]));
 		give(owner, new ItemStack(ModItems.PIGMENT, PIGMENT_MIN + r.nextInt(PIGMENT_MAX - PIGMENT_MIN + 1)));
-		if (o.type == HunterType.INK) give(owner, new ItemStack(ModItems.INK_ECHO));
+		// усилитель пробуждений гарантированно: Чернильный — Отголосок, Кровавый — Кристалл крови, Шпиль — один из двух
+		boolean echo = o.type == HunterType.INK || (o.type == HunterType.SPIRE && r.nextBoolean());
+		give(owner, new ItemStack(echo ? ModItems.INK_ECHO : ModItems.BLOOD_CRYSTAL));
 		if (r.nextFloat() < WEAPON_CHANCE[o.rank]) {
 			ItemStack w = (!o.off.isEmpty() && r.nextBoolean() ? o.off : o.main).copy();
+			com.tarkrakov.tearsofink.weapon.forge.Gear.setTier(w, Hunt.rewardTier(o.rank, r.nextFloat())); // Рубрики — только в Купели
 			give(owner, w);
 		}
 		say(owner, "order.tears-of-ink.done", name(o));

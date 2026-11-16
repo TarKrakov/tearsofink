@@ -118,6 +118,10 @@ public final class HuntTuning {
 	public static final double SPIRE_LAUNCH = 0.45;
 
 	/** Шанс получить у Торговки оружие охотника за контракт. */
+	/** 16 ноя: оружие из сложного контракта / Легендарного обезумевшего — Контрастное с этим шансом (иначе Тусклое). */
+	public static final float HARD_CONTRAST_CHANCE = 0.35f;
+	/** Временно до Арены: Багряный Цветок за средний/сложный контракт с Кровавым охотником. */
+	public static final float TEMP_FLOWER_CHANCE = 0.25f;
 	public static final float[] CONTRACT_WEAPON_CHANCE = {0.3f, 0.6f, 1.0f}; // лёгкий / средний / сложный (= ранг охотника)
 
 	// ===== Мировая Охота и контракты =====

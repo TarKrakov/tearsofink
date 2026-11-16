@@ -41,8 +41,8 @@ public final class Gear {
 	public static final float DEGRADE_AT = 0.10f, WARN_AT = 0.25f;
 	/** Заточка на Чернильной наковальне: доля шкалы за один Пигмент (по одному в клетку). */
 	public static final float SHARPEN_PER_PIGMENT = 0.25f;
-	/** Ванильное оружие (и всё не из мода) по существам в Землях: ×0,7. Броня — когда будет своя (0 — выключено). */
-	public static final float VANILLA_WEAPON_MULT = 0.7f;
+	/** Ванильное оружие (и всё не из мода) по существам в Землях: ×0,6. Броня — когда будет своя (0 — выключено). */
+	public static final float VANILLA_WEAPON_MULT = 0.6f; // 16 ноя: было 0,7 — зачарованный алмаз обгонял наше оружие
 	public static final float VANILLA_ARMOR_CUT = 0f;
 	/** Пассивки обычного оружия: Кровь — шанс кровотечения; Чернила — замедление (тики, сила 0 = I). */
 	public static final float ORDINARY_BLEED_CHANCE = 0.10f;
@@ -51,7 +51,7 @@ public final class Gear {
 	/** Чернильный металл: шанс с врага, убитого игроком в Чернолесье (руды нет). */
 	public static final float INK_METAL_CHANCE = 0.25f;
 	/** Чернильный отголосок: редкий шанс с тех же врагов Чернолесья. */
-	public static final float INK_ECHO_CHANCE = 0.03f;
+	public static final float INK_ECHO_CHANCE = 0.02f;
 	/** Осколки безумия: контракт с Чернильным охотником (в награде) и убитый игроком Чернильный охотник. */
 	public static final int SHARDS_CONTRACT_MIN = 1, SHARDS_CONTRACT_MAX = 2, SHARDS_KILL_MIN = 2, SHARDS_KILL_MAX = 3;
 

@@ -861,8 +861,12 @@ public final class Hunt {
 					+ lands.random.nextInt(HuntTuning.PREFIX_BONUS_PIGMENT_MAX - HuntTuning.PREFIX_BONUS_PIGMENT_MIN + 1)));
 		}
 		p.sendSystemMessage(Component.translatable("hunt.tears-of-ink.your_reward", contracts).withStyle(ChatFormatting.GOLD));
-		if (a.contract() && p.getUUID().equals(a.owner) && a.rank == 2)
-			com.tarkrakov.tearsofink.weapon.forge.AscensionFont.onHardContract(p); // Символ Доблести — каждые 5 сложных
+		if (a.contract() && p.getUUID().equals(a.owner) && a.rank >= 1) {
+			com.tarkrakov.tearsofink.weapon.forge.AscensionFont.onContract(p, a.rank); // очки к Символу Доблести
+			// временно, до Арены: Кровавый охотник в среднем/сложном контракте — шанс на Багряный Цветок
+			if (a.type == HunterType.BLOOD && lands.random.nextFloat() < HuntTuning.TEMP_FLOWER_CHANCE)
+				give(p, new ItemStack(ModItems.CRIMSON_FLOWER));
+		}
 		if (a.contract() && p.getUUID().equals(a.owner)) {
 			com.tarkrakov.tearsofink.vow.Vows.awaken(p, "contract_" + a.rank, com.tarkrakov.tearsofink.vow.Vows.AWAKENING);
 			com.tarkrakov.tearsofink.vow.Vows.heart(p, "contract_" + a.rank, com.tarkrakov.tearsofink.vow.Vows.SMALL_HEART, 0); // малое сердце (заглушка до боссов)
@@ -902,9 +906,19 @@ public final class Hunt {
 		CompoundTag tag = d.copyTag();
 		if (!tag.contains(C_KIND)) return ItemStack.EMPTY;
 		var item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(tag.getString(C_KIND)));
-		if (item instanceof com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem) return new ItemStack(item); // настоящее оружие (Кровь)
-		if (!(item instanceof HunterWeaponItem w)) return ItemStack.EMPTY;
-		return w.make(HunterType.byIndex(tag.getInt(C_LINE)), tag.getInt(C_TIER));
+		int diff = tag.getInt(C_DIFF);
+		ItemStack out;
+		if (item instanceof com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem) out = new ItemStack(item); // настоящее оружие (Кровь)
+		else if (item instanceof HunterWeaponItem w) out = w.make(HunterType.byIndex(tag.getInt(C_LINE)), 0);
+		else return ItemStack.EMPTY;
+		// 16 ноя: добыча — Тусклое; со сложного — с шансом Контрастное. Рубрики — только в Купели
+		com.tarkrakov.tearsofink.weapon.forge.Gear.setTier(out, rewardTier(diff, java.util.concurrent.ThreadLocalRandom.current().nextFloat()));
+		return out;
+	}
+
+	/** Ступень оружия-добычи: сложный (ранг 2) — Контрастное с шансом HuntTuning.HARD_CONTRAST_CHANCE, иначе Тусклое. */
+	public static int rewardTier(int rank, float roll) {
+		return rank >= 2 && roll < HuntTuning.HARD_CONTRAST_CHANCE ? 1 : 0;
 	}
 
 	/** Сообщение: мировая — всем в Землях; контракт — хозяину и тем, кто рядом. */

@@ -64,6 +64,8 @@ public enum Awakening {
 	public static final int BASE_COST = 4, COST_STEP = 2, MAX_COST = 16;
 	/** «Разящий приём»: сколько тиков после приёма его урон считается уроном приёма. */
 	public static final int EDGE_WINDOW = 60;
+	/** Потолок суммарной прибавки урона от пробуждений (+50%). */
+	public static final float MAX_DAMAGE_BONUS = 0.5f;
 
 	public final String id;
 	public final boolean blood;
@@ -194,7 +196,7 @@ public enum Awakening {
 		if (target.hasEffect(com.tarkrakov.tearsofink.effect.ModEffects.BLEEDING)) m += power(weapon, DEEP_WOUNDS);
 		Long last = LAST_ABILITY.get(p.getUUID());
 		if (!comboHit && last != null && p.serverLevel().getGameTime() - last <= EDGE_WINDOW) m += power(weapon, EDGE);
-		return m;
+		return Math.min(m, 1f + MAX_DAMAGE_BONUS);
 	}
 
 	/** После расчёта урона: Жажда лечит. */

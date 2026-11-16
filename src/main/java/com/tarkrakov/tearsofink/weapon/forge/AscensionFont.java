@@ -58,8 +58,9 @@ public final class AscensionFont {
 	/** Возвышение: Тусклое → Контрастное, Контрастное → Рубрики: Пигмент и ресурс линии. */
 	public static final int[] PIGMENT_COST = {8, 16};
 	public static final int[] RESOURCE_COST = {1, 2};
-	/** Символ Доблести — за каждые столько сложных контрактов. */
-	public static final int HARD_CONTRACTS_PER_SIGIL = 5;
+	/** Символ Доблести — очки за контракты: средний 1, сложный 2; Символ за каждые 8 очков. */
+	public static final int[] SIGIL_POINTS = {0, 1, 2};
+	public static final int POINTS_PER_SIGIL = 8;
 	/** Подсказка «чего не хватает» — если собрано хотя бы столько долей; не чаще раза в столько тиков. */
 	public static final float HINT_FROM = 0.4f;
 	public static final int HINT_EVERY = 60;
@@ -279,17 +280,19 @@ public final class AscensionFont {
 		}
 	}
 
-	/** Сложный контракт выполнен: каждые HARD_CONTRACTS_PER_SIGIL — Символ Доблести. */
-	public static void onHardContract(ServerPlayer p) {
-		int n = p.getAttachedOrCreate(HARD_CONTRACTS) + 1;
+	/** Контракт выполнен: очки к Символу Доблести (средний 1, сложный 2), каждые POINTS_PER_SIGIL — Символ. */
+	public static void onContract(ServerPlayer p, int rank) {
+		int add = SIGIL_POINTS[Math.min(rank, SIGIL_POINTS.length - 1)];
+		if (add <= 0) return;
+		int before = p.getAttachedOrCreate(HARD_CONTRACTS), n = before + add;
 		p.setAttached(HARD_CONTRACTS, n);
-		if (n % HARD_CONTRACTS_PER_SIGIL == 0) {
+		if (n / POINTS_PER_SIGIL > before / POINTS_PER_SIGIL) {
 			ItemStack s = new ItemStack(ModItems.VALOR_SIGIL);
 			if (!p.getInventory().add(s)) p.drop(s, false);
 			p.sendSystemMessage(Component.translatable("font.tears-of-ink.sigil").withStyle(ChatFormatting.GOLD));
 		} else {
-			p.sendSystemMessage(Component.translatable("font.tears-of-ink.sigil_progress", n % HARD_CONTRACTS_PER_SIGIL,
-					HARD_CONTRACTS_PER_SIGIL).withStyle(ChatFormatting.GRAY));
+			p.sendSystemMessage(Component.translatable("font.tears-of-ink.sigil_progress", n % POINTS_PER_SIGIL,
+					POINTS_PER_SIGIL).withStyle(ChatFormatting.GRAY));
 		}
 	}
 }
