@@ -31,7 +31,10 @@ public final class DebugCommands {
 										.executes(ctx -> checkRoad(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "road") - 1,
 												IntegerArgumentType.getInteger(ctx, "length"))))))
 						.then(Commands.literal("dump").then(Commands.argument("road", IntegerArgumentType.integer(1, InkLandsLayout.ROADS))
-								.executes(ctx -> dumpRoad(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "road") - 1))))
+								.executes(ctx -> dumpRoad(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "road") - 1, 100000))
+								.then(Commands.argument("length", IntegerArgumentType.integer(16, 100000))
+										.executes(ctx -> dumpRoad(ctx.getSource(), IntegerArgumentType.getInteger(ctx, "road") - 1,
+												IntegerArgumentType.getInteger(ctx, "length"))))))
 						.then(Commands.literal("terrain").executes(ctx -> checkTerrain(ctx.getSource())))
 						.then(Commands.literal("start").executes(ctx -> checkStart(ctx.getSource()))))));
 	}
@@ -153,7 +156,7 @@ public final class DebugCommands {
 	 * Разбор дороги для Claude: road_<n>.csv в папке сервера — по каждому блоку пути от края до конца: полотно, что над ним,
 	 * высота по профилю, земля по бокам (±8 от оси, до и после генерации), биом. Для поиска висящих кусков, траншей, завалов.
 	 */
-	private static int dumpRoad(CommandSourceStack src, int road) {
+	private static int dumpRoad(CommandSourceStack src, int road, int length) {
 		ServerLevel level = ModDimensions.lands(src.getServer());
 		InkLandsLayout layout = level == null ? null : InkLandsLayout.of(level);
 		if (layout == null) { say(src, "нет измерения"); return 0; }
@@ -162,7 +165,7 @@ public final class DebugCommands {
 		StringBuilder out = new StringBuilder("d,x,z,deck,deckBlock,a1,a2,a3,prof,bridge,sl,sr,gl,gr,nl,nr,biome\n");
 		double dStart = InkLandsLayout.RADIUS * InkLandsLayout.ROAD_START_FRACTION;
 		long t0 = System.currentTimeMillis();
-		for (double d = dStart; d > InkLandsLayout.ROAD_END_RADIUS - 24; d -= 2) {
+		for (double d = dStart; d > InkLandsLayout.ROAD_END_RADIUS - 24 && dStart - d < length; d -= 2) {
 			double[] p = layout.roadPoint(road, d);
 			int x = (int) Math.floor(p[0]), z = (int) Math.floor(p[1]);
 			if (layout.depthInside(x, z) < 0) continue;
@@ -185,13 +188,22 @@ public final class DebugCommands {
 			int rx = (int) Math.floor(p[0] + dir[1] * 8), rz = (int) Math.floor(p[1] - dir[0] * 8);
 			level.getChunk(lx >> 4, lz >> 4);
 			level.getChunk(rx >> 4, rz >> 4);
-			int sl = level.getHeight(Heightmap.Types.WORLD_SURFACE, lx, lz) - 1, sr = level.getHeight(Heightmap.Types.WORLD_SURFACE, rx, rz) - 1;
+			int sl = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, lx, lz) - 1, sr = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, rx, rz) - 1;
 			int gl = level.getHeight(Heightmap.Types.OCEAN_FLOOR, lx, lz) - 1, gr = level.getHeight(Heightmap.Types.OCEAN_FLOOR, rx, rz) - 1;
 			int nl = 0, nr = 0; // база шума — дорого, не считаем
 			double prof = layout.roadHeight(road, d,
 					(bx, bz) -> gen.getBaseHeight(bx, bz, Heightmap.Types.WORLD_SURFACE_WG, level, rs) - 1,
 					(bx, bz) -> gen.getBaseHeight(bx, bz, Heightmap.Types.OCEAN_FLOOR_WG, level, rs) - 1, gen.getSeaLevel());
 			boolean br = layout.roadBridge(road, d);
+			if (y == Integer.MIN_VALUE) { // полотна нет — что в столбце у высоты профиля
+				StringBuilder col = new StringBuilder();
+				for (int yy = (int) Math.round(prof) + 4; yy >= (int) Math.round(prof) - 4; yy--) {
+					BlockState s = level.getBlockState(new BlockPos(x, yy, z));
+					col.append(yy).append('=').append(net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(s.getBlock()).getPath()).append(' ');
+				}
+				double[] hit = layout.roadNear(x, z, InkLandsLayout.ROAD_SHOULDER);
+				TearsOfInk.LOGGER.info("[roadhole] " + (road + 1) + " d=" + (int) d + " " + x + " " + z + " near=" + (hit == null ? "null" : (int) hit[0] + "/" + String.format(java.util.Locale.ROOT, "%.1f/%.1f", hit[1], hit[2])) + " | " + col);
+			}
 			String biome = level.getBiome(new BlockPos(x, 64, z)).unwrapKey().map(k -> k.location().getPath()).orElse("?");
 			int lenBefore = out.length();
 			out.append((int) d).append(',').append(x).append(',').append(z).append(',').append(y == Integer.MIN_VALUE ? "" : String.valueOf(y))

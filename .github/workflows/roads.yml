@@ -1,6 +1,15 @@
 # Ручной разбор дорог для Claude: сервер генерирует все дороги и пишет road_<n>.csv (полотно, профиль, земля по бокам).
 name: roads
-on: [workflow_dispatch]
+on:
+  workflow_dispatch:
+    inputs:
+      roads:
+        description: 'какие дороги'
+        default: '1 2 3 4 5'
+      length:
+        description: 'сколько блоков от края'
+        default: '100000'
+
 
 jobs:
   roads:
@@ -15,18 +24,18 @@ jobs:
       - run: chmod +x ./gradlew
       - name: run server and dump roads
         run: |
-          printf "max-tick-time=-1\n" >> run-server/server.properties
+          printf "max-tick-time=-1\nlevel-seed=777\n" >> run-server/server.properties
           {
             for i in $(seq 1 120); do
               sleep 5
               if grep -q "Done (" run-server/logs/latest.log 2>/dev/null; then break; fi
             done
-            for r in 1 2 3 4 5; do
-              echo "tearsofink check dump $r"
+            for r in ${{ github.event.inputs.roads }}; do
+              echo "tearsofink check dump $r ${{ github.event.inputs.length }}"
               for i in $(seq 1 3000); do sleep 5; if [ "$(grep -c "дамп дороги $r:" run-server/logs/latest.log 2>/dev/null)" -ge 1 ]; then break; fi; done
             done
             echo "stop"
-          } | ./gradlew runServer --console=plain 2>&1 | tee server.log | grep --line-buffered -E "\[check\]|\[roadcsv\]|дамп|ERROR|Exception|Caused by|Done \(" || true
+          } | ./gradlew runServer --console=plain 2>&1 | tee server.log | grep --line-buffered -E "\[check\]|\[roadcsv\]|\[roadhole\]|дамп|ERROR|Exception|Caused by|Done \(" || true
       - uses: actions/upload-artifact@v7
         if: always()
         with:
