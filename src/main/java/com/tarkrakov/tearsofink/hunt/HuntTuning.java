@@ -121,6 +121,11 @@ public final class HuntTuning {
 	public static final float[] CONTRACT_WEAPON_CHANCE = {0.3f, 0.6f, 1.0f}; // лёгкий / средний / сложный (= ранг охотника)
 
 	// ===== Мировая Охота и контракты =====
+	/**
+	 * Мировые PvE-Охоты (раз в INTERVAL бросок кубика) — ВЫКЛЮЧЕНЫ 16 ноя по решению автора: Охота только по контрактам.
+	 * Код оставлен для будущей Охоты на игрока. Команда /tearsofink hunt start по-прежнему запускает для теста.
+	 */
+	public static final boolean WORLD_HUNTS = false;
 	/** Раз в INTERVAL — бросок: с таким шансом начинается мировая Охота. */
 	public static final float WORLD_CHANCE = 0.5f;
 	/** Доска контрактов у Торговки обновляется раз в столько тиков (5 мин). */

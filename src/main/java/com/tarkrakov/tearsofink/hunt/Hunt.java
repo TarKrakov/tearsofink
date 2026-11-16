@@ -230,7 +230,7 @@ public final class Hunt {
 		if (lands == null) return;
 		long now = server.getTickCount();
 		if (nextStart < 0) nextStart = now + HuntTuning.FIRST_DELAY;
-		if (world() == null && now >= nextStart && now % 20 == 0) {
+		if (HuntTuning.WORLD_HUNTS && world() == null && now >= nextStart && now % 20 == 0) {
 			if (lands.random.nextFloat() < HuntTuning.WORLD_CHANCE) {
 				if (!start(lands, null)) return; // некого/негде — пробуем через секунду
 			} else {
