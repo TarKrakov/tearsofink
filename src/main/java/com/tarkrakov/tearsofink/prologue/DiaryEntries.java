@@ -2,9 +2,14 @@ package com.tarkrakov.tearsofink.prologue;
 
 import com.mojang.serialization.Codec;
 import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.item.ModItems;
+import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -19,6 +24,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -26,8 +32,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Записи Дневника: открываются по событиям. Сейчас — вступление (саквояж открыт)
- * и первое убийство каждого вида врага. Тексты — diary.tears-of-ink.entry.&lt;id&gt;.title / .text в ru_ru.json.
+ * Записи Дневника: вступление (саквояж открыт), прибытие в Земли, получение
+ * бледного металла и первое убийство каждого вида врага.
+ * Тексты — diary.tears-of-ink.entry.&lt;id&gt;.title / .text в локализациях.
  * Новая запись о существе = добавить его id (имя сущности без мода) в {@link #CREATURES} и тексты.
  */
 public final class DiaryEntries {
@@ -35,6 +42,10 @@ public final class DiaryEntries {
 	public static final List<String> CREATURES = List.of("pale_spearman", "pale_shieldbearer",
 			"pale_crossbowman", "zombie", "skeleton", "spider");
 	public static final String INTRO = "intro";
+	public static final String FIRST_STEPS = "first_steps";
+	public static final String PALE_METAL = "pale_metal";
+	/** Проверять инвентарь не чаще раза в 5 секунд и только до открытия записи. */
+	private static final int INVENTORY_CHECK_TICKS = 100;
 	/** Глава о гусеницах: общая часть + страница на каждый вид (pale, blood, ink), открываются по убийствам. */
 	public static final String CATERPILLAR = "caterpillar";
 	public static final List<String> CATERPILLAR_PAGES = List.of("caterpillar", "caterpillar_pale", "caterpillar_blood", "caterpillar_ink");
@@ -60,7 +71,22 @@ public final class DiaryEntries {
 
 	public static void init() {
 		PayloadTypeRegistry.playS2C().register(Sync.TYPE, Sync.CODEC);
-		ServerPlayConnectionEvents.JOIN.register((h, s, server) -> sync(h.getPlayer()));
+		ServerPlayConnectionEvents.JOIN.register((h, s, server) -> {
+			checkArrival(h.getPlayer()); // в том числе старые сохранения уже в Землях
+			sync(h.getPlayer());
+		});
+		ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((p, origin, destination) -> checkArrival(p));
+		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
+			checkArrival(newPlayer);
+			sync(newPlayer);
+		});
+		// В Fabric 1.21.1 нет общего события получения предмета для всех способов
+		// изменения инвентаря. Редкая серверная проверка охватывает подбор, крафт,
+		// печь и перенос из контейнеров без нового Mixin.
+		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			if (server.getTickCount() % INVENTORY_CHECK_TICKS != 0) return;
+			for (ServerPlayer p : server.getPlayerList().getPlayers()) checkPaleMetal(p);
+		});
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			if (!(source.getEntity() instanceof ServerPlayer p)) return;
 			if (entity instanceof com.tarkrakov.tearsofink.entity.CaterpillarEntity c) {
@@ -73,6 +99,22 @@ public final class DiaryEntries {
 			ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
 			if (CREATURES.contains(id.getPath())) unlock(p, id.getPath());
 		});
+	}
+
+	private static void checkArrival(ServerPlayer p) {
+		if (ModDimensions.isLands(p.level())) unlock(p, FIRST_STEPS);
+	}
+
+	private static void checkPaleMetal(ServerPlayer p) {
+		if (p.getAttachedOrCreate(DATA).contains(PALE_METAL)) return;
+		var inventory = p.getInventory();
+		for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
+			ItemStack stack = inventory.getItem(slot);
+			if (stack.is(ModItems.RAW_PALE_METAL) || stack.is(ModItems.PALE_INGOT)) {
+				unlock(p, PALE_METAL);
+				return;
+			}
+		}
 	}
 
 	public static void unlock(ServerPlayer p, String... entries) {
