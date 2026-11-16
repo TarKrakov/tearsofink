@@ -452,10 +452,14 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		if (dual() && now >= techReady) {
 			if (m == Archetype.EXECUTIONER && dist < 4) return guillotine(level, now);
 			if (m == Archetype.SCIMITAR && dist < 16) return flourish(level, f, now);
+			if (m == Archetype.AXE && dist < 3.5) return axeExecution(level, now);
+			if (m == Archetype.DAGGER && dist > 2.5 && dist < 7) return daggerRush(level, f, now, false, true, 1f);
 		}
 		if (now >= skillReady) {
 			if (m == Archetype.SCIMITAR && dist < 16) return wave(level, f, now, false);
 			if (m == Archetype.EXECUTIONER && dist < 4) return cleave(level, now, false, 1f);
+			if (m == Archetype.AXE && dist > 2 && dist < 7) return axeRush(level, f, now, false, 1f);
+			if (m == Archetype.DAGGER && dist > 2.5 && dist < 7) return daggerRush(level, f, now, false, false, 1f);
 		}
 		// Тальвар (в любой руке) — кровавая дуга; Дуссак — стойка парирования (её решает tryParry)
 		if (now >= skillReady && dist < BloodTuning.ARC_RANGE - 1) {
@@ -463,8 +467,10 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 			if (o == Archetype.TALWAR && m != Archetype.TALWAR) return bloodArc(level, f, now, true);
 		}
 		// клинок в правой, двуручник в левой — приём левой рукой, слабее
-		if (!dual() && o == Archetype.EXECUTIONER && m == Archetype.SCIMITAR && now >= offSkillReady && dist < 4) {
-			return cleave(level, now, true, WeaponAbilities.OFFHAND_TWO_HANDED_POWER);
+		boolean oneHanded = m == Archetype.SCIMITAR || m == Archetype.DAGGER;
+		if (!dual() && oneHanded && now >= offSkillReady) {
+			if (o == Archetype.EXECUTIONER && dist < 4) return cleave(level, now, true, WeaponAbilities.OFFHAND_TWO_HANDED_POWER);
+			if (o == Archetype.AXE && dist > 2 && dist < 7) return axeRush(level, f, now, true, WeaponAbilities.OFFHAND_TWO_HANDED_POWER);
 		}
 		return false;
 	}
@@ -602,6 +608,94 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		if (offhand) offSkillReady = now + (long) cd(WeaponAbilities.CLEAVE.cooldownTicks());
 		else skillReady = now + (long) cd(WeaponAbilities.CLEAVE.cooldownTicks());
 		skillDone(now, Math.max(windup + 4, combo.scaled(combo.abilityTicks())));
+		return true;
+	}
+
+	// ===== Шпиль: Секира и Кинжал (16 ноя) =====
+
+	/** Секира (R): рывок к врагу и широкий рассекающий взмах. offhand — двуручник в левой (слабее). */
+	private boolean axeRush(ServerLevel level, LivingEntity f, long now, boolean offhand, float mult) {
+		Combos.Combo combo = Combos.get(Archetype.AXE);
+		anim(Archetype.AXE, (offhand ? "off:" : "") + combo.abilityAnim(), combo.scaled(combo.abilityTicks()), combo.tempo());
+		dash(level, f.position(), 1);
+		timed.add(new Timed(now + HuntTuning.AXE_RUSH_HIT, () -> {
+			LivingEntity t = foe;
+			Vec3 d = facing();
+			if (t != null && t.isAlive() && distanceTo(t) < HuntTuning.AXE_RUSH_REACH) {
+				t.hurt(damageSources().mobAttack(this), HuntTuning.AXE_RUSH_DAMAGE * skillScale() * mult);
+				t.knockback(0.6, -d.x, -d.z);
+			}
+			level.sendParticles(ParticleTypes.SWEEP_ATTACK, getX() + d.x * 2, getY() + 1, getZ() + d.z * 2, 3, 1.0, 0.1, 1.0, 0);
+			level.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1f, 0.6f);
+		}));
+		long cdEnd = now + (long) cd(com.tarkrakov.tearsofink.weapon.combat.AxeMoves.RUSH.cooldownTicks());
+		if (offhand) offSkillReady = cdEnd;
+		else skillReady = cdEnd;
+		skillDone(now, combo.scaled(combo.abilityTicks()));
+		return true;
+	}
+
+	/** Секиры парой (ПКМ): развести топоры, подпрыгнуть и два мощных удара. Без страха — это приём игрока. */
+	private boolean axeExecution(ServerLevel level, long now) {
+		anim(Archetype.AXE, "execute_spread", 22, 1f);
+		anim(Archetype.AXE, "off:execute_spread", 22, 1f);
+		level.playSound(null, blockPosition(), SoundEvents.RAVAGER_ROAR, SoundSource.HOSTILE, 0.5f, 1.2f);
+		timed.add(new Timed(now + 20, () -> {
+			anim(Archetype.AXE, "execute_strike", 14, 1f);
+			anim(Archetype.AXE, "off:execute_strike_off", 14, 1f);
+			push(0, 0.35, 0);
+			hurtMarked = true;
+		}));
+		for (int at : new int[]{25, 28}) {
+			timed.add(new Timed(now + at, () -> {
+				LivingEntity t = foe;
+				if (t != null && t.isAlive() && distanceTo(t) < 3.8)
+					t.hurt(damageSources().mobAttack(this), HuntTuning.AXE_EXECUTE_DAMAGE * skillScale());
+				level.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.HOSTILE, 1f, 0.6f);
+			}));
+		}
+		techReady = now + (long) cd(com.tarkrakov.tearsofink.weapon.combat.AxeMoves.EXECUTION.cooldownTicks());
+		skillDone(now, 34);
+		return true;
+	}
+
+	/** Кинжал (R): рывок; задел — укол, перезарядка вдвое. dual — парой (ПКМ): вонзить оба и вырвать в стороны. */
+	private boolean daggerRush(ServerLevel level, LivingEntity f, long now, boolean offhand, boolean dual, float mult) {
+		anim(Archetype.DAGGER, dual ? "dual_dash" : (offhand ? "off:" : "") + "dash", 9, 1f);
+		if (dual) anim(Archetype.DAGGER, "off:dual_dash", 9, 1f);
+		dash(level, f.position(), 1);
+		boolean[] done = {false};
+		var skill = dual ? com.tarkrakov.tearsofink.weapon.combat.DaggerMoves.DUAL_RUSH : com.tarkrakov.tearsofink.weapon.combat.DaggerMoves.RUSH;
+		long cdTicks = (long) cd(skill.cooldownTicks());
+		for (int i = 2; i <= HuntTuning.DASH_TICKS + 1; i++) {
+			timed.add(new Timed(now + i, () -> {
+				LivingEntity t = foe;
+				if (done[0] || t == null || !t.isAlive() || distanceTo(t) > 2.2) return;
+				done[0] = true;
+				dashTicks = 0;
+				if (dual) {
+					anim(Archetype.DAGGER, "dual_pierce_rip", 16, 1f);
+					anim(Archetype.DAGGER, "off:dual_pierce_rip", 16, 1f);
+					t.hurt(damageSources().mobAttack(this), HuntTuning.DAGGER_PIERCE_DAMAGE * skillScale());
+					timed.add(new Timed(level.getGameTime() + 7, () -> {
+						if (t.isAlive() && distanceTo(t) < 4) {
+							t.invulnerableTime = 0;
+							t.hurt(damageSources().mobAttack(this), HuntTuning.DAGGER_RIP_DAMAGE * skillScale());
+							level.sendParticles(ParticleTypes.CRIT, t.getX(), t.getY() + t.getBbHeight() * 0.6, t.getZ(), 14, 0.4, 0.3, 0.4, 0.2);
+						}
+					}));
+					techReady = level.getGameTime() + cdTicks / 2;
+				} else {
+					anim(Archetype.DAGGER, (offhand ? "off:" : "") + "dash_stab", 10, 1f);
+					t.hurt(damageSources().mobAttack(this), HuntTuning.DAGGER_STAB_DAMAGE * skillScale() * mult);
+					skillReady = level.getGameTime() + cdTicks / 2; // попал — перезарядка вдвое
+				}
+				level.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.HOSTILE, 1f, 1.4f);
+			}));
+		}
+		if (dual) techReady = now + cdTicks;
+		else skillReady = now + cdTicks;
+		skillDone(now, 10);
 		return true;
 	}
 

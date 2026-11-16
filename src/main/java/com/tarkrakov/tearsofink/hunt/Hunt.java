@@ -401,6 +401,7 @@ public final class Hunt {
 	/** Оружие охотника: один меч / пара одинаковых / клинок + двуручник в левой (правило рук игрока). {правая, левая} */
 	static ItemStack[] loadout(HunterType type, int rank, RandomSource random) {
 		if (type == HunterType.BLOOD) return bloodLoadout(rank, random);
+		if (type == HunterType.SPIRE) return spireLoadout(rank, random);
 		HunterWeaponItem great = (HunterWeaponItem) ModItems.HUNTER_GREATSWORD, saber = (HunterWeaponItem) ModItems.HUNTER_SABER;
 		HunterWeaponItem kind = random.nextBoolean() ? great : saber;
 		ItemStack weapon = kind.make(type, rank), offWeapon = ItemStack.EMPTY;
@@ -414,6 +415,32 @@ public final class Hunt {
 			offWeapon = kind.make(type, rank);
 		}
 		return new ItemStack[]{weapon, offWeapon};
+	}
+
+	/** Охотник Шпиля — оружие автора: Палач, Секира (двуручные), Скимитар, Кинжал (одноручные); ступень = ранг. */
+	static ItemStack[] spireLoadout(int rank, RandomSource random) {
+		int[] w = HuntTuning.SPIRE_LOADOUT[Math.max(0, Math.min(rank, HuntTuning.SPIRE_LOADOUT.length - 1))];
+		int total = 0;
+		for (int x : w) total += x;
+		int r = random.nextInt(Math.max(1, total)), pick = 0;
+		while (pick < w.length - 1 && r >= w[pick]) r -= w[pick++];
+		net.minecraft.world.item.Item[] all = {ModItems.CLEAVE_GREATSWORD, ModItems.ROARING_AXE, ModItems.WAVE_GREATSWORD, ModItems.RAPID_KNIFE};
+		net.minecraft.world.item.Item[] one = {ModItems.WAVE_GREATSWORD, ModItems.RAPID_KNIFE}, two = {ModItems.CLEAVE_GREATSWORD, ModItems.ROARING_AXE};
+		ItemStack main, off = ItemStack.EMPTY;
+		switch (pick) {
+			case 0 -> main = new ItemStack(all[random.nextInt(all.length)]);
+			case 1 -> {
+				main = new ItemStack(all[random.nextInt(all.length)]);
+				off = main.copy();
+			}
+			default -> {
+				main = new ItemStack(one[random.nextInt(one.length)]);
+				off = new ItemStack(two[random.nextInt(two.length)]);
+			}
+		}
+		com.tarkrakov.tearsofink.weapon.forge.Gear.setTier(main, rank);
+		if (!off.isEmpty()) com.tarkrakov.tearsofink.weapon.forge.Gear.setTier(off, rank);
+		return new ItemStack[]{main, off};
 	}
 
 	/** Кровавый охотник — только оружие Крови (веса — HuntTuning.BLOOD_LOADOUT). */
@@ -908,8 +935,8 @@ public final class Hunt {
 		var item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(tag.getString(C_KIND)));
 		int diff = tag.getInt(C_DIFF);
 		ItemStack out;
-		if (item instanceof com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem) out = new ItemStack(item); // настоящее оружие (Кровь)
-		else if (item instanceof HunterWeaponItem w) out = w.make(HunterType.byIndex(tag.getInt(C_LINE)), 0);
+		if (item instanceof HunterWeaponItem w) out = w.make(HunterType.byIndex(tag.getInt(C_LINE)), 0);
+		else if (item instanceof com.tarkrakov.tearsofink.weapon.InkGreatswordItem) out = new ItemStack(item); // настоящее оружие (Кровь, Шпиль)
 		else return ItemStack.EMPTY;
 		// 16 ноя: добыча — Тусклое; со сложного — с шансом Контрастное. Рубрики — только в Купели
 		com.tarkrakov.tearsofink.weapon.forge.Gear.setTier(out, rewardTier(diff, java.util.concurrent.ThreadLocalRandom.current().nextFloat()));

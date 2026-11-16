@@ -73,6 +73,12 @@ public final class HuntTuning {
 	public static final float[] SKILL_DAMAGE = {0.85f, 1.0f, 1.2f};
 	/** Урон Волны и Рассечения у охотника (как у игрока). */
 	public static final float WAVE_DAMAGE = 6f, CLEAVE_DAMAGE = 12f;
+	/** Шпиль (16 ноя): Секира — рывок со взмахом и казнь парой (2 удара); Кинжал — укол рывка, парой — вонзание и вырывание. */
+	public static final float AXE_RUSH_DAMAGE = 10f, AXE_EXECUTE_DAMAGE = 9f, DAGGER_STAB_DAMAGE = 8f, DAGGER_PIERCE_DAMAGE = 6f, DAGGER_RIP_DAMAGE = 6f;
+	public static final int AXE_RUSH_HIT = 7;
+	public static final double AXE_RUSH_REACH = 4.2;
+	/** Охотник Шпиля — оружие автора (16 ноя): веса один клинок / пара одинаковых / одноручный + двуручный в левой, по рангу. */
+	public static final int[][] SPIRE_LOADOUT = {{70, 15, 15}, {45, 35, 20}, {30, 45, 25}};
 	/** Приёмы Скимитаров у охотников (Волна, Чернильный Росчерк) — перезарядка дольше в столько раз. */
 	public static final float SCIMITAR_SKILL_COOLDOWN = 2.0f;
 	/** Гильотина охотника: сколько ударов, прежде чем казнь. */
