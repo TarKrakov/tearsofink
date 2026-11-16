@@ -25,6 +25,15 @@ jobs:
           done
             javap -p -classpath "$j" net.minecraft.client.model.HumanoidModel 2>/dev/null | grep "setupAnim\|ModelPart\|attackTime\|setupAttackAnimation"
             javap -p -classpath "$j" net.minecraft.client.model.PlayerModel 2>/dev/null | grep "setupAnim"
+      - name: javap experimental warning
+        run: |
+          for j in $(find ~/.gradle/caches .gradle -name "minecraft-*loom.mappings*.jar" 2>/dev/null); do
+            echo "JAR $j"
+            javap -p -classpath "$j" net.minecraft.client.gui.screens.worldselection.WorldOpenFlows 2>/dev/null || true
+            javap -p -c -classpath "$j" net.minecraft.client.gui.screens.worldselection.WorldOpenFlows 2>/dev/null | grep -n "Lifecycle\|askForBackup\|confirmWorldCreation\|worldGenSettingsLifecycle\|isStable\|stable" | head -40 || true
+            javap -p -classpath "$j" net.minecraft.world.level.storage.PrimaryLevelData 2>/dev/null | grep -i "lifecycle" || true
+            javap -p -classpath "$j" net.minecraft.world.level.storage.WorldData 2>/dev/null | grep -i "lifecycle" || true
+          done
       - name: javap common
         run: |
           find ~/.gradle/caches .gradle -name "minecraft-*.jar" 2>/dev/null | grep -i mappings | head
