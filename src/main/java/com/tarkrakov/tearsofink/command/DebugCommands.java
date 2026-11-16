@@ -162,7 +162,7 @@ public final class DebugCommands {
 		StringBuilder out = new StringBuilder("d,x,z,deck,deckBlock,a1,a2,a3,prof,bridge,sl,sr,gl,gr,nl,nr,biome\n");
 		double dStart = InkLandsLayout.RADIUS * InkLandsLayout.ROAD_START_FRACTION;
 		long t0 = System.currentTimeMillis();
-		for (double d = dStart; d > InkLandsLayout.ROAD_END_RADIUS - 24; d -= 1) {
+		for (double d = dStart; d > InkLandsLayout.ROAD_END_RADIUS - 24; d -= 2) {
 			double[] p = layout.roadPoint(road, d);
 			int x = (int) Math.floor(p[0]), z = (int) Math.floor(p[1]);
 			if (layout.depthInside(x, z) < 0) continue;
@@ -187,18 +187,19 @@ public final class DebugCommands {
 			level.getChunk(rx >> 4, rz >> 4);
 			int sl = level.getHeight(Heightmap.Types.WORLD_SURFACE, lx, lz) - 1, sr = level.getHeight(Heightmap.Types.WORLD_SURFACE, rx, rz) - 1;
 			int gl = level.getHeight(Heightmap.Types.OCEAN_FLOOR, lx, lz) - 1, gr = level.getHeight(Heightmap.Types.OCEAN_FLOOR, rx, rz) - 1;
-			int nl = gen.getBaseHeight(lx, lz, Heightmap.Types.WORLD_SURFACE_WG, level, rs) - 1;
-			int nr = gen.getBaseHeight(rx, rz, Heightmap.Types.WORLD_SURFACE_WG, level, rs) - 1;
+			int nl = 0, nr = 0; // база шума — дорого, не считаем
 			double prof = layout.roadHeight(road, d,
 					(bx, bz) -> gen.getBaseHeight(bx, bz, Heightmap.Types.WORLD_SURFACE_WG, level, rs) - 1,
 					(bx, bz) -> gen.getBaseHeight(bx, bz, Heightmap.Types.OCEAN_FLOOR_WG, level, rs) - 1, gen.getSeaLevel());
 			boolean br = layout.roadBridge(road, d);
 			String biome = level.getBiome(new BlockPos(x, 64, z)).unwrapKey().map(k -> k.location().getPath()).orElse("?");
+			int lenBefore = out.length();
 			out.append((int) d).append(',').append(x).append(',').append(z).append(',').append(y == Integer.MIN_VALUE ? "" : String.valueOf(y))
 					.append(',').append(deckBlock).append(',').append(above[0]).append(',').append(above[1]).append(',').append(above[2])
 					.append(',').append(String.format(java.util.Locale.ROOT, "%.1f", prof)).append(',').append(br ? 1 : 0)
 					.append(',').append(sl).append(',').append(sr).append(',').append(gl).append(',').append(gr)
 					.append(',').append(nl).append(',').append(nr).append(',').append(biome).append('\n');
+			TearsOfInk.LOGGER.info("[roadcsv] " + (road + 1) + "," + out.substring(lenBefore).trim());
 		}
 		try {
 			java.nio.file.Path f = java.nio.file.Path.of("road_" + (road + 1) + ".csv");
