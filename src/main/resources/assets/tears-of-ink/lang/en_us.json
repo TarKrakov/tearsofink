@@ -100,6 +100,7 @@
   "item.tears-of-ink.skill_book_dash.desc2": "Teaches the Dash. Costs Ink.",
   "skill.tears-of-ink.dash": "Dash",
   "message.tears-of-ink.skill_learned": "You have learned: %s.",
+  "message.tears-of-ink.skill_learned_soul": "Teaching taken to heart: %s.",
   "message.tears-of-ink.skill_known": "You already know: %s.",
   "key.categories.tears-of-ink": "Tears of Ink",
   "key.tears-of-ink.dash": "Dash",

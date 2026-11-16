@@ -13,7 +13,8 @@
 		"ItemInHandRendererMixin",
 		"HumanoidModelMixin",
 		"ItemInHandLayerMixin",
-		"LivingEntityRendererMixin"
+		"LivingEntityRendererMixin",
+		"NoExperimentalWarningMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

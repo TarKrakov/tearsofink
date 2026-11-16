@@ -54,7 +54,13 @@ public class SkillBookItem extends Item {
 			serverPlayer.sendSystemMessage(Component.translatable("message.tears-of-ink.skill_known", name).withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
 			return InteractionResultHolder.fail(stack);
 		}
-		serverPlayer.sendSystemMessage(Component.translatable("message.tears-of-ink.skill_learned", name).withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
+		if (com.tarkrakov.tearsofink.vow.Vows.vow(serverPlayer) == com.tarkrakov.tearsofink.vow.Vow.SOUL) {
+			// Путь Души: «Наставление усвоено» — белым, название умения бирюзой
+			serverPlayer.sendSystemMessage(Component.translatable("message.tears-of-ink.skill_learned_soul",
+					name.copy().withStyle(ChatFormatting.AQUA)).withStyle(ChatFormatting.WHITE, ChatFormatting.ITALIC));
+		} else {
+			serverPlayer.sendSystemMessage(Component.translatable("message.tears-of-ink.skill_learned", name).withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
+		}
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1f, 0.8f);
 		level.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.6f, 0.7f);
 		if (level instanceof net.minecraft.server.level.ServerLevel server) {
