@@ -95,10 +95,16 @@ public class SoulTraderEntity extends PathfinderMob {
 				server.sendParticles(ParticleTypes.SQUID_INK, getX(), getY() + 0.3, getZ(), 3, 0.25, 0.1, 0.25, 0.005);
 			}
 		}
+		if (!vanishes()) return;
 		if (idle >= SoulTrader.IDLE_TICKS || life >= SoulTrader.MAX_LIFE || (vanishAt >= 0 && tickCount >= vanishAt)
 				|| !server.getBlockState(fountain).is(com.tarkrakov.tearsofink.block.ModBlocks.INK_FOUNTAIN)) {
 			vanish(server);
 		}
+	}
+
+	/** Исчезает сама (Торговка — да; Хранитель Жатвы — нет). */
+	protected boolean vanishes() {
+		return true;
 	}
 
 	private void vanish(ServerLevel server) {

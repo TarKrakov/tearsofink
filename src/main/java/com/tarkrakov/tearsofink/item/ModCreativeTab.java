@@ -109,6 +109,7 @@ public final class ModCreativeTab {
 						output.accept(ModItems.VALOR_SIGIL);
 						output.accept(ModItems.HOPE_ESSENCE);
 						output.accept(ModItems.HOPE_MOTE);
+						output.accept(ModItems.CRIMSON_GIFT);
 						output.accept(ModItems.FULFILLED_CONTRACT);
 						output.accept(ModBlocks.PALE_LOG);
 						output.accept(ModBlocks.STRIPPED_PALE_LOG);

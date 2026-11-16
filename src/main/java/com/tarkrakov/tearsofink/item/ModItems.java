@@ -143,6 +143,10 @@ public final class ModItems {
 	/** Частичка Надежды — Чернила (особые заказы Торговки, позже). */
 	public static final Item HOPE_MOTE = register("hope_mote", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)));
 
+	/** Дар Багряного Вестника — сумка Алой Жатвы (ПКМ — открыть). */
+	public static final Item CRIMSON_GIFT = register("crimson_gift",
+			new com.tarkrakov.tearsofink.hunt.CrimsonGiftItem(new Item.Properties().stacksTo(16).rarity(net.minecraft.world.item.Rarity.RARE)));
+
 	// ===== Обычное оружие линий (16 ноя; модели — заглушки-перекраски, автор нарисует) =====
 	// итоговый урон / скорость: Бледное и Кровавое 5 и 8, Чернильное 6 и 9; Бледное быстрее
 	public static final Item PALE_SWORD = register("pale_sword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(

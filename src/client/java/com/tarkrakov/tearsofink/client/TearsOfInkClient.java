@@ -124,6 +124,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.trader.SoulTraderModel.LAYER,
 				com.tarkrakov.tearsofink.client.trader.SoulTraderModel::createBodyLayer);
 		EntityRendererRegistry.register(ModMobs.SOUL_TRADER, com.tarkrakov.tearsofink.client.trader.SoulTraderRenderer::new);
+		registerKeeper(); // Хранитель Жатвы — рендер Торговки со своей текстурой
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.hunt.HunterModel.LAYER,
 				com.tarkrakov.tearsofink.client.hunt.HunterModel::createBodyLayer);
 		EntityRendererRegistry.register(ModMobs.HUNTER, com.tarkrakov.tearsofink.client.hunt.HunterRenderer::new);
@@ -184,5 +185,11 @@ public class TearsOfInkClient implements ClientModInitializer {
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.POTTED_TEARBLOOM, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.PALE_TRAPDOOR, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.cutout(), ModBlocks.INK_LANTERN, ModBlocks.STONE_LANTERN, ModBlocks.ETERNAL_LANTERN);
+	}
+
+	@SuppressWarnings({"unchecked", "rawtypes"})
+	private static void registerKeeper() {
+		EntityRendererRegistry.register(ModMobs.HARVEST_KEEPER,
+				(net.minecraft.client.renderer.entity.EntityRendererProvider) com.tarkrakov.tearsofink.client.trader.HarvestKeeperRenderer::new);
 	}
 }

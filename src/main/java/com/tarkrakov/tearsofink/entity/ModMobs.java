@@ -47,6 +47,11 @@ public final class ModMobs {
 			BuiltInRegistries.ENTITY_TYPE, TearsOfInk.id("soul_trader"),
 			EntityType.Builder.of(com.tarkrakov.tearsofink.trader.SoulTraderEntity::new, MobCategory.MISC)
 					.sized(0.7f, 2.3f).clientTrackingRange(10).build("soul_trader"));
+	/** Хранитель Алой Жатвы (Арена Храбрецов). */
+	public static final EntityType<com.tarkrakov.tearsofink.hunt.HarvestKeeperEntity> HARVEST_KEEPER = Registry.register(
+			BuiltInRegistries.ENTITY_TYPE, TearsOfInk.id("harvest_keeper"),
+			EntityType.Builder.of(com.tarkrakov.tearsofink.hunt.HarvestKeeperEntity::new, MobCategory.MISC)
+					.sized(0.7f, 2.3f).clientTrackingRange(10).build("harvest_keeper"));
 	/** Охотник (Охота). */
 	public static final EntityType<com.tarkrakov.tearsofink.hunt.HunterEntity> HUNTER = Registry.register(
 			BuiltInRegistries.ENTITY_TYPE, TearsOfInk.id("hunter"),
@@ -67,6 +72,7 @@ public final class ModMobs {
 		FabricDefaultAttributeRegistry.register(PALE_CROSSBOWMAN, com.tarkrakov.tearsofink.entity.patrol.PaleCrossbowmanEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(GUIDE, com.tarkrakov.tearsofink.prologue.GuideEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(SOUL_TRADER, com.tarkrakov.tearsofink.trader.SoulTraderEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(HARVEST_KEEPER, com.tarkrakov.tearsofink.trader.SoulTraderEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(HUNTER, com.tarkrakov.tearsofink.hunt.HunterEntity.createAttributes());
 		com.tarkrakov.tearsofink.entity.patrol.SquadPatrols.init();
 		com.tarkrakov.tearsofink.entity.patrol.Outposts.init();
