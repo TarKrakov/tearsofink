@@ -69,6 +69,7 @@ public final class ModMobs {
 		FabricDefaultAttributeRegistry.register(SOUL_TRADER, com.tarkrakov.tearsofink.trader.SoulTraderEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(HUNTER, com.tarkrakov.tearsofink.hunt.HunterEntity.createAttributes());
 		com.tarkrakov.tearsofink.entity.patrol.SquadPatrols.init();
+		com.tarkrakov.tearsofink.entity.patrol.Outposts.init();
 		SpawnPlacements.register(CATERPILLAR, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
 				(type, level, reason, pos, random) -> {
 					BlockPos below = pos.below();

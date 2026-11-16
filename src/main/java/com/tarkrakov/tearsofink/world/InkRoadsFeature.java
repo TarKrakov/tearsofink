@@ -86,6 +86,19 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 				boolean bridge = layout.roadBridge(road, along);
 				boolean bent = Math.floorMod((int) Math.floor(along), BENT) == 0;
 
+				// разрушенный мост у Чернолесья: чем ближе к обрыву, тем больше дыр; последние блоки — пустота
+				double broken = along - InkLandsLayout.ROAD_END_RADIUS;
+				boolean wreck = bridge && broken < InkLandsLayout.BROKEN_BRIDGE_LEN;
+				double decay = wreck ? 1 - broken / InkLandsLayout.BROKEN_BRIDGE_LEN : 0; // 0 — целый, 1 — у обрыва
+				long h = net.minecraft.util.Mth.getSeed(x, 7, z);
+				double roll = ((h >>> 16) & 0xFFFF) / 65535.0;
+				if (wreck && (broken < 7 || roll < 0.55 * decay * decay)) {
+					// обломок внизу, на земле
+					if (roll < 0.35 && broken >= 3) level.setBlock(pos.set(x, ground + 1, z),
+							((h >>> 8) & 1) == 0 ? deck : ModBlocks.PALE_STAIRS.defaultBlockState(), 2);
+					placed = true;
+					continue;
+				}
 				if (bridge) {
 					if (!lane && fromAxis > InkLandsLayout.ROAD_HALF_WIDTH + RAIL_BAND) continue;
 					// ----- Мост -----
@@ -94,10 +107,11 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 						clear(level, pos, x, z, y + 1, Math.max(surface, y + HEADROOM));
 						if (bent && y - 1 > ground) level.setBlock(pos.set(x, y - 1, z), beam(layout, road, along), 2);
 					} else {
-						// перила по краю; на пролёте — столбик и опора до земли
-						level.setBlock(pos.set(x, y + 1, z), bent ? pillar : rail, 2);
+						// перила по краю; на пролёте — столбик и опора до земли (у обрыва — перила выломаны, опоры обрублены)
+						if (!wreck || roll > decay * 0.8) level.setBlock(pos.set(x, y + 1, z), bent ? pillar : rail, 2);
 						clear(level, pos, x, z, y + 2, Math.max(surface, y + HEADROOM));
-						if (bent) for (int yy = y - 1; yy > ground; yy--) level.setBlock(pos.set(x, yy, z), pillar, 2);
+						int stump = wreck ? (int) Math.round((y - ground) * decay * 0.7) : 0;
+						if (bent) for (int yy = y - 1 - stump; yy > ground; yy--) level.setBlock(pos.set(x, yy, z), pillar, 2);
 					}
 				} else if (lane) {
 					// ----- Полотно по земле: насыпь (в т.ч. через ручьи) или выемка -----
@@ -105,6 +119,14 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 					level.setBlock(pos.set(x, y, z), path, 2);
 					clear(level, pos, x, z, y + 1, Math.max(surface, y + HEADROOM));
 					if (surface > y) WorldgenCleanup.removeFloatingPlants(level, x, surface + 1, z);
+					// застава Шпиля: баррикада поперёк дороги (заглушка — постройку сделает автор)
+					for (int n = 0; n < InkLandsLayout.OUTPOSTS.length; n++) {
+						if (Math.abs(along - layout.outpostDistance(n)) < 0.75) {
+							boolean spike = ((x + z) & 1) == 0;
+							level.setBlock(pos.set(x, y + 1, z), spike ? pillar : rail, 2);
+							if (spike) level.setBlock(pos.set(x, y + 2, z), rail, 2);
+						}
+					}
 				} else {
 					// ----- Обочина: откос насыпи на ступень ниже полотна или расширение выемки -----
 					if (surface < y - 1) {

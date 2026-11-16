@@ -65,7 +65,7 @@ public final class SquadTuning {
 	 * Пешком по дороге: окраина ~40 с, лес ~50 с, глубь ~1 мин — но игрок обычно идёт медленнее, обыскивая лес.
 	 */
 	/** Где начинаются пояса 1 и 2 (глубина от края, блоки). */
-	public static final int TIER1_DEPTH = 250, TIER2_DEPTH = 450;
+	public static final int TIER1_DEPTH = 500, TIER2_DEPTH = 1000; // 16 ноя: Бледнолесье ~1560 в глубину (было 680)
 	/** Составы и веса по поясам: T — щитовик, S — копейщик, C — арбалетчик. Порядок = строй (первый ведёт). */
 	public static final String[][] TIER_SQUADS = {
 			{"S", "SS", "SC", "TC"},

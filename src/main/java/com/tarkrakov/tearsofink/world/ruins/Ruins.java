@@ -40,9 +40,9 @@ public final class Ruins {
 
 	// ===== Храмы (в каждом — Малый чернильный фонтан: +5 к Чернилам навсегда) =====
 	/** Сколько храмов на всё Бледнолесье. 7 фонтанов = +35 к запасу Чернил за все. */
-	public static final int TEMPLES = 7;
+	public static final int TEMPLES = 13; // 16 ноя: мир вчетверо больше по площади (было 7)
 	/** На какой глубине от края стоят храмы. */
-	public static final int TEMPLE_MIN_DEPTH = 150, TEMPLE_MAX_DEPTH = 560;
+	public static final int TEMPLE_MIN_DEPTH = 150, TEMPLE_MAX_DEPTH = 1350;
 
 	// ===== Стартовый храм: новички попадают в Земли на дорогу рядом с ним =====
 	/** От осевой дороги до середины стартового храма (блоки). */
@@ -89,7 +89,8 @@ public final class Ruins {
 	/** Пояс глубины (0 окраина, 1 лес, 2 глубь/Чернолесье) — как у патрулей. */
 	public static int tier(InkLandsLayout layout, int x, int z) {
 		double depth = layout.depthInside(x, z);
-		return depth < 250 ? 0 : depth < 450 ? 1 : 2;
+		return depth < com.tarkrakov.tearsofink.entity.patrol.SquadTuning.TIER1_DEPTH ? 0
+				: depth < com.tarkrakov.tearsofink.entity.patrol.SquadTuning.TIER2_DEPTH ? 1 : 2;
 	}
 
 	private static final Map<InkLandsLayout, List<int[]>> TEMPLE_CACHE = new WeakHashMap<>();

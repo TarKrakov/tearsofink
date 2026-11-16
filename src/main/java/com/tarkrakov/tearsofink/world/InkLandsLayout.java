@@ -22,13 +22,13 @@ import java.util.function.IntBinaryOperator;
 public final class InkLandsLayout {
 	// ===== Размеры (в блоках) =====
 	/** Радиус всей области (до края-петли). Каждая зона на +100 шире, чем было в обычном мире (800). */
-	public static final int RADIUS = 1100;
-	/** Радиус ядра — Чернолесья. */
-	public static final int CORE_RADIUS = 424;
+	public static final int RADIUS = 2200; // 16 ноя: было 1100 — мир вдвое шире (по дороге ~6–7 мин бегом)
+	/** Радиус ядра — Чернолесья (16 ноя: ×1,5, было 424; шире стало в основном Бледнолесье). */
+	public static final int CORE_RADIUS = 640;
 	/** Насколько рвутся края области (±). */
-	public static final int EDGE_WOBBLE = 110;
+	public static final int EDGE_WOBBLE = 160;
 	/** Масштаб «рваности» краёв: больше — плавнее изгибы. */
-	public static final double EDGE_SCALE = 300.0;
+	public static final double EDGE_SCALE = 420.0;
 
 	// ===== Кроволесье: круглые пятна (позже — вокруг Багряных Вестников) =====
 	/** Размер ячейки сетки: в каждой ячейке может быть одно пятно. */
@@ -45,7 +45,7 @@ public final class InkLandsLayout {
 
 	// ===== Смоляное Озеро (одно на область) =====
 	/** Расстояние центра Озера от центра области: на стыке Бледнолесья и Чернолесья, ближе к Чернолесью. */
-	public static final int LAKE_DISTANCE = 500;
+	public static final int LAKE_DISTANCE = 720;
 	/** Радиус водной глади (до пляжа). */
 	public static final int LAKE_WATER_RADIUS = 130;
 	/** Ширина пляжа вокруг воды. */
@@ -78,7 +78,17 @@ public final class InkLandsLayout {
 	public static final double ROAD_MEANDER_SCALE = 160.0;
 	/** Дороги начинаются чуть за краем области и доходят почти до центра. */
 	public static final double ROAD_START_FRACTION = 1.08;
-	public static final int ROAD_END_RADIUS = 30;
+	/** 16 ноя: дороги обрываются у Чернолесья разрушенным мостом — дальше только лесом. */
+	public static final int ROAD_END_RADIUS = CORE_RADIUS - 4;
+	/** Разрушенный мост: столько блоков от конца дороги идёт подъём на мост и обломки; подъём над землёй. */
+	public static final int BROKEN_BRIDGE_LEN = 48, BROKEN_BRIDGE_RISE = 9;
+
+	// ===== Заставы Шпиля на дорогах (16 ноя) =====
+	/** На какой доле пути от Чернолесья к краю стоят заставы (по одной на каждую долю, на каждой дороге). */
+	public static final double[] OUTPOSTS = {0.3, 0.65};
+
+	// ===== Арена Храбрецов: одна низина Кроволесья крупнее прочих (16 ноя, место под постройку автора) =====
+	public static final int ARENA_VALLEY_RADIUS = 140;
 	/** Насколько дорога может подниматься над рельефом насыпью (вниз — режет без ограничений). */
 	public static final int ROAD_MAX_FILL = 6;
 	/** Максимальный уклон дороги: подъём в блоках на 1 блок пути. */
@@ -125,6 +135,38 @@ public final class InkLandsLayout {
 			roadAngles[i] = start + i * Mth.TWO_PI / ROADS + (random.nextDouble() - 0.5) * 0.5;
 		}
 		this.lakeCenter = placeLake();
+		this.arenaCenter = placeArena();
+	}
+
+	/** Центр низины Арены: середина второго по ширине промежутка между дорогами, посередине Бледнолесья. */
+	private final BlockPos arenaCenter;
+
+	private BlockPos placeArena() {
+		double[] sorted = new double[ROADS];
+		for (int i = 0; i < ROADS; i++) sorted[i] = Mth.positiveModulo(roadAngles[i], Mth.TWO_PI);
+		java.util.Arrays.sort(sorted);
+		double[] gaps = new double[ROADS], mids = new double[ROADS];
+		for (int i = 0; i < ROADS; i++) {
+			double a = sorted[i], b = i + 1 < ROADS ? sorted[i + 1] : sorted[0] + Mth.TWO_PI;
+			gaps[i] = b - a;
+			mids[i] = (a + b) / 2;
+		}
+		int best = 0, second = -1;
+		for (int i = 1; i < ROADS; i++) if (gaps[i] > gaps[best]) best = i;
+		for (int i = 0; i < ROADS; i++) if (i != best && (second < 0 || gaps[i] > gaps[second])) second = i;
+		double d = (CORE_RADIUS + RADIUS) / 2.0;
+		return new BlockPos(center.getX() + (int) Math.round(Math.cos(mids[second]) * d), 0,
+				center.getZ() + (int) Math.round(Math.sin(mids[second]) * d));
+	}
+
+	/** Центр низины Арены Храбрецов (под её Вестником встанет Арена). */
+	public BlockPos arenaCenter() {
+		return arenaCenter;
+	}
+
+	/** Где на дороге road стоит застава number: расстояние от центра. */
+	public double outpostDistance(int number) {
+		return ROAD_END_RADIUS + BROKEN_BRIDGE_LEN + OUTPOSTS[number] * (RADIUS - ROAD_END_RADIUS - BROKEN_BRIDGE_LEN);
 	}
 
 	/** Озеро — посередине самого широкого промежутка между соседними дорогами. */
@@ -316,6 +358,9 @@ public final class InkLandsLayout {
 	}
 
 	private long[] computeBloodBlob(int cellX, int cellZ) {
+		// низина Арены — в своей ячейке всегда, крупнее прочих; соседние пятна на неё не наезжают
+		if (Math.floorDiv(arenaCenter.getX(), BLOOD_CELL) == cellX && Math.floorDiv(arenaCenter.getZ(), BLOOD_CELL) == cellZ)
+			return new long[]{arenaCenter.getX(), arenaCenter.getZ(), ARENA_VALLEY_RADIUS};
 		RandomSource r = RandomSource.create(seed * 31 + cellX * 341873128712L + cellZ * 132897987541L);
 		if (r.nextDouble() > BLOOD_CHANCE) return null;
 		long bx = (long) ((cellX + 0.2 + r.nextDouble() * 0.6) * BLOOD_CELL);
@@ -326,6 +371,8 @@ public final class InkLandsLayout {
 		if (d < CORE_RADIUS + BLOOD_INNER_MARGIN + radius || d > RADIUS * BLOOD_OUTER_FRACTION - radius) return null;
 		double lx = bx - lakeCenter.getX(), lz = bz - lakeCenter.getZ();
 		if (Math.sqrt(lx * lx + lz * lz) < LAKE_ZONE_RADIUS + radius + VALLEY_SLOPE) return null; // не наезжать на Озеро
+		double ax = bx - arenaCenter.getX(), az = bz - arenaCenter.getZ();
+		if (Math.sqrt(ax * ax + az * az) < ARENA_VALLEY_RADIUS + radius + VALLEY_SLOPE * 2) return null; // и на Арену
 		return new long[]{bx, bz, radius};
 	}
 
@@ -655,13 +702,19 @@ public final class InkLandsLayout {
 				for (int i = 1; i < samples; i++) if (!water[i]) p[i] = Math.min(p[i], p[i - 1] + maxStep);
 				for (int i = samples - 2; i >= 0; i--) if (!water[i]) p[i] = Math.min(p[i], p[i + 1] + maxStep);
 			}
+			// у Чернолесья дорога поднимается на мост, который обрывается (разрушенный мост)
+			int brokenSamples = BROKEN_BRIDGE_LEN / ROAD_PROFILE_STEP;
+			for (int i = 0; i <= brokenSamples && i < samples; i++) {
+				double rise = BROKEN_BRIDGE_RISE * (1 - (double) i / (brokenSamples + 1));
+				p[i] = Math.max(p[i], raw[i] + rise);
+			}
 			// плавный подъём к мостам
 			for (int i = 1; i < samples; i++) p[i] = Math.max(p[i], p[i - 1] - maxStep);
 			for (int i = samples - 2; i >= 0; i--) p[i] = Math.max(p[i], p[i + 1] - maxStep);
 			result[road] = p;
 			// где мост: вода или полотно высоко над землёй; + по отрезку с каждой стороны (заходы на берег)
 			boolean[] raw2 = new boolean[samples], br = new boolean[samples];
-			for (int i = 0; i < samples; i++) raw2[i] = water[i] || p[i] - raw[i] > ROAD_VIADUCT_HEIGHT;
+			for (int i = 0; i < samples; i++) raw2[i] = water[i] || p[i] - raw[i] > ROAD_VIADUCT_HEIGHT || i <= brokenSamples;
 			for (int i = 0; i < samples; i++) br[i] = raw2[i] || (i > 0 && raw2[i - 1]) || (i + 1 < samples && raw2[i + 1]);
 			// короткие разрывы между мостами (1–2 отрезка земли) — тоже мост, без ступенек туда-сюда
 			for (int i = 1; i < samples - 2; i++) {
