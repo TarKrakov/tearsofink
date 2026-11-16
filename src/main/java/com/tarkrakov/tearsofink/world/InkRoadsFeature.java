@@ -33,6 +33,9 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
 public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 	/** Сколько блоков воздуха оставить над дорогой. */
 	private static final int HEADROOM = 4;
+	/** Склон выемки: ширина за обочиной (блоки) и крутизна (блоков вверх на блок вбок); срезаем, только если выемка глубже. */
+	private static final double CUT_SLOPE_WIDTH = 8, CUT_SLOPE = 1.6;
+	private static final int CUT_MIN_DEPTH = 7;
 	/** Пролёт моста: опоры и балки каждые столько блоков вдоль дороги. */
 	private static final int BENT = 8;
 	/** Перила моста — полоса такой ширины сразу за краем полотна. */
@@ -74,10 +77,25 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 		for (int dx = 0; dx < 16; dx++) {
 			for (int dz = 0; dz < 16; dz++) {
 				int x = minX + dx, z = minZ + dz;
-				double[] hit = layout.roadNear(x, z, InkLandsLayout.ROAD_SHOULDER);
+				double[] hit = layout.roadNear(x, z, InkLandsLayout.ROAD_SHOULDER + CUT_SLOPE_WIDTH);
 				if (hit == null || layout.depthInside(x, z) < 0) continue; // за краем дорог нет
 				int road = (int) hit[0];
 				double along = hit[1], fromAxis = hit[2];
+				// 16 ноя: склон выемки — за обочиной стенки срезаются уступом (не отвесная стена в горах)
+				double beyond = fromAxis - (InkLandsLayout.ROAD_HALF_WIDTH + InkLandsLayout.ROAD_SHOULDER);
+				if (beyond > 0) {
+					if (!layout.roadBridge(road, along)) {
+						int yr = (int) Math.round(ctx.height(road, along));
+						int cap = yr + HEADROOM + (int) Math.floor(beyond * CUT_SLOPE);
+						int top = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z) - 1;
+						if (top > cap && top - yr > CUT_MIN_DEPTH) {
+							clear(level, pos, x, z, cap + 1, top);
+							WorldgenCleanup.removeFloatingPlants(level, x, cap + 1, z);
+							placed = true;
+						}
+					}
+					continue;
+				}
 				boolean lane = fromAxis <= InkLandsLayout.ROAD_HALF_WIDTH;
 
 				int y = (int) Math.round(ctx.height(road, along));
