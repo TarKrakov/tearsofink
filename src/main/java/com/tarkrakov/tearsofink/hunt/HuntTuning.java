@@ -78,7 +78,7 @@ public final class HuntTuning {
 	public static final int AXE_RUSH_HIT = 7;
 	public static final double AXE_RUSH_REACH = 4.2;
 	/** Охотник Шпиля — оружие автора (16 ноя): веса один клинок / пара одинаковых / одноручный + двуручный в левой, по рангу. */
-	public static final int[][] SPIRE_LOADOUT = {{70, 15, 15}, {45, 35, 20}, {30, 45, 25}};
+	public static final int[][] SPIRE_LOADOUT = {{45, 40, 15}, {40, 40, 20}, {30, 45, 25}};
 	/** Приёмы Скимитаров у охотников (Волна, Чернильный Росчерк) — перезарядка дольше в столько раз. */
 	public static final float SCIMITAR_SKILL_COOLDOWN = 2.0f;
 	/** Гильотина охотника: сколько ударов, прежде чем казнь. */
@@ -114,7 +114,7 @@ public final class HuntTuning {
 	/** Шпиль: шанс подбить врага ударом и сила подброса. */
 	public static final float SPIRE_LAUNCH_CHANCE = 0.25f;
 	/** Шпиль играет от приёмов: урон его приёмов и здоровье — выше (иначе отходы стоят ему боя). */
-	public static final float SPIRE_SKILL_DAMAGE = 1.1f, SPIRE_HP = 1.05f;
+	public static final float SPIRE_SKILL_DAMAGE = 1.1f, SPIRE_HP = 1.15f; // 16 ноя: 1,05 → 1,15 (новое оружие, Новички проседали)
 	/** Стрелки (скелет, арбалетчик): враг дальше этого — охотник догоняет рывком; Шпиль против стрелка не отходит. */
 	public static final double CHASE_RANGED = 4;
 	/** Шпиль: шанс после отхода не стрелять издалека, а полезть в драку (3–4 удара подряд). */
