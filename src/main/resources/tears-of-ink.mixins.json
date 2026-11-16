@@ -16,7 +16,8 @@
 		"LivingEntityAttackAccessor",
 		"SanctuaryAttackMixin",
 		"NoSunBurnMixin",
-		"PreyDamageMixin"
+		"PreyDamageMixin",
+		"GearDamageMixin"
 	],
 	"injectors": {
 		"defaultRequire": 1

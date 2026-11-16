@@ -154,6 +154,14 @@ public final class Skills {
 		}
 
 		cooldowns.put(skill.id(), now + skill.cooldownTicks());
+		// приёмы оружия тупят клинок (Gear): Shift+R — левый, остальное — правый
+		if (skill.getClass().getName().contains(".weapon.")) {
+			var off = player.getOffhandItem();
+			boolean left = off.getItem() instanceof com.tarkrakov.tearsofink.weapon.AbilityWeapon aw && aw.ability() == skill
+					&& !(player.getMainHandItem().getItem() instanceof com.tarkrakov.tearsofink.weapon.AbilityWeapon mw && mw.ability() == skill);
+			com.tarkrakov.tearsofink.weapon.forge.Gear.wear(player, left ? off : player.getMainHandItem(),
+					com.tarkrakov.tearsofink.weapon.forge.Gear.WEAR_ABILITY);
+		}
 		if (!creative) {
 			InkData fresh = InkPowers.get(player);
 			InkPowers.update(player, fresh.withInk(fresh.ink() - skill.inkCost()).withSoul(fresh.soul() - skill.soulCost()));

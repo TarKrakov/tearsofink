@@ -1,0 +1,25 @@
+{
+  "type": "tears-of-ink:forging",
+  "pattern": [
+    "MIM",
+    "AIA",
+    "ASA"
+  ],
+  "key": {
+    "I": {
+      "item": "tears-of-ink:pale_ingot"
+    },
+    "M": {
+      "item": "tears-of-ink:ink"
+    },
+    "A": {
+      "item": "tears-of-ink:asphoda"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:spire_torturer_greatsword"
+  }
+}

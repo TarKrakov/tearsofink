@@ -1,0 +1,25 @@
+{
+  "type": "tears-of-ink:forging",
+  "pattern": [
+    " I ",
+    "MIM",
+    "ASA"
+  ],
+  "key": {
+    "I": {
+      "item": "tears-of-ink:blood_ingot"
+    },
+    "M": {
+      "item": "tears-of-ink:blood_clot"
+    },
+    "A": {
+      "item": "tears-of-ink:asphoda"
+    },
+    "S": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:blood_talvar"
+  }
+}

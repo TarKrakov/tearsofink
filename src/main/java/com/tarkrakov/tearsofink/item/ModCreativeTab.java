@@ -93,6 +93,15 @@ public final class ModCreativeTab {
 						output.accept(ModBlocks.ASPHODELITE_DIAMOND_ORE);
 						output.accept(ModBlocks.ASPHODELITE_EMERALD_ORE);
 						output.accept(ModItems.PIGMENT);
+						output.accept(ModItems.RAW_PALE_METAL);
+						output.accept(ModItems.PALE_INGOT);
+						output.accept(ModItems.RAW_BLOOD_METAL);
+						output.accept(ModItems.BLOOD_INGOT);
+						output.accept(ModItems.RAW_INK_METAL);
+						output.accept(ModItems.INK_INGOT);
+						output.accept(com.tarkrakov.tearsofink.block.ModBlocks.PALE_ORE);
+						output.accept(com.tarkrakov.tearsofink.block.ModBlocks.BLOOD_ORE);
+						output.accept(com.tarkrakov.tearsofink.block.ModBlocks.INK_ANVIL);
 						output.accept(ModItems.FULFILLED_CONTRACT);
 						output.accept(ModBlocks.PALE_LOG);
 						output.accept(ModBlocks.STRIPPED_PALE_LOG);
@@ -129,6 +138,12 @@ public final class ModCreativeTab {
 						output.accept(ModItems.CLEAVE_GREATSWORD);
 						output.accept(ModItems.ROARING_AXE);
 						output.accept(ModItems.RAPID_KNIFE);
+						output.accept(ModItems.PALE_SWORD);
+						output.accept(ModItems.PALE_GREATSWORD);
+						output.accept(ModItems.BLOOD_SWORD);
+						output.accept(ModItems.BLOOD_GREATSWORD);
+						output.accept(ModItems.INK_SWORD);
+						output.accept(ModItems.INK_GREATSWORD);
 						output.accept(ModItems.BLOOD_KATANA);
 						output.accept(ModItems.BLOOD_OBSI_CLUB);
 						output.accept(ModItems.BLOOD_TALVAR);

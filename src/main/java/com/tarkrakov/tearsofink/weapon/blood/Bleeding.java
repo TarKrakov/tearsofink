@@ -38,6 +38,7 @@ public final class Bleeding {
 
 	/** Обычный удар оружием Крови — с шансом кровотечение. */
 	public static void onWeaponHit(LivingEntity attacker, ItemStack weapon, LivingEntity target) {
+		com.tarkrakov.tearsofink.weapon.forge.Gear.onWeaponHit(attacker, weapon, target); // заточка и пассивки обычного оружия
 		if (!(weapon.getItem() instanceof ArsenalWeaponItem w) || !w.blood()) return;
 		if (attacker.getRandom().nextFloat() < BloodTuning.BLEED_CHANCE) apply(target, attacker, 1);
 	}

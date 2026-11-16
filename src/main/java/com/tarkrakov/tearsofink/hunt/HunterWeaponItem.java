@@ -16,10 +16,8 @@ import net.minecraft.world.item.component.CustomModelData;
  * Удары — от архетипа (двуручник — Палачи, клинок — Скимитары). Своей абилки на R пока нет.
  */
 public class HunterWeaponItem extends InkGreatswordItem {
-	/** Прибавка к урону за ступень: Тусклое, Контрастное, Рубрики. */
-	public static final int[] TIER_DAMAGE = {0, 1, 2};
 	public static final int TIERS = 3;
-	private static final String LINE = "HunterLine", TIER = "HunterTier";
+	private static final String LINE = "HunterLine";
 
 	private final boolean twoHanded;
 
@@ -39,13 +37,13 @@ public class HunterWeaponItem extends InkGreatswordItem {
 		tier = Math.max(0, Math.min(TIERS - 1, tier));
 		CompoundTag tag = new CompoundTag();
 		tag.putInt(LINE, line.ordinal());
-		tag.putInt(TIER, tier);
 		stack.set(DataComponents.CUSTOM_DATA, CustomData.of(tag));
+		com.tarkrakov.tearsofink.weapon.forge.Gear.setTier(stack, tier); // ступень — множителем урона (Gear), не прибавкой
 		stack.set(DataComponents.CUSTOM_MODEL_DATA, new CustomModelData(line.ordinal() + 1));
 		int base = twoHanded ? InkGreatswordItem.DAMAGE : InkGreatswordItem.ONE_HANDED_DAMAGE;
 		float speed = twoHanded ? InkGreatswordItem.ATTACK_SPEED : InkGreatswordItem.ONE_HANDED_SPEED;
 		stack.set(DataComponents.ATTRIBUTE_MODIFIERS,
-				SwordItem.createAttributes(ModTiers.ASPHODA, base + TIER_DAMAGE[tier], speed).withTooltip(false));
+				SwordItem.createAttributes(ModTiers.ASPHODA, base, speed).withTooltip(false));
 		return stack;
 	}
 
@@ -55,8 +53,7 @@ public class HunterWeaponItem extends InkGreatswordItem {
 	}
 
 	public static int tier(ItemStack stack) {
-		CustomData d = stack.get(DataComponents.CUSTOM_DATA);
-		return d == null ? 0 : Math.max(0, Math.min(TIERS - 1, d.copyTag().getInt(TIER)));
+		return com.tarkrakov.tearsofink.weapon.forge.Gear.tier(stack);
 	}
 
 	@Override

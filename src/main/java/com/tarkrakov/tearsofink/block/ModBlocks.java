@@ -228,6 +228,17 @@ public final class ModBlocks {
 	public static final Block DEEPSLATE_ASPHODELITE_ORE = register("deepslate_asphodelite_ore", new DropExperienceBlock(UniformInt.of(2, 5),
 			BlockBehaviour.Properties.ofFullCopy(Blocks.DEEPSLATE_IRON_ORE).lightLevel(s -> ASPHODELITE_LIGHT)));
 
+	// ===== Руды линий (16 ноя): копаешь — падает металл, металл в печь — слиток =====
+	/** Бледная руда — под землёй Бледнолесья (железная кирка не нужна — каменной хватит). */
+	public static final Block PALE_ORE = register("pale_ore", new DropExperienceBlock(UniformInt.of(0, 2),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE).mapColor(MapColor.COLOR_LIGHT_GRAY)));
+	/** Кровавая руда — под низинами Кроволесья, неглубоко и гуще. */
+	public static final Block BLOOD_ORE = register("blood_ore", new DropExperienceBlock(UniformInt.of(0, 2),
+			BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE).mapColor(MapColor.COLOR_RED)));
+	/** Чернильная наковальня — ковка оружия (раскладка 3×3) и заточка за Пигмент. */
+	public static final Block INK_ANVIL = register("ink_anvil", new com.tarkrakov.tearsofink.weapon.forge.InkAnvilBlock(
+			BlockBehaviour.Properties.ofFullCopy(Blocks.SMITHING_TABLE).mapColor(MapColor.COLOR_BLACK).requiresCorrectToolForDrops().strength(3.5f)));
+
 	// ===== Ванильные руды в асфоделитовой породе (лут — ванильный) =====
 	public static final Block ASPHODELITE_COAL_ORE = register("asphodelite_coal_ore", new DropExperienceBlock(UniformInt.of(0, 2),
 			BlockBehaviour.Properties.ofFullCopy(Blocks.COAL_ORE).mapColor(MapColor.COLOR_LIGHT_BLUE)));

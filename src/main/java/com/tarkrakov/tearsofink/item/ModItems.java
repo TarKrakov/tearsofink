@@ -103,11 +103,11 @@ public final class ModItems {
 	/** Ревущая Секира (Шпиль, двуручная, парой — тоже, как Палач): урон 8, скорость 1,1; R — рывок с рассекающим взмахом (Чернила). Модель автора 15 ноя. */
 	public static final Item ROARING_AXE = register("spire_roaring_axe",
 			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE,
-					() -> com.tarkrakov.tearsofink.weapon.combat.AxeMoves.RUSH, 5, -2.9f));
+					() -> com.tarkrakov.tearsofink.weapon.combat.AxeMoves.RUSH, 6, -2.9f)); // 16 ноя: 9
 	/** Разящий Кинжал (Шпиль, одноручный): урон 4, скорость 2,0; R — рывок с уколом (Чернила). Модель автора 15 ноя. */
 	public static final Item RAPID_KNIFE = register("spire_rapid_knife",
 			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE,
-					() -> com.tarkrakov.tearsofink.weapon.combat.DaggerMoves.RUSH, 1, -2.0f));
+					() -> com.tarkrakov.tearsofink.weapon.combat.DaggerMoves.RUSH, 2, -2.0f)); // 16 ноя: 5
 	public static final Item BLOOD_KATANA = register("blood_katana",
 			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD));
 	public static final Item BLOOD_OBSI_CLUB = register("blood_obsi_club",
@@ -117,6 +117,30 @@ public final class ModItems {
 	public static final Item BLOOD_DUSSAK = register("blood_dussak",
 			new com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem(new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD,
 					() -> com.tarkrakov.tearsofink.weapon.blood.BloodAbilities.PARRY));
+
+	// ===== Металлы и слитки линий (16 ноя) =====
+	public static final Item RAW_PALE_METAL = register("raw_pale_metal", new Item(new Item.Properties()));
+	public static final Item RAW_BLOOD_METAL = register("raw_blood_metal", new Item(new Item.Properties()));
+	/** Чернильный металл — только с врагов Чернолесья и из сундуков (руды нет). */
+	public static final Item RAW_INK_METAL = register("raw_ink_metal", new Item(new Item.Properties()));
+	public static final Item PALE_INGOT = register("pale_ingot", new Item(new Item.Properties()));
+	public static final Item BLOOD_INGOT = register("blood_ingot", new Item(new Item.Properties()));
+	public static final Item INK_INGOT = register("ink_ingot", new Item(new Item.Properties()));
+
+	// ===== Обычное оружие линий (16 ноя; модели — заглушки-перекраски, автор нарисует) =====
+	// итоговый урон / скорость: Бледное и Кровавое 5 и 8, Чернильное 6 и 9; Бледное быстрее
+	public static final Item PALE_SWORD = register("pale_sword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+			new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE, 5, 1.7f));
+	public static final Item PALE_GREATSWORD = register("pale_greatsword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+			new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE, 8, 1.1f));
+	public static final Item BLOOD_SWORD = register("blood_sword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+			new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD, 5, 1.5f));
+	public static final Item BLOOD_GREATSWORD = register("blood_greatsword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+			new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.BLOOD, 8, 1.0f));
+	public static final Item INK_SWORD = register("ink_sword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+			new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.INK, 6, 1.5f));
+	public static final Item INK_GREATSWORD = register("ink_greatsword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
+			new Item.Properties(), true, com.tarkrakov.tearsofink.hunt.HunterType.INK, 9, 1.0f));
 
 	// ===== Добыча с фауны =====
 	/** Шёлковая нить (бледные гусеницы) — работает в рецептах вместо ванильной нити. */
@@ -185,7 +209,7 @@ public final class ModItems {
 	/** Тусклый скимитар — стартовое оружие Пути Чернил: удары Скимитаров, урон 4, тусклая Волна (R). */
 	public static final Item DIM_SCIMITAR = register("dim_scimitar",
 			new com.tarkrakov.tearsofink.weapon.InkGreatswordItem(() -> com.tarkrakov.tearsofink.weapon.WeaponAbilities.DIM_WAVE,
-					new Item.Properties(), false, com.tarkrakov.tearsofink.weapon.InkGreatswordItem.ONE_HANDED_DAMAGE - 1));
+					new Item.Properties(), false, com.tarkrakov.tearsofink.weapon.InkGreatswordItem.ONE_HANDED_DAMAGE - 2)); // итого 4 (охотничье подняли на +1, тусклый остаётся слабее)
 	public static final Item DIARY = register("diary",
 			new com.tarkrakov.tearsofink.prologue.PrologueItems.Diary(new Item.Properties().stacksTo(1)));
 	/** Базовое оружие Чернил: Чернильная клякса (R). */

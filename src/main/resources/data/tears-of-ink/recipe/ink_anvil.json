@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "III",
+    "AJA",
+    "IAI"
+  ],
+  "key": {
+    "I": {
+      "item": "tears-of-ink:pale_ingot"
+    },
+    "A": {
+      "item": "tears-of-ink:asphoda"
+    },
+    "J": {
+      "item": "tears-of-ink:ink"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:ink_anvil"
+  }
+}
