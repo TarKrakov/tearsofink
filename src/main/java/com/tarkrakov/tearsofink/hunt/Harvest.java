@@ -123,6 +123,18 @@ public final class Harvest {
 					begin(c.getSource().getPlayerOrException());
 					return 1;
 				}))
+				.then(Commands.literal("where").requires(src -> src.hasPermission(2)).executes(c -> { // для тестов: к Арене
+					ServerPlayer p = c.getSource().getPlayerOrException();
+					ServerLevel lands = ModDimensions.lands(p.server);
+					if (lands == null) return 0;
+					Vec3 a = arena(lands);
+					if (a == null) return 0;
+					p.teleportTo(lands, a.x, a.y + 1, a.z, p.getYRot(), p.getXRot());
+					Vec3 g = ground(lands, a.x, a.z);
+					p.teleportTo(lands, g.x, g.y, g.z, p.getYRot(), p.getXRot());
+					c.getSource().sendSuccess(() -> Component.literal("Арена: " + (int) g.x + " " + (int) g.y + " " + (int) g.z), false);
+					return 1;
+				}))
 				.then(Commands.literal("claim").executes(c -> {
 					claim(c.getSource().getPlayerOrException());
 					return 1;
