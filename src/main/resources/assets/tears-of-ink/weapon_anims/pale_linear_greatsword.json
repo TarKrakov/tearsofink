@@ -59,7 +59,7 @@
             5,
             -3
           ],
-          "ease": "ease_in_out"
+          "ease": "linear"
         },
         {
           "t": 0.62,
