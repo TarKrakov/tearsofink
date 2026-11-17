@@ -67,13 +67,61 @@ for name in ('attack1','attack2','attack3','attack4','dual_attack2','dual_attack
     source=anims[name].get('third',{}).get('source')
     assert source in anims,(name,'missing third-person source',source)
 
-# The dual X-split must move blade tips AWAY from the player centre, not inward.
-for side,name in ((1,'dual_attack3'),(-1,'dual_attack3_off')):
-    c=anims[name]; angle,position=sample(c,.6)
-    fp_model=m['display']['firstperson_'+('right' if side==1 else 'left')+'hand']
-    line=apply4(fp_item_m(fp_model,angle,position,g,side),np.array([h,tpt])/16)
-    outward=(line[1]-line[0])[0]*side
-    assert outward>.35,(name,'blade not opening outward',outward)
-print('PASS: dual split blades open outward in both hands')
+# The pilot's third.push once moved blades away from the character's actual wrists.
+# Shield-only item translation must never reappear on this sword.
+assert a['third'].get('push', 0) == 0
+for name,c in anims.items():
+    assert not c.get('third', {}).get('push'), (name, 'item-only third-person push detaches the blade')
 
-print('PASS: Claude preview geometry: visible attacks, right-to-left swing, 8 independent third-person sources')
+def sight(name, t, sign=1):
+    point=screen_tip(name,t,sign)
+    assert point[2]<-.05, (name,t,'clipped behind camera',point)
+    return np.array([point[0]/(-point[2]), point[1]/(-point[2])])
+
+# Different first-/third-person animations may be used, but the pivot at the grip stays
+# exactly stationary through any wrist rotation.  Check each animation source separately.
+for name in ('attack1','attack2','attack3','attack4','dual_attack1','dual_attack1_off',
+             'dual_attack2','dual_attack2_off','dual_attack3','dual_attack3_off',
+             'dual_charge','dual_charge_off','dual_parry','dual_parry_off'):
+    c=anims[name]
+    src=c.get('third',{}).get('source')
+    if src:
+        c=dict(c,keyframes=anims[src]['keyframes'])
+    fx=c.get('third',{})
+    for sign in (1,-1):
+        disp=m['display']['thirdperson_'+('right' if sign==1 else 'left')+'hand']
+        for t0 in (0.1, 0.3, 0.55):
+            _,_,W,_=solve4(m['display'],sign,c,t0,a['third'],fx,g,h,tpt)
+            grip_px=np.array([h])/16
+            still=apply4(tp_item_m(np.eye(4),disp,h,None,sign),grip_px)[0]
+            moved=apply4(tp_item_m(np.eye(4),disp,h,W,sign),grip_px)[0]
+            assert np.linalg.norm(still-moved)<1e-8,(name,sign,'third-person grip drift',still,moved)
+
+# 1. Mirrored slashes travel from the middle to the OUTER screen edges.
+r0=sight('dual_attack1',0,1); l0=sight('dual_attack1_off',0,-1)
+r1=sight('dual_attack1',.55,1); l1=sight('dual_attack1_off',.55,-1)
+assert r0[0]<-.15 and l0[0]>.15,(r0,l0)
+assert .55<r1[0]<.95 and -.95<l1[0]<-.55,(r1,l1)
+
+# 2. Separate thrusts follow the first hit position, one tip at a time toward the centre.
+assert sight('dual_attack2',0,1)[0]>.55
+assert sight('dual_attack2_off',0,-1)[0]<-.55
+assert abs(sight('dual_attack2_off',.35,-1)[0])<.35
+assert abs(sight('dual_attack2',.9,1)[0])<.35
+
+# 3. Vertical blade-led split: BOTH tips rise near the top and slash down to the toolbar,
+#    remaining visible without swapping left/right or crossing the camera centre.
+for side,name in ((1,'dual_attack3'),(-1,'dual_attack3_off')):
+    top=sight(name,.38,side); low=sight(name,.85,side)
+    assert .4<top[1]<.80,(name,'upper sword outside screen',top)
+    assert -.64<low[1]<-.25,(name,'lower sword out of frame',low)
+    assert top[0]*side > -.1 and low[0]*side > -.1,(name,'blade crossed centre',top,low)
+
+# Parry/charge: keep two entire blades beside each other, with only their TIPS angled
+# towards centre; they must not collide on-screen (and never leave their hands).
+for name,t0 in (('dual_parry',.35),('dual_charge',.6)):
+    right=sight(name,t0,1); left=sight(name+'_off',t0,-1)
+    assert right[0]>.20 and left[0]<-.18,(name,'blades overlap',right,left)
+    assert right[0]-left[0]>.45,(name,'blades too close',right,left)
+    assert max(abs(right[0]),abs(left[0]))<.85,(name,'blades outside view',right,left)
+print('PASS: Claude preview: raised solo attacks, mirrored dual combos, charge/parry gap, anchored grips')
