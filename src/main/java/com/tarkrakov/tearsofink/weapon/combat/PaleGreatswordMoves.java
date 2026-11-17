@@ -119,10 +119,13 @@ public final class PaleGreatswordMoves {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             if (!(entity instanceof ServerPlayer p)) return true;
             State s = STATES.get(p.getUUID());
+            net.minecraft.world.entity.Entity attacker = source.getEntity() != null
+                    ? source.getEntity() : source.getDirectEntity();
+            // Melee, arrows and other sourced attacks can all trigger this parry.
+            // Environmental fall/void damage must not trigger it.
             if (s == null || s.phase != Phase.PARRY || s.parried || now(p) > s.parryUntil
                     || !valid(p, s) || amount <= 0 || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)
-                    || !(source.getDirectEntity() instanceof LivingEntity attacker)
-                    || attacker == p || attacker.isAlliedTo(p) || attacker.distanceToSqr(p) > 25) return true;
+                    || attacker == null || attacker == p || attacker.isAlliedTo(p)) return true;
             s.parried = true;
             play(p, s, "dual_repel", "dual_repel_off", 10);
             area(p, s, 360, 3.3, 0.35, 1.2);
