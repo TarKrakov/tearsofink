@@ -9,6 +9,8 @@ from third import sample
 
 PATH=Path(__file__).resolve().parents[2]/'src/main/resources/assets/tears-of-ink/weapon_anims/pale_linear_greatsword.json'
 p=BladePose('pale_linear_greatsword');root=p.anims;anims=root['animations']
+if root.get('lmb_source')=='axe':
+    raise SystemExit('D-026 is historical. Current author request: use pale_axe_transfer.py.')
 # Metadata is retained for durations/hold/return and event markers, never old poses.
 def zero(t=0): return dict(t=t,rotation=[0,0,0],translation=[0,0,0],ease='ease_in_out')
 def pose(t,d,h,edge=(1,0,0),left=False,ease='ease_in_out'): return p.key(t,d,edge,h,left,ease)

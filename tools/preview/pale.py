@@ -14,11 +14,12 @@ def generate(out, only=None):
     out = Path(out); out.mkdir(parents=True, exist_ok=True)
     combo = json.load(open(f'{COMBO}/{ARCH}.json'))
     solo = [(s['anim'], None, s['duration']/20) for s in combo['steps']]
-    pair = [(s['anim'], s['off_anim'], s['duration']/20) for s in combo['dual_steps']]
+    pair = [(s.get('anim') or None, s.get('off_anim') or None, s['duration']/20) for s in combo['dual_steps']]
     cases = {'baseline': ([(None,None,.1)], True), 'solo': (solo, False), 'pair': (pair, True),
-             'solo-r': ([('attack3', None, .44), ('ability', None, .38), ('rush', None, .6), ('recover', None, .4)], False),
+             'solo-r': ([(solo[-1][0], None, .25), ('ability', None, .38), ('rush', None, .6), ('recover', None, .4)], False),
              'pair-charge': ([('dual_charge', 'dual_charge_off', 1.5), ('dual_rush', 'dual_rush_off', .7), ('dual_recover', 'dual_recover_off', .35)], True),
-             'pair-r': ([('dual_parry', 'dual_parry_off', .25), ('dual_repel', 'dual_repel_off', .45), ('dual_leap', 'dual_leap_off', .9), ('dual_slam', 'dual_slam_off', .7)], True),
+             'parry-cross': ([('dual_parry','dual_parry_off',.9)],True),
+             'pair-r': ([('dual_parry', 'dual_parry_off', .65), ('dual_repel', 'dual_repel_off', .45), ('dual_leap', 'dual_leap_off', .9), ('dual_slam', 'dual_slam_off', .7)], True),
              'left-r': ([(None, 'ability_off', .4), (None, 'rush_off', .6), (None, 'recover_off', .4)], True)}
     # R interrupting each individual attack, rather than only the third attack.
     for i, st in enumerate(solo, 1):
@@ -31,23 +32,27 @@ def generate(out, only=None):
         # Filmstrip of the entire sequence, with each frame showing all three perspectives.
         from PIL import Image
         indices = [min(len(frames)-1, int(i*(len(frames)-1)/5)) for i in range(6)]
+        phases={'pair-r':[0,.35,.80,1.,1.55,2.2], 'pair-charge':[0,.5,1.35,1.5,1.62,2.2]}
+        if name in phases: indices=[min(len(frames)-1,round(t*30)) for t in phases[name]]
         sheet = Image.new('RGB', (1440, 720))
         for i, index in enumerate(indices): sheet.paste(frames[index], ((i%2)*720, (i//2)*240))
         sheet.save(out/f'{name}.png')
         print(name, len(frames), flush=True)
     # A short individual comparison for every base attack.
-    for st in ([] if only else solo + pair):
-        frames = build(ARCH, [st], st[1] is not None, str(out/f'{st[0]}.gif'), fps=30, front=True)
+    for index, st in enumerate([] if only else solo + pair):
+        label=st[0] if index<len(solo) else f'lmb-pair-{index-len(solo)+1}'
+        frames = build(ARCH, [st], index>=len(solo), str(out/f'{label}.gif'), fps=30, front=True)
         # Dense impact sheet; no sparse 1/3-time snapshot hiding the active stroke.
         import json as _json
         from third import REPO
-        clip=_json.load(open(f'{REPO}/weapon_anims/{ARCH}.json'))['animations'][st[0]]
+        name=st[0] or st[1]
+        clip=_json.load(open(f'{REPO}/weapon_anims/{ARCH}.json'))['animations'][name]
         impact=clip['impact']
         times=[0,max(0,impact-.12),max(0,impact-.06),impact,impact+.06,impact+.12,st[2],(len(frames)-1)/30]
         sheet=Image.new('RGB',(1440,960))
         for i,t in enumerate(times):
             sheet.paste(frames[min(len(frames)-1,round(t*30))],((i%2)*720,(i//2)*240))
-        sheet.save(out/f'{st[0]}.png')
+        sheet.save(out/f'{label}.png')
 
 if __name__ == '__main__':
     generate(sys.argv[1] if len(sys.argv) > 1 else 'out/pale', set(sys.argv[2:]) if len(sys.argv) > 2 else None)

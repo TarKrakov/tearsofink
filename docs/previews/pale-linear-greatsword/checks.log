@@ -1,28 +1,61 @@
 check
-PASS: authored inherited baseline; unchanged handle center; full meshes finite; anchored grips; combat markers; FP/F5 handoffs; shortest rotations; 3000 samples
-
-edge
-PASS: cutting planes follow the impact stroke, max normal/velocity component FP 0.136 / F5 0.017
+PASS: 3 solo / 5 paired steps; seven literal raw axe clips including F5 source; FP mounting only -16px Z; donor timing/late/speed; authored Display retained
+PASS: 1260 finite full-mesh/pivot samples; handles back/up, tips down/in; crossed guard; straight raised-to-ground slam at server tick 4
 
 space
-PASS: active paired blades clear head/torso and have separate F5 lanes; minimum X gap 0.403 blocks
+PASS: paired skill meshes clear head/torso through entry/hold/return; leap/slam/rush stay in their lanes; guard intentionally crosses
 
-legacy
-PASS: six reference weapons: unchanged interpolation at 1224 samples
+edge
+PASS: paired response/slam cutting planes and positive hand/tip stroke; maximum normal/velocity FP 0.111 / F5 0.125
 
-rotation-parity
-PASS: JOML / preview shortest orientations: 321 cases; max matrix error 2.7417316947331294e-06
+review
+Reviewed 13 clips for pale_linear_greatsword; warnings: 15
+REVIEW: axe_attack2: unusually large per-sample tip movement; inspect curve
+REVIEW: axe_attack2: abrupt keyframe velocity change (34.9); inspect blending
+REVIEW: axe_attack3: abrupt keyframe velocity change (10.8); inspect blending
+REVIEW: axe_dual_chop: unusually large per-sample tip movement; inspect curve
+REVIEW: axe_dual_chop: abrupt keyframe velocity change (15.8); inspect blending
+REVIEW: axe_dual_chop: unusually large per-sample tip movement; inspect curve
+REVIEW: axe_dual_chop: abrupt keyframe velocity change (15.9); inspect blending
+REVIEW: axe_dual_slam: unusually large per-sample tip movement; inspect curve
+REVIEW: axe_dual_slam: abrupt keyframe velocity change (39.4); inspect blending
+REVIEW: axe_dual_slam: unusually large per-sample tip movement; inspect curve
+REVIEW: axe_dual_slam: abrupt keyframe velocity change (34.9); inspect blending
+REVIEW: axe_dual_slam_final: unusually large per-sample tip movement; inspect curve
+REVIEW: axe_dual_slam_final: abrupt keyframe velocity change (50.6); inspect blending
+REVIEW: axe_dual_slam_final: unusually large per-sample tip movement; inspect curve
+REVIEW: axe_dual_slam_final: abrupt keyframe velocity change (43.0); inspect blending
+Report: work/axe-transfer/review/pale_linear_greatsword/report.json
 
-arm-parity
-PASS: JOML / preview arm-space chain: 120 poses; maximum position error 7.058085962352578e-07 blocks
+review-render
+Reviewed 13 clips for pale_linear_greatsword; warnings: 15
+REVIEW: axe_attack2: unusually large per-sample tip movement; inspect curve
+REVIEW: axe_attack2: abrupt keyframe velocity change (34.9); inspect blending
+REVIEW: axe_attack3: abrupt keyframe velocity change (10.8); inspect blending
+REVIEW: axe_dual_chop: unusually large per-sample tip movement; inspect curve
+REVIEW: axe_dual_chop: abrupt keyframe velocity change (15.8); inspect blending
+REVIEW: axe_dual_chop: unusually large per-sample tip movement; inspect curve
+REVIEW: axe_dual_chop: abrupt keyframe velocity change (15.9); inspect blending
+REVIEW: axe_dual_slam: unusually large per-sample tip movement; inspect curve
+REVIEW: axe_dual_slam: abrupt keyframe velocity change (39.4); inspect blending
+REVIEW: axe_dual_slam: unusually large per-sample tip movement; inspect curve
+REVIEW: axe_dual_slam: abrupt keyframe velocity change (34.9); inspect blending
+REVIEW: axe_dual_slam_final: unusually large per-sample tip movement; inspect curve
+REVIEW: axe_dual_slam_final: abrupt keyframe velocity change (50.6); inspect blending
+REVIEW: axe_dual_slam_final: unusually large per-sample tip movement; inspect curve
+REVIEW: axe_dual_slam_final: abrupt keyframe velocity change (43.0); inspect blending
+Preview GIFs + contact sheets: work/axe-transfer/review-final/pale_linear_greatsword
+Report: work/axe-transfer/review-final/pale_linear_greatsword/report.json
 
-review-check
-Reviewed 13 clips for pale_linear_greatsword; warnings: 1
-REVIEW: dual_attack3_off: unusually large per-sample tip movement; inspect curve
-Report: work/rebuild/review/pale_linear_greatsword/report.json
-
-review-final
-Reviewed 13 clips for pale_linear_greatsword; warnings: 1
-REVIEW: dual_attack3_off: unusually large per-sample tip movement; inspect curve
-Preview GIFs + contact sheets: work/rebuild/review-final/pale_linear_greatsword
-Report: work/rebuild/review-final/pale_linear_greatsword/report.json
+previews
+baseline 27
+solo 79
+pair 99
+solo-r 72
+pair-charge 100
+parry-cross 51
+pair-r 105
+left-r 66
+interrupt-1 59
+interrupt-2 61
+interrupt-3 59

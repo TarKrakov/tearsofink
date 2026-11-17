@@ -1,5 +1,5 @@
 {
-  "_comment": "D-026: new poses from updated authored Display. F5 shoulders lead, wrist edge roll only; no artistic reflection.",
+  "_comment": "ЛКМ дословно из axe (axe_*); парные ПКМ/R отдельно по новому описанию автора.",
   "grip": [
     7.75,
     2,
@@ -1039,38 +1039,36 @@
           "ease": "ease_in_out"
         },
         {
-          "t": 0.55,
+          "t": 0.5,
           "rotation": [
-            3.0799,
-            53.0973,
-            -62.0886
+            0.1547,
+            -19.8736,
+            110.0096
           ],
           "translation": [
-            2.2121,
-            -0.6534,
-            -8.4332
+            -0.0279,
+            1.1066,
+            -2.8332
           ],
           "ease": "ease_in_out"
         },
         {
           "t": 1.35,
           "rotation": [
-            -22.6371,
-            75.0365,
-            -41.0699
+            -31.6809,
+            -3.1026,
+            107.5259
           ],
           "translation": [
-            6.2121,
-            -0.6534,
-            -9.2332
+            -0.3479,
+            3.3466,
+            1.0068
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
-        "source": "dual_charge_shoulder",
-        "arm_space": true,
-        "wrist_source": "dual_charge_edge"
+        "source": "dual_charge_skill_third"
       }
     },
     "dual_charge_off": {
@@ -1096,38 +1094,36 @@
           "ease": "ease_in_out"
         },
         {
-          "t": 0.55,
+          "t": 0.5,
           "rotation": [
-            -5.395,
-            -44.3248,
-            59.5656
+            50.2002,
+            71.7628,
+            -161.9843
           ],
           "translation": [
             -2.3838,
-            1.2703,
-            -4.2541
+            2.2303,
+            0.2259
           ],
           "ease": "ease_in_out"
         },
         {
           "t": 1.35,
           "rotation": [
-            -6.6586,
-            -22.1226,
-            68.8017
+            74.6138,
+            72.9557,
+            139.9575
           ],
           "translation": [
-            1.6162,
-            1.2703,
-            -5.0541
+            -3.6638,
+            4.4703,
+            2.3059
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
-        "source": "dual_charge_off_shoulder",
-        "arm_space": true,
-        "wrist_source": "dual_charge_off_edge"
+        "source": "dual_charge_off_skill_third"
       }
     },
     "dual_rush": {
@@ -1141,42 +1137,42 @@
         {
           "t": 0,
           "rotation": [
-            -22.6371,
-            75.0365,
-            -41.0699
+            -31.6809,
+            -3.1026,
+            107.5259
           ],
           "translation": [
-            6.2121,
-            -0.6534,
-            -9.2332
+            -0.3479,
+            3.3466,
+            1.0068
           ],
           "ease": "ease_in_out"
         },
         {
           "t": 0.12,
           "rotation": [
-            18.6838,
-            -37.6214,
-            113.3268
+            14.0524,
+            -32.0203,
+            112.1469
           ],
           "translation": [
-            -4.5079,
-            -0.6534,
-            -13.0732
+            -4.1879,
+            0.1466,
+            -11.9532
           ],
           "ease": "linear"
         },
         {
           "t": 0.35,
           "rotation": [
-            18.6838,
-            -37.6214,
-            113.3268
+            14.0524,
+            -32.0203,
+            112.1469
           ],
           "translation": [
-            -4.5079,
-            -0.6534,
-            -13.0732
+            -4.1879,
+            0.1466,
+            -11.9532
           ],
           "ease": "linear"
         },
@@ -1196,9 +1192,7 @@
         }
       ],
       "third": {
-        "source": "dual_rush_shoulder",
-        "arm_space": true,
-        "wrist_source": "dual_rush_edge"
+        "source": "dual_rush_skill_third"
       }
     },
     "dual_rush_off": {
@@ -1212,42 +1206,42 @@
         {
           "t": 0,
           "rotation": [
-            -6.6586,
-            -22.1226,
-            68.8017
+            74.6138,
+            72.9557,
+            139.9575
           ],
           "translation": [
-            1.6162,
-            1.2703,
-            -5.0541
+            -3.6638,
+            4.4703,
+            2.3059
           ],
           "ease": "ease_in_out"
         },
         {
           "t": 0.12,
           "rotation": [
-            39.3119,
-            58.5421,
-            -131.6657
+            41.0182,
+            63.2828,
+            -138.139
           ],
           "translation": [
-            -9.1038,
-            1.2703,
-            -8.8941
+            -8.7838,
+            2.0703,
+            -9.0541
           ],
           "ease": "linear"
         },
         {
           "t": 0.35,
           "rotation": [
-            39.3119,
-            58.5421,
-            -131.6657
+            41.0182,
+            63.2828,
+            -138.139
           ],
           "translation": [
-            -9.1038,
-            1.2703,
-            -8.8941
+            -8.7838,
+            2.0703,
+            -9.0541
           ],
           "ease": "linear"
         },
@@ -1267,9 +1261,7 @@
         }
       ],
       "third": {
-        "source": "dual_rush_off_shoulder",
-        "arm_space": true,
-        "wrist_source": "dual_rush_off_edge"
+        "source": "dual_rush_off_skill_third"
       }
     },
     "dual_parry": {
@@ -1295,38 +1287,36 @@
           "ease": "ease_in_out"
         },
         {
-          "t": 0.25,
+          "t": 0.22,
           "rotation": [
-            33.6615,
-            30.3121,
-            -68.1834
+            52.5446,
+            4.7903,
+            88.3235
           ],
           "translation": [
-            -3.3879,
-            -0.8134,
-            -8.2732
+            -2.5879,
+            -1.4534,
+            -7.9532
           ],
           "ease": "ease_in_out"
         },
         {
           "t": 0.55,
           "rotation": [
-            33.6615,
-            30.3121,
-            -68.1834
+            52.5446,
+            4.7903,
+            88.3235
           ],
           "translation": [
-            -3.3879,
-            -0.8134,
-            -8.2732
+            -2.5879,
+            -1.4534,
+            -7.9532
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
-        "source": "dual_parry_shoulder",
-        "arm_space": true,
-        "wrist_source": "dual_parry_edge"
+        "source": "dual_parry_skill_third"
       }
     },
     "dual_parry_off": {
@@ -1352,38 +1342,36 @@
           "ease": "ease_in_out"
         },
         {
-          "t": 0.25,
+          "t": 0.22,
           "rotation": [
-            4.3653,
-            -64.6562,
-            39.4579
+            161.6786,
+            52.2635,
+            136.4949
           ],
           "translation": [
-            -7.9838,
-            1.1103,
-            -4.0941
+            -7.1838,
+            0.4703,
+            -5.0541
           ],
           "ease": "ease_in_out"
         },
         {
           "t": 0.55,
           "rotation": [
-            4.3653,
-            -64.6562,
-            39.4579
+            161.6786,
+            52.2635,
+            136.4949
           ],
           "translation": [
-            -7.9838,
-            1.1103,
-            -4.0941
+            -7.1838,
+            0.4703,
+            -5.0541
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
-        "source": "dual_parry_off_shoulder",
-        "arm_space": true,
-        "wrist_source": "dual_parry_off_edge"
+        "source": "dual_parry_off_skill_third"
       }
     },
     "dual_repel": {
@@ -1397,50 +1385,118 @@
         {
           "t": 0,
           "rotation": [
-            33.6615,
-            30.3121,
-            -68.1834
+            52.5446,
+            4.7903,
+            88.3235
           ],
           "translation": [
-            -3.3879,
-            -0.8134,
-            -8.2732
+            -2.5879,
+            -1.4534,
+            -7.9532
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.12,
+          "t": 0.06,
           "rotation": [
-            29.6542,
-            -60.944,
-            121.7901
+            52.08672,
+            1.57186,
+            89.66111
           ],
           "translation": [
-            -2.9079,
-            -0.3334,
-            -10.1932
+            -2.51622,
+            -1.41756,
+            -8.0044
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.09,
+          "rotation": [
+            49.69118,
+            -5.92968,
+            90.76604
+          ],
+          "translation": [
+            -2.34598,
+            -1.33244,
+            -8.126
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            45.2308,
+            -20.63764,
+            92.07827
+          ],
+          "translation": [
+            -2.01446,
+            -1.16668,
+            -8.3628
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.15,
+          "rotation": [
+            36.91684,
+            -44.95637,
+            91.39499
+          ],
+          "translation": [
+            -1.4679,
+            -0.8934,
+            -8.7532
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.18,
+          "rotation": [
+            19.79437,
+            -68.64201,
+            80.68369
+          ],
+          "translation": [
+            -0.92134,
+            -0.62012,
+            -9.1436
           ],
           "ease": "linear"
         },
         {
           "t": 0.24,
           "rotation": [
-            58.0023,
-            -78.1785,
-            149.4404
+            -68.99091,
+            -80.25581,
+            -2.61373
           ],
           "translation": [
-            -2.2679,
+            -0.41958,
+            -0.36924,
+            -9.502
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -83.6174,
+            -78.0293,
+            -17.4558
+          ],
+          "translation": [
+            -0.3479,
             -0.3334,
-            -8.4332
+            -9.5532
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
-        "source": "dual_repel_shoulder",
-        "arm_space": true,
-        "wrist_source": "dual_repel_edge"
+        "source": "dual_repel_skill_third"
       }
     },
     "dual_repel_off": {
@@ -1454,50 +1510,118 @@
         {
           "t": 0,
           "rotation": [
-            4.3653,
-            -64.6562,
-            39.4579
+            161.6786,
+            52.2635,
+            136.4949
           ],
           "translation": [
-            -7.9838,
-            1.1103,
-            -4.0941
+            -7.1838,
+            0.4703,
+            -5.0541
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.12,
+          "t": 0.06,
           "rotation": [
-            32.4098,
-            36.7231,
-            -116.6613
+            157.6968,
+            54.50066,
+            140.97616
           ],
           "translation": [
-            -7.5038,
-            1.5903,
-            -6.0141
+            -7.11212,
+            0.50614,
+            -5.1053
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.09,
+          "rotation": [
+            144.69073,
+            56.94319,
+            153.74635
+          ],
+          "translation": [
+            -6.94188,
+            0.59126,
+            -5.2269
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            117.15388,
+            56.53034,
+            -179.17078
+          ],
+          "translation": [
+            -6.61036,
+            0.75702,
+            -5.4637
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.15,
+          "rotation": [
+            84.10117,
+            43.25306,
+            -146.89898
+          ],
+          "translation": [
+            -6.0638,
+            1.0303,
+            -5.8541
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.18,
+          "rotation": [
+            67.32328,
+            22.7796,
+            -131.03956
+          ],
+          "translation": [
+            -5.51724,
+            1.30358,
+            -6.2445
           ],
           "ease": "linear"
         },
         {
           "t": 0.24,
           "rotation": [
-            31.3779,
-            18.3239,
-            -109.9957
+            58.29125,
+            1.82557,
+            -123.12126
           ],
           "translation": [
-            -6.8638,
+            -5.01548,
+            1.55446,
+            -6.6029
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            58.2463,
+            -1.7104,
+            -122.7373
+          ],
+          "translation": [
+            -4.9438,
             1.5903,
-            -4.2541
+            -6.6541
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
-        "source": "dual_repel_off_shoulder",
-        "arm_space": true,
-        "wrist_source": "dual_repel_off_edge"
+        "source": "dual_repel_off_skill_third"
       }
     },
     "dual_leap": {
@@ -1523,38 +1647,36 @@
           "ease": "ease_in_out"
         },
         {
-          "t": 0.35,
+          "t": 0.34,
           "rotation": [
-            13.9782,
-            -16.5225,
-            19.2138
+            41.9737,
+            -15.1388,
+            23.4631
           ],
           "translation": [
             -3.7079,
-            1.9066,
-            -7.7932
+            2.5466,
+            -8.7532
           ],
           "ease": "ease_in_out"
         },
         {
           "t": 0.7,
           "rotation": [
-            13.9782,
-            -16.5225,
-            19.2138
+            41.9737,
+            -15.1388,
+            23.4631
           ],
           "translation": [
             -3.7079,
-            1.9066,
-            -7.7932
+            2.5466,
+            -8.7532
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
-        "source": "dual_leap_shoulder",
-        "arm_space": true,
-        "wrist_source": "dual_leap_edge"
+        "source": "dual_leap_skill_third"
       }
     },
     "dual_leap_off": {
@@ -1580,87 +1702,85 @@
           "ease": "ease_in_out"
         },
         {
-          "t": 0.35,
+          "t": 0.34,
           "rotation": [
-            115.7895,
-            -11.8119,
-            173.4383
+            142.25,
+            -8.064,
+            171.2655
           ],
           "translation": [
             -8.3038,
-            3.8303,
-            -3.6141
+            4.4703,
+            -5.8541
           ],
           "ease": "ease_in_out"
         },
         {
           "t": 0.7,
           "rotation": [
-            115.7895,
-            -11.8119,
-            173.4383
+            142.25,
+            -8.064,
+            171.2655
           ],
           "translation": [
             -8.3038,
-            3.8303,
-            -3.6141
+            4.4703,
+            -5.8541
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
-        "source": "dual_leap_off_shoulder",
-        "arm_space": true,
-        "wrist_source": "dual_leap_off_edge"
+        "source": "dual_leap_off_skill_third"
       }
     },
     "dual_slam": {
       "length": 0.7,
       "hold": 0.1,
       "return": 0.24,
-      "impact": 0.22,
+      "impact": 0.2,
       "smooth": "tight",
       "rotation_mode": "slerp",
       "keyframes": [
         {
           "t": 0,
           "rotation": [
-            13.9782,
-            -16.5225,
-            19.2138
+            41.9737,
+            -15.1388,
+            23.4631
           ],
           "translation": [
             -3.7079,
-            1.9066,
-            -7.7932
+            2.5466,
+            -8.7532
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.22,
+          "t": 0.2,
           "rotation": [
-            -66.2364,
-            -10.7543,
-            10.9598
+            -80.039,
+            -8.3083,
+            15.4831
           ],
           "translation": [
-            -3.8679,
-            -0.9734,
-            -10.0332
+            -3.7079,
+            0.9466,
+            -11.4732
           ],
           "ease": "linear"
         },
         {
-          "t": 0.4,
+          "t": 0.38,
           "rotation": [
-            -75.4156,
-            -9.9626,
-            9.8569
+            -90.6912,
+            -8.0068,
+            15.0587
           ],
           "translation": [
-            -3.8679,
-            -1.2934,
-            -9.3932
+            -3.7079,
+            0.3066,
+            -12.1132
           ],
           "ease": "ease_in_out"
         },
@@ -1680,58 +1800,56 @@
         }
       ],
       "third": {
-        "source": "dual_slam_shoulder",
-        "arm_space": true,
-        "wrist_source": "dual_slam_edge"
+        "source": "dual_slam_skill_third"
       }
     },
     "dual_slam_off": {
       "length": 0.7,
       "hold": 0.1,
       "return": 0.24,
-      "impact": 0.22,
+      "impact": 0.2,
       "smooth": "tight",
       "rotation_mode": "slerp",
       "keyframes": [
         {
           "t": 0,
           "rotation": [
-            115.7895,
-            -11.8119,
-            173.4383
+            142.25,
+            -8.064,
+            171.2655
           ],
           "translation": [
             -8.3038,
-            3.8303,
-            -3.6141
+            4.4703,
+            -5.8541
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.22,
+          "t": 0.2,
           "rotation": [
-            36.3712,
-            -20.8764,
-            169.3463
+            20.6872,
+            -17.0005,
+            165.8619
           ],
           "translation": [
-            -8.4638,
-            0.9503,
-            -5.8541
+            -8.3038,
+            2.8703,
+            -8.5741
           ],
           "ease": "linear"
         },
         {
-          "t": 0.4,
+          "t": 0.38,
           "rotation": [
-            27.1793,
-            -22.1079,
-            168.7703
+            10.0276,
+            -17.4694,
+            165.6335
           ],
           "translation": [
-            -8.4638,
-            0.6303,
-            -5.2141
+            -8.3038,
+            2.2303,
+            -9.2141
           ],
           "ease": "ease_in_out"
         },
@@ -1751,9 +1869,7 @@
         }
       ],
       "third": {
-        "source": "dual_slam_off_shoulder",
-        "arm_space": true,
-        "wrist_source": "dual_slam_off_edge"
+        "source": "dual_slam_off_skill_third"
       }
     },
     "dual_recover": {
@@ -4829,6 +4945,1712 @@
           "ease": "ease_in_out"
         }
       ]
+    },
+    "axe_attack1": {
+      "length": 0.55,
+      "hold": 0.25,
+      "return": 0.3,
+      "impact": 0.22,
+      "smooth": "tight",
+      "keyframes": [
+        {
+          "t": 0.1,
+          "rotation": [
+            -34.4,
+            14.4,
+            -42.8
+          ],
+          "translation": [
+            4.55,
+            -3.25,
+            -15.35
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.22,
+          "rotation": [
+            4.9,
+            14.5,
+            -1.5
+          ],
+          "translation": [
+            0.0,
+            0.65,
+            -18.6
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.34,
+          "rotation": [
+            23.2,
+            10.0,
+            28.9
+          ],
+          "translation": [
+            -4.55,
+            3.9,
+            -17.3
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "third": {
+        "source": "axe_attack1_raw"
+      },
+      "camera_mount_z": -16
+    },
+    "axe_attack2": {
+      "length": 0.7,
+      "hold": 0.35,
+      "return": 0.3,
+      "impact": 0.24,
+      "smooth": "tight",
+      "keyframes": [
+        {
+          "t": 0.0,
+          "rotation": [
+            23.2,
+            10.0,
+            28.9
+          ],
+          "translation": [
+            -4.55,
+            3.9,
+            -17.3
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.14,
+          "rotation": [
+            70,
+            0,
+            0
+          ],
+          "translation": [
+            0.0,
+            7.8,
+            -13.4
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.24,
+          "rotation": [
+            -81.6,
+            31.4,
+            -25.0
+          ],
+          "translation": [
+            0.0,
+            -5.2,
+            -19.9
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.36,
+          "rotation": [
+            -73.6,
+            31.4,
+            -25.0
+          ],
+          "translation": [
+            0.0,
+            -3.9,
+            -19.25
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "third": {
+        "source": "axe_attack2_raw"
+      },
+      "camera_mount_z": -16
+    },
+    "axe_attack3": {
+      "length": 0.6,
+      "impact": 0.22,
+      "smooth": "tight",
+      "keyframes": [
+        {
+          "t": 0.0,
+          "rotation": [
+            -73.6,
+            31.4,
+            -25.0
+          ],
+          "translation": [
+            0.0,
+            -3.9,
+            -19.25
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            15,
+            0,
+            0
+          ],
+          "translation": [
+            0.0,
+            1.3,
+            -13.4
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.22,
+          "rotation": [
+            -62,
+            0,
+            0
+          ],
+          "translation": [
+            0.0,
+            0.65,
+            -21.2
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.36,
+          "rotation": [
+            -58,
+            0,
+            0
+          ],
+          "translation": [
+            0.0,
+            0.65,
+            -20.55
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "third": {
+        "source": "axe_attack3_raw"
+      },
+      "camera_mount_z": -16
+    },
+    "axe_dual_chop": {
+      "length": 0.6,
+      "hold": 0.3,
+      "return": 0.35,
+      "impact": 0.18,
+      "smooth": "tight",
+      "third": {
+        "mirror": true,
+        "source": "axe_dual_chop_third_raw"
+      },
+      "keyframes": [
+        {
+          "t": 0.08,
+          "rotation": [
+            45,
+            -90,
+            0
+          ],
+          "translation": [
+            5,
+            9,
+            -13
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.18,
+          "rotation": [
+            -72,
+            -90,
+            0
+          ],
+          "translation": [
+            3,
+            -6,
+            -21
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -76,
+            -90,
+            0
+          ],
+          "translation": [
+            3,
+            -8,
+            -20
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "camera_mount_z": -16
+    },
+    "axe_dual_chop_third": {
+      "length": 0.6,
+      "hold": 0.3,
+      "return": 0.35,
+      "impact": 0.18,
+      "smooth": "tight",
+      "keyframes": [
+        {
+          "t": 0.08,
+          "rotation": [
+            45,
+            0,
+            0
+          ],
+          "translation": [
+            5,
+            9,
+            3
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.18,
+          "rotation": [
+            -72,
+            0,
+            0
+          ],
+          "translation": [
+            3,
+            -6,
+            -5
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -76,
+            0,
+            0
+          ],
+          "translation": [
+            3,
+            -8,
+            -4
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "third": {
+        "mirror": true
+      }
+    },
+    "axe_dual_slam": {
+      "length": 0.55,
+      "hold": 0.25,
+      "return": 0.35,
+      "impact": 0.2,
+      "smooth": "tight",
+      "third": {
+        "mirror": true,
+        "no_cross": true,
+        "turn": -20,
+        "source": "axe_dual_slam_raw"
+      },
+      "keyframes": [
+        {
+          "t": 0.0,
+          "rotation": [
+            -76,
+            -90,
+            0
+          ],
+          "translation": [
+            3,
+            -8,
+            -20
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            62,
+            0,
+            0
+          ],
+          "translation": [
+            4,
+            11,
+            -12
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.2,
+          "rotation": [
+            -72.1,
+            37.0,
+            -30.2
+          ],
+          "translation": [
+            4,
+            -6,
+            -21
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -70.1,
+            37.0,
+            -30.2
+          ],
+          "translation": [
+            4,
+            -6,
+            -20
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "camera_mount_z": -16
+    },
+    "axe_dual_slam_final": {
+      "length": 1.0,
+      "impact": 0.46,
+      "smooth": "tight",
+      "third": {
+        "mirror": true,
+        "no_cross": true,
+        "turn": -20,
+        "source": "axe_dual_slam_final_raw"
+      },
+      "keyframes": [
+        {
+          "t": 0.0,
+          "rotation": [
+            -70.1,
+            37.0,
+            -30.2
+          ],
+          "translation": [
+            4,
+            -6,
+            -20
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.18,
+          "rotation": [
+            75,
+            0,
+            0
+          ],
+          "translation": [
+            4,
+            14,
+            -11
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.38,
+          "rotation": [
+            80,
+            0,
+            0
+          ],
+          "translation": [
+            4,
+            15,
+            -11
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.46,
+          "rotation": [
+            -87.6,
+            22.7,
+            -17.6
+          ],
+          "translation": [
+            4,
+            -9,
+            -22
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.62,
+          "rotation": [
+            -82.6,
+            22.7,
+            -17.6
+          ],
+          "translation": [
+            4,
+            -7,
+            -21
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "camera_mount_z": -16
+    },
+    "dual_charge_skill_third": {
+      "length": 1.5,
+      "hold": 1,
+      "return": 0.34,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            -18.27923,
+            -12.59705,
+            3.86293
+          ],
+          "translation": [
+            -4.52083,
+            -9.98091,
+            7.78274
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.5,
+          "rotation": [
+            -2.68752,
+            -26.33562,
+            111.0904
+          ],
+          "translation": [
+            -0.97229,
+            -4.63478,
+            3.14424
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 1.35,
+          "rotation": [
+            -29.29768,
+            -11.61486,
+            108.74881
+          ],
+          "translation": [
+            1.44027,
+            0.40315,
+            -0.92236
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "dual_parry_skill_third": {
+      "length": 0.7,
+      "hold": 4,
+      "return": 0.34,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            -18.27923,
+            -12.59705,
+            3.86293
+          ],
+          "translation": [
+            -4.52083,
+            -9.98091,
+            7.78274
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.22,
+          "rotation": [
+            46.58653,
+            -4.47541,
+            91.28998
+          ],
+          "translation": [
+            -2.08899,
+            -9.70642,
+            0.7724
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.55,
+          "rotation": [
+            46.58653,
+            -4.47541,
+            91.28998
+          ],
+          "translation": [
+            -2.08899,
+            -9.70642,
+            0.7724
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "dual_repel_skill_third": {
+      "length": 0.5,
+      "hold": 0.2,
+      "return": 0.34,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            46.58653,
+            -4.47541,
+            91.28998
+          ],
+          "translation": [
+            -2.08899,
+            -9.70642,
+            0.7724
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.06,
+          "rotation": [
+            47.36801,
+            -7.42476,
+            93.99883
+          ],
+          "translation": [
+            -2.12818,
+            -9.63107,
+            0.90827
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.09,
+          "rotation": [
+            45.93491,
+            -14.22878,
+            95.48111
+          ],
+          "translation": [
+            -2.22126,
+            -9.4521,
+            1.23096
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            43.33547,
+            -27.49986,
+            98.13372
+          ],
+          "translation": [
+            -2.40253,
+            -9.10359,
+            1.85935
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.15,
+          "rotation": [
+            38.65624,
+            -49.40587,
+            101.10756
+          ],
+          "translation": [
+            -2.70137,
+            -8.52903,
+            2.89534
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.18,
+          "rotation": [
+            28.77839,
+            -71.26732,
+            97.4922
+          ],
+          "translation": [
+            -3.00021,
+            -7.95446,
+            3.93133
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.24,
+          "rotation": [
+            -76.59049,
+            -84.7898,
+            -3.3164
+          ],
+          "translation": [
+            -3.27456,
+            -7.42698,
+            4.88241
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -87.68781,
+            -79.78614,
+            -18.80575
+          ],
+          "translation": [
+            -3.31375,
+            -7.35163,
+            5.01828
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "dual_leap_skill_third": {
+      "length": 2.5,
+      "hold": 2.1,
+      "return": 0.25,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            -18.27923,
+            -12.59705,
+            3.86293
+          ],
+          "translation": [
+            -4.52083,
+            -9.98091,
+            7.78274
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.34,
+          "rotation": [
+            50.09968,
+            -19.4049,
+            30.25814
+          ],
+          "translation": [
+            -2.68147,
+            -5.35136,
+            -6.22532
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.7,
+          "rotation": [
+            50.09968,
+            -19.4049,
+            30.25814
+          ],
+          "translation": [
+            -2.68147,
+            -5.35136,
+            -6.22532
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "dual_slam_skill_third": {
+      "length": 0.7,
+      "hold": 0.1,
+      "return": 0.24,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            50.09968,
+            -19.4049,
+            30.25814
+          ],
+          "translation": [
+            -2.68147,
+            -5.35136,
+            -6.22532
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.2,
+          "rotation": [
+            -103.90922,
+            -7.29271,
+            14.05504
+          ],
+          "translation": [
+            -2.69375,
+            1.81817,
+            -2.84055
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.38,
+          "rotation": [
+            -109.42756,
+            -6.68336,
+            13.19722
+          ],
+          "translation": [
+            -2.84526,
+            -0.10545,
+            -1.12504
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.65,
+          "rotation": [
+            -18.27923,
+            -12.59705,
+            3.86293
+          ],
+          "translation": [
+            -4.52083,
+            -9.98091,
+            7.78274
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "dual_charge_off_skill_third": {
+      "length": 1.5,
+      "hold": 1,
+      "return": 0.2,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            83.12733,
+            -36.35593,
+            162.92968
+          ],
+          "translation": [
+            -8.65992,
+            -8.0129,
+            12.05369
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.5,
+          "rotation": [
+            33.01525,
+            67.67111,
+            -147.1656
+          ],
+          "translation": [
+            -5.56817,
+            -2.71113,
+            7.32336
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 1.35,
+          "rotation": [
+            47.47428,
+            74.44835,
+            170.4938
+          ],
+          "translation": [
+            -3.15561,
+            2.3268,
+            3.25676
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "dual_parry_off_skill_third": {
+      "length": 0.7,
+      "hold": 4,
+      "return": 0.3,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            83.12733,
+            -36.35593,
+            162.92968
+          ],
+          "translation": [
+            -8.65992,
+            -8.0129,
+            12.05369
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.22,
+          "rotation": [
+            143.86232,
+            57.30664,
+            150.97962
+          ],
+          "translation": [
+            -6.68487,
+            -7.78277,
+            4.95151
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.55,
+          "rotation": [
+            143.86232,
+            57.30664,
+            150.97962
+          ],
+          "translation": [
+            -6.68487,
+            -7.78277,
+            4.95151
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "dual_repel_off_skill_third": {
+      "length": 0.5,
+      "hold": 0.2,
+      "return": 0.24,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            143.86232,
+            57.30664,
+            150.97962
+          ],
+          "translation": [
+            -6.68487,
+            -7.78277,
+            4.95151
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.06,
+          "rotation": [
+            139.62917,
+            59.79012,
+            156.22183
+          ],
+          "translation": [
+            -6.72406,
+            -7.70742,
+            5.08738
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.09,
+          "rotation": [
+            125.80481,
+            60.70404,
+            170.11331
+          ],
+          "translation": [
+            -6.81715,
+            -7.52845,
+            5.41007
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            99.7715,
+            57.86799,
+            -163.90619
+          ],
+          "translation": [
+            -6.99841,
+            -7.17995,
+            6.03846
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.15,
+          "rotation": [
+            72.03131,
+            43.55787,
+            -136.94494
+          ],
+          "translation": [
+            -7.29726,
+            -6.60538,
+            7.07445
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.18,
+          "rotation": [
+            58.59776,
+            23.94437,
+            -125.02756
+          ],
+          "translation": [
+            -7.5961,
+            -6.03081,
+            8.11044
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.24,
+          "rotation": [
+            51.7483,
+            4.2901,
+            -119.77592
+          ],
+          "translation": [
+            -7.87045,
+            -5.50334,
+            9.06152
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            55.52512,
+            -0.4739,
+            -121.4625
+          ],
+          "translation": [
+            -7.90964,
+            -5.42799,
+            9.19739
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "dual_leap_off_skill_third": {
+      "length": 2.5,
+      "hold": 2.1,
+      "return": 0.25,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            83.12733,
+            -36.35593,
+            162.92968
+          ],
+          "translation": [
+            -8.65992,
+            -8.0129,
+            12.05369
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.34,
+          "rotation": [
+            148.60362,
+            -0.96409,
+            174.41823
+          ],
+          "translation": [
+            -7.27735,
+            -3.42771,
+            -2.0462
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.7,
+          "rotation": [
+            148.60362,
+            -0.96409,
+            174.41823
+          ],
+          "translation": [
+            -7.27735,
+            -3.42771,
+            -2.0462
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "dual_slam_off_skill_third": {
+      "length": 0.7,
+      "hold": 0.1,
+      "return": 0.24,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            148.60362,
+            -0.96409,
+            174.41823
+          ],
+          "translation": [
+            -7.27735,
+            -3.42771,
+            -2.0462
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.2,
+          "rotation": [
+            -3.225,
+            -18.57941,
+            165.08996
+          ],
+          "translation": [
+            -7.28963,
+            3.74182,
+            1.33857
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.38,
+          "rotation": [
+            -8.79141,
+            -19.52889,
+            164.62306
+          ],
+          "translation": [
+            -7.44114,
+            1.8182,
+            3.05407
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.65,
+          "rotation": [
+            83.12733,
+            -36.35593,
+            162.92968
+          ],
+          "translation": [
+            -8.65992,
+            -8.0129,
+            12.05369
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "dual_rush_skill_third": {
+      "length": 0.95,
+      "hold": 0.15,
+      "return": 0.34,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            -29.29768,
+            -11.61486,
+            108.74881
+          ],
+          "translation": [
+            1.44027,
+            0.40315,
+            -0.92236
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            14.0524,
+            -32.02027,
+            112.14686
+          ],
+          "translation": [
+            -2.51541,
+            -7.11151,
+            4.41549
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.35,
+          "rotation": [
+            14.0524,
+            -32.02027,
+            112.14686
+          ],
+          "translation": [
+            -2.51541,
+            -7.11151,
+            4.41549
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.72,
+          "rotation": [
+            -18.27923,
+            -12.59705,
+            3.86293
+          ],
+          "translation": [
+            -4.52083,
+            -9.98091,
+            7.78274
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "dual_rush_off_skill_third": {
+      "length": 0.95,
+      "hold": 0.15,
+      "return": 0.24,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            47.47428,
+            74.44835,
+            170.4938
+          ],
+          "translation": [
+            -3.15561,
+            2.3268,
+            3.25676
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            41.01817,
+            63.28277,
+            -138.13898
+          ],
+          "translation": [
+            -7.11129,
+            -5.18786,
+            8.59461
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.35,
+          "rotation": [
+            41.01817,
+            63.28277,
+            -138.13898
+          ],
+          "translation": [
+            -7.11129,
+            -5.18786,
+            8.59461
+          ],
+          "ease": "linear"
+        },
+        {
+          "t": 0.72,
+          "rotation": [
+            83.12733,
+            -36.35593,
+            162.92968
+          ],
+          "translation": [
+            -8.65992,
+            -8.0129,
+            12.05369
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "axe_attack1_raw": {
+      "length": 0.55,
+      "hold": 0.25,
+      "return": 0.3,
+      "impact": 0.22,
+      "smooth": "tight",
+      "keyframes": [
+        {
+          "t": 0.1,
+          "rotation": [
+            -34.4,
+            14.4,
+            -42.8
+          ],
+          "translation": [
+            4.55,
+            -3.25,
+            0.65
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.22,
+          "rotation": [
+            4.9,
+            14.5,
+            -1.5
+          ],
+          "translation": [
+            0.0,
+            0.65,
+            -2.6
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.34,
+          "rotation": [
+            23.2,
+            10.0,
+            28.9
+          ],
+          "translation": [
+            -4.55,
+            3.9,
+            -1.3
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "axe_attack2_raw": {
+      "length": 0.7,
+      "hold": 0.35,
+      "return": 0.3,
+      "impact": 0.24,
+      "smooth": "tight",
+      "keyframes": [
+        {
+          "t": 0.0,
+          "rotation": [
+            23.2,
+            10.0,
+            28.9
+          ],
+          "translation": [
+            -4.55,
+            3.9,
+            -1.3
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.14,
+          "rotation": [
+            70,
+            0,
+            0
+          ],
+          "translation": [
+            0.0,
+            7.8,
+            2.6
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.24,
+          "rotation": [
+            -81.6,
+            31.4,
+            -25.0
+          ],
+          "translation": [
+            0.0,
+            -5.2,
+            -3.9
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.36,
+          "rotation": [
+            -73.6,
+            31.4,
+            -25.0
+          ],
+          "translation": [
+            0.0,
+            -3.9,
+            -3.25
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "axe_attack3_raw": {
+      "length": 0.6,
+      "impact": 0.22,
+      "smooth": "tight",
+      "keyframes": [
+        {
+          "t": 0.0,
+          "rotation": [
+            -73.6,
+            31.4,
+            -25.0
+          ],
+          "translation": [
+            0.0,
+            -3.9,
+            -3.25
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            15,
+            0,
+            0
+          ],
+          "translation": [
+            0.0,
+            1.3,
+            2.6
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.22,
+          "rotation": [
+            -62,
+            0,
+            0
+          ],
+          "translation": [
+            0.0,
+            0.65,
+            -5.2
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.36,
+          "rotation": [
+            -58,
+            0,
+            0
+          ],
+          "translation": [
+            0.0,
+            0.65,
+            -4.55
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "axe_dual_chop_raw": {
+      "length": 0.6,
+      "hold": 0.3,
+      "return": 0.35,
+      "impact": 0.18,
+      "smooth": "tight",
+      "third": {
+        "mirror": true,
+        "source": "axe_dual_chop_third"
+      },
+      "keyframes": [
+        {
+          "t": 0.08,
+          "rotation": [
+            45,
+            -90,
+            0
+          ],
+          "translation": [
+            5,
+            9,
+            3
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.18,
+          "rotation": [
+            -72,
+            -90,
+            0
+          ],
+          "translation": [
+            3,
+            -6,
+            -5
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -76,
+            -90,
+            0
+          ],
+          "translation": [
+            3,
+            -8,
+            -4
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "axe_dual_chop_third_raw": {
+      "length": 0.6,
+      "hold": 0.3,
+      "return": 0.35,
+      "impact": 0.18,
+      "smooth": "tight",
+      "keyframes": [
+        {
+          "t": 0.08,
+          "rotation": [
+            45,
+            0,
+            0
+          ],
+          "translation": [
+            5,
+            9,
+            3
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.18,
+          "rotation": [
+            -72,
+            0,
+            0
+          ],
+          "translation": [
+            3,
+            -6,
+            -5
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -76,
+            0,
+            0
+          ],
+          "translation": [
+            3,
+            -8,
+            -4
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "third": {
+        "mirror": true
+      }
+    },
+    "axe_dual_slam_raw": {
+      "length": 0.55,
+      "hold": 0.25,
+      "return": 0.35,
+      "impact": 0.2,
+      "smooth": "tight",
+      "third": {
+        "mirror": true,
+        "no_cross": true,
+        "turn": -20
+      },
+      "keyframes": [
+        {
+          "t": 0.0,
+          "rotation": [
+            -76,
+            -90,
+            0
+          ],
+          "translation": [
+            3,
+            -8,
+            -4
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            62,
+            0,
+            0
+          ],
+          "translation": [
+            4,
+            11,
+            4
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.2,
+          "rotation": [
+            -72.1,
+            37.0,
+            -30.2
+          ],
+          "translation": [
+            4,
+            -6,
+            -5
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -70.1,
+            37.0,
+            -30.2
+          ],
+          "translation": [
+            4,
+            -6,
+            -4
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "axe_dual_slam_final_raw": {
+      "length": 1.0,
+      "impact": 0.46,
+      "smooth": "tight",
+      "third": {
+        "mirror": true,
+        "no_cross": true,
+        "turn": -20
+      },
+      "keyframes": [
+        {
+          "t": 0.0,
+          "rotation": [
+            -70.1,
+            37.0,
+            -30.2
+          ],
+          "translation": [
+            4,
+            -6,
+            -4
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.18,
+          "rotation": [
+            75,
+            0,
+            0
+          ],
+          "translation": [
+            4,
+            14,
+            5
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.38,
+          "rotation": [
+            80,
+            0,
+            0
+          ],
+          "translation": [
+            4,
+            15,
+            5
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.46,
+          "rotation": [
+            -87.6,
+            22.7,
+            -17.6
+          ],
+          "translation": [
+            4,
+            -9,
+            -6
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.62,
+          "rotation": [
+            -82.6,
+            22.7,
+            -17.6
+          ],
+          "translation": [
+            4,
+            -7,
+            -5
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
     }
-  }
+  },
+  "lmb_source": "axe"
 }

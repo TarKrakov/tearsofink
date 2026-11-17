@@ -55,7 +55,8 @@ def inspect(arch, samples=50):
     for step in combo.get('steps', []):
         selected.append((step['anim'], 1, step['hit'] / 20, step.get('second_hit')))
     for step in combo.get('dual_steps', []):
-        selected.append((step['anim'], 1, step['hit'] / 20, step.get('second_hit')))
+        if step.get('anim'):
+            selected.append((step['anim'], 1, step['hit'] / 20, step.get('second_hit')))
         if step.get('off_anim'):
             selected.append((step['off_anim'], -1, step['hit'] / 20, step.get('second_hit')))
     for name in ('dual_charge', 'dual_charge_off', 'dual_parry', 'dual_parry_off'):
