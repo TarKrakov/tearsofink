@@ -10,7 +10,7 @@ from tl import build, COMBO
 
 ARCH = 'pale_linear_greatsword'
 
-def generate(out):
+def generate(out, only=None):
     out = Path(out); out.mkdir(parents=True, exist_ok=True)
     combo = json.load(open(f'{COMBO}/{ARCH}.json'))
     solo = [(s['anim'], None, s['duration']/20) for s in combo['steps']]
@@ -23,7 +23,10 @@ def generate(out):
     # R interrupting each individual attack, rather than only the third attack.
     for i, st in enumerate(solo, 1):
         cases[f'interrupt-{i}'] = ([(st[0], None, st[2]*.45), ('ability', None, .32), ('rush', None, .6)], False)
+    if only and not only.issubset(cases):
+        raise ValueError(f'Unknown preview cases: {sorted(only - cases.keys())}')
     for name, (steps, dual) in cases.items():
+        if only and name not in only: continue
         frames = build(ARCH, steps, dual, str(out/f'{name}.gif'))
         # Filmstrip of the entire sequence, with each frame showing all three perspectives.
         from PIL import Image
@@ -33,9 +36,9 @@ def generate(out):
         sheet.save(out/f'{name}.png')
         print(name, len(frames), flush=True)
     # A short individual comparison for every base attack.
-    for st in solo + pair:
+    for st in ([] if only else solo + pair):
         frames = build(ARCH, [st], st[1] is not None, str(out/f'{st[0]}.gif'))
         frames[len(frames)//3].save(out/f'{st[0]}.png')
 
 if __name__ == '__main__':
-    generate(sys.argv[1] if len(sys.argv) > 1 else 'out/pale')
+    generate(sys.argv[1] if len(sys.argv) > 1 else 'out/pale', set(sys.argv[2:]) if len(sys.argv) > 2 else None)
