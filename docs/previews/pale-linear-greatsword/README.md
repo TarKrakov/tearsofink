@@ -20,3 +20,7 @@ python3 tools/preview/review.py pale_linear_greatsword --check-only
 python3 tools/preview/review.py pale_linear_greatsword --render --fps 30
 python3 tools/preview/pale.py out/pale
 ```
+
+## Новая проба после отзыва «нединамично и хаотично»
+
+Серии обновлены после разбора шести принятых оружий. [Что изучено и изменено](../../PALE_MOTION_STUDY.md), [сравнение кадров шести образцов](reference-study.png). У клинка теперь работают перемещение рукояти, разгон, быстрая активная часть и проводка; дополнительное принуждение F5 отключено. В GIF добавлено время. Предыдущие технические отчёты не означают приёмку этой пробы автором.

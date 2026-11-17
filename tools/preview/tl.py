@@ -105,8 +105,9 @@ def build(arch, steps, dual, out, fps=20, tune=None):
         dr.text((4,2), 'сзади (F5)', fill=(200,200,200), font=FONT); dr.text((244,2), 'спереди', fill=(200,200,200), font=FONT)
         dr.text((484,2), 'от первого лица', fill=(200,200,200), font=FONT)
         dr.text((484,214), f'{arch}: ' + (' + '.join(labels) or '—'), fill=(255,255,255), font=FONT)
+        dr.text((4,220), f'{now:.2f} s', fill=(255,255,255), font=FONT)
         frames.append(im)
-    frames[0].save(out, save_all=True, append_images=frames[1:], duration=int(1000/fps), loop=0)
+    frames[0].save(out, save_all=True, append_images=frames[1:], duration=[(round((i+1)*100/fps)-round(i*100/fps))*10 for i in range(len(frames))], loop=0)
     return frames
 
 def all_for(arch):

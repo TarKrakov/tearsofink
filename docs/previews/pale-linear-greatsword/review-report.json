@@ -7,10 +7,10 @@
       "frames_checked": 51,
       "lowest_visible_fraction": 1.0,
       "impact_visible_fraction": 1.0,
-      "largest_tip_step": 0.071,
-      "highest_tip_speed": 4.475,
-      "largest_keyframe_velocity_change": 3.43,
-      "f5_blade_arm_alignment": 0.98015
+      "largest_tip_step": 0.172,
+      "highest_tip_speed": 10.777,
+      "largest_keyframe_velocity_change": 3.851,
+      "f5_blade_arm_alignment": null
     },
     {
       "clip": "attack2",
@@ -18,32 +18,32 @@
       "frames_checked": 51,
       "lowest_visible_fraction": 0.968,
       "impact_visible_fraction": 1.0,
-      "largest_tip_step": 0.078,
-      "highest_tip_speed": 3.422,
-      "largest_keyframe_velocity_change": 0.75,
-      "f5_blade_arm_alignment": 0.98956
+      "largest_tip_step": 0.309,
+      "highest_tip_speed": 18.486,
+      "largest_keyframe_velocity_change": 15.195,
+      "f5_blade_arm_alignment": null
     },
     {
       "clip": "attack3",
       "hand": "right",
       "frames_checked": 51,
-      "lowest_visible_fraction": 0.637,
-      "impact_visible_fraction": 1.0,
-      "largest_tip_step": 0.058,
-      "highest_tip_speed": 3.75,
-      "largest_keyframe_velocity_change": 2.39,
-      "f5_blade_arm_alignment": 0.94291
+      "lowest_visible_fraction": 0.0,
+      "impact_visible_fraction": 0.956,
+      "largest_tip_step": 0.104,
+      "highest_tip_speed": 4.737,
+      "largest_keyframe_velocity_change": 1.943,
+      "f5_blade_arm_alignment": null
     },
     {
       "clip": "dual_attack1",
       "hand": "right",
       "frames_checked": 51,
-      "lowest_visible_fraction": 1.0,
+      "lowest_visible_fraction": 0.911,
       "impact_visible_fraction": 1.0,
-      "largest_tip_step": 0.064,
-      "highest_tip_speed": 4.221,
-      "largest_keyframe_velocity_change": 0.684,
-      "f5_blade_arm_alignment": 0.95224
+      "largest_tip_step": 0.195,
+      "highest_tip_speed": 12.929,
+      "largest_keyframe_velocity_change": 4.877,
+      "f5_blade_arm_alignment": null
     },
     {
       "clip": "dual_attack1_off",
@@ -51,54 +51,54 @@
       "frames_checked": 51,
       "lowest_visible_fraction": 1.0,
       "impact_visible_fraction": 1.0,
-      "largest_tip_step": 0.067,
-      "highest_tip_speed": 4.426,
-      "largest_keyframe_velocity_change": 0.584,
-      "f5_blade_arm_alignment": 0.95325
+      "largest_tip_step": 0.207,
+      "highest_tip_speed": 13.732,
+      "largest_keyframe_velocity_change": 5.866,
+      "f5_blade_arm_alignment": null
     },
     {
       "clip": "dual_attack2",
       "hand": "right",
       "frames_checked": 51,
-      "lowest_visible_fraction": 0.891,
-      "impact_visible_fraction": 0.956,
-      "largest_tip_step": 0.084,
-      "highest_tip_speed": 3.4,
-      "largest_keyframe_velocity_change": 0.856,
-      "f5_blade_arm_alignment": 0.93182
+      "lowest_visible_fraction": 0.0,
+      "impact_visible_fraction": 1.0,
+      "largest_tip_step": 0.268,
+      "highest_tip_speed": 10.844,
+      "largest_keyframe_velocity_change": 2.614,
+      "f5_blade_arm_alignment": null
     },
     {
       "clip": "dual_attack2_off",
       "hand": "left",
       "frames_checked": 51,
-      "lowest_visible_fraction": 0.944,
-      "impact_visible_fraction": 0.956,
-      "largest_tip_step": 0.138,
-      "highest_tip_speed": 5.582,
-      "largest_keyframe_velocity_change": 0.44,
-      "f5_blade_arm_alignment": 0.94704
+      "lowest_visible_fraction": 0.0,
+      "impact_visible_fraction": 1.0,
+      "largest_tip_step": 0.309,
+      "highest_tip_speed": 12.525,
+      "largest_keyframe_velocity_change": 3.859,
+      "f5_blade_arm_alignment": null
     },
     {
       "clip": "dual_attack3",
       "hand": "right",
       "frames_checked": 51,
-      "lowest_visible_fraction": 0.891,
+      "lowest_visible_fraction": 0.952,
       "impact_visible_fraction": 1.0,
-      "largest_tip_step": 0.128,
-      "highest_tip_speed": 5.105,
-      "largest_keyframe_velocity_change": 0.734,
-      "f5_blade_arm_alignment": 0.98811
+      "largest_tip_step": 0.605,
+      "highest_tip_speed": 26.702,
+      "largest_keyframe_velocity_change": 9.566,
+      "f5_blade_arm_alignment": null
     },
     {
       "clip": "dual_attack3_off",
       "hand": "left",
       "frames_checked": 51,
-      "lowest_visible_fraction": 0.944,
+      "lowest_visible_fraction": 0.984,
       "impact_visible_fraction": 1.0,
-      "largest_tip_step": 0.128,
-      "highest_tip_speed": 5.081,
-      "largest_keyframe_velocity_change": 0.722,
-      "f5_blade_arm_alignment": 0.98866
+      "largest_tip_step": 0.742,
+      "highest_tip_speed": 32.74,
+      "largest_keyframe_velocity_change": 17.06,
+      "f5_blade_arm_alignment": null
     },
     {
       "clip": "dual_charge",
@@ -109,7 +109,7 @@
       "largest_tip_step": 0.02,
       "highest_tip_speed": 0.644,
       "largest_keyframe_velocity_change": 0.057,
-      "f5_blade_arm_alignment": 0.9916
+      "f5_blade_arm_alignment": null
     },
     {
       "clip": "dual_charge_off",
@@ -120,7 +120,7 @@
       "largest_tip_step": 0.011,
       "highest_tip_speed": 0.375,
       "largest_keyframe_velocity_change": 0.034,
-      "f5_blade_arm_alignment": 0.99434
+      "f5_blade_arm_alignment": null
     },
     {
       "clip": "dual_parry",
@@ -131,7 +131,7 @@
       "largest_tip_step": 0.007,
       "highest_tip_speed": 0.474,
       "largest_keyframe_velocity_change": 0.003,
-      "f5_blade_arm_alignment": 0.96794
+      "f5_blade_arm_alignment": null
     },
     {
       "clip": "dual_parry_off",
@@ -142,9 +142,19 @@
       "largest_tip_step": 0.005,
       "highest_tip_speed": 0.385,
       "largest_keyframe_velocity_change": 0.003,
-      "f5_blade_arm_alignment": 0.96768
+      "f5_blade_arm_alignment": null
     }
   ],
-  "warnings": [],
+  "warnings": [
+    "attack2: unusually large per-sample tip movement; inspect curve",
+    "attack2: abrupt keyframe velocity change (15.2); inspect blending",
+    "dual_attack1_off: unusually large per-sample tip movement; inspect curve",
+    "dual_attack2: unusually large per-sample tip movement; inspect curve",
+    "dual_attack2_off: unusually large per-sample tip movement; inspect curve",
+    "dual_attack3: unusually large per-sample tip movement; inspect curve",
+    "dual_attack3: abrupt keyframe velocity change (9.6); inspect blending",
+    "dual_attack3_off: unusually large per-sample tip movement; inspect curve",
+    "dual_attack3_off: abrupt keyframe velocity change (17.1); inspect blending"
+  ],
   "important": "Mathematical preview, not Minecraft playtesting or artistic approval"
 }
