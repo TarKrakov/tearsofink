@@ -150,6 +150,24 @@ public final class WeaponAnims {
 						TearsOfInk.LOGGER.error("Движения {} не прочитались: {}", a.id, e.toString());
 					}
 				}
+				// Отдельная тестовая библиотека Blockbench: никогда не заменяет принятые клипы.
+				var pilot = manager.getResource(TearsOfInk.id("weapon_anims/pale_linear_greatsword_bb_test.json"));
+				if (pilot.isPresent()) {
+					try (Reader r = pilot.get().openAsReader()) {
+						Map<String, Clip> active = CLIPS.get(Archetype.PALE_LINEAR_GREATSWORD.id);
+						if (active != null) {
+							Map<String, Clip> test = parse(JsonParser.parseReader(r).getAsJsonObject());
+							for (String name : test.keySet()) {
+								if (!name.startsWith("bb_test_") || active.containsKey(name)) {
+									throw new IllegalArgumentException("Invalid/duplicate Blockbench test clip: " + name);
+								}
+							}
+							active.putAll(test);
+						}
+					} catch (Exception e) {
+						TearsOfInk.LOGGER.error("Blockbench test animations could not be loaded: {}", e.toString());
+					}
+				}
 			}
 		});
 	}
