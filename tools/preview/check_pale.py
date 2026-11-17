@@ -121,11 +121,39 @@ for side,name in ((1,'dual_attack3'),(-1,'dual_attack3_off')):
     assert -.64<low[1]<-.25,(name,'lower sword out of frame',low)
     assert top[0]*side > -.1 and low[0]*side > -.1,(name,'blade crossed centre',top,low)
 
-# Parry/charge: keep two entire blades beside each other, with only their TIPS angled
-# towards centre; they must not collide on-screen (and never leave their hands).
+# Check the REAL AUTHOR'S ENTIRE ROTATED BLOCKBENCH MESH, not just the furthest tip.
+# Old previews approved two tips inside the camera while 60% of both sword models
+# were off screen!  Use Claude's model_points and first-person item matrices.
+FOV_Y=math.tan(math.radians(70/2))
+FOV_X=FOV_Y*240/180  # tool's first-person 240x180 viewport
+vertices=model_points(m)/16
+
+def visible_fraction(name, t0, side):
+    c=anims[name]; r,p=sample(c,t0)
+    item=m['display']['firstperson_'+('right' if side==1 else 'left')+'hand']
+    world=apply4(fp_item_m(item,r,p,g,side),vertices)
+    depth=-world[:,2]
+    good=depth>.05
+    with np.errstate(divide='ignore', invalid='ignore'):
+        good &= np.abs(world[:,0]/depth)<FOV_X
+        good &= np.abs(world[:,1]/depth)<FOV_Y
+    return np.count_nonzero(good)/len(vertices)
+
+for name,t0,hand in (('attack1',.30,1),('attack3',.32,1),('attack3',.95,1),('attack4',.30,1),
+                     ('dual_attack1',.55,1),('dual_attack1_off',.55,-1),
+                     ('dual_attack3',.38,1),('dual_attack3_off',.38,-1),
+                     ('dual_attack3',.85,1),('dual_attack3_off',.85,-1)):
+    frac=visible_fraction(name,t0,hand)
+    assert frac>.88,(name,'model clipped during blade strike',frac)
+
+# Parry/charge: BOTH entire swords must fit horizontally inside the camera and
+# the sharpened tips stay near (but never OVER) the centre.
 for name,t0 in (('dual_parry',.35),('dual_charge',.6)):
     right=sight(name,t0,1); left=sight(name+'_off',t0,-1)
-    assert right[0]>.20 and left[0]<-.18,(name,'blades overlap',right,left)
-    assert right[0]-left[0]>.45,(name,'blades too close',right,left)
-    assert max(abs(right[0]),abs(left[0]))<.85,(name,'blades outside view',right,left)
-print('PASS: Claude preview: raised solo attacks, mirrored dual combos, charge/parry gap, anchored grips')
+    assert right[0]>.20 and left[0]<-.10,(name,'tips crossed',right,left)
+    assert right[0]-left[0]>.36,(name,'blades overlap',right,left)
+    assert max(abs(right[0]),abs(left[0]))<.85,(name,'blade tips outside view',right,left)
+    for side,n in ((1,name),(-1,name+'_off')):
+        frac=visible_fraction(n,t0,side)
+        assert frac>.96,(n,'blade body outside view',frac)
+print('PASS: Claude preview: full-model screen framing, raised strikes, complete paired charge and parry, anchored grips')
