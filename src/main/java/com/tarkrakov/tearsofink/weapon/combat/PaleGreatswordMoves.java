@@ -126,6 +126,13 @@ public final class PaleGreatswordMoves {
             s.parried = true;
             play(p, s, "dual_repel", "dual_repel_off", 10);
             area(p, s, 360, 3.3, 0.35, 1.2);
+            // Same recognisable clang as the Dussak parry, without touching its sounds.
+            p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.ANVIL_LAND,
+                    net.minecraft.sounds.SoundSource.PLAYERS, 0.45f, 1.9f);
+            p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.AMETHYST_BLOCK_CHIME,
+                    net.minecraft.sounds.SoundSource.PLAYERS, 1f, 1.6f);
+            p.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.SWEEP_ATTACK,
+                    p.getX(), p.getY() + 1, p.getZ(), 8, 0.8, 0.3, 0.8, 0.02);
             return false;
         });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -158,7 +165,15 @@ public final class PaleGreatswordMoves {
                     case SLAM -> {
                         if (!s.slammed && time >= s.started + 4) {
                             s.slammed = true;
-                            if (p.onGround()) area(p, s, 360, 3.3, 1.4, 0.6);
+                            if (p.onGround()) {
+                                area(p, s, 360, 3.3, 1.4, 0.6);
+                                p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.GENERIC_EXPLODE.value(),
+                                        net.minecraft.sounds.SoundSource.PLAYERS, 0.75f, 0.85f);
+                                p.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD,
+                                        p.getX(), p.getY() + 0.1, p.getZ(), 26, 1.4, 0.15, 1.4, 0.08);
+                                p.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.SWEEP_ATTACK,
+                                        p.getX(), p.getY() + 0.2, p.getZ(), 6, 1.2, 0.1, 1.2, 0);
+                            }
                         }
                         if (time >= s.until) s.phase = Phase.IDLE;
                     }
@@ -177,7 +192,7 @@ public final class PaleGreatswordMoves {
             s.phase = Phase.SINGLE_DASH;
             startDash(p, s, 4, 1.2f);
             play(p, s, "rush", null, 18);
-            p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_SWEEP, net.minecraft.sounds.SoundSource.PLAYERS, 1.1f, 0.75f);
+            p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.TRIDENT_RIPTIDE_1.value(), net.minecraft.sounds.SoundSource.PLAYERS, 0.9f, 0.85f);
             return;
         }
         if (s.phase == Phase.PARRY && dual(p) && now(p) <= s.until) {
@@ -189,6 +204,10 @@ public final class PaleGreatswordMoves {
             p.setDeltaMovement(d.x * 0.3, 1.05, d.z * 0.3);
             p.hurtMarked = true;
             play(p, s, "dual_leap", "dual_leap_off", 50);
+            p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.TRIDENT_RIPTIDE_1.value(),
+                    net.minecraft.sounds.SoundSource.PLAYERS, 0.8f, 1.1f);
+            p.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD,
+                    p.getX(), p.getY() + 0.15, p.getZ(), 12, 0.5, 0.1, 0.5, 0.08);
             return;
         }
         Skills.activate(p, dual(p) ? PARRY : SINGLE, new SkillInput(0, 0, left));
@@ -216,10 +235,15 @@ public final class PaleGreatswordMoves {
         s.damage = (float) (left ? base[0] : p.getAttributeValue(Attributes.ATTACK_DAMAGE)) * s.power;
         if (charge) {
             s.phase = Phase.CHARGE;
-            play(p, s, "dual_charge", "dual_charge_off", 32);
+            play(p, s, "dual_charge", "dual_charge_off", 52);
+            // Hunter axe charging uses this existing iron-windup sound.
+            p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_IRON.value(),
+                    net.minecraft.sounds.SoundSource.PLAYERS, 0.9f, 0.65f);
         } else if (pair) {
             s.phase = Phase.PARRY; s.parryUntil = now(p) + 26; s.until = now(p) + 100;
-            play(p, s, "dual_parry", "dual_parry_off", 14);
+            play(p, s, "dual_parry", "dual_parry_off", 26);
+            p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.SHIELD_BLOCK,
+                    net.minecraft.sounds.SoundSource.PLAYERS, 0.55f, 1.25f);
         } else {
             s.phase = Phase.SINGLE_WINDOW; s.until = now(p) + 70;
             play(p, s, "ability", null, 14);
@@ -237,11 +261,12 @@ public final class PaleGreatswordMoves {
         s.chargeReady = cooldown(p, s, 240);
         startDash(p, s, 5.5, Mth.lerp(charge, 1.3f, 2.1f));
         play(p, s, "dual_rush", "dual_rush_off", 18);
-        p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_SWEEP, net.minecraft.sounds.SoundSource.PLAYERS, 1.1f, 0.8f);
+        p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.TRIDENT_RIPTIDE_1.value(), net.minecraft.sounds.SoundSource.PLAYERS, 0.9f, 0.85f);
     }
 
     private static void startDash(ServerPlayer p, State s, double distance, float mult) {
-        s.direction = p.getLookAngle().normalize(); s.travelled = 0; s.maxDistance = distance;
+        // Dash is horizontal like AxeMoves.RUSH. Pitch must not push the player's hitbox into the floor.
+        s.direction = flat(p); s.travelled = 0; s.maxDistance = distance;
         s.broken = 0; s.killed = false; s.hit.clear(); s.started = now(p);
         s.lastPosition = p.position();
         s.damage *= mult;
@@ -279,33 +304,46 @@ public final class PaleGreatswordMoves {
         s.phase = Phase.IDLE;
     }
 
-    /** Swept player volume in <=0.1 block steps; no client velocity or forced chunk loads. */
+    /**
+     * Use the same synchronized player velocity as the hunter axes rather than moving the
+     * server player by setPos+teleport every tick (which the real client can immediately undo).
+     * Server checks the next swept volume; actual travel is measured next tick so distance
+     * and the existing soft-block/collision safeguards remain authoritative.
+     */
     private static void dashTick(ServerPlayer p, State s) {
-        if (now(p) - s.started > 16 || p.position().distanceTo(s.lastPosition) > 1) { endDash(p, s); return; }
-        for (int n = 0; n < 8 && s.travelled < s.maxDistance; n++) {
-            double step = Math.min(0.1, s.maxDistance - s.travelled);
-            Vec3 next = p.position().add(s.direction.scale(step));
-            AABB box = p.getBoundingBox().move(next.subtract(p.position()));
-            if (!clearPath(p, s, box)) { endDash(p, s); return; }
-            p.setPos(next.x, next.y, next.z);
-            s.travelled += step;
-            s.lastPosition = next;
-            for (LivingEntity target : p.serverLevel().getEntitiesOfClass(LivingEntity.class, box.inflate(0.3))) {
-                if (!enemy(p, target) || s.hit.contains(target.getUUID()) || !p.hasLineOfSight(target)) continue;
-                s.hit.add(target.getUUID());
-                if (s.phase == Phase.SINGLE_DASH && s.sweepHit.contains(target.getUUID())) target.invulnerableTime = 0;
-                if (hurt(p, s, target, s.damage) && target.isDeadOrDying()
-                        && s.phase == Phase.DUAL_DASH && !s.killed) {
-                    s.killed = true;
-                    s.chargeReady = now(p) + Math.max(0, s.chargeReady - now(p)) / 2;
-                    p.getCooldowns().addCooldown(ModItems.PALE_LINEAR_GREATSWORD, (int) (s.chargeReady - now(p)));
-                }
-                if (!p.isAlive()) return;
-            }
+        Vec3 current = p.position();
+        double moved = current.subtract(s.lastPosition).dot(s.direction);
+        if (moved < -0.5 || moved > 2.0 || now(p) - s.started > 22) {
+            endDash(p, s);
+            return;
         }
-        p.connection.teleport(p.getX(), p.getY(), p.getZ(), p.getYRot(), p.getXRot());
-        p.setDeltaMovement(Vec3.ZERO); p.hurtMarked = true;
-        if (s.travelled >= s.maxDistance - 1e-6) endDash(p, s);
+        s.travelled += Math.max(0, moved);
+        s.lastPosition = current;
+        double remaining = s.maxDistance - s.travelled;
+        if (remaining <= 0.08) { endDash(p, s); return; }
+
+        // Prevent passing the wall or breaking protected terrain before applying impulse.
+        double speed = Math.min(0.72, remaining);
+        AABB next = p.getBoundingBox().move(s.direction.scale(speed));
+        if (!clearPath(p, s, next)) { endDash(p, s); return; }
+        // Test future occupied volume, never damage the same target twice per dash.
+        for (LivingEntity target : p.serverLevel().getEntitiesOfClass(LivingEntity.class, next.inflate(0.3))) {
+            if (!enemy(p, target) || s.hit.contains(target.getUUID()) || !p.hasLineOfSight(target)) continue;
+            s.hit.add(target.getUUID());
+            if (s.phase == Phase.SINGLE_DASH && s.sweepHit.contains(target.getUUID()))
+                target.invulnerableTime = 0;
+            if (hurt(p, s, target, s.damage) && target.isDeadOrDying()
+                    && s.phase == Phase.DUAL_DASH && !s.killed) {
+                s.killed = true;
+                s.chargeReady = now(p) + Math.max(0, s.chargeReady - now(p)) / 2;
+                p.getCooldowns().addCooldown(ModItems.PALE_LINEAR_GREATSWORD, (int) (s.chargeReady - now(p)));
+            }
+            if (!p.isAlive()) return;
+        }
+        p.setDeltaMovement(s.direction.x * speed, Math.min(0.1, p.getDeltaMovement().y), s.direction.z * speed);
+        p.hurtMarked = true; // vanilla velocity packet: same path used by AxeMoves
+        p.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD,
+                p.getX(), p.getY() + 0.4, p.getZ(), 2, 0.12, 0.12, 0.12, 0.01);
     }
 
     private static boolean clearPath(ServerPlayer p, State s, AABB box) {
@@ -331,8 +369,8 @@ public final class PaleGreatswordMoves {
 
     private static void endDash(ServerPlayer p, State s) {
         boolean pair = s.phase == Phase.DUAL_DASH;
-        p.connection.teleport(p.getX(), p.getY(), p.getZ(), p.getYRot(), p.getXRot());
-        p.setDeltaMovement(Vec3.ZERO); p.hurtMarked = true;
+        Vec3 velocity = p.getDeltaMovement();
+        p.setDeltaMovement(0, velocity.y, 0); p.hurtMarked = true;
         if (!pair) s.singleReady = cooldown(p, s, 180);
         s.phase = Phase.RECOVER; s.until = now(p) + 5;
         play(p, s, pair ? "dual_recover" : "recover", pair ? "dual_recover_off" : null, 5);
