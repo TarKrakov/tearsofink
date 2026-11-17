@@ -27,8 +27,8 @@ def generate(out, only=None):
              'solo-r': ([(solo[-1][0], None, .25), ('ability', None, .38), ('rush', None, .6), ('recover', None, .4)], False),
              'pair-charge': ([('dual_charge', 'dual_charge_off', 1.5), ('dual_rush', 'dual_rush_off', .7), ('dual_recover', 'dual_recover_off', .35)], True),
              'solo-backstep': ([('backstep',None,.6)],False),
-             'solo-guard': ([('guard',None,1.20)],False),
-             'dual-guard': ([('dual_guard','dual_guard_off',1.40)],True),
+             'solo-guard': ([('guard',None,1.5),('guard_hold',None,1.5),('guard_release',None,.3)],False),
+             'dual-guard': ([('dual_guard','dual_guard_off',1.5),('dual_guard_hold','dual_guard_hold_off',1.5),('guard_release','guard_release_off',.3)],True),
              'parry-cross': ([('dual_parry','dual_parry_off',.9)],True),
              'pair-r': ([('dual_parry', 'dual_parry_off', .65), ('dual_repel', 'dual_repel_off', .45), ('dual_leap', 'dual_leap_off', .9), ('dual_slam', 'dual_slam_off', .7)], True),
              'left-r': ([(None, 'ability_off', .4), (None, 'rush_off', .6), (None, 'recover_off', .4)], True)}
@@ -63,8 +63,8 @@ def generate(out, only=None):
                      'pair':(.08,.20,.6,.92,1.,1.32,1.4,2.06),
                      'pair-charge':(0,.5,1.,1.35,1.5,1.62,1.85,2.2),
                      'solo-backstep':(0,.07,.13,.17,.23,.33,.5,.7),
-                     'solo-guard':(0,.10,.20,.35,.60,.90,1.05,1.20),
-                     'dual-guard':(0,.10,.20,.35,.65,1.10,1.25,1.40),
+                     'solo-guard':(0,.12,.26,.6,1.6,2.95,3.15,3.5),
+                     'dual-guard':(0,.12,.26,.6,1.6,2.95,3.15,3.5),
                      'pair-r':(.65,1.0,1.1,1.3,1.55,1.75,2.0,2.2)}[name]
             large=Image.new('RGB',(1920,540))
             for i,t in enumerate(moments):

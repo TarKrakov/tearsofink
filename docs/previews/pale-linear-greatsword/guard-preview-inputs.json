@@ -1,0 +1,23 @@
+{
+  "inputs": {
+    "src/main/resources/assets/tears-of-ink/weapon_anims/pale_linear_greatsword.json": "1403eaa7d0988b25b109a85774e94ebf50496313e47dabc2b5492e49c52b59b9",
+    "src/main/resources/assets/tears-of-ink/models/item/pale_linear_greatsword.json": "b7412f5684279e63c84ca35512093d61790c3391fedbc12aad98183ea2ac4156",
+    "src/main/resources/assets/tears-of-ink/models/item/pale_linear_great.json": "70b8cdc45b289c6cb9214e2b2e1aaefdd45eb5c4d6d112b200bdcc9cafeed089",
+    "tools/preview/pale.py": "f3e0ad979dae534781ca29f1f4d8632cf96123d644149a1dccf3d5703cf2e31c",
+    "tools/preview/tl.py": "9c371c8f0f55cf5ba74b600fd630d7c00f9384e1a50c7d3330e5a4bdce4a5c18",
+    "tools/preview/third.py": "c63ccc31ba6b7690b397f5a24c6667a6bcf52bc3851ca98fef622ffd35e1e734",
+    "tools/preview/run.py": "4c56e8423896b7cadac156f1c69187958801180220f9d85ba69ecbe6743dfe56",
+    "tools/preview/gif.py": "d2764c1e76a5d9fc1445ca7c3476aa4beb2defbbab7b0b6a58b9c400c8c47a3e"
+  },
+  "fps": 30,
+  "fp_aspect": "16:9",
+  "fp_resolution": [
+    960,
+    540
+  ],
+  "complete": true,
+  "cases": [
+    "dual-guard",
+    "solo-guard"
+  ]
+}

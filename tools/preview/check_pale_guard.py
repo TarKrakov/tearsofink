@@ -1,55 +1,44 @@
-"""Shift+R guard: first-person / F5 pose consistency and server tuning contract.
-Run from repository root: python3 tools/preview/check_pale_guard.py
-Does not replace the artistic review or real Minecraft combat tests.
-"""
-import json
-import math
-from pathlib import Path
-
-import numpy as np
-from tl import load, sample, fp_item_m, fp_offset
-
-ARCH = "pale_linear_greatsword"
-a, model, _, _, grip = load(ARCH)
-anims = a["animations"]
-root = Path(__file__).resolve().parents[2]
-balance = json.loads((root / "src/main/resources/data/tears-of-ink/weapon_moves" /
-                      (ARCH + ".json")).read_text(encoding="utf-8"))["shift_guard"]
-
-assert 0 < balance["single_reduction"] < balance["dual_reduction"] < 1
-assert 1 <= balance["single_arc"] <= balance["dual_arc"] <= 360
-cases = (
-    ("guard", 1, "single", 1.0),
-    ("guard_off", -1, "single", 1.0),
-    ("dual_guard", 1, "dual", 1.2),
-    ("dual_guard_off", -1, "dual", 1.2),
-)
-for name, hand, mode, seconds in cases:
-    clip = anims[name]
-    assert clip["third"]["arm_space"], (name, "F5 must follow the authored shoulder")
-    assert not clip["third"].get("mirror"), (name, "each hand has its own author pose")
-    src = clip["third"]["source"]
-    assert src in anims, (name, "missing third-person shoulder clip")
-    shoulder = anims[src]
-    assert shoulder["length"] == clip["length"]
-    assert clip["length"] >= seconds and shoulder["length"] >= seconds
-    assert int(round(seconds * 20)) == balance[f"{mode}_duration_ticks"]
-    for c in (clip, shoulder):
-        times = [key["t"] for key in c["keyframes"]]
-        assert times[0] == 0 and all(x < y for x, y in zip(times, times[1:])), name
-        assert times[-1] <= c["length"], name
-        assert all(np.isfinite([*key["rotation"], *key.get("translation", [0, 0, 0])]).all()
-                   for key in c["keyframes"]), name
-    display = model["display"]["firstperson_" + ("right" if hand == 1 else "left") + "hand"]
-    for t in np.linspace(0, clip["length"], 31):
-        rot, pos = sample(clip, float(t))
-        matrix = fp_item_m(display, rot, pos, grip, hand, view_offset=fp_offset(model))
-        assert np.isfinite(matrix).all(), (name, t)
-    arm0, _ = sample(shoulder, 0)
-    armGuard, _ = sample(shoulder, .35)
-    assert np.linalg.norm(armGuard - arm0) > 10, (name, "guard should visibly lift the blade")
-    rot0, pos0 = sample(clip, 0)
-    assert np.allclose(rot0, 0) and np.allclose(pos0, 0), (name, "neutral entry")
-    rotEnd, posEnd = sample(clip, clip["length"])
-    assert np.allclose(rotEnd, 0, atol=.01) and np.allclose(posEnd, 0, atol=.01), (name, "neutral return")
-print("PASS: four independent Shift+R hand clips, inherited author Display, F5 shoulder, timing and guard data")
+"""Toggle guard geometry and actual refreshed timeline, independent from parrying."""
+from tl import *
+a,m,fp,tp,g=load('pale_linear_greatsword');anims=a['animations'];h,tip=axis(m,fp,g)
+mesh=model_points(m)/16;fov=math.tan(D(35));basis=np.array([0.,0,1.])
+balance=json.load(open(COMBO+'/../weapon_moves/pale_linear_greatsword.json'))['shift_guard']
+assert 'single_duration_ticks'not in balance and 'dual_duration_ticks'not in balance
+assert 0<balance['single_reduction']<balance['dual_reduction']<1
+for paired in(False,True):
+ for sign,suffix in((1,''),(-1,'_off')):
+  name=('dual_guard'if paired else'guard')+suffix
+  held=('dual_guard_hold'if paired else'guard_hold')+suffix
+  c=anims[name];d=m['display']['firstperson_'+('right'if sign==1 else'left')+'hand']
+  assert end_time(c)>3 and end_time(anims[held])>3 # longer than the 1.5s refresh period
+  r,p=sample(c,.5);mm=fp_item_m(d,r,p,g,sign,view_offset=fp_offset(m))
+  pts=apply4(mm,np.array([g,tip])/16);v=apply4(mm,mesh);depth=-v[:,2]
+  assert ((depth>.05)&(abs(v[:,0])<depth*fov*16/9)&(abs(v[:,1])<depth*fov)).mean()>.97,(name,'out of frame')
+  assert pts[0,0]*sign>0 and pts[1,0]*sign<0 and pts[1,1]>pts[0,1]+.3,(name,'diagonal does not cross the view')
+  normal=mm[:3,:3]@basis;normal/=np.linalg.norm(normal)
+  if paired:
+   parry=anims['dual_parry'+suffix];rp,_=sample(parry,.4)
+   assert np.linalg.norm(XYZ(r)-XYZ(rp))>.5,(name,'guard must differ from R parry')
+   assert abs(normal[2])>.99,(name,'paired guard must present the FLATS')
+  else:
+   # Model's own blade-edge basis, not a guessed global roll axis.
+   from blade_pose import BladePose
+   b=BladePose('pale_linear_greatsword');edge=mm[:3,:3]@b.basis[:,1];edge/=np.linalg.norm(edge)
+   assert edge[2]<-.99,(name,'solo edge must face outward to enemy')
+  # Refresh starts from the exact held pose in both render paths.
+  rh,ph=sample(anims[held],0);assert np.allclose(XYZ(r),XYZ(rh))and np.allclose(p,ph)
+  x=hand_pose('pale_linear_greatsword',m,g,c,.5,sign,a['third'],True,anims)
+  y=hand_pose('pale_linear_greatsword',m,g,anims[held],0,sign,a['third'],True,anims)
+  assert np.allclose(x[0],y[0])and np.allclose(x[1],y[1]),(name,'F5 refresh pop')
+ print('PASS:', 'paired broadside crossed blades'if paired else'solo diagonal, outward cutting edge', '; full geometry visible')
+ base='dual_guard'if paired else'guard';hold='dual_guard_hold'if paired else'guard_hold'
+ steps=[(base,base+'_off'if paired else None,1.5),(hold,hold+'_off'if paired else None,1.5),(hold,hold+'_off'if paired else None,.6),('guard_release','guard_release_off'if paired else None,.25)]
+ snapshots={}
+ def observe(t,first,carried):snapshots[round(t*120)]=(first,carried)
+ build('pale_linear_greatsword',steps,paired,'unused.gif',fps=120,observer=observe,render_frames=False)
+ for sign in((1,-1)if paired else(1,)):
+  expected=snapshots[120][0][sign]
+  for tick in range(120,432):assert np.allclose(snapshots[tick][0][sign],expected,atol=2e-5),('refresh destabilizes FP',paired,sign,tick)
+  idle=fp_item_m(m['display']['firstperson_'+('right'if sign==1 else'left')+'hand'],np.zeros(3),np.zeros(3),g,sign,view_offset=fp_offset(m,1))
+  assert np.allclose(snapshots[max(snapshots)][0][sign],idle)
+ print('PASS: 120Hz held timeline across two refreshes; toggle-off returns to idle')

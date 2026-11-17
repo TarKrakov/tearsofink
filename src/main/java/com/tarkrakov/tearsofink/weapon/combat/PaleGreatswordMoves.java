@@ -36,6 +36,7 @@ import java.util.UUID;
 
 /** Server-owned phases. No energy cost; continuations bypass the entry cooldown, never its validation. */
 public final class PaleGreatswordMoves {
+    private static final int GUARD_REFRESH_TICKS = 30; // held-pose refresh, not a gameplay duration
     private static final Archetype ARCH = Archetype.PALE_LINEAR_GREATSWORD;
     private static final TagKey<Block> SOFT = TagKey.create(Registries.BLOCK, TearsOfInk.id("pale_dash_soft"));
     private enum Phase { IDLE, SINGLE_WINDOW, SINGLE_DASH, BACKSTEP, GUARD, PARRY, LEAP, SLAM, CHARGE, DUAL_DASH, RECOVER }
@@ -140,7 +141,7 @@ public final class PaleGreatswordMoves {
             // Shift+R is a damage-reducing block, NOT a full parry: it never
             // triggers the counter or cancels the hit's knockback. Only incoming
             // attacks in front of the guarding blades are reduced.
-            if (!passingGuardDamage && s != null && s.phase == Phase.GUARD && now(p) < s.until
+            if (!passingGuardDamage && s != null && s.phase == Phase.GUARD
                     && available(p) && valid(p, s) && amount > 0
                     && !source.is(DamageTypeTags.BYPASSES_SHIELD)
                     && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)
@@ -233,14 +234,20 @@ public final class PaleGreatswordMoves {
                         }
                         if (time >= s.until) s.phase = Phase.IDLE;
                     }
-                    case RECOVER, GUARD -> { if (time >= s.until) s.phase = Phase.IDLE; }
+                    case GUARD -> {
+                        if (time >= s.until) {
+                            play(p, s, s.paired ? "dual_guard_hold" : "guard_hold", s.paired ? "dual_guard_hold_off" : null, GUARD_REFRESH_TICKS);
+                            s.until = time + GUARD_REFRESH_TICKS;
+                        }
+                    }
+                    case RECOVER -> { if (time >= s.until) s.phase = Phase.IDLE; }
                     default -> {}
                 }
             }
         });
     }
 
-    /** Shift+R: a short frontal block, independent of the offensive R chain. */
+    /** Shift+R toggles a frontal block. Lowering always works, even during its entry cooldown. */
     public static void guard(ServerPlayer p) {
         if (!available(p)) return;
         boolean main = isWeapon(p.getMainHandItem());
@@ -250,24 +257,24 @@ public final class PaleGreatswordMoves {
         if (!main && com.tarkrakov.tearsofink.weapon.InkGreatswordItem.twoHanded(p.getMainHandItem())) return;
         State s = state(p);
         if (s.phase != Phase.IDLE && !valid(p, s)) cancel(p, s);
+        if (s.phase == Phase.GUARD) { lowerGuard(p, s); return; }
         if (s.phase != Phase.IDLE || now(p) < s.guardReady) return;
         var tune = PaleGreatswordBalance.get();
         var block = tune.shiftGuard();
         boolean pair = main && off;
         boolean left = !main;
-        int duration = pair ? block.dualDurationTicks() : block.singleDurationTicks();
         int cooldown = pair ? block.dualCooldownTicks() : block.singleCooldownTicks();
 
         s.tuning = tune;
         s.owner = p; s.level = p.serverLevel();
         s.main = p.getMainHandItem(); s.off = p.getOffhandItem();
         s.left = left; s.paired = pair; s.started = now(p);
-        s.phase = Phase.GUARD; s.until = now(p) + duration;
+        s.phase = Phase.GUARD; s.until = now(p) + GUARD_REFRESH_TICKS;
         // Defensive Shift+R has its OWN recovery timer. Do not set the item's
         // global cooldown: doing so would unnecessarily lock regular R/RMB
         // even after the blocking pose ends.
         s.guardReady = now(p) + Math.round(cooldown * Awakening.cooldownMult(left ? s.off : s.main));
-        play(p, s, pair ? "dual_guard" : "guard", pair ? "dual_guard_off" : null, duration);
+        play(p, s, pair ? "dual_guard" : "guard", pair ? "dual_guard_off" : null, GUARD_REFRESH_TICKS);
         // Free ordinary technique; the existing weapon-wear economy still applies.
         ItemStack sword = left ? s.off : s.main;
         com.tarkrakov.tearsofink.weapon.forge.Gear.wear(p, sword,
@@ -276,6 +283,11 @@ public final class PaleGreatswordMoves {
         p.serverLevel().playSound(null, p.blockPosition(),
                 net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_IRON.value(),
                 net.minecraft.sounds.SoundSource.PLAYERS, 0.65f, pair ? 0.9f : 1.1f);
+    }
+
+    private static void lowerGuard(ServerPlayer p, State s) {
+        s.phase = Phase.IDLE; // protection ends immediately; return pose can blend into another action
+        play(p, s, "guard_release", s.paired ? "guard_release_off" : null, 5);
     }
 
     private static boolean guardFacing(ServerPlayer p, net.minecraft.world.damagesource.DamageSource source) {
@@ -404,6 +416,7 @@ public final class PaleGreatswordMoves {
     }
 
     private static void cancel(ServerPlayer p, State s) {
+        if (s.phase == Phase.GUARD) { lowerGuard(p, s); return; }
         if (s.phase == Phase.SINGLE_WINDOW || s.phase == Phase.SINGLE_DASH) finish(p, s, false);
         else if (s.phase == Phase.PARRY || s.phase == Phase.LEAP || s.phase == Phase.SLAM) finish(p, s, true);
         else if (s.phase == Phase.CHARGE) s.chargeReady = cooldown(p, s, s.tuning.dualCharge().cooldownTicks());

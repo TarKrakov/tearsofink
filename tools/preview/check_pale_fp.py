@@ -7,16 +7,22 @@ from tl import *
 a,model,fp,tp,grip=load('pale_linear_greatsword');h,tip=axis(model,fp,grip);mesh=model_points(model)/16
 assert a['fp_pose_version']=='raised_inward_v1'
 reference=json.load(open(Path(__file__).parent/'references/pale_f5_accepted_ee55b6e.json'))
-f5=dict(reference['f5'])
+# JSON 0 and 0.0 describe the same pose; editor serialization must not break the snapshot.
+def numeric_canonical(v):
+ if isinstance(v,dict):return {k:numeric_canonical(x)for k,x in v.items()}
+ if isinstance(v,list):return [numeric_canonical(x)for x in v]
+ if isinstance(v,(int,float))and not isinstance(v,bool):return float(v)
+ return v
+f5=dict(reference['numeric_canonical_f5'])
 for name,c in a['animations'].items():
- if c.get('f5_reference'):f5[name]=reference['f5'][c['f5_reference']]
+ if c.get('f5_reference'):f5[name]=reference['numeric_canonical_f5'][c['f5_reference']]
 # Only the requested R flight preparation and its landing entry change F5.
 raised_f5={'dual_leap','dual_leap_off','dual_slam','dual_slam_off'}
 for name,wanted in f5.items():
  if name in raised_f5:continue
  c=a['animations'][name];fix=c.get('third',{});src=fix.get('source')
  value={'fix':fix,'pose':a['animations'][src]if src else c,'timing':{'end':round(end_time(c),6),'out':round(max(.05,c.get('return',.3))if c.get('hold',0)>0 else .15,6)}}
- assert hashlib.sha256(json.dumps(value,sort_keys=True).encode()).hexdigest()==wanted,(name,'accepted F5 changed')
+ assert hashlib.sha256(json.dumps(numeric_canonical(value),sort_keys=True).encode()).hexdigest()==wanted,(name,'accepted F5 changed')
 print('PASS:',len(f5)-len(raised_f5),'F5 snapshots unchanged from',reference['revision'],'; 4 R flight/landing entries intentionally revised and checked separately')
 # Camera mount is shared by idle and all clips, matching WeaponAnims.apply.
 gesture_fp_item_m=fp_item_m

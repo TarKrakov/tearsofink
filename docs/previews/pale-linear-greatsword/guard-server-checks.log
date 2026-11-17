@@ -1,0 +1,8 @@
+PASS solo guard persists across >4s and multiple refreshes; front damage 2.2
+PASS rear hit is not reduced
+PASS repeat Shift+R lowers guard; damage returns to full
+PASS dual guard persists across >4s and multiple refreshes; front damage 1.6
+PASS rear hit is not reduced
+PASS repeat Shift+R lowers guard; damage returns to full
+PASS toggle-off works immediately during entry cooldown
+PASS weapon change cancels block

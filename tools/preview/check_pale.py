@@ -19,14 +19,16 @@ for name in('attack1','attack2','attack3','dual_chop','dual_chop_third','dual_sl
  assert anims['axe_'+name+'_raw']==expected,('donor animation changed',name)
 for group in('steps','dual_steps'):
  for index,(actual,expected) in enumerate(zip(c[group],donor[group])):
-  for field in('duration','hit','speed','late','second_hit'):
+  for field in('duration','hit','late','second_hit'):
    assert actual.get(field)==expected.get(field),(group,field,actual)
+  # Speed is an editable balance value, changed by the author's subsequent audit.
+  assert np.isfinite(actual['speed'])and actual['speed']>0
   for field in('anim','off_anim'):
    wanted=('axe_'+expected[field])if expected.get(field)else expected.get(field)
    if group=='dual_steps' and index==3 and wanted:wanted+='_repeat'
    if field=='off_anim' and wanted:wanted+='_off'
    assert actual.get(field)==wanted,(group,field)
-print('PASS: 3 solo / 5 paired steps; seven literal raw axe clips including F5 source; raised camera-space FP; independent synchronized off-hand; donor timing/late/speed; authored Display retained')
+print('PASS: 3 solo / 5 paired steps; seven literal raw axe clips including F5 source; raised camera-space FP; independent synchronized off-hand; donor timing/late, configurable speed; authored Display retained')
 active={st[field]for group in('steps','dual_steps')for st in c[group]for field in('anim','off_anim')if st.get(field)}
 active.update(n+s for n in('dual_charge','dual_rush','dual_parry','dual_repel','dual_leap','dual_slam')for s in('','_off'))
 vertices=model_points(m)/16;count=0
