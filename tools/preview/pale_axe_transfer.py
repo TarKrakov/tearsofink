@@ -214,7 +214,7 @@ for suffix in ('','_off'):
 a['fp_pose_version']='raised_inward_v1'
 # Small polish of the accepted version: camera composition is shared by idle,
 # LMB and abilities. Bridge tails replace pauses without moving any combat hit.
-a['firstperson_offset']=[0,-.64,.8] # pixels: 4 cm down, 5 cm towards the viewer
+a['firstperson_offset']=[0,-.64,2.4] # pixels: 4 cm down, 15 cm towards the viewer
 
 def link_tail(name,time,direction,hand):
  clip=anims[name];old_end=end_time(clip)

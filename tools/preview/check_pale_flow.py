@@ -35,5 +35,5 @@ for sign in(1,-1):
   for at in(0,.2,.5):
    old=matrix(name,at,sign,False);new=matrix(name,at,sign)
    assert np.allclose(old[:3,:3],new[:3,:3])
-   assert np.allclose(new[:3,3]-old[:3,3],[0,-.04,.05]),(name,'inconsistent mount')
-print('PASS: idle and all FP clips move uniformly 4cm down / 5cm closer; orientation and scale unchanged')
+   assert np.allclose(new[:3,3]-old[:3,3],[0,-.04,.15]),(name,'inconsistent mount')
+print('PASS: idle and all FP clips move uniformly 4cm down / 15cm closer; orientation and scale unchanged')

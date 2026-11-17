@@ -1,6 +1,6 @@
 {
   "inputs": {
-    "src/main/resources/assets/tears-of-ink/weapon_anims/pale_linear_greatsword.json": "40185da994abdd71b0a7d9f5a8651c489a511855dc0757bfb6d14d4c4fd1a9ab",
+    "src/main/resources/assets/tears-of-ink/weapon_anims/pale_linear_greatsword.json": "ad36c57d6ba956cf126f113d9c09c53db8fa05864aa36572ae1c0fdf8174770c",
     "src/main/resources/assets/tears-of-ink/models/item/pale_linear_greatsword.json": "b7412f5684279e63c84ca35512093d61790c3391fedbc12aad98183ea2ac4156",
     "src/main/resources/assets/tears-of-ink/models/item/pale_linear_great.json": "70b8cdc45b289c6cb9214e2b2e1aaefdd45eb5c4d6d112b200bdcc9cafeed089",
     "tools/preview/pale.py": "5acec884c4444e1ff5ab8e477be3797b4ae90e327a5e79fdfd948e0534825707",

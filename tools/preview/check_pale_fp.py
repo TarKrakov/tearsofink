@@ -72,7 +72,8 @@ for sign,suffix in((1,''),(-1,'_off')):
   r,p=sample(clip,at);points=apply4(fp_item_m(display,r,p,grip,sign),np.array([grip,tip])/16)
   assert points[1,0]*sign<points[0,0]*sign,('paired tip points outward',sign,at)
  clip=a['animations']['dual_charge'+suffix];r,p=sample(clip,1.35);points=apply4(fp_item_m(display,r,p,grip,sign),np.array([tip])/16)
- assert screen(points)[0,1]>-.30,('charge still below the frame',sign,screen(points))
+ charge_y=270-screen(points)[0,1]/FOV*270
+ assert charge_y<430,('charge must remain above HUD with 70px clearance',sign,charge_y)
 print('PASS: full blade visible on hits; high curved opening, straight thrust, inward paired tips, raised charge')
 
 charge_reference=json.load(open(Path(__file__).parent/'references/pale_charge_before_lift.json'))
