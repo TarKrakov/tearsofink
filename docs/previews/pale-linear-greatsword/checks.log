@@ -1,0 +1,28 @@
+check
+PASS: authored inherited baseline; unchanged handle center; full meshes finite; anchored grips; combat markers; FP/F5 handoffs; shortest rotations; 3000 samples
+
+edge
+PASS: cutting planes follow the impact stroke, max normal/velocity component FP 0.136 / F5 0.017
+
+space
+PASS: active paired blades clear head/torso and have separate F5 lanes; minimum X gap 0.403 blocks
+
+legacy
+PASS: six reference weapons: unchanged interpolation at 1224 samples
+
+rotation-parity
+PASS: JOML / preview shortest orientations: 321 cases; max matrix error 2.7417316947331294e-06
+
+arm-parity
+PASS: JOML / preview arm-space chain: 120 poses; maximum position error 7.058085962352578e-07 blocks
+
+review-check
+Reviewed 13 clips for pale_linear_greatsword; warnings: 1
+REVIEW: dual_attack3_off: unusually large per-sample tip movement; inspect curve
+Report: work/rebuild/review/pale_linear_greatsword/report.json
+
+review-final
+Reviewed 13 clips for pale_linear_greatsword; warnings: 1
+REVIEW: dual_attack3_off: unusually large per-sample tip movement; inspect curve
+Preview GIFs + contact sheets: work/rebuild/review-final/pale_linear_greatsword
+Report: work/rebuild/review-final/pale_linear_greatsword/report.json

@@ -21,7 +21,8 @@ ASPECT = 240 / 180
 
 def preview_pose(anims, clip):
     """Retain the original clip's third-person settings when sourcing F5 keys."""
-    fix = clip.get('third', {})
+    fix = dict(clip.get('third', {}))
+    if fix.get('wrist_source'): fix['_wrist_clip'] = anims[fix['wrist_source']]
     src = fix.get('source')
     if src is not None and src not in anims:
         raise ValueError(f'Unknown third.source: {src}')
@@ -151,7 +152,7 @@ def render(arch, combo, out, fps):
     for label, (steps, two_hands) in cases.items():
         if not steps:
             continue
-        frames = build(arch, steps, two_hands, str(out / (label + '.gif')), fps=fps)
+        frames = build(arch, steps, two_hands, str(out / (label + '.gif')), fps=fps, front=(arch == "pale_linear_greatsword"))
         count = min(12, len(frames))
         contact = Image.new('RGB', (720 * 3, 240 * 4), (20, 20, 20))
         for i, idx in enumerate(np.linspace(0, len(frames) - 1, count).astype(int)):

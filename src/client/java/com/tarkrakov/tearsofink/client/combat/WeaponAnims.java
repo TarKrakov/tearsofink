@@ -41,7 +41,7 @@ public final class WeaponAnims {
 	 * hold — сколько секунд клинок стоит в последней позе (следующий удар начнётся прямо из неё),
 	 * back — за сколько потом возвращается в стойку. Без hold движение идёт к стойке к моменту length.
 	 */
-	public record Clip(float length, boolean absolute, List<Key> keys, float hold, float back, float impact, boolean smooth, boolean tight, ThirdFix third) {}
+	public record Clip(float length, boolean absolute, List<Key> keys, float hold, float back, float impact, boolean smooth, boolean tight, ThirdFix third, boolean shortestRotation) {}
 
 	/**
 	 * Поправки третьего лица для одного движения (блок "third" внутри движения):
@@ -50,10 +50,11 @@ public final class WeaponAnims {
 	 * center — руки ближе к середине (0.5 — вдвое); lateral — множитель движения рук влево-вправо (−1 — наоборот:
 	 * сводятся в центр и расходятся в края); no_cross — руки не заходят за середину (не перекрещиваются);
 	 * source — третье лицо считается по другому движению (первое лицо правят, а третье остаётся как было).
+	 * arm_space: source rotations are shoulder deltas; wrist_source.x is edge roll about the blade axis.
 	 */
 	public record ThirdFix(float wristHold, boolean mirror, float center, float lateral, boolean noCross, @org.jetbrains.annotations.Nullable String source,
-						   float pushRight, float pushLeft, float turn, boolean followBlade) {
-		static final ThirdFix NONE = new ThirdFix(-1, false, 1, 1, false, null, 0, 0, 0, false);
+						   float pushRight, float pushLeft, float turn, boolean followBlade, boolean armSpace, @org.jetbrains.annotations.Nullable String wristSource) {
+		static final ThirdFix NONE = new ThirdFix(-1, false, 1, 1, false, null, 0, 0, 0, false, false, null);
 	}
 
 	/** Третье лицо архетипа (поле "third" в файле движений): как поза первого лица переводится в руку Стива. */
@@ -170,7 +171,8 @@ public final class WeaponAnims {
 					o.has("impact") ? o.get("impact").getAsFloat() : -1f,
 					o.has("smooth") && (o.get("smooth").getAsJsonPrimitive().isString() || o.get("smooth").getAsBoolean()),
 					o.has("smooth") && o.get("smooth").getAsJsonPrimitive().isString() && "tight".equals(o.get("smooth").getAsString()),
-					o.has("third") ? fix(o.getAsJsonObject("third")) : ThirdFix.NONE));
+					o.has("third") ? fix(o.getAsJsonObject("third")) : ThirdFix.NONE,
+					"slerp".equals(o.has("rotation_mode") ? o.get("rotation_mode").getAsString() : "")));
 		}
 		return out;
 	}
@@ -179,7 +181,7 @@ public final class WeaponAnims {
 		return new ThirdFix(f(t, "wrist_hold", -1), t.has("mirror") && t.get("mirror").getAsBoolean(), f(t, "center", 1),
 				f(t, "lateral", 1), t.has("no_cross") && t.get("no_cross").getAsBoolean(),
 				t.has("source") ? t.get("source").getAsString() : null,
-				push(t, 0), push(t, 1), f(t, "turn", 0), t.has("follow_blade") && t.get("follow_blade").getAsBoolean());
+				push(t, 0), push(t, 1), f(t, "turn", 0), t.has("follow_blade") && t.get("follow_blade").getAsBoolean(), t.has("arm_space") && t.get("arm_space").getAsBoolean(), t.has("wrist_source") ? t.get("wrist_source").getAsString() : null);
 	}
 
 	/** "push": 3 — обеим рукам; "push": [правая, левая] — по-разному. */
@@ -268,7 +270,7 @@ public final class WeaponAnims {
 	private static Key shown(Playing p, Key key) {
 		if (p.from == null || p.real() >= blend(p)) return key;
 		float u = ease(Ease.EASE_OUT, p.real() / blend(p));
-		return new Key(0, lerp(p.from.rot(), key.rot(), u), lerp(p.from.pos(), key.pos(), u),
+		return new Key(0, p.clip.shortestRotation() ? rotationMix(p.from.rot(), key.rot(), u) : lerp(p.from.rot(), key.rot(), u), lerp(p.from.pos(), key.pos(), u),
 				lerp(p.from.scale(), key.scale(), u), Ease.LINEAR);
 	}
 
@@ -285,8 +287,35 @@ public final class WeaponAnims {
 		return sample(c, t, REST);
 	}
 
-	/** Поза движения в момент t. */
+	/** Optional orientation channel for the straight-blade pilot; legacy Euler curves remain the default. */
+	private static Vector3f rotationMix(Vector3f a, Vector3f b, float u) {
+		Quaternionf from = new Quaternionf().rotationXYZ(a.x * Mth.DEG_TO_RAD, a.y * Mth.DEG_TO_RAD, a.z * Mth.DEG_TO_RAD);
+		Quaternionf to = new Quaternionf().rotationXYZ(b.x * Mth.DEG_TO_RAD, b.y * Mth.DEG_TO_RAD, b.z * Mth.DEG_TO_RAD);
+		return from.slerp(to, u).getEulerAnglesXYZ(new Vector3f()).mul(180f / Mth.PI);
+	}
+
 	private static Key sample(Clip c, float t, Key restKey) {
+		Key result = sampleEuler(c, t, restKey);
+		if (!c.shortestRotation() || c.keys().isEmpty()) return result;
+		List<Key> keys = c.keys();
+		Key last = keys.get(keys.size() - 1);
+		Vector3f rotation;
+		if (c.hold() > 0 && t >= last.t()) {
+			float u = ease(Ease.EASE_IN_OUT, Mth.clamp((t - last.t() - c.hold()) / Math.max(.01f, c.back()), 0, 1));
+			rotation = rotationMix(last.rot(), restKey.rot(), u);
+		} else {
+			Key from = restKey, to = new Key(c.length(), restKey.rot(), restKey.pos(), restKey.scale(), Ease.LINEAR);
+			for (Key key : keys) {
+				if (key.t() > t) { to = key; break; }
+				from = key;
+			}
+			float u = to.t() > from.t() ? Mth.clamp((t - from.t()) / (to.t() - from.t()), 0, 1) : 1;
+			rotation = rotationMix(from.rot(), to.rot(), ease(from.ease(), u));
+		}
+		return new Key(t, rotation, result.pos(), result.scale(), Ease.LINEAR);
+	}
+
+	private static Key sampleEuler(Clip c, float t, Key restKey) {
 		List<Key> keys = c.keys();
 		if (c.hold() > 0 && !keys.isEmpty() && t >= lastT(c)) {
 			// замер в последней позе, потом мягкий возврат в стойку

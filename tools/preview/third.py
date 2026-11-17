@@ -78,6 +78,28 @@ def sample(c, t):
         return tight(a0['rot'],a['rot'],b['rot'],b1['rot'],u,uh), tight(a0['pos'],a['pos'],b['pos'],b1['pos'],u,uh)
     return spline(a0['rot'],a['rot'],b['rot'],b1['rot'],u), spline(a0['pos'],a['pos'],b['pos'],b1['pos'],u)
 
+_sample_euler = sample
+
+def mix_rotation(a, b, u):
+    from gif import slerp_m
+    r = XYZ(a) @ slerp_m(XYZ(a).T @ XYZ(b), u)
+    return np.degrees([math.atan2(-r[1,2],r[2,2]), math.asin(np.clip(r[0,2],-1,1)), math.atan2(-r[0,1],r[0,0])])
+
+def sample(c, t):
+    rot, pos = _sample_euler(c, t)
+    if c.get('rotation_mode') != 'slerp' or not c['keyframes']: return rot, pos
+    keys = sorted((key(k) for k in c['keyframes']), key=lambda k:k['t'])
+    last = keys[-1]
+    if c.get('hold',0) > 0 and t >= last['t']:
+        u = ease('ease_in_out', np.clip((t-last['t']-c['hold'])/max(.01,c.get('return',.3)),0,1))
+        return mix_rotation(last['rot'],np.zeros(3),u),pos
+    a=REST; b=dict(REST,t=c['length'])
+    for k in keys:
+        if k['t'] > t: b=k;break
+        a=k
+    u=np.clip((t-a['t'])/(b['t']-a['t']),0,1) if b['t']>a['t'] else 1
+    return mix_rotation(a['rot'],b['rot'],ease(a['ease'],u)),pos
+
 def end_time(c):
     keys = c['keyframes']
     if c.get('hold',0) > 0 and keys: return max(k['t'] for k in keys)+c['hold']+c.get('return',0.3)
@@ -390,6 +412,18 @@ def rotation_between(a, b):
 def solve4(disp, m, clip, t, tune, fix, grip, handle, tip):
     side = 'right' if m == 1 else 'left'
     tp = disp['thirdperson_'+side+'hand']
+    if fix.get('arm_space'):
+        rot, pos = sample(clip, t)
+        W = np.eye(3)
+        if '_wrist_clip' in fix:
+            roll = D(sample(fix['_wrist_clip'],t)[0][0])
+            direction = gp(tip,tp,m)-gp(handle,tp,m);direction /= np.linalg.norm(direction)
+            K = np.array([[0,-direction[2],direction[1]],[direction[2],0,-direction[0]],[-direction[1],direction[0],0]])
+            W += math.sin(roll)*K+(1-math.cos(roll))*(K@K)
+        x=VANILLA_ARM[0]+D(rot[0]);y=m*D(rot[1]);z=m*D(rot[2])
+        hand = Rz(z)@Ry(y)@Rx(x)@C@(gp(handle,tp,m)+np.array([m/16,.125,-.625]))+np.array([-m*5/16,2/16,0])
+        hand = np.array([-hand[0],-hand[1]-.119,hand[2]])
+        return x, y, W, hand
     mirror = fix.get('mirror') and m == -1
     cm = 1 if mirror else m
     b = base4(disp, cm, clip, t, tune, fix, grip, handle, tip)

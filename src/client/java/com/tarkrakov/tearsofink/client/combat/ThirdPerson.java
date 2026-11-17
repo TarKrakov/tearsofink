@@ -144,7 +144,7 @@ public final class ThirdPerson {
 			Solved s = solve(model, entity, stack, side, p.clip, t);
 			float w = weight(p, t);
 			ModelPart arm = arm(model, side);
-			float x = Mth.lerp(w, arm.xRot, s.x), y = Mth.lerp(w, arm.yRot, s.y), z = Mth.lerp(w, arm.zRot, 0);
+			float x = Mth.lerp(w, arm.xRot, s.x), y = Mth.lerp(w, arm.yRot, s.y), z = Mth.lerp(w, arm.zRot, s.z);
 			Quaternionf wrist = new Quaternionf().slerp(s.wrist, w);
 			float push = s.push * w;
 			float transition = p.archetype == Archetype.PALE_LINEAR_GREATSWORD ? 0.2f : BLEND;
@@ -227,7 +227,7 @@ public final class ThirdPerson {
 
 	// ---------------- перевод позы первого лица ----------------
 
-	private record Solved(float x, float y, Quaternionf wrist, Vector3f pivot, float body, Vector3f hand, float push) {}
+	private record Solved(float x, float y, float z, Quaternionf wrist, Vector3f pivot, float body, Vector3f hand, float push) {}
 
 	private static Solved solve(HumanoidModel<?> model, LivingEntity entity, ItemStack stack, HumanoidArm side, WeaponAnims.Clip clip, float t) {
 		boolean left = side == HumanoidArm.LEFT;
@@ -249,6 +249,28 @@ public final class ThirdPerson {
 			WeaponAnims.Clip src = WeaponAnims.clip(archetype, fix.source());
 			if (src != null) pose = src;
 		}
+		if (fix.armSpace()) {
+			// Local opt-in: author the shoulder, retaining this hand's exact Display.
+			// Source rotations are deltas from the vanilla held-item arm (-18°, 0, 0).
+			WeaponAnims.Key k = WeaponAnims.sample(pose, t);
+			float x = -Mth.PI / 10 + k.rot().x * Mth.DEG_TO_RAD;
+			float y = m * k.rot().y * Mth.DEG_TO_RAD;
+			float z = m * k.rot().z * Mth.DEG_TO_RAD;
+			Vector3f hand = at(ax[0], tp, m).add(m / 16f, .125f, -.625f);
+			LAYER.transform(hand);
+			new Quaternionf().rotationZ(z).rotateY(y).rotateX(x).transform(hand);
+			hand.add(-m * 5 / 16f, 2 / 16f, 0);
+			// Model head origin is at 1.501 blocks, standing camera at 1.62.
+			hand.set(-hand.x, -hand.y - .119f, hand.z);
+			Quaternionf wrist = new Quaternionf();
+			WeaponAnims.Clip wristClip = fix.wristSource() == null ? null : WeaponAnims.clip(archetype, fix.wristSource());
+			if (wristClip != null) {
+				Vector3f blade = at(ax[1], tp, m).sub(at(ax[0], tp, m)).normalize();
+				wrist.rotationAxis(WeaponAnims.sample(wristClip, t).rot().x * Mth.DEG_TO_RAD, blade);
+			}
+			return new Solved(x + model.head.xRot * tune.look(), y + model.head.yRot, z,
+					wrist, at(ax[0], tp, m), y * tune.body(), hand, 0);
+		}
 		Base b = base(tr, calc, pose, t, tune, fix, grip, ax);
 		Base bw = fix.wristHold() >= 0 ? base(tr, calc, pose, fix.wristHold(), tune, fix, grip, ax) : b;
 		if (mirror) {
@@ -263,7 +285,7 @@ public final class ThirdPerson {
 		Quaternionf wrist = new Quaternionf(armQ).mul(LAYER).conjugate()
 				.mul(look).mul(new Quaternionf().rotationY(-m * fix.turn() * Mth.DEG_TO_RAD)) // turn — к центру
 				.mul(bw.item).mul(rot(tp, m).conjugate());
-		return new Solved(a[0], a[1], wrist, at(ax[0], tp, m), a[1] * tune.body(), b.hand, (tune.push() + (left ? fix.pushLeft() : fix.pushRight())) / 16f);
+		return new Solved(a[0], a[1], 0, wrist, at(ax[0], tp, m), a[1] * tune.body(), b.hand, (tune.push() + (left ? fix.pushLeft() : fix.pushRight())) / 16f);
 	}
 
 	/** Поза первого лица в пространстве модели (до поворота головы): куда тянется рука и как лежит оружие. */

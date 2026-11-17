@@ -12,18 +12,21 @@ def hand_pose(arch, model, grip, c, t, m, tune, continuing=False):
     else:
         handle, tip = axis(model, disp['firstperson_righthand'], grip)
     rot, pos = sample(c, t); w = weight(c, t)
+    if arch == 'pale_linear_greatsword':
+        w = ease('ease_in_out', min(min(1,t/.18), max(0,min(1,(end_time(c)-t)/(c.get('return',.3) if c.get('hold',0)>0 else .15)))))
     if continuing: w = ease("ease_in_out", min(1, max(0, (end_time(c)-t)/(c.get("return", .3) if c.get("hold", 0) > 0 else .15))))
     fx = dict(c.get('third', {}))  # correction belongs to the original clip, not its F5 source
     src = fx.get('source')
-    if src: c = dict(c, keyframes=json.load(open(f'{REPO}/weapon_anims/{arch}.json'))['animations'][src]['keyframes'])  # третье лицо — по другому движению
+    if fx.get('wrist_source'): fx['_wrist_clip'] = json.load(open(f'{REPO}/weapon_anims/{arch}.json'))['animations'][fx['wrist_source']]
+    if src: c = json.load(open(f'{REPO}/weapon_anims/{arch}.json'))['animations'][src]  # третье лицо — по другому движению
     if tune.get('centre'): fx['_keep_face'] = True
     x, y, W, P = solve4(disp, m, c, t, tune, fx, grip, handle, tip)
     v0 = VANILLA_ARM
-    arm = (v0[0]+(x-v0[0])*w, y*w, 0)
+    arm = (v0[0]+(x-v0[0])*w, y*w, m*D(sample(c,t)[0][2])*w if fx.get('arm_space') else 0)
     fq = item_quads(model, fp_item_m(fp, rot, pos, grip, m), (190,40,50) if m == 1 else (150,30,90))
     return arm, slerp_m(W, w), tp, handle, fq, y*w, P, w
 
-def build(arch, steps, dual, out, fps=20, tune=None):
+def build(arch, steps, dual, out, fps=20, tune=None, front=False):
     a, model, fp0, tp0, grip = load(arch)
     tune = tune or dict(TUNE, **a.get("third", {}))
     combo = json.load(open(f'{COMBO}/{arch}.json')); tempo = combo.get('tempo', 1.0)
@@ -47,11 +50,11 @@ def build(arch, steps, dual, out, fps=20, tune=None):
         rot, pos = sample(c, t)
         if previous is None and arch == 'pale_linear_greatsword' and c.get('smooth') and now-start < .20:
             u = ease('ease_out', max(0, (now-start)/.20))
-            rot, pos = rot*u, pos*u
+            rot, pos = (mix_rotation(np.zeros(3), rot, u) if c.get('rotation_mode') == 'slerp' else rot*u), pos*u
         if previous is not None and now-start < (.20 if arch == 'pale_linear_greatsword' else .12):
             u = ease('ease_out', max(0, (now-start)/(.20 if arch == 'pale_linear_greatsword' else .12)))
             if c.get('smooth'):
-                rot = previous[1][0]*(1-u) + rot*u
+                rot = mix_rotation(previous[1][0], rot, u) if c.get('rotation_mode') == 'slerp' else previous[1][0]*(1-u) + rot*u
                 pos = previous[1][1]*(1-u) + pos*u
             result[0] = tuple(np.array(previous[0][0])*(1-u) + np.array(result[0])*u)
             W0, W1 = previous[0][1], result[1]
@@ -98,7 +101,7 @@ def build(arch, steps, dual, out, fps=20, tune=None):
         q = scene(arms, items, body)
         A_ = render(fq, [0,0,0], [0,0,-1], size=(240,180), fov=70, bg=(40,40,56))
         B_ = render(q, [0.9,2.4,2.6], [0,1.3,-0.6], size=(240,240), fov=50)
-        C_ = render(q, [-1.8,1.9,-2.4], [0,1.25,0], size=(240,240), fov=50)
+        C_ = render(q, [0,1.7,-3.3] if front else [-1.8,1.9,-2.4], [0,1.25,0], size=(240,240), fov=50)
         im = Image.new('RGB', (720, 240), (20,20,20))
         im.paste(B_, (0,0)); im.paste(C_, (240,0)); im.paste(A_, (480,30))
         dr = ImageDraw.Draw(im)
