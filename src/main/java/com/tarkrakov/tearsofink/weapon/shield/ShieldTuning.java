@@ -5,6 +5,16 @@ public final class ShieldTuning {
 	// ===== Блок =====
 	/** Сколько Души стоит принятый удар: столько за единицу урона (2 = сердце). */
 	public static final float SOUL_PER_DAMAGE = 1.0f;
+	/** Стойкий (115 максимума): расход на обычный блок ×0.9. */
+	public static final float STEADFAST_COST_MULT = 0.9f;
+	/** Светлый (130 максимума): за один успешный идеальный блок — 2 заряда. */
+	public static final int LUMINOUS_PERFECT_CHARGE = 2;
+	/** Несгибаемый (150 максимума): возврат 55% вместо 40%, доп. урон максимум +30 HP. */
+	public static final float UNBENDING_RETURN = 0.55f, UNBENDING_CAP = 30f;
+	/** Больше чем столько HP не накапливать между выбросами (одинаково в одиночной и сетевой игре). */
+	public static final float STORED_DAMAGE_CAP = 55f;
+	/** Против спама ПКМ: не чаще одного идеального блока каждые 12 тиков (0,6 сек). */
+	public static final int PERFECT_REPEAT_TICKS = 12;
 	/** Душа кончилась — щиты пробиты: опускаются и недоступны столько тиков (20 = 1 с). */
 	public static final int BREAK_TICKS = 60;
 	/** Спереди и с боков блок полный — в пределах стольких градусов от взгляда; со спины — доля урона. */

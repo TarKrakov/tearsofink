@@ -36,6 +36,8 @@ import java.util.Map;
 public final class ShieldStanceClient {
 	/** id сущности → заряд щитов. */
 	private static final Map<Integer, Integer> CHARGE = new HashMap<>();
+	/** Число поглощённых HP в текущей стойке, приходит только своему игроку. */
+	private static int stored;
 	/** Поза рук в стойке (градусы, для правой руки; левая — зеркально): front — рука, что держит блок, side — вторая, сбоку. */
 	private static Vector3f front = new Vector3f(-55, -25, 0), side = new Vector3f(45, 40, 10);
 	private static float look = 0.5f;
@@ -51,7 +53,10 @@ public final class ShieldStanceClient {
 			if (payload.charge() <= 0) CHARGE.remove(payload.entity());
 			else CHARGE.put(payload.entity(), payload.charge());
 		}));
-		ClientPlayConnectionEvents.DISCONNECT.register((h, c) -> CHARGE.clear());
+		ClientPlayNetworking.registerGlobalReceiver(ShieldStance.Stored.TYPE, (payload, ctx) ->
+				ctx.client().execute(() -> stored = payload.health()));
+		ClientPlayConnectionEvents.DISCONNECT.register((h, c) -> { CHARGE.clear(); stored = 0; });
+		net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback.EVENT.register((g, delta) -> renderHud(g));
 		net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents.END_CLIENT_TICK.register(ShieldStanceClient::tick);
 		ResourceManagerHelper.get(PackType.CLIENT_RESOURCES).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
 			@Override
@@ -94,6 +99,20 @@ public final class ShieldStanceClient {
 
 	public static int charge(LivingEntity e) {
 		return CHARGE.getOrDefault(e.getId(), 0);
+	}
+
+	/** Небольшой информационный HUD над хотбаром; ни одной новой текстуры/модели. */
+	private static void renderHud(net.minecraft.client.gui.GuiGraphics g) {
+		var mc = net.minecraft.client.Minecraft.getInstance();
+		if (mc.player == null || mc.options.hideGui || mc.getDebugOverlay().showDebugScreen()
+				|| !dual(mc.player)) return;
+		int c = charge(mc.player);
+		if (c <= 0 && stored <= 0) return;
+		var line = net.minecraft.network.chat.Component.translatable("hud.tears-of-ink.shield_stored",
+				c, ShieldTuning.CHARGE_MAX, stored, (int) ShieldTuning.STORED_DAMAGE_CAP);
+		int x = (g.guiWidth() - mc.font.width(line)) / 2;
+		int y = g.guiHeight() - 81;
+		g.drawString(mc.font, line, x, y, 0xE7F9FA, true);
 	}
 
 	/** Модель «в блоке» для щита: этот щит используют — или стойка двух щитов (оба подняты). */

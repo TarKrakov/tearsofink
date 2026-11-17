@@ -39,13 +39,13 @@ import java.util.UUID;
  */
 public final class Vows {
 	// ===== Настройки — крутить здесь =====
-	/** Обмен у Торговки: столько запаса Чернил отдаёшь … */
+	/** Историческая цена ОБРАТНОГО обмена (только миграция и сброс старых сохранений, новых покупок нет). */
 	public static final int EXCHANGE_INK = 10;
-	/** … и столько Души получаешь. */
+	/** Историческая прибавка Души из закрытого обмена. */
 	public static final int EXCHANGE_SOUL = 5;
-	/** Сколько всего Души можно получить обменом. */
+	/** Исторический предел закрытого обмена. */
 	public static final int EXCHANGE_LIMIT = 10;
-	/** Ниже этого запас Чернил обменом не опустить. */
+	/** Устаревший порог исторической сделки; оставлен для старых сохранений. */
 	public static final int EXCHANGE_INK_FLOOR = 30;
 	/** Продажа души, когда Душа выше 100 за счёт обмена: Чернил возвращается только столько (обратный ход с потерей). */
 	public static final int UNEXCHANGE_INK = 5;
@@ -197,6 +197,10 @@ public final class Vows {
 		pathBonus(p, Vow.NONE, v);
 		Guide.say(p, "vow.chosen." + v.id);
 		mark(p, v);
+		if (v == Vow.SOUL) {
+			com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(p, "soul_pilgrim");
+			SoulRank.grantReached(p);
+		}
 	}
 
 	/** Звук и свет обета. */
@@ -240,6 +244,7 @@ public final class Vows {
 		InkData ink = InkPowers.get(p);
 		set(p, d.withAwakening(id));
 		InkPowers.update(p, ink.withExtra(ink.extra() + amount).withSoul(ink.soul() + amount));
+		SoulRank.grantReached(p);
 		p.sendSystemMessage(Component.translatable("vow.tears-of-ink.awakening." + id, amount).withStyle(ChatFormatting.AQUA, ChatFormatting.ITALIC));
 		ServerLevel level = p.serverLevel();
 		level.sendParticles(ModParticles.TEAR_GLINT, p.getX(), p.getY() + 1.0, p.getZ(), 40, 0.4, 0.8, 0.4, 0.03);
@@ -255,26 +260,6 @@ public final class Vows {
 	}
 
 	// ---------------- Торговка ----------------
-
-	/** Почему нельзя обменять Чернила на Душу (ключ причины) или null — можно. */
-	public static String exchangeBlock(ServerPlayer p) {
-		InkData ink = InkPowers.get(p);
-		VowData d = get(p);
-		if (ink.sold() + ink.taint() > 0) return "sold";
-		if (d.exchanged() >= EXCHANGE_LIMIT) return "limit";
-		if (ink.inkMax() - EXCHANGE_INK < EXCHANGE_INK_FLOOR) return "ink";
-		return null;
-	}
-
-	/** Обменять: −EXCHANGE_INK к запасу Чернил → +EXCHANGE_SOUL Души. */
-	public static boolean exchange(ServerPlayer p) {
-		if (exchangeBlock(p) != null) return false;
-		InkData ink = InkPowers.get(p);
-		set(p, get(p).withExchanged(get(p).exchanged() + EXCHANGE_SOUL));
-		InkPowers.update(p, ink.withInkBonus(ink.inkBonus() - EXCHANGE_INK).withExtra(ink.extra() + EXCHANGE_SOUL)
-				.withSoul(ink.soul() + EXCHANGE_SOUL));
-		return true;
-	}
 
 	/**
 	 * Продажа шага души, когда Душа выше 100 за счёт обмена: обмен откатывается с потерей.
@@ -311,6 +296,7 @@ public final class Vows {
 		set(p, d.withVow(next).withChanges(d.changes() + 1));
 		pathBonus(p, d.vow(), next);
 		mark(p, next);
+		SoulRank.grantReached(p);
 		return true;
 	}
 
