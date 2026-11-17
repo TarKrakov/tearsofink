@@ -288,7 +288,8 @@ public final class PaleGreatswordMoves {
             s.phase = Phase.PARRY;
             s.parryUntil = now(p) + parry.parryTicks();
             s.until = now(p) + parry.followupWindowTicks();
-            play(p, s, "dual_parry", "dual_parry_off", parry.parryTicks());
+            // Preserve the authored 26-tick animation; only the effective parry guard is shorter.
+            play(p, s, "dual_parry", "dual_parry_off", 26);
             p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.SHIELD_BLOCK,
                     net.minecraft.sounds.SoundSource.PLAYERS, 0.55f, 1.25f);
         } else {
