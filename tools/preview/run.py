@@ -44,6 +44,7 @@ def load(arch):
         with open(alias_path, encoding='utf-8') as source:
             overlay = json.load(source)
         m['display'] = {**m.get('display', {}), **overlay.get('display', {})}
+    m['_fp_offset']=a.get('firstperson_offset',[0,0,0])
     disp = m['display']
     missing = [name for name in ('firstperson_righthand', 'firstperson_lefthand',
                                  'thirdperson_righthand', 'thirdperson_lefthand')
@@ -64,7 +65,7 @@ def cell(arch, clipname, t, model, disp, grip, clip, both, tune):
         x, y, W, P = solve3(rot, pos, fp, tp, grip, handle, tip, tune, m)
         arms[s] = (x, y, 0)
         items[s] = (model, (lambda tp, W, m: (lambda am: tp_item_m(am, tp, handle, W, m)))(tp, W, m))
-        fq += item_quads(model, fp_item_m(fp, rot, pos, grip, m), (190,40,50) if m == 1 else (150,30,90))
+        fq += item_quads(model, fp_item_m(fp, rot, pos, grip, m, view_offset=model.get('_fp_offset')), (190,40,50) if m == 1 else (150,30,90))
         if not both: body = max(-D(tune['body_max']), min(D(tune['body_max']), y*tune['body']))
     q = scene(arms, items, body)
     a = render(fq, [0,0,0], [0,0,-1], size=(200,150), fov=FP_FOV, bg=(40,40,56))

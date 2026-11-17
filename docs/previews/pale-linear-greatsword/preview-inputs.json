@@ -1,12 +1,13 @@
 {
   "inputs": {
-    "src/main/resources/assets/tears-of-ink/weapon_anims/pale_linear_greatsword.json": "a3faab578eebabd446a8c2b692600947820162ad7e61c2b8e6945ea549856503",
+    "src/main/resources/assets/tears-of-ink/weapon_anims/pale_linear_greatsword.json": "40185da994abdd71b0a7d9f5a8651c489a511855dc0757bfb6d14d4c4fd1a9ab",
     "src/main/resources/assets/tears-of-ink/models/item/pale_linear_greatsword.json": "b7412f5684279e63c84ca35512093d61790c3391fedbc12aad98183ea2ac4156",
     "src/main/resources/assets/tears-of-ink/models/item/pale_linear_great.json": "70b8cdc45b289c6cb9214e2b2e1aaefdd45eb5c4d6d112b200bdcc9cafeed089",
-    "tools/preview/pale.py": "e62a93b8419c71a22eb9826db29397799c5576a6810b210a9f91edfa0ffafd00",
-    "tools/preview/tl.py": "2def8f1ee479c294034e51446b88792c32d405d7912db595a09d074dde915d24",
-    "tools/preview/third.py": "c425e7205224d095fd7f48d98a1b8c483c082b0baceece1b3ee63fd6c1f93f6a",
-    "tools/preview/run.py": "24ec4f720e6ce60b61157b271bc7837e0994109a52aa5d86964bb9b3a7561b2d"
+    "tools/preview/pale.py": "5acec884c4444e1ff5ab8e477be3797b4ae90e327a5e79fdfd948e0534825707",
+    "tools/preview/tl.py": "2fb1ac116bf3b84bab7ba7e2127b42392dc877f4462b6cebf79e5d724f4c7bbd",
+    "tools/preview/third.py": "89ac69a41e5e8c479efc8e3b500b6915ea2edefc05ff6f5ca166d48ecc6ea541",
+    "tools/preview/run.py": "884bf5ba925268fc29119932524214ce253d3eff6e730629f01ec0d139b7b865",
+    "tools/preview/gif.py": "0e2ec09c4ee66aa8d538a545cfd74b75596a7fe33428e9a4e58752242784f82f"
   },
   "fps": 30,
   "fp_aspect": "16:9",

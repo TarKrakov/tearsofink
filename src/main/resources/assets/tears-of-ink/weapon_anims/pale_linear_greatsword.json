@@ -4920,7 +4920,7 @@
     },
     "axe_attack1": {
       "length": 0.55,
-      "hold": 0.25,
+      "hold": 0.04,
       "return": 0.3,
       "impact": 0.22,
       "smooth": "tight",
@@ -4966,6 +4966,20 @@
             -7.9532
           ],
           "ease": "ease_in_out"
+        },
+        {
+          "t": 0.55,
+          "rotation": [
+            -86.2923,
+            50.0252,
+            8.6909
+          ],
+          "translation": [
+            -6.4279,
+            5.6666,
+            -7.3132
+          ],
+          "ease": "ease_in_out"
         }
       ],
       "third": {
@@ -4976,22 +4990,22 @@
     },
     "axe_attack2": {
       "length": 0.7,
-      "hold": 0.35,
+      "hold": 0.01,
       "return": 0.3,
       "impact": 0.24,
       "smooth": "tight",
       "keyframes": [
         {
-          "t": 0.0,
+          "t": 0,
           "rotation": [
-            -75.5188,
-            13.2279,
-            82.0697
+            -86.2923,
+            50.0252,
+            8.6909
           ],
           "translation": [
-            -6.7479,
-            5.4266,
-            -7.9532
+            -6.4279,
+            5.6666,
+            -7.3132
           ],
           "ease": "ease_out"
         },
@@ -5036,6 +5050,20 @@
             -5.2332
           ],
           "ease": "ease_in_out"
+        },
+        {
+          "t": 0.7,
+          "rotation": [
+            -60.2806,
+            -0.8,
+            18.8024
+          ],
+          "translation": [
+            -5.4679,
+            6.3066,
+            -4.1132
+          ],
+          "ease": "ease_in_out"
         }
       ],
       "third": {
@@ -5050,16 +5078,16 @@
       "smooth": "tight",
       "keyframes": [
         {
-          "t": 0.0,
+          "t": 0,
           "rotation": [
-            -75.1591,
-            -8.4098,
-            15.6356
+            -60.2806,
+            -0.8,
+            18.8024
           ],
           "translation": [
-            -6.1079,
-            5.9866,
-            -5.2332
+            -5.4679,
+            6.3066,
+            -4.1132
           ],
           "ease": "ease_out"
         },
@@ -5225,7 +5253,7 @@
     },
     "axe_dual_slam": {
       "length": 0.55,
-      "hold": 0.25,
+      "hold": 0.15,
       "return": 0.35,
       "impact": 0.2,
       "smooth": "tight",
@@ -5291,6 +5319,20 @@
             -5.3932
           ],
           "ease": "ease_in_out"
+        },
+        {
+          "t": 0.4,
+          "rotation": [
+            -63.8334,
+            -4.6926,
+            24.4631
+          ],
+          "translation": [
+            -2.9079,
+            6.1466,
+            -5.0732
+          ],
+          "ease": "ease_in_out"
         }
       ],
       "rotation_mode": "slerp",
@@ -5308,16 +5350,16 @@
       },
       "keyframes": [
         {
-          "t": 0.0,
+          "t": 0,
           "rotation": [
-            -68.3878,
-            -5.015,
-            24.9016
+            -63.8334,
+            -4.6926,
+            24.4631
           ],
           "translation": [
             -2.9079,
-            5.9866,
-            -5.3932
+            6.1466,
+            -5.0732
           ],
           "ease": "ease_out"
         },
@@ -11143,7 +11185,7 @@
     },
     "axe_dual_slam_off": {
       "length": 0.55,
-      "hold": 0.25,
+      "hold": 0.15,
       "return": 0.35,
       "impact": 0.2,
       "smooth": "tight",
@@ -11204,6 +11246,20 @@
             -7.5038,
             7.9102,
             -1.2141
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.4,
+          "rotation": [
+            34.714,
+            -8.8011,
+            160.6843
+          ],
+          "translation": [
+            -7.5038,
+            8.0702,
+            -0.8941
           ],
           "ease": "ease_in_out"
         }
@@ -13275,14 +13331,14 @@
         {
           "t": 0,
           "rotation": [
-            30.1607,
-            -8.3211,
-            160.941
+            34.714,
+            -8.8011,
+            160.6843
           ],
           "translation": [
             -7.5038,
-            7.9102,
-            -1.2141
+            8.0702,
+            -0.8941
           ],
           "ease": "ease_out"
         },
@@ -17580,6 +17636,179 @@
           "ease": "linear"
         }
       ]
+    },
+    "axe_dual_slam_repeat": {
+      "length": 0.55,
+      "hold": 0.15,
+      "return": 0.35,
+      "impact": 0.2,
+      "smooth": "tight",
+      "third": {
+        "mirror": true,
+        "no_cross": true,
+        "turn": -20,
+        "source": "axe_dual_slam_compact_third"
+      },
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            -63.8334,
+            -4.6926,
+            24.4631
+          ],
+          "translation": [
+            -2.9079,
+            6.1466,
+            -5.0732
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            16.0698,
+            2.667,
+            13.9949
+          ],
+          "translation": [
+            -2.9079,
+            7.9866,
+            -5.0732
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.2,
+          "rotation": [
+            -61.3566,
+            -4.3435,
+            23.9658
+          ],
+          "translation": [
+            -2.9079,
+            6.3866,
+            -6.0332
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            -68.3878,
+            -5.015,
+            24.9016
+          ],
+          "translation": [
+            -2.9079,
+            5.9866,
+            -5.3932
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.4,
+          "rotation": [
+            -63.8334,
+            -4.6926,
+            24.4631
+          ],
+          "translation": [
+            -2.9079,
+            6.1466,
+            -5.0732
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "rotation_mode": "slerp",
+      "fp_pose": "raised_inward_v1",
+      "f5_reference": "axe_dual_slam"
+    },
+    "axe_dual_slam_repeat_off": {
+      "length": 0.55,
+      "hold": 0.15,
+      "return": 0.35,
+      "impact": 0.2,
+      "smooth": "tight",
+      "third": {
+        "source": "axe_dual_slam_off_compact_third"
+      },
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            34.714,
+            -8.8011,
+            160.6843
+          ],
+          "translation": [
+            -7.5038,
+            8.0702,
+            -0.8941
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            113.2885,
+            -20.1932,
+            154.6689
+          ],
+          "translation": [
+            -7.5038,
+            9.9102,
+            -0.8941
+          ],
+          "ease": "ease_in"
+        },
+        {
+          "t": 0.2,
+          "rotation": [
+            37.1866,
+            -9.3432,
+            160.4093
+          ],
+          "translation": [
+            -7.5038,
+            8.3102,
+            -1.8541
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.3,
+          "rotation": [
+            30.1607,
+            -8.3211,
+            160.941
+          ],
+          "translation": [
+            -7.5038,
+            7.9102,
+            -1.2141
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.4,
+          "rotation": [
+            34.714,
+            -8.8011,
+            160.6843
+          ],
+          "translation": [
+            -7.5038,
+            8.0702,
+            -0.8941
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "rotation_mode": "slerp",
+      "fp_pose": "raised_inward_v1",
+      "f5_reference": "axe_dual_slam_off"
     }
   },
   "lmb_source": "axe",
@@ -17602,5 +17831,11 @@
     "mount_z": -9
   },
   "solo_r_reference": "8b7dd6d",
-  "fp_pose_version": "raised_inward_v1"
+  "fp_pose_version": "raised_inward_v1",
+  "firstperson_offset": [
+    0,
+    -0.64,
+    0.8
+  ],
+  "fp_flow_version": "linked_v1"
 }

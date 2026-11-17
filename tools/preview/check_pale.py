@@ -18,11 +18,12 @@ for name in('attack1','attack2','attack3','dual_chop','dual_chop_third','dual_sl
  if expected.get('third',{}).get('source'):expected['third']['source']='axe_'+expected['third']['source']
  assert anims['axe_'+name+'_raw']==expected,('donor animation changed',name)
 for group in('steps','dual_steps'):
- for actual,expected in zip(c[group],donor[group]):
+ for index,(actual,expected) in enumerate(zip(c[group],donor[group])):
   for field in('duration','hit','speed','late','second_hit'):
    assert actual.get(field)==expected.get(field),(group,field,actual)
   for field in('anim','off_anim'):
    wanted=('axe_'+expected[field])if expected.get(field)else expected.get(field)
+   if group=='dual_steps' and index==3 and wanted:wanted+='_repeat'
    if field=='off_anim' and wanted:wanted+='_off'
    assert actual.get(field)==wanted,(group,field)
 print('PASS: 3 solo / 5 paired steps; seven literal raw axe clips including F5 source; raised camera-space FP; independent synchronized off-hand; donor timing/late/speed; authored Display retained')

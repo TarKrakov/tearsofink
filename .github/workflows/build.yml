@@ -33,6 +33,8 @@ jobs:
         run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale.py
       - name: validate first-person composition and compiled renderer
         run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale_fp.py --compiled
+      - name: validate connected FP series and shared camera mount
+        run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale_flow.py
       - name: validate paired attack handoffs
         run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale_sync.py
       - name: review clip curves and whole-model visibility

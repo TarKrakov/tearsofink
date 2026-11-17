@@ -63,6 +63,8 @@ public final class WeaponAnims {
 	}
 
 	private static final Map<String, ThirdTune> THIRD = new HashMap<>();
+	/** Camera-only composition, in model pixels; never used by ThirdPerson. */
+	private static final Map<String, Vector3f> FIRST_PERSON_OFFSET = new HashMap<>();
 
 	public static ThirdTune thirdTune(Archetype a) {
 		return THIRD.getOrDefault(a.id, ThirdTune.DEFAULT);
@@ -123,6 +125,7 @@ public final class WeaponAnims {
 				CLIPS.clear();
 				GRIP.clear();
 				THIRD.clear();
+				FIRST_PERSON_OFFSET.clear();
 				ThirdPerson.clear();
 				for (Archetype a : Archetype.values()) {
 					var res = manager.getResource(TearsOfInk.id("weapon_anims/" + a.id + ".json"));
@@ -130,6 +133,7 @@ public final class WeaponAnims {
 					try (Reader r = res.get().openAsReader()) {
 						JsonObject root = JsonParser.parseReader(r).getAsJsonObject();
 						CLIPS.put(a.id, parse(root));
+						if (root.has("firstperson_offset")) FIRST_PERSON_OFFSET.put(a.id, vec(root, "firstperson_offset", new Vector3f()));
 						if (root.has("grip")) GRIP.put(a.id, vec(root, "grip", new Vector3f(8, 8, 8)));
 						if (root.has("third")) {
 							JsonObject t = root.getAsJsonObject("third");
@@ -251,6 +255,11 @@ public final class WeaponAnims {
 		if (ctx == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND) arm = HumanoidArm.RIGHT;
 		else if (ctx == ItemDisplayContext.FIRST_PERSON_LEFT_HAND) arm = HumanoidArm.LEFT;
 		else return false;
+		// This mount also applies when no clip is playing, so idle/attack/ability
+		// transitions share the same camera frame without a composition pop.
+		Archetype held = Archetype.of(stack);
+		Vector3f offset = held == null ? null : FIRST_PERSON_OFFSET.get(held.id);
+		if (offset != null) pose.translate((left ? -offset.x : offset.x) / 16f, offset.y / 16f, offset.z / 16f);
 		Playing p = ARMS[arm.ordinal()];
 		if (p == null) return false;
 		float t = p.time();

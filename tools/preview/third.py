@@ -231,7 +231,8 @@ def steve_and_items(arms, wrist, items, body_yaw):
 
 def fp_quads(model, fp, rot, pos, grip, left=False):
     m_ = -1 if left else 1
-    m = T([m_*0.56, -0.52, -0.72]) @ T([m_*pos[0]/16, pos[1]/16, pos[2]/16])
+    offset=np.array(model.get('_fp_offset',[0,0,0]),float)/16;offset[0]*=m_
+    m = T(offset) @ T([m_*0.56, -0.52, -0.72]) @ T([m_*pos[0]/16, pos[1]/16, pos[2]/16])
     R = Rx(D(rot[0])) @ Ry(D(m_*rot[1])) @ Rz(D(m_*rot[2]))
     if grip is not None:
         g = grip_point(grip, fp) * np.array([m_,1,1])
@@ -332,8 +333,10 @@ def tp_item_m(am, tp, handle, W, m, push=0):
         g = gp(handle, tp, m); mm = mm @ T(g) @ M4(R=W) @ T(-g)
     return mm @ T(dT(tp, m)) @ M4(R=dR(tp, m)) @ M4(s=dS(tp)) @ T([-.5,-.5,-.5])
 
-def fp_item_m(fp, rot, pos, grip, m, equipped=0):
-    mm = T([m*0.56, -0.52-.6*equipped, -0.72]) @ T([m*pos[0]/16, pos[1]/16, pos[2]/16])
+def fp_item_m(fp, rot, pos, grip, m, equipped=0, view_offset=None):
+    offset=np.array(view_offset if view_offset is not None else [0,0,0],float)/16
+    offset[0]*=m
+    mm = T(offset) @ T([m*0.56, -0.52-.6*equipped, -0.72]) @ T([m*pos[0]/16, pos[1]/16, pos[2]/16])
     R = Rx(D(rot[0])) @ Ry(D(m*rot[1])) @ Rz(D(m*rot[2]))
     if grip is not None:
         g = gp(grip, fp, m); mm = mm @ T(g) @ M4(R=R) @ T(-g)
