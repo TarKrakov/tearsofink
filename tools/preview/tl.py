@@ -13,9 +13,9 @@ def hand_pose(arch, model, grip, c, t, m, tune, continuing=False):
         handle, tip = axis(model, disp['firstperson_righthand'], grip)
     rot, pos = sample(c, t); w = weight(c, t)
     if continuing: w = ease("ease_in_out", min(1, max(0, (end_time(c)-t)/(c.get("return", .3) if c.get("hold", 0) > 0 else .15))))
-    src = c.get('third', {}).get('source')
+    fx = dict(c.get('third', {}))  # correction belongs to the original clip, not its F5 source
+    src = fx.get('source')
     if src: c = dict(c, keyframes=json.load(open(f'{REPO}/weapon_anims/{arch}.json'))['animations'][src]['keyframes'])  # третье лицо — по другому движению
-    fx = dict(c.get('third', {}))
     if tune.get('centre'): fx['_keep_face'] = True
     x, y, W, P = solve4(disp, m, c, t, tune, fx, grip, handle, tip)
     v0 = VANILLA_ARM
