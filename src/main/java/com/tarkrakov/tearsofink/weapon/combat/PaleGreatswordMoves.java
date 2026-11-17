@@ -38,10 +38,10 @@ import java.util.UUID;
 public final class PaleGreatswordMoves {
     private static final Archetype ARCH = Archetype.PALE_LINEAR_GREATSWORD;
     private static final TagKey<Block> SOFT = TagKey.create(Registries.BLOCK, TearsOfInk.id("pale_dash_soft"));
-    private enum Phase { IDLE, SINGLE_WINDOW, SINGLE_DASH, BACKSTEP, PARRY, LEAP, SLAM, CHARGE, DUAL_DASH, RECOVER }
+    private enum Phase { IDLE, SINGLE_WINDOW, SINGLE_DASH, BACKSTEP, GUARD, PARRY, LEAP, SLAM, CHARGE, DUAL_DASH, RECOVER }
     private static final class State {
         Phase phase = Phase.IDLE;
-        long until, started, parryUntil, singleReady, dualReady, chargeReady, backstepReady;
+        long until, started, parryUntil, singleReady, dualReady, chargeReady, backstepReady, guardReady;
         PaleGreatswordBalance.Tuning tuning;
         boolean left, paired, parried, killed, airborne, slammed;
         int broken;
@@ -54,6 +54,9 @@ public final class PaleGreatswordMoves {
         final Set<UUID> hit = new HashSet<>();
     }
     private static final Map<UUID, State> STATES = new HashMap<>();
+    // This guard lets the original hit be replaced with one smaller hit. Damage events
+    // fire again for that nested call, just as they do in ShieldStance.
+    private static boolean passingGuardDamage;
     private record DamageWeapon(ServerPlayer player, ItemStack stack) {}
     private static final ThreadLocal<DamageWeapon> DAMAGE_WEAPON = new ThreadLocal<>();
 
@@ -134,7 +137,27 @@ public final class PaleGreatswordMoves {
             State s = STATES.get(p.getUUID());
             net.minecraft.world.entity.Entity attacker = source.getEntity() != null
                     ? source.getEntity() : source.getDirectEntity();
-            // Melee, arrows and other sourced attacks can all trigger this parry.
+            // Shift+R is a damage-reducing block, NOT a full parry: it never
+            // triggers the counter or cancels the hit's knockback. Only incoming
+            // attacks in front of the guarding blades are reduced.
+            if (!passingGuardDamage && s != null && s.phase == Phase.GUARD && now(p) < s.until
+                    && available(p) && valid(p, s) && amount > 0
+                    && !source.is(DamageTypeTags.BYPASSES_SHIELD)
+                    && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)
+                    && guardFacing(p, source)) {
+                var guard = s.tuning.shiftGuard();
+                float reduction = s.paired ? guard.dualReduction() : guard.singleReduction();
+                passingGuardDamage = true;
+                try {
+                    p.hurt(source, amount * (1f - reduction));
+                } finally {
+                    passingGuardDamage = false;
+                }
+                p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.SHIELD_BLOCK,
+                        net.minecraft.sounds.SoundSource.PLAYERS, 0.65f, s.paired ? 0.95f : 1.1f);
+                return false;
+            }
+            // Existing full parry remains exclusive to ordinary R with a pair.
             // Environmental fall/void damage must not trigger it.
             if (s == null || s.phase != Phase.PARRY || s.parried || now(p) > s.parryUntil
                     || !valid(p, s) || amount <= 0 || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)
@@ -210,11 +233,57 @@ public final class PaleGreatswordMoves {
                         }
                         if (time >= s.until) s.phase = Phase.IDLE;
                     }
-                    case RECOVER -> { if (time >= s.until) s.phase = Phase.IDLE; }
+                    case RECOVER, GUARD -> { if (time >= s.until) s.phase = Phase.IDLE; }
                     default -> {}
                 }
             }
         });
+    }
+
+    /** Shift+R: a short frontal block, independent of the offensive R chain. */
+    public static void guard(ServerPlayer p) {
+        if (!available(p)) return;
+        boolean main = isWeapon(p.getMainHandItem());
+        boolean off = isWeapon(p.getOffhandItem());
+        if (!main && !off) return;
+        // A different two-handed weapon in the main hand occupies the offhand.
+        if (!main && com.tarkrakov.tearsofink.weapon.InkGreatswordItem.twoHanded(p.getMainHandItem())) return;
+        State s = state(p);
+        if (s.phase != Phase.IDLE && !valid(p, s)) cancel(p, s);
+        if (s.phase != Phase.IDLE || now(p) < s.guardReady) return;
+        var tune = PaleGreatswordBalance.get();
+        var block = tune.shiftGuard();
+        boolean pair = main && off;
+        boolean left = !main;
+        int duration = pair ? block.dualDurationTicks() : block.singleDurationTicks();
+        int cooldown = pair ? block.dualCooldownTicks() : block.singleCooldownTicks();
+
+        s.tuning = tune;
+        s.owner = p; s.level = p.serverLevel();
+        s.main = p.getMainHandItem(); s.off = p.getOffhandItem();
+        s.left = left; s.paired = pair; s.started = now(p);
+        s.phase = Phase.GUARD; s.until = now(p) + duration;
+        s.guardReady = cooldown(p, s, cooldown);
+        play(p, s, pair ? "dual_guard" : "guard", pair ? "dual_guard_off" : null, duration);
+        // Free ordinary technique; the existing weapon-wear economy still applies.
+        ItemStack sword = left ? s.off : s.main;
+        com.tarkrakov.tearsofink.weapon.forge.Gear.wear(p, sword,
+                com.tarkrakov.tearsofink.weapon.forge.Gear.WEAR_ABILITY);
+        Awakening.abilityUsed(p);
+        p.serverLevel().playSound(null, p.blockPosition(),
+                net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_IRON.value(),
+                net.minecraft.sounds.SoundSource.PLAYERS, 0.65f, pair ? 0.9f : 1.1f);
+    }
+
+    private static boolean guardFacing(ServerPlayer p, net.minecraft.world.damagesource.DamageSource source) {
+        Vec3 sourcePos = source.getSourcePosition();
+        if (sourcePos == null) return false; // no protection against fire, falling or the void
+        Vec3 to = sourcePos.subtract(p.position()).multiply(1, 0, 1);
+        if (to.lengthSqr() < 1.0e-4) return true;
+        State s = STATES.get(p.getUUID());
+        if (s == null) return false;
+        double arc = s.paired ? s.tuning.shiftGuard().dualArc() : s.tuning.shiftGuard().singleArc();
+        return flat(p).dot(to.normalize()) >= Math.cos(Math.toRadians(arc / 2));
     }
 
     public static void useR(ServerPlayer p, boolean left) {
