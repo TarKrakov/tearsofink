@@ -1,6 +1,6 @@
 # Бледный линейный двуручник — аудит боевого баланса (17 ноября 2026)
 
-**Статус: технический аудит и предложения, НЕ утверждённая перебалансировка.** Сверены текущие `main`-ресурсы после переноса анимаций Claude с топоров: `weapon_combos/pale_linear_greatsword.json`, `weapon_moves/pale_linear_greatsword.json`, `PaleGreatswordMoves.java`, `PaleGreatswordBalance.java`, `Combat.java`, `ModItems.java`, `Gear.java`, `Awakening.java`, `Skills.java`, региональные рецепты и настройки мобов. Игровые изменения при аудите **не вносились**. Приведённые DPS — грубые теоретические ориентиры, не реальные измерения в Minecraft.
+**Исторический аудит до фактической балансировки D-028.** Числа ниже описывают состояние ДО изменения; текущие значения — в [PALE_MOVE_BALANCE.md](PALE_MOVE_BALANCE.md) и игровых JSON. Актуальная реализация внесена непосредственно в `main`. Сверены текущие `main`-ресурсы после переноса анимаций Claude с топоров: `weapon_combos/pale_linear_greatsword.json`, `weapon_moves/pale_linear_greatsword.json`, `PaleGreatswordMoves.java`, `PaleGreatswordBalance.java`, `Combat.java`, `ModItems.java`, `Gear.java`, `Awakening.java`, `Skills.java`, региональные рецепты и настройки мобов. Игровые изменения при аудите **не вносились**. Приведённые DPS — грубые теоретические ориентиры, не реальные измерения в Minecraft.
 
 ## Сводка текущих чисел
 
