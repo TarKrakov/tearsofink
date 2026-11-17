@@ -18,11 +18,18 @@ public final class PaleGreatswordBalance {
                           double dashDistance, float dashDamageMultiplier, int dashTicks) {}
     public record Backstep(Sweep sweep, int hitTicks, int durationTicks, int cooldownTicks,
                            double backwardSpeed, double upwardSpeed) {}
-    public record Tuning(SingleR singleR, Backstep backstep) {}
+    public record DualR(int parryTicks, int followupWindowTicks, int cooldownTicks,
+                        float repelDamageMultiplier, double repelReach, double repelKnockback,
+                        float slamDamageMultiplier, double slamReach, double slamKnockback) {}
+    public record DualCharge(int cooldownTicks, double dashDistance, float minDamageMultiplier,
+                             float maxDamageMultiplier) {}
+    public record Tuning(SingleR singleR, Backstep backstep, DualR dualR, DualCharge dualCharge) {}
 
     private static final Tuning DEFAULT = new Tuning(
-            new SingleR(new Sweep(.75f, 3.6, 140, 1.1), 14, 70, 180, 4, 1.2f, 18),
-            new Backstep(new Sweep(.35f, 3, 120, .45), 3, 12, 50, .48, .12));
+            new SingleR(new Sweep(.70f, 3.4, 125, 1.0), 14, 48, 160, 4, 1.10f, 18),
+            new Backstep(new Sweep(.35f, 2.8, 110, .45), 3, 12, 70, .42, .12),
+            new DualR(16, 64, 240, .30f, 3.1, 1.1, 1.25f, 3.1, .6),
+            new DualCharge(260, 5.5, 1.10f, 1.8f));
     private static Tuning current = DEFAULT;
     private PaleGreatswordBalance() {}
     public static Tuning get() { return current; }
@@ -45,7 +52,9 @@ public final class PaleGreatswordBalance {
 
     static Tuning parse(JsonObject root) {
         JsonObject r = section(root, "single_r"), b = section(root, "backstep");
+        JsonObject p = section(root, "dual_r"), c = section(root, "dual_charge");
         SingleR d = DEFAULT.singleR(); Backstep k = DEFAULT.backstep();
+        DualR pd = DEFAULT.dualR(); DualCharge cd = DEFAULT.dualCharge();
         SingleR single = new SingleR(sweep(r, d.sweep()), ticks(r,"sweep_ticks",d.sweepTicks()),
                 ticks(r,"window_ticks",d.windowTicks()), ticks(r,"cooldown_ticks",d.cooldownTicks()),
                 number(r,"dash_distance",d.dashDistance(),.1,32),
@@ -53,8 +62,24 @@ public final class PaleGreatswordBalance {
         Backstep back = new Backstep(sweep(b,k.sweep()), ticks(b,"hit_ticks",k.hitTicks()),
                 ticks(b,"duration_ticks",k.durationTicks()), ticks(b,"cooldown_ticks",k.cooldownTicks()),
                 number(b,"backward_speed",k.backwardSpeed(),0,2), number(b,"upward_speed",k.upwardSpeed(),0,1));
+        DualR dualR = new DualR(ticks(p,"parry_ticks",pd.parryTicks()),
+                ticks(p,"followup_window_ticks",pd.followupWindowTicks()),
+                ticks(p,"cooldown_ticks",pd.cooldownTicks()),
+                (float) number(p,"repel_damage_multiplier",pd.repelDamageMultiplier(),0,100),
+                number(p,"repel_reach",pd.repelReach(),.1,32),
+                number(p,"repel_knockback",pd.repelKnockback(),0,8),
+                (float) number(p,"slam_damage_multiplier",pd.slamDamageMultiplier(),0,100),
+                number(p,"slam_reach",pd.slamReach(),.1,32),
+                number(p,"slam_knockback",pd.slamKnockback(),0,8));
+        DualCharge dualCharge = new DualCharge(ticks(c,"cooldown_ticks",cd.cooldownTicks()),
+                number(c,"dash_distance",cd.dashDistance(),.1,32),
+                (float) number(c,"min_damage_multiplier",cd.minDamageMultiplier(),0,100),
+                (float) number(c,"max_damage_multiplier",cd.maxDamageMultiplier(),0,100));
         if (back.hitTicks() >= back.durationTicks()) throw new IllegalArgumentException("backstep hit_ticks must be before duration_ticks");
-        return new Tuning(single,back);
+        if (dualR.parryTicks() > dualR.followupWindowTicks()) throw new IllegalArgumentException("dual_r parry_ticks must fit followup_window_ticks");
+        if (dualCharge.minDamageMultiplier() > dualCharge.maxDamageMultiplier())
+            throw new IllegalArgumentException("dual_charge min_damage_multiplier must not exceed max_damage_multiplier");
+        return new Tuning(single, back, dualR, dualCharge);
     }
     private static Sweep sweep(JsonObject o, Sweep d) {
         return new Sweep((float) number(o,"damage_multiplier",d.damageMultiplier(),0,100),
