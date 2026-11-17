@@ -30,7 +30,11 @@ public final class Combos {
 	 * late — своё окно «чуть позже» после этого удара в тиках (-1 — общее reset_ticks).
 	 */
 	public record Step(String anim, int duration, int hit, float damage, float reach, float arc, float knockback, float speed,
-					   String offAnim, int late) {
+					   String offAnim, int late, int secondHit) {
+		public Step(String anim, int duration, int hit, float damage, float reach, float arc, float knockback, float speed,
+				String offAnim, int late) {
+			this(anim, duration, hit, damage, reach, arc, knockback, speed, offAnim, late, -1);
+		}
 		public Step(String anim, int duration, int hit, float damage, float reach, float arc, float knockback, float speed) {
 			this(anim, duration, hit, damage, reach, arc, knockback, speed, null, -1);
 		}
@@ -96,7 +100,8 @@ public final class Combos {
 					s.has("knockback") ? s.get("knockback").getAsFloat() : 0.4f,
 					s.has("speed") ? s.get("speed").getAsFloat() : 1f,
 					s.has("off_anim") ? s.get("off_anim").getAsString() : null,
-					s.has("late") ? s.get("late").getAsInt() : -1));
+					s.has("late") ? s.get("late").getAsInt() : -1,
+					s.has("second_hit") ? s.get("second_hit").getAsInt() : -1));
 		}
 		return steps;
 	}

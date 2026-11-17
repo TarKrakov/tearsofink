@@ -76,10 +76,14 @@ public final class Combat {
 		boolean queued;      // нажал чуть раньше — удар запомнен
 		long queuedAt;
 		boolean dual;        // идёт парная связка (клинки в обеих руках)
+		ItemStack paleMain, paleOff; // отмена пилотной серии при смене экземпляра/хвата
+		final java.util.Set<UUID> firstHit = new java.util.HashSet<>();
 		int window = 30;     // окно «чуть позже» после последнего удара
 	}
 
-	private record Pending(long at, Archetype archetype, Combos.Step step) {}
+	private record Pending(long at, Archetype archetype, Combos.Step step, float scale) {
+		Pending(long at, Archetype archetype, Combos.Step step) { this(at, archetype, step, 1f); }
+	}
 
 	private static final Map<UUID, State> STATES = new HashMap<>();
 
@@ -101,7 +105,22 @@ public final class Combat {
 	}
 
 	private static State state(ServerPlayer p) {
-		return STATES.computeIfAbsent(p.getUUID(), u -> new State());
+		State s = STATES.computeIfAbsent(p.getUUID(), u -> new State());
+		cancelPaleOnSwap(p, s, p.serverLevel().getGameTime());
+		return s;
+	}
+
+	private static void cancelPaleOnSwap(ServerPlayer p, State s, long now) {
+		if (s.paleMain == null || (p.isAlive() && p.getMainHandItem() == s.paleMain && p.getOffhandItem() == s.paleOff)) return;
+		s.hitAt = -1;
+		s.extra.clear();
+		s.firstHit.clear();
+		s.queued = false;
+		s.next = 0;
+		s.busyUntil = now;
+		s.speed = 1f;
+		s.carry = 0;
+		s.paleMain = s.paleOff = null;
 	}
 
 	/** Удар связки ещё не дошёл (урон впереди). */
@@ -145,6 +164,7 @@ public final class Combat {
 	private static void swing(ServerPlayer p) {
 		if (!p.isAlive() || p.isSpectator()) return;
 		if (com.tarkrakov.tearsofink.weapon.blood.Parry.active(p)) return; // в стойке парирования бить нельзя
+		if (PaleGreatswordMoves.locked(p)) return;
 		ItemStack weapon = p.getMainHandItem();
 		Archetype a = Archetype.of(weapon);
 		if (a == null) return;
@@ -198,6 +218,13 @@ public final class Combat {
 		s.hitArchetype = a;
 		s.hitStep = step;
 		s.hitScale = scale;
+		s.firstHit.clear();
+		if (a == Archetype.PALE_LINEAR_GREATSWORD) {
+			s.paleMain = p.getMainHandItem();
+			s.paleOff = p.getOffhandItem();
+		} else s.paleMain = s.paleOff = null;
+		if (step.secondHit() >= 0)
+			s.extra.add(new Pending(now + combo.scaled(step.secondHit()), a, step, scale));
 		s.speed = step.speed() * combo.tempo();
 		s.carry = 0;
 		p.resetAttackStrengthTicker();
@@ -265,6 +292,12 @@ public final class Combat {
 		s.lastEnd = s.busyUntil;
 		s.next = 0;
 		s.queued = false;
+		if (a == Archetype.PALE_LINEAR_GREATSWORD) {
+			s.paleMain = s.paleOff = null;
+			s.hitAt = -1;
+			s.extra.clear();
+			s.firstHit.clear();
+		}
 		if (mainAnim != null) broadcast(p, a, mainAnim, ticks, -1f, 1f);
 		if (offAnim != null) broadcast(p, a, "off:" + offAnim, ticks, -1f, 1f);
 	}
@@ -312,6 +345,7 @@ public final class Combat {
 			ServerPlayer p = server.getPlayerList().getPlayer(e.getKey());
 			if (p == null) continue;
 			long now = p.serverLevel().getGameTime();
+			cancelPaleOnSwap(p, s, now);
 			if (s.speed != 1f) {
 				s.carry = fastFill(p, s.speed, s.carry);
 				if (p.getAttackStrengthScale(0) >= 1f) s.speed = 1f;
@@ -322,7 +356,7 @@ public final class Combat {
 					Pending h = it.next();
 					if (now < h.at()) continue;
 					it.remove();
-					if (p.isAlive() && Archetype.of(p.getMainHandItem()) == h.archetype()) strike(p, h.step(), 1f);
+					if (p.isAlive() && Archetype.of(p.getMainHandItem()) == h.archetype()) strike(p, h.step(), h.scale(), h.step().secondHit() >= 0);
 				}
 			}
 			if (s.hitAt >= 0 && now >= s.hitAt) {
@@ -342,6 +376,10 @@ public final class Combat {
 
 	/** Урон по дуге перед игроком. */
 	private static void strike(ServerPlayer p, Combos.Step step, float scale) {
+		strike(p, step, scale, false);
+	}
+
+	private static void strike(ServerPlayer p, Combos.Step step, float scale, boolean second) {
 		ServerLevel level = p.serverLevel();
 		ItemStack weapon = p.getMainHandItem();
 		Vec3 eye = p.getEyePosition();
@@ -372,6 +410,10 @@ public final class Combat {
 			if (bastion) dmg *= com.tarkrakov.tearsofink.weapon.shield.ShieldStance.strongMult(t)
 					* (riposte ? com.tarkrakov.tearsofink.weapon.shield.ShieldTuning.RIPOSTE_MULT : 1f);
 			com.tarkrakov.tearsofink.weapon.forge.Awakening.comboHit = true; // удар связки — не приём («Разящий приём»)
+			// Второй укол той же пары доходит даже в ванильные 10 тиков неуязвимости.
+			// Чужие попадания и несвязанные серии не сбрасывают эту защиту.
+			State s = state(p);
+			if (second && s.firstHit.contains(t.getUUID())) t.invulnerableTime = 0;
 			boolean hurt;
 			try {
 				hurt = t.hurt(src, dmg);
@@ -379,6 +421,7 @@ public final class Combat {
 				com.tarkrakov.tearsofink.weapon.forge.Awakening.comboHit = false;
 			}
 			if (hurt) {
+				if (step.secondHit() >= 0 && !second) s.firstHit.add(t.getUUID());
 				hitAny = true;
 				if (riposte) com.tarkrakov.tearsofink.weapon.shield.ShieldStance.riposteHit(p, t);
 				com.tarkrakov.tearsofink.weapon.blood.Bleeding.onWeaponHit(p, weapon, t);

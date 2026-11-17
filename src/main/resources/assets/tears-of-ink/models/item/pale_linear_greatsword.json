@@ -1,6 +1,34 @@
 {
-  "parent": "minecraft:item/handheld",
-  "textures": {
-    "layer0": "tears-of-ink:item/pale_linear_greatsword"
+  "parent": "tears-of-ink:item/pale_linear_great",
+  "display": {
+    "firstperson_lefthand": {
+      "rotation": [
+        -57.38,
+        -71.6,
+        42.49
+      ],
+      "translation": [
+        -1.62,
+        2.2,
+        1.13
+      ],
+      "scale": [
+        0.68,
+        0.68,
+        0.68
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        -47.61,
+        -78.16,
+        -2.37
+      ],
+      "translation": [
+        0,
+        2.75,
+        -2.5
+      ]
+    }
   }
 }

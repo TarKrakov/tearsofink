@@ -3,7 +3,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from run import *
 from PIL import ImageFont
 FONT = ImageFont.truetype('/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf', 13)
-TWO = {'executioner'}
+TWO = {'executioner', 'pale_linear_greatsword'}
 
 def aim(P, m, tune):
     S = np.array([m*5/16, -0.245, 0])

@@ -5,12 +5,18 @@ sys.path.insert(0, os.path.dirname(__file__))
 from third import *
 
 FP_FOV = 70
-ITEM = {'executioner':'spire_torturer_greatsword','axe':'spire_roaring_axe','dagger':'spire_rapid_knife','scimitar':'spire_shadow_scimitar','talwar':'blood_talvar','dussak':'blood_dussak'}
+ITEM = {'executioner':'spire_torturer_greatsword','axe':'spire_roaring_axe','dagger':'spire_rapid_knife','scimitar':'spire_shadow_scimitar','talwar':'blood_talvar','dussak':'blood_dussak','pale_linear_greatsword':'pale_linear_great'}
 TUNE = dict(reach=1.3, body=0.3, body_max=25, lead=0.5)
 
 def load(arch):
     a = json.load(open(f'{REPO}/weapon_anims/{arch}.json'))
     m = json.load(open(f'{REPO}/models/item/{ITEM[arch]}.json'))
+    # Merge item-specific transforms, preserving Blockbench geometry and source model.
+    # The registered greatsword uses an alias model that provides matching left-hand poses.
+    alias_path = f'{REPO}/models/item/{arch}.json'
+    if arch == 'pale_linear_greatsword':
+        overlay = json.load(open(alias_path))
+        m['display'] = {**m['display'], **overlay.get('display', {})}
     disp = m['display']
     return a, m, disp['firstperson_righthand'], disp['thirdperson_righthand'], a.get('grip')
 
@@ -57,4 +63,5 @@ def sheet(arch, clips=None, n=6, out=None, tune=TUNE):
 
 if __name__ == '__main__':
     arch = sys.argv[1]; clips = sys.argv[2].split(',') if len(sys.argv) > 2 else None
-    sheet(arch, clips, out=f'/home/claude/preview/{arch}_{"_".join(clips) if clips else "all"}.png')
+    os.makedirs('out', exist_ok=True)
+    sheet(arch, clips, out=f'out/{arch}_{"_".join(clips) if clips else "all"}.png')

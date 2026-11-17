@@ -6,7 +6,7 @@ import com.tarkrakov.tearsofink.weapon.InkGreatswordItem;
 
 /**
  * Обычное оружие линии (крафт на верстаке из слитков и палок): лёгкий одноручный и тяжёлый двуручный меч.
- * Удары — архетипа (лёгкий — Скимитары, тяжёлый — Палачи), без приёма на R и без парного ПКМ.
+ * Удары — своего архетипа. Бледный линейный двуручник имеет собственные бесплатные приёмы.
  * Пассивки: Кровь — шанс кровотечения, Шпиль — быстрее, Чернила — замедляют (Gear).
  */
 public class OrdinaryWeaponItem extends InkGreatswordItem {
@@ -24,6 +24,46 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
 
 	@Override
 	public Skill ability() {
-		return null;
+		return this == com.tarkrakov.tearsofink.item.ModItems.PALE_LINEAR_GREATSWORD
+				? com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.SINGLE : null;
+	}
+
+	@Override
+	public net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> use(net.minecraft.world.level.Level level,
+			net.minecraft.world.entity.player.Player player, net.minecraft.world.InteractionHand hand) {
+		if (hand == net.minecraft.world.InteractionHand.MAIN_HAND
+				&& com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.dual(player)) {
+			var stack = player.getItemInHand(hand);
+			if (player instanceof net.minecraft.server.level.ServerPlayer sp
+					&& !com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.charge(sp))
+				return net.minecraft.world.InteractionResultHolder.fail(stack);
+			player.startUsingItem(hand);
+			return net.minecraft.world.InteractionResultHolder.consume(stack);
+		}
+		return super.use(level, player, hand);
+	}
+
+	@Override
+	public void onUseTick(net.minecraft.world.level.Level level, net.minecraft.world.entity.LivingEntity entity,
+			net.minecraft.world.item.ItemStack stack, int remaining) {
+		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(stack)) {
+			if (entity instanceof net.minecraft.server.level.ServerPlayer sp) {
+				if (!com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.dual(sp)) sp.stopUsingItem();
+				else if (getUseDuration(stack, entity) - remaining >= 30) sp.releaseUsingItem();
+			}
+			return;
+		}
+		super.onUseTick(level, entity, stack, remaining);
+	}
+
+	@Override
+	public void releaseUsing(net.minecraft.world.item.ItemStack stack, net.minecraft.world.level.Level level,
+			net.minecraft.world.entity.LivingEntity entity, int timeLeft) {
+		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(stack)) {
+			if (entity instanceof net.minecraft.server.level.ServerPlayer sp)
+				com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.release(sp);
+			return;
+		}
+		super.releaseUsing(stack, level, entity, timeLeft);
 	}
 }
