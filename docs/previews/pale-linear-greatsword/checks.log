@@ -1,47 +1,50 @@
+fp-check
+PASS: all 29 F5 source/fix/timing snapshots unchanged from 28a2a80
+PASS: vanilla independent equip offsets reproduced (up to .6 blocks); corrected FP pair matches in 16:9 screen space
+PASS: full blade visible on hits; high curved opening, straight thrust, inward paired tips, raised charge
+PASS: charge is exactly +6px Y at the held keys; original angles/X/Z unchanged
+PASS: compiled renderer checks both swing/equip and passes neutral 0/0, including pale NONE-use; legacy path preserved
+
 check
-PASS: 3 solo / 5 paired steps; seven literal raw axe clips including F5 source; compact FP mounting -9px Z; independent synchronized off-hand; donor timing/late/speed; authored Display retained
+PASS: 3 solo / 5 paired steps; seven literal raw axe clips including F5 source; raised camera-space FP; independent synchronized off-hand; donor timing/late/speed; authored Display retained
 PASS: 1260 finite full-mesh/pivot samples; handles back/up, tips down/in; crossed guard; straight raised-to-ground slam at server tick 4
 PASS: closer grips, reduced low excursion, held alternating handoff, exact single R from 8b7dd6d
 
 sync
-PASS: actual steps 3/4 at120Hz: mirrored FP grip/tip 0.00000326 blocks; F5 axis 0.00000013; authored grip difference 0.07028 blocks
-PASS: edge-first downward impacts in both hands; normal/velocity FP 0.0487 / F5 0.0387
-PASS: axial turn preserves pre-turn FP path / arm angles / F5 path; max errors [7.286986603016743e-08, 0.0004538415096376758, 0.0012594084703052566]
+PASS: actual steps 3/4 at120Hz: mirrored FP grip/tip 0.00000304 blocks; F5 axis 0.00000013; authored grip difference 0.07028 blocks
+PASS: edge-first downward impacts in both hands; normal/velocity FP 0.0400 / F5 0.0387
+PASS: accepted F5 arm angles / path preserved; max errors [0.0004538415096376758, 0.0012594084703052566]
 
 review
-Reviewed 13 clips for pale_linear_greatsword; warnings: 12
-REVIEW: axe_attack2: abrupt keyframe velocity change (25.0); inspect blending
-REVIEW: axe_attack3: abrupt keyframe velocity change (11.1); inspect blending
-REVIEW: axe_dual_chop: unusually large per-sample tip movement; inspect curve
-REVIEW: axe_dual_chop: abrupt keyframe velocity change (16.2); inspect blending
-REVIEW: axe_dual_chop_off: unusually large per-sample tip movement; inspect curve
-REVIEW: axe_dual_chop_off: abrupt keyframe velocity change (16.2); inspect blending
-REVIEW: axe_dual_slam: abrupt keyframe velocity change (29.6); inspect blending
-REVIEW: axe_dual_slam_off: abrupt keyframe velocity change (29.6); inspect blending
+Reviewed 13 clips for pale_linear_greatsword; warnings: 10
+REVIEW: axe_attack1: abrupt keyframe velocity change (20.9); inspect blending
+REVIEW: axe_attack2: abrupt keyframe velocity change (18.8); inspect blending
+REVIEW: axe_dual_chop: abrupt keyframe velocity change (16.7); inspect blending
+REVIEW: axe_dual_chop_off: abrupt keyframe velocity change (16.7); inspect blending
+REVIEW: axe_dual_slam: abrupt keyframe velocity change (21.5); inspect blending
+REVIEW: axe_dual_slam_off: abrupt keyframe velocity change (21.5); inspect blending
 REVIEW: axe_dual_slam_final: unusually large per-sample tip movement; inspect curve
-REVIEW: axe_dual_slam_final: abrupt keyframe velocity change (29.7); inspect blending
+REVIEW: axe_dual_slam_final: abrupt keyframe velocity change (23.4); inspect blending
 REVIEW: axe_dual_slam_final_off: unusually large per-sample tip movement; inspect curve
-REVIEW: axe_dual_slam_final_off: abrupt keyframe velocity change (29.8); inspect blending
-Report: work/compact-pass/review/pale_linear_greatsword/report.json
+REVIEW: axe_dual_slam_final_off: abrupt keyframe velocity change (23.4); inspect blending
+Report: work/fp-fix/review/pale_linear_greatsword/report.json
 
-review-render
-Reviewed 13 clips for pale_linear_greatsword; warnings: 12
-REVIEW: axe_attack2: abrupt keyframe velocity change (25.0); inspect blending
-REVIEW: axe_attack3: abrupt keyframe velocity change (11.1); inspect blending
-REVIEW: axe_dual_chop: unusually large per-sample tip movement; inspect curve
-REVIEW: axe_dual_chop: abrupt keyframe velocity change (16.2); inspect blending
-REVIEW: axe_dual_chop_off: unusually large per-sample tip movement; inspect curve
-REVIEW: axe_dual_chop_off: abrupt keyframe velocity change (16.2); inspect blending
-REVIEW: axe_dual_slam: abrupt keyframe velocity change (29.6); inspect blending
-REVIEW: axe_dual_slam_off: abrupt keyframe velocity change (29.6); inspect blending
+review-delivery
+Reviewed 13 clips for pale_linear_greatsword; warnings: 10
+REVIEW: axe_attack1: abrupt keyframe velocity change (20.9); inspect blending
+REVIEW: axe_attack2: abrupt keyframe velocity change (18.8); inspect blending
+REVIEW: axe_dual_chop: abrupt keyframe velocity change (16.7); inspect blending
+REVIEW: axe_dual_chop_off: abrupt keyframe velocity change (16.7); inspect blending
+REVIEW: axe_dual_slam: abrupt keyframe velocity change (21.5); inspect blending
+REVIEW: axe_dual_slam_off: abrupt keyframe velocity change (21.5); inspect blending
 REVIEW: axe_dual_slam_final: unusually large per-sample tip movement; inspect curve
-REVIEW: axe_dual_slam_final: abrupt keyframe velocity change (29.7); inspect blending
+REVIEW: axe_dual_slam_final: abrupt keyframe velocity change (23.4); inspect blending
 REVIEW: axe_dual_slam_final_off: unusually large per-sample tip movement; inspect curve
-REVIEW: axe_dual_slam_final_off: abrupt keyframe velocity change (29.8); inspect blending
-Preview GIFs + contact sheets: work/compact-pass/review-final/pale_linear_greatsword
-Report: work/compact-pass/review-final/pale_linear_greatsword/report.json
+REVIEW: axe_dual_slam_final_off: abrupt keyframe velocity change (23.4); inspect blending
+Preview GIFs + contact sheets: work/fp-fix/review-delivery/pale_linear_greatsword
+Report: work/fp-fix/review-delivery/pale_linear_greatsword/report.json
 
-previews
+delivery
 baseline 27
 solo 79
 pair 99

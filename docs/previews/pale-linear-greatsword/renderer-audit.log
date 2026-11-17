@@ -1,0 +1,40 @@
+PASS: compiled custom render call passes swing=0 and equipped=0
+       121: aload_0
+       122: checkcast     #94                 // class com/tarkrakov/tearsofink/client/mixin/ItemInHandRendererInvoker
+       125: aload_1
+       126: fload_2
+       127: fload_3
+       128: aload         4
+       130: fconst_0
+       131: aload         6
+       133: fconst_0
+       134: aload         8
+       136: aload         9
+       138: iload         10
+       140: invokeinterface #96,  11          // InterfaceMethod com/tarkrakov/tearsofink/client/mixin/ItemInHandRendererInvoker.tearsofink$renderArmWithItem:(Lnet/minecraft/client/player/AbstractClientPlayer;FFLnet/minecraft/world/InteractionHand;FLnet/minecraft/world/item/ItemStack;FLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V
+
+Minecraft 1.21.1 vanilla hand translation:
+(com.mojang.blaze3d.vertex.PoseStack, net.minecraft.world.entity.HumanoidArm, float);
+    Code:
+         0: aload_2
+         1: getstatic     #262                // Field net/minecraft/world/entity/HumanoidArm.RIGHT:Lnet/minecraft/world/entity/HumanoidArm;
+         4: if_acmpne     11
+         7: iconst_1
+         8: goto          12
+        11: iconst_m1
+        12: istore        4
+        14: aload_1
+        15: iload         4
+        17: i2f
+        18: ldc           #34                 // float 0.56f
+        20: fmul
+        21: ldc           #36                 // float -0.52f
+        23: fload_3
+        24: ldc           #32                 // float -0.6f
+        26: fmul
+        27: fadd
+        28: ldc           #38                 // float -0.72f
+        30: invokevirtual #286                // Method com/mojang/blaze3d/vertex/PoseStack.translate:(FFF)V
+        33: return
+
+  

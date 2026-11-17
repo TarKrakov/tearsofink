@@ -4,6 +4,7 @@ python3 tools/preview/pale.py [output-directory]
 The renderer shades the authored geometry; this is not an in-game texture/material capture.
 """
 import json
+import hashlib
 import sys
 from pathlib import Path
 from tl import build, COMBO
@@ -12,6 +13,13 @@ ARCH = 'pale_linear_greatsword'
 
 def generate(out, only=None):
     out = Path(out); out.mkdir(parents=True, exist_ok=True)
+    root=Path(__file__).resolve().parents[2]
+    inputs=['src/main/resources/assets/tears-of-ink/weapon_anims/pale_linear_greatsword.json',
+            'src/main/resources/assets/tears-of-ink/models/item/pale_linear_greatsword.json',
+            'src/main/resources/assets/tears-of-ink/models/item/pale_linear_great.json']
+    inputs += ['tools/preview/'+n+'.py'for n in('pale','tl','third','run')]
+    def snapshot():return {name:hashlib.sha256((root/name).read_bytes()).hexdigest()for name in inputs}
+    before=snapshot()
     combo = json.load(open(f'{COMBO}/{ARCH}.json'))
     solo = [(s['anim'], None, s['duration']/20) for s in combo['steps']]
     pair = [(s.get('anim') or None, s.get('off_anim') or None, s['duration']/20) for s in combo['dual_steps']]
@@ -28,7 +36,7 @@ def generate(out, only=None):
         raise ValueError(f'Unknown preview cases: {sorted(only - cases.keys())}')
     for name, (steps, dual) in cases.items():
         if only and name not in only: continue
-        frames = build(ARCH, steps, dual, str(out/f'{name}.gif'), fps=30, front=True)
+        frames = build(ARCH, steps, dual, str(out/f'{name}.gif'), fps=30, front=True, widescreen=True, fp_out=str(out/f'{name}-fp.gif') if name in ('solo','pair','pair-charge') else None)
         # Filmstrip of the entire sequence, with each frame showing all three perspectives.
         from PIL import Image
         indices = [min(len(frames)-1, int(i*(len(frames)-1)/5)) for i in range(6)]
@@ -45,11 +53,24 @@ def generate(out, only=None):
             for i,t in enumerate((.8,.92,1.,1.1,1.2,1.32,1.4,1.5)):
                 contact.paste(frames[min(len(frames)-1,round(t*30))],((i%2)*720,(i//2)*240))
             contact.save(out/'pair-3-4.png')
+        if name in ('solo','pair','pair-charge'):
+            from PIL import ImageSequence
+            fps_frames=[f.convert('RGB')for f in ImageSequence.Iterator(Image.open(out/f'{name}-fp.gif'))]
+            moments={'solo':(.10,.23,.37,.70,.80,1.37,1.47,1.60),
+                     'pair':(.08,.20,.6,.92,1.,1.32,1.4,2.06),
+                     'pair-charge':(0,.5,1.,1.35,1.5,1.62,1.85,2.2)}[name]
+            large=Image.new('RGB',(1920,540))
+            for i,t in enumerate(moments):
+                large.paste(fps_frames[min(len(fps_frames)-1,round(t*30))].resize((480,270)),((i%4)*480,(i//4)*270))
+            large.save(out/f'{name}-fp.png')
+            if name=='pair':
+                focus=fps_frames[24:48]
+                focus[0].save(out/'pair-3-4-fp.gif',save_all=True,append_images=focus[1:],duration=[(round((i+1)*100/30)-round(i*100/30))*10 for i in range(len(focus))],loop=0)
         print(name, len(frames), flush=True)
     # A short individual comparison for every base attack.
     for index, st in enumerate([] if only else solo + pair):
         label=st[0] if index<len(solo) else f'lmb-pair-{index-len(solo)+1}'
-        frames = build(ARCH, [st], index>=len(solo), str(out/f'{label}.gif'), fps=30, front=True)
+        frames = build(ARCH, [st], index>=len(solo), str(out/f'{label}.gif'), fps=30, front=True, widescreen=True)
         # Dense impact sheet; no sparse 1/3-time snapshot hiding the active stroke.
         import json as _json
         from third import REPO
@@ -61,6 +82,9 @@ def generate(out, only=None):
         for i,t in enumerate(times):
             sheet.paste(frames[min(len(frames)-1,round(t*30))],((i%2)*720,(i//2)*240))
         sheet.save(out/f'{label}.png')
+
+    assert snapshot()==before,'Preview inputs changed during rendering; rerun into a clean output directory'
+    (out/'preview-inputs.json').write_text(json.dumps({'inputs':before,'fps':30,'fp_aspect':'16:9','fp_resolution':[960,540],'complete':True,'cases':sorted(only or cases)},indent=2)+'\n')
 
 if __name__ == '__main__':
     generate(sys.argv[1] if len(sys.argv) > 1 else 'out/pale', set(sys.argv[2:]) if len(sys.argv) > 2 else None)

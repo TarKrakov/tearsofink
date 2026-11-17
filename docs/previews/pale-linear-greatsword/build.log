@@ -1,25 +1,25 @@
 Picked up JAVA_TOOL_OPTIONS: -Djavax.net.ssl.trustStore=/etc/ssl/certs/java/cacerts
 Reusing configuration cache.
+> Task :processResources UP-TO-DATE
 > Task :compileJava UP-TO-DATE
 > Task :processClientResources UP-TO-DATE
 > Task :processIncludeJars UP-TO-DATE
-> Task :sourcesJar
-> Task :processResources
-> Task :classes
+> Task :classes UP-TO-DATE
+> Task :sourcesJar UP-TO-DATE
+> Task :remapSourcesJar UP-TO-DATE
 > Task :compileClientJava UP-TO-DATE
-> Task :jar
-> Task :remapJar
+> Task :processTestResources NO-SOURCE
 > Task :clientClasses UP-TO-DATE
 > Task :compileTestJava NO-SOURCE
-> Task :processTestResources NO-SOURCE
 > Task :testClasses UP-TO-DATE
 > Task :test NO-SOURCE
 > Task :validateAccessWidener NO-SOURCE
 > Task :check UP-TO-DATE
-> Task :remapSourcesJar
-> Task :assemble
-> Task :build
+> Task :jar UP-TO-DATE
+> Task :remapJar UP-TO-DATE
+> Task :assemble UP-TO-DATE
+> Task :build UP-TO-DATE
 
-BUILD SUCCESSFUL in 18s
-9 actionable tasks: 5 executed, 4 up-to-date
+BUILD SUCCESSFUL in 2s
+9 actionable tasks: 9 up-to-date
 Configuration cache entry reused.

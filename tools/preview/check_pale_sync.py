@@ -46,5 +46,7 @@ for at in np.linspace(0,.3,121):
     q=apply4(tp_item_m(WORLD@part_m([-5,2,0],x,y,0),tp,grip,W,1),np.array([hilt,tip])/16)
     q0=apply4(tp_item_m(WORLD@part_m([-5,2,0],x0,y0,0),tp,grip,W0,1),np.array([hilt,tip])/16)
     unchanged[2]=max(unchanged[2],abs(q-q0).max())
-assert unchanged[0]<1e-5 and unchanged[1]<.002 and unchanged[2]<.002,('axial turn moved the pose',unchanged)
-print('PASS: axial turn preserves pre-turn FP path / arm angles / F5 path; max errors',unchanged.tolist())
+# FP was deliberately restaged after the user's screen-space feedback.
+# The accepted F5 path and arm are still frozen against this reference.
+assert unchanged[1]<.002 and unchanged[2]<.002,('F5 pose changed',unchanged)
+print('PASS: accepted F5 arm angles / path preserved; max errors',unchanged[1:].tolist())

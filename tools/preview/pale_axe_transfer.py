@@ -77,8 +77,8 @@ def neutral_source(t,left=False):
  return carried(t,0,0,d,e,left)
 def make(name,keys,sources):
  c=anims[name];src=name+'_skill_third'
- c['keyframes']=keys;c['smooth']='tight';c['rotation_mode']='slerp';c['third']={'source':src}
- anims[src]={**{k:c[k] for k in('length','hold','return') if k in c},'smooth':'tight','rotation_mode':'slerp','keyframes':sources}
+ c['keyframes']=copy.deepcopy(keys);c['smooth']='tight';c['rotation_mode']='slerp';c['third']={'source':src}
+ anims[src]={**{k:c[k] for k in('length','hold','return') if k in c},'smooth':'tight','rotation_mode':'slerp','keyframes':copy.deepcopy(sources)}
 for left in(False,True):
  off='_off' if left else '';depth=.08 if left else 0
  # Relative to each authored rest, the hilt moves towards the camera and UP;
@@ -166,6 +166,52 @@ def roll_clip(clip,third_person):
   keys.append(key)
  clip['keyframes']=keys;clip['rotation_mode']='slerp';clip['blade_edge_roll']=round(math.degrees(angle),5)
 roll_clip(main,False);roll_clip(source,True)
+# FP composition is authored in camera space, independently of the frozen F5
+# sources. Keep every donor time/ease: the change is mounting and blade facing.
+def first_person(name,poses):
+ clip=anims[name];old=clip['keyframes'];assert len(old)==len(poses)
+ clip['keyframes']=[p.key(k['t'],d,(0,-1,0),hand,False,k.get('ease','ease_in_out')) for k,(d,hand) in zip(old,poses)]
+ clip['rotation_mode']='slerp';clip.pop('camera_mount_z',None);clip.pop('blade_edge_roll',None)
+ clip['fp_pose']='raised_inward_v1'
+chop_low=((- .42,-.46,-.78),(.37,-.005,-.69))
+first_person('axe_dual_chop',[
+ ((-.32,.72,-.62),(.40,.10,-.67)),
+ ((-.42,-.38,-.82),(.37,.02,-.73)),chop_low])
+slam_low=((- .12,-.56,-.82),(.34,.015,-.74))
+first_person('axe_dual_slam',[chop_low,
+ ((-.12,.78,-.61),(.34,.14,-.72)),
+ ((-.12,-.45,-.88),(.34,.04,-.78)),slam_low])
+first_person('axe_dual_slam_final',[slam_low,
+ ((-.12,.78,-.61),(.34,.14,-.74)),
+ ((-.12,.80,-.59),(.34,.155,-.71)),
+ ((-.12,-.45,-.88),(.34,.04,-.78)),slam_low])
+# Solo order remains the axe's diagonal / overhead chop / thrust.
+first_person('axe_attack1',[
+ ((.08,.78,-.62),(.38,.15,-.68)),
+ ((-.40,-.60,-.69),(.22,.04,-.65)),
+ ((-.74,-.60,-.30),(.10,-.02,-.90))])
+# The diagonal follows through left/down, rather than turning flat to the cut.
+for k in anims['axe_attack1']['keyframes']:
+ rot,pos=sample(anims['axe_attack1'],k['t']);mat=fp_item_m(p.model['display']['firstperson_righthand'],rot,pos,p.grip,1)
+ direction=mat[:3,:3]@p.basis[:,0];hand=apply4(mat,np.array([p.grip])/16)[0]
+ corrected=p.key(k['t'],direction,(-.8,-.6,0),hand,False,k['ease']);k.update(corrected)
+first_person('axe_attack2',[
+ ((-.74,-.60,-.30),(.10,-.02,-.90)),
+ ((.02,.78,-.63),(.14,.15,-.78)),
+ ((.02,-.52,-.85),(.14,.045,-.74)),
+ ((.02,-.64,-.77),(.14,.015,-.73))])
+first_person('axe_attack3',[
+ ((.02,-.64,-.77),(.14,.015,-.73)),
+ ((-.28,.03,-.96),(.26,.06,-.48)),
+ ((-.28,.03,-.96),(.22,.06,-.96)),
+ ((-.28,.03,-.96),(.23,.06,-.83))])
+# Charge: translate the existing pose straight UP, retaining every angle and
+# all F5 poses. Its release begins at that same raised held position.
+for suffix in ('','_off'):
+ for k in anims['dual_charge'+suffix]['keyframes']:
+  if k['t']>0:k['translation'][1]+=6
+ anims['dual_rush'+suffix]['keyframes'][0]['translation'][1]+=6
+a['fp_pose_version']='raised_inward_v1'
 # The diagonal sword is not a Y-axis axe. Retarget its off-hand through its
 # own Display, rather than feeding both hands identical relative Euler angles.
 # Both paired blades now share a single phase/axis/edge trajectory.

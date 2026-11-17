@@ -25,7 +25,7 @@ for group in('steps','dual_steps'):
    wanted=('axe_'+expected[field])if expected.get(field)else expected.get(field)
    if field=='off_anim' and wanted:wanted+='_off'
    assert actual.get(field)==wanted,(group,field)
-print('PASS: 3 solo / 5 paired steps; seven literal raw axe clips including F5 source; compact FP mounting -9px Z; independent synchronized off-hand; donor timing/late/speed; authored Display retained')
+print('PASS: 3 solo / 5 paired steps; seven literal raw axe clips including F5 source; raised camera-space FP; independent synchronized off-hand; donor timing/late/speed; authored Display retained')
 active={st[field]for group in('steps','dual_steps')for st in c[group]for field in('anim','off_anim')if st.get(field)}
 active.update(n+s for n in('dual_charge','dual_rush','dual_parry','dual_repel','dual_leap','dual_slam')for s in('','_off'))
 vertices=model_points(m)/16;count=0

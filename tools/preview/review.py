@@ -29,7 +29,7 @@ def preview_pose(anims, clip):
     return anims[src] if src else clip, fix
 
 
-def frame_data(model, grip, blade_tip, vertices, clip, t, hand):
+def frame_data(model, grip, blade_tip, vertices, clip, t, hand, aspect=ASPECT):
     side = 'right' if hand == 1 else 'left'
     display = model['display']['firstperson_' + side + 'hand']
     rot, pos = sample(clip, t)
@@ -38,7 +38,7 @@ def frame_data(model, grip, blade_tip, vertices, clip, t, hand):
     depth = -points[:, 2]
     with np.errstate(divide='ignore', invalid='ignore'):
         visible = ((depth > .05) &
-                   (abs(points[:, 0] / depth) < FOV * ASPECT) &
+                   (abs(points[:, 0] / depth) < FOV * aspect) &
                    (abs(points[:, 1] / depth) < FOV))
     tip = apply4(mat, np.array([blade_tip]) / 16)[0]
     xy = np.array([np.nan, np.nan]) if tip[2] >= -.05 else tip[:2] / -tip[2]
@@ -49,6 +49,7 @@ def inspect(arch, samples=50):
     a, model, fp, _, grip = load(arch)
     combo = json.loads((Path(COMBO) / (arch + '.json')).read_text(encoding='utf-8'))
     anims = a['animations']
+    aspect=16/9 if arch=='pale_linear_greatsword' else ASPECT
     hilt, tip = axis(model, fp, grip)
     vertices = model_points(model) / 16
     selected = []
@@ -84,7 +85,7 @@ def inspect(arch, samples=50):
         timeline = np.linspace(0, max(keytimes), samples)
         if impact is not None:
             timeline = np.unique(np.r_[timeline, impact])
-        frames = [frame_data(model, grip, tip, vertices, clip, float(t), hand) for t in timeline]
+        frames = [frame_data(model, grip, tip, vertices, clip, float(t), hand, aspect) for t in timeline]
         fractions = np.array([x[0] for x in frames])
         xy = np.array([x[1] for x in frames])
         if not np.isfinite(xy).all():
@@ -93,7 +94,7 @@ def inspect(arch, samples=50):
         velocities = steps / np.diff(timeline)
         impact_fraction = None
         if impact is not None:
-            impact_fraction = frame_data(model, grip, tip, vertices, clip, impact, hand)[0]
+            impact_fraction = frame_data(model, grip, tip, vertices, clip, impact, hand, aspect)[0]
             if impact_fraction < .85:
                 warnings.append(f'{name}: only {impact_fraction:.0%} of mesh visible on hit')
         if len(steps) and np.max(steps) > .2:
@@ -103,9 +104,9 @@ def inspect(arch, samples=50):
         max_corner = 0.0
         for previous, keytime, following in zip(keytimes[:-2], keytimes[1:-1], keytimes[2:]):
             dt = min(.012, .25 * (keytime - previous), .25 * (following - keytime))
-            left = frame_data(model, grip, tip, vertices, clip, keytime-dt, hand)[1]
-            middle = frame_data(model, grip, tip, vertices, clip, keytime, hand)[1]
-            right = frame_data(model, grip, tip, vertices, clip, keytime+dt, hand)[1]
+            left = frame_data(model, grip, tip, vertices, clip, keytime-dt, hand, aspect)[1]
+            middle = frame_data(model, grip, tip, vertices, clip, keytime, hand, aspect)[1]
+            right = frame_data(model, grip, tip, vertices, clip, keytime+dt, hand, aspect)[1]
             jump = float(np.linalg.norm((right - middle) / dt - (middle - left) / dt))
             max_corner = max(max_corner, jump)
         if max_corner > 6:
@@ -153,7 +154,7 @@ def render(arch, combo, out, fps):
     for label, (steps, two_hands) in cases.items():
         if not steps:
             continue
-        frames = build(arch, steps, two_hands, str(out / (label + '.gif')), fps=fps, front=(arch == "pale_linear_greatsword"))
+        frames = build(arch, steps, two_hands, str(out / (label + '.gif')), fps=fps, front=(arch == "pale_linear_greatsword"), widescreen=(arch == "pale_linear_greatsword"))
         count = min(12, len(frames))
         contact = Image.new('RGB', (720 * 3, 240 * 4), (20, 20, 20))
         for i, idx in enumerate(np.linspace(0, len(frames) - 1, count).astype(int)):
