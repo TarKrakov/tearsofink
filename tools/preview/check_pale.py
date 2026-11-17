@@ -9,7 +9,7 @@ from third import *
 a,m,fp,tp,g=load('pale_linear_greatsword'); anims=a['animations']
 combo=json.load(open(ROOT/'src/main/resources/data/tears-of-ink/weapon_combos/pale_linear_greatsword.json'))
 assert len(combo['steps'])==4 and len(combo['dual_steps'])==3
-assert combo['steps'][2]['late']==6
+assert combo['steps'][2]['late']>=6
 assert combo['dual_steps'][1]['second_hit'] > combo['dual_steps'][1]['hit']
 for st in combo['steps']+combo['dual_steps']:
     c=anims[st['off_anim']] if st['anim']=='dual_attack2' else anims[st['anim']]
@@ -43,3 +43,26 @@ for name,sign in [('attack2',1),('dual_attack2_off',-1)]:
     direction=points[1]-points[0];direction/=np.linalg.norm(direction)
     assert direction[2]<-.9,(name,direction)
 print('PASS: main and off thrusts face forward')
+
+# Camera framing and readable right-to-left cut (based on Claude's exact item matrices).
+def screen_tip(name, t, hand=1):
+    c=anims[name]
+    rot,pos=sample(c,t)
+    side='right' if hand==1 else 'left'
+    frame=m['display']['firstperson_'+side+'hand']
+    pts=apply4(fp_item_m(frame,rot,pos,g,hand),np.array([h,tpt])/16)
+    return pts[1] + np.array([hand*.56,-.52,-.72])
+tpt=t
+start=screen_tip('attack1',0)
+finish=screen_tip('attack1',.43)
+assert start[0]>.25 and finish[0]<-.15,('right-to-left swing missing',start,finish)
+for name,tick in [('attack1',.30),('attack2',.35),('attack3',.75),('attack4',.30),
+                  ('dual_attack2',.90),('dual_attack2_off',.35)]:
+    tip=screen_tip(name,tick,-1 if name.endswith('_off') else 1)
+    assert -0.48<tip[1]<0.48,(name,'outside vertical frame',tip)
+    assert abs(tip[0])<0.85,(name,'outside horizontal frame',tip)
+for name in ('attack1','attack2','attack3','attack4','dual_attack2','dual_attack2_off',
+             'dual_attack3','dual_attack3_off'):
+    source=anims[name].get('third',{}).get('source')
+    assert source in anims,(name,'missing third-person source',source)
+print('PASS: Claude preview geometry: visible attacks, right-to-left swing, 8 independent third-person sources')

@@ -23,6 +23,23 @@ jobs:
         run: chmod +x ./gradlew
       - name: build
         run: ./gradlew build
+      # The original Claude previewer validates the real model/pivot and can render
+      # synchronized first-person and F5 animations from the actual weapon JSON.
+      - name: install preview dependencies
+        run: python3 -m pip install --quiet numpy pillow
+      - name: validate animation positions via Claude preview
+        run: python3 tools/preview/check_pale.py
+      - name: render combat previews via Claude preview
+        if: contains(github.event.head_commit.message, '[preview]')
+        run: |
+          mkdir -p out
+          python3 tools/preview/tl.py pale_linear_greatsword
+      - name: save combat preview GIFs
+        if: contains(github.event.head_commit.message, '[preview]')
+        uses: actions/upload-artifact@v7
+        with:
+          name: PaleGreatswordPreview
+          path: out/pale_linear_greatsword_*.gif
       - name: capture build artifacts
         uses: actions/upload-artifact@v7
         with:
