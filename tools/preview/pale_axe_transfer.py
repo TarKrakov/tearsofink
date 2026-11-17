@@ -1,4 +1,4 @@
-"""Author-requested literal axe LMB transfer, plus the pale sword's own paired skills.
+"""Reuse axe LMB rhythm with author-requested compactness, synchronization and blade roll.
 Animations are deep copies, with namespaced source links; donor assets never change.
 """
 import copy,json,math
@@ -33,14 +33,23 @@ for name in('attack1','attack2','attack3','dual_chop','dual_chop_third','dual_sl
  if clip.get('third',{}).get('source'):clip['third']['source']='axe_'+clip['third']['source']
  anims['axe_'+name+'_raw']=copy.deepcopy(clip)
  if name!='dual_chop_third':
-  # Camera mounting only: the longer sword otherwise crosses the near plane.
-  # Preserve unmodified donor F5 keys and all rotation/timing/easing channels.
-  clip.setdefault('third',{})['source']='axe_'+(axe['animations'][name].get('third',{}).get('source') or name)+'_raw'
-  for key in clip['keyframes']:key.setdefault('translation',[0,0,0])[2]-=16
-  clip['camera_mount_z']=-16
+  # Author correction: compact the donor gesture without changing its rhythm.
+  def compact(keys):
+   for key in keys:
+    r=key.setdefault('rotation',[0,0,0]);r[0]=max(-60,min(42,r[0]*.8));r[1]*=.85;r[2]*=.85
+    v=key.setdefault('translation',[0,0,0]);v[0]*=.6;v[1]=min(2.5,v[1]*(.45 if v[1]<0 else .5));v[2]*=.6
+  compact(clip['keyframes'])
+  source=copy.deepcopy(axe['animations'][axe['animations'][name].get('third',{}).get('source') or name])
+  compact(source['keyframes'])
+  if name=='dual_chop':clip['hold']=source['hold']=.6 # right still held when left has finished
+  source_name='axe_'+name+'_compact_third';anims[source_name]=source
+  clip.setdefault('third',{})['source']=source_name
+  for key in clip['keyframes']:key['translation'][2]-=9
+  clip['camera_mount_z']=-9
+  if name.startswith('dual_'):clip['rotation_mode']='slerp'
  anims['axe_'+name]=clip
 combo['early_ticks']=donor['early_ticks'];combo['_comment']='Автор: ЛКМ — серии топоров (3 одиночных / 5 парных), их timing/late/speed; урон/дальность/арка/отдача меча сохранены. R/ПКМ — прежняя механика меча.'
-a['lmb_source']='axe';a['_comment']='ЛКМ дословно из axe (axe_*); парные ПКМ/R отдельно по новому описанию автора.'
+a['lmb_compact']=dict(rotation=[.8,.85,.85],pitch_limits=[-60,42],translation=[.6,.45,.6],upper_y=2.5,mount_z=-9);a['lmb_source']='axe';a['_comment']='ЛКМ axe: уменьшенная амплитуда и синхронные самостоятельные off-клипы; кромка 3/4 довёрнута вокруг клинка. Одиночный R из 8b7dd6d.'
 
 def zero(t=0):return dict(t=t,rotation=[0,0,0],translation=[0,0,0],ease='ease_in_out')
 def fp(t,d,h,left=False,edge=(1,0,0),ease='ease_in_out'):return p.key(t,d,edge,h,left,ease)
@@ -128,5 +137,61 @@ for name in ('dual_repel','dual_repel_off'):
    keys.append(dict(t=at,rotation=r.round(5).tolist(),translation=pos.round(5).tolist(),ease='linear'))
   keys.append(copy.deepcopy(old['keyframes'][-1]));clip['keyframes']=keys
 for name in('dual_slam','dual_slam_off'):anims[name]['impact']=.20
+# Author: turn the blades themselves edge-first on paired steps 3/4. The
+# axial rotation preserves grip and tip, so it cannot move the carrying arm.
+main=anims['axe_dual_slam'];source=anims[main['third']['source']]
+def roll_clip(clip,third_person):
+ old=copy.deepcopy(clip);at=main['impact'];frame=p.model['display']['firstperson_righthand']
+ def matrix(time):
+  if not third_person:
+   r,pos=sample(old,time);return fp_item_m(frame,r,pos,p.grip,1)
+  x,y,W,_=solve4(p.model['display'],1,old,time,a['third'],main['third'],p.grip,hilt,tip)
+  return tp_item_m(WORLD@part_m([-5,2,0],x,y,0),p.model['display']['thirdperson_righthand'],p.grip,W,1)
+ middle=matrix(at);velocity=apply4(matrix(at+.003),np.array([tip])/16)[0]-apply4(matrix(at-.003),np.array([tip])/16)[0]
+ v=np.linalg.inv(middle[:3,:3])@velocity;v/=np.linalg.norm(v)
+ axis=np.array(tip-hilt,float);axis/=np.linalg.norm(axis);normal=np.array([0.,0,1]);parallel=axis*(axis@normal);perp=normal-parallel
+ aa=perp@v;bb=np.cross(axis,perp)@v;cc=parallel@v
+ phase=math.atan2(bb,aa);theta=math.acos(np.clip(-cc/math.hypot(aa,bb),-1,1))
+ angles=[(phase+d+math.pi)%(2*math.pi)-math.pi for d in(theta,-theta)]
+ angle=min(angles,key=abs)
+ local_axis=dR(frame,1)@((tip-hilt)*dS(frame));local_axis/=np.linalg.norm(local_axis)
+ x,y,z=local_axis;K=np.array([[0,-z,y],[z,0,-x],[-y,x,0]])
+ axial=np.eye(3)+math.sin(angle)*K+(1-math.cos(angle))*(K@K)
+ times=([k['t']for k in old['keyframes']] if not third_person else sorted(set([k['t']for k in old['keyframes']]+[round(float(t),6)for t in np.arange(0,old['keyframes'][-1]['t'],1/480)])))
+ keys=[]
+ for time in times:
+  r,pos=sample(old,time);new=euler_xyz(XYZ(r)@axial)
+  key=dict(t=time,rotation=new.round(5).tolist(),translation=pos.round(5).tolist(),ease='linear')
+  if not third_person:key['ease']=old['keyframes'][len(keys)].get('ease','ease_in_out')
+  keys.append(key)
+ clip['keyframes']=keys;clip['rotation_mode']='slerp';clip['blade_edge_roll']=round(math.degrees(angle),5)
+roll_clip(main,False);roll_clip(source,True)
+# The diagonal sword is not a Y-axis axe. Retarget its off-hand through its
+# own Display, rather than feeding both hands identical relative Euler angles.
+# Both paired blades now share a single phase/axis/edge trajectory.
+SX=np.diag([-1.,1.,1.]);disp=p.model['display'];right_fp=disp['firstperson_righthand'];left_fp=disp['firstperson_lefthand'];right_tp=disp['thirdperson_righthand']
+for base in ('dual_chop','dual_slam','dual_slam_final'):
+ main_name='axe_'+base;main=anims[main_name];off=copy.deepcopy(main);source=anims[main['third']['source']]
+ last=main['keyframes'][-1]['t'];times=sorted(set([0,last]+[round(float(t),6)for t in np.arange(0,last,1/480)]+[k['t']for k in main['keyframes']]))
+ off_keys=[];off_source=[]
+ for at in times:
+  r,pos=sample(main,at);mm=fp_item_m(right_fp,r,pos,p.grip,1)
+  direction=mm[:3,:3]@p.basis[:,0];edge=mm[:3,:3]@p.basis[:,1]
+  hand=apply4(mm,np.array([p.grip])/16)[0]
+  original_key=next((k for k in main['keyframes']if abs(k['t']-at)<1e-7),None)
+  if original_key is not None or at==0:
+   off_keys.append(p.key(at,direction,edge,hand,True,original_key.get('ease','ease_in_out')if original_key else 'ease_in_out'))
+  x,y,W,_=solve4(disp,1,source,at,a['third'],main['third'],p.grip,hilt,tip)
+  item=WORLD[:3,:3]@Ry(y)@Rx(x)@C@W@dR(right_tp,1)
+  off_source.append(carried(at,math.degrees(x-VANILLA_ARM[0]),math.degrees(y),item@p.basis[:,0],item@p.basis[:,1],True,'linear'))
+ off['keyframes']=off_keys;off['rotation_mode']='slerp';off['smooth']='tight';off['third']={'source':main_name+'_off_compact_third'}
+ anims[main_name+'_off']=off
+ anims[off['third']['source']]={**{k:source[k]for k in('length','hold','return')if k in source},'smooth':'tight','rotation_mode':'slerp','keyframes':off_source}
+for st in combo['dual_steps']:
+ if st.get('off_anim'):st['off_anim']=st['off_anim']+'_off'
+# Restore only the single-right-hand R, including preparation and recovery.
+reference=json.loads((Path(__file__).parent/'references/pale_solo_r_8b7dd6d.json').read_text())
+for name,clip in reference['animations'].items():anims[name]=copy.deepcopy(clip)
+a['solo_r_reference']=reference['revision']
 (ANIM/'pale_linear_greatsword.json').write_text(json.dumps(a,ensure_ascii=False,indent=2)+'\n')
 (COMBO/'pale_linear_greatsword.json').write_text(json.dumps(combo,ensure_ascii=False,indent=2)+'\n')
