@@ -147,8 +147,9 @@ public final class ThirdPerson {
 			float x = Mth.lerp(w, arm.xRot, s.x), y = Mth.lerp(w, arm.yRot, s.y), z = Mth.lerp(w, arm.zRot, 0);
 			Quaternionf wrist = new Quaternionf().slerp(s.wrist, w);
 			float push = s.push * w;
-			if (p.from != null && p.real() < BLEND) {
-				float u = WeaponAnims.ease(WeaponAnims.Ease.EASE_OUT, p.real() / BLEND);
+			float transition = p.archetype == Archetype.PALE_LINEAR_GREATSWORD ? 0.2f : BLEND;
+			if (p.from != null && p.real() < transition) {
+				float u = WeaponAnims.ease(WeaponAnims.Ease.EASE_OUT, p.real() / transition);
 				x = Mth.lerp(u, p.from.x, x);
 				y = Mth.lerp(u, p.from.y, y);
 				z = Mth.lerp(u, p.from.z, z);
@@ -217,7 +218,8 @@ public final class ThirdPerson {
 	/** Рука плавно входит в удар из обычной позы и плавно выходит в конце. Новый удар сразу после старого — без входа. */
 	private static float weight(Playing p, float t) {
 		WeaponAnims.Clip c = p.clip;
-		float in = p.from != null ? 1 : Mth.clamp(t / RAMP_IN, 0, 1);
+		float rampIn = p.archetype == Archetype.PALE_LINEAR_GREATSWORD ? 0.18f : RAMP_IN;
+		float in = p.from != null ? 1 : Mth.clamp(t / rampIn, 0, 1);
 		float outTime = c.hold() > 0 ? Math.max(0.05f, c.back()) : RAMP_OUT;
 		float out = Mth.clamp((WeaponAnims.end(c) - t) / outTime, 0, 1);
 		return WeaponAnims.ease(WeaponAnims.Ease.EASE_IN_OUT, Math.min(in, out));
@@ -261,6 +263,16 @@ public final class ThirdPerson {
 		Quaternionf wrist = new Quaternionf(armQ).mul(LAYER).conjugate()
 				.mul(look).mul(new Quaternionf().rotationY(-m * fix.turn() * Mth.DEG_TO_RAD)) // turn — к центру
 				.mul(bw.item).mul(rot(tp, m).conjugate());
+		// Some authored greatsword poses require the blade to be carried by the forearm,
+		// rather than an independently spinning wrist. Rotating around the grip still
+		// anchors the hilt to the hand; other archetypes retain their original wrist.
+		if (fix.followBlade()) {
+			Vector3f blade = new Vector3f(ax[1]).sub(ax[0]).mul(tp.scale).normalize();
+			rot(tp, m).transform(blade);
+			Vector3f alongArm = new Vector3f(0, 1, -0.15f).normalize();
+			new Quaternionf(LAYER).conjugate().transform(alongArm);
+			wrist = new Quaternionf().rotationTo(blade, alongArm);
+		}
 		return new Solved(a[0], a[1], wrist, at(ax[0], tp, m), a[1] * tune.body(), b.hand, (tune.push() + (left ? fix.pushLeft() : fix.pushRight())) / 16f);
 	}
 
