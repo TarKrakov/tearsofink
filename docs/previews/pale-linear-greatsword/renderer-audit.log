@@ -36,5 +36,3 @@ Minecraft 1.21.1 vanilla hand translation:
         28: ldc           #38                 // float -0.72f
         30: invokevirtual #286                // Method com/mojang/blaze3d/vertex/PoseStack.translate:(FFF)V
         33: return
-
-  
