@@ -115,8 +115,12 @@ public final class Vows {
 			ServerPlayer p = handler.getPlayer();
 			sync(p);
 			PROMPTED.remove(p.getUUID());
-			if (InkPowers.get(p).inside()) prompt(p);
-			InkRank.grantReached(p); // достижения старых сохранений с уже высоким максимумом
+			if (InkPowers.get(p).inside()) {
+				com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(p,
+						com.tarkrakov.tearsofink.advancement.ModAdvancements.INK_LANDS);
+				prompt(p);
+			}
+			grantCurrentVowAdvancements(p); // восстановить корни ветвей и ранги старых сохранений
 		});
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> PROMPTED.remove(handler.getPlayer().getUUID()));
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> sync(newPlayer));
@@ -198,10 +202,15 @@ public final class Vows {
 		pathBonus(p, Vow.NONE, v);
 		Guide.say(p, "vow.chosen." + v.id);
 		mark(p, v);
-		if (v == Vow.SOUL) {
+		grantCurrentVowAdvancements(p);
+	}
+
+	/** Начальные достижения ветви и уже достигнутые ранги: выбор, смена обета, вход со старым сохранением. */
+	private static void grantCurrentVowAdvancements(ServerPlayer p) {
+		if (vow(p) == Vow.SOUL) {
 			com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(p, "soul_pilgrim");
 			SoulRank.grantReached(p);
-		} else if (v == Vow.INK) {
+		} else if (vow(p) == Vow.INK) {
 			com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(p, "ink_shattered_heart");
 			InkRank.grantReached(p);
 		}
@@ -300,8 +309,7 @@ public final class Vows {
 		set(p, d.withVow(next).withChanges(d.changes() + 1));
 		pathBonus(p, d.vow(), next);
 		mark(p, next);
-		SoulRank.grantReached(p);
-		InkRank.grantReached(p);
+		grantCurrentVowAdvancements(p);
 		return true;
 	}
 
