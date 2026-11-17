@@ -43,21 +43,15 @@ jobs:
           name: WeaponAnimationReview
           if-no-files-found: warn
           path: out/review/
-      - name: render combat previews via Claude preview
+      - name: render specialty R preview via Claude preview
         if: contains(github.event.head_commit.message, '[preview]')
-        run: |
-          mkdir -p out
-          /tmp/tearsofink-preview-venv/bin/python tools/preview/tl.py pale_linear_greatsword
-          /tmp/tearsofink-preview-venv/bin/python tools/preview/pale.py out/pale pair-charge pair-r
-      - name: save combat preview GIFs
+        run: /tmp/tearsofink-preview-venv/bin/python tools/preview/pale.py out/pale pair-r
+      - name: save specialty R preview
         if: contains(github.event.head_commit.message, '[preview]')
         uses: actions/upload-artifact@v7
         with:
-          name: PaleGreatswordPreview
+          name: PaleGreatswordSpecialtyPreview
           path: |
-            out/pale_linear_greatsword_*.gif
-            out/pale/pair-charge.gif
-            out/pale/pair-charge.png
             out/pale/pair-r.gif
             out/pale/pair-r.png
       - name: capture build artifacts
