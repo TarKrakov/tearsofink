@@ -73,7 +73,7 @@
             7,
             -2
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 0.65,
@@ -954,7 +954,7 @@
             9,
             -3
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 1.05,
@@ -1065,7 +1065,7 @@
             9,
             -3
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 1.05,
@@ -1123,18 +1123,46 @@
           "ease": "ease_in_out"
         },
         {
-          "t": 0.32,
+          "t": 0.28,
+          "rotation": [
+            -31,
+            9,
+            8
+          ],
+          "translation": [
+            1.6,
+            6.5,
+            -4.4
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.65,
+          "rotation": [
+            -35,
+            11,
+            9
+          ],
+          "translation": [
+            2.5,
+            7.4,
+            -5.3
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 1.05,
           "rotation": [
             -38,
             13,
             10
           ],
           "translation": [
-            1,
+            3.3,
             8,
             -6
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 1.5,
@@ -1144,7 +1172,7 @@
             10
           ],
           "translation": [
-            1,
+            3.3,
             8,
             -6
           ],
@@ -1177,18 +1205,46 @@
           "ease": "ease_in_out"
         },
         {
-          "t": 0.32,
+          "t": 0.28,
+          "rotation": [
+            -31,
+            9,
+            8
+          ],
+          "translation": [
+            1.6,
+            6.5,
+            -4.4
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.65,
+          "rotation": [
+            -35,
+            11,
+            9
+          ],
+          "translation": [
+            2.5,
+            7.4,
+            -5.3
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 1.05,
           "rotation": [
             -38,
             13,
             10
           ],
           "translation": [
-            1,
+            3.3,
             8,
             -6
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 1.5,
@@ -1198,7 +1254,7 @@
             10
           ],
           "translation": [
-            1,
+            3.3,
             8,
             -6
           ],
@@ -1224,7 +1280,7 @@
             10
           ],
           "translation": [
-            1,
+            3.3,
             8,
             -6
           ],
@@ -1238,7 +1294,7 @@
             9
           ],
           "translation": [
-            1,
+            3.3,
             8,
             -7
           ],
@@ -1252,7 +1308,7 @@
             9
           ],
           "translation": [
-            1,
+            3.3,
             8,
             -7
           ],
@@ -1279,7 +1335,7 @@
             10
           ],
           "translation": [
-            1,
+            3.3,
             8,
             -6
           ],
@@ -1293,7 +1349,7 @@
             9
           ],
           "translation": [
-            1,
+            3.3,
             8,
             -7
           ],
@@ -1307,7 +1363,7 @@
             9
           ],
           "translation": [
-            1,
+            3.3,
             8,
             -7
           ],
@@ -2109,7 +2165,7 @@
             0,
             -5
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 0.95,
@@ -2173,7 +2229,7 @@
             8,
             -9
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 0.49,
@@ -2251,7 +2307,7 @@
             8,
             -9
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 0.44,
@@ -2304,6 +2360,20 @@
           "ease": "ease_in_out"
         },
         {
+          "t": 0.32,
+          "rotation": [
+            -17,
+            -18,
+            -24
+          ],
+          "translation": [
+            -3.2,
+            7.5,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
           "t": 0.6,
           "rotation": [
             26,
@@ -2329,7 +2399,7 @@
             8,
             -5
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 1.07,
@@ -2382,6 +2452,20 @@
           "ease": "ease_in_out"
         },
         {
+          "t": 0.08,
+          "rotation": [
+            -17,
+            -18,
+            -24
+          ],
+          "translation": [
+            -3.2,
+            7.5,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
           "t": 0.14,
           "rotation": [
             26,
@@ -2407,7 +2491,7 @@
             8,
             -5
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 0.52,
@@ -2499,7 +2583,7 @@
             7,
             -3
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 0.85,
@@ -2513,7 +2597,7 @@
             7,
             -3
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 1.05,
@@ -2605,7 +2689,7 @@
             7,
             -3
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 0.85,
@@ -2619,7 +2703,7 @@
             7,
             -3
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 1.05,
