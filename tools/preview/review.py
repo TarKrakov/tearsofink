@@ -33,7 +33,7 @@ def frame_data(model, grip, blade_tip, vertices, clip, t, hand, aspect=ASPECT):
     side = 'right' if hand == 1 else 'left'
     display = model['display']['firstperson_' + side + 'hand']
     rot, pos = sample(clip, t)
-    mat = fp_item_m(display, rot, pos, grip, hand)
+    mat = fp_item_m(display, rot, pos, grip, hand, view_offset=model.get('_fp_offset'))
     points = apply4(mat, vertices)
     depth = -points[:, 2]
     with np.errstate(divide='ignore', invalid='ignore'):

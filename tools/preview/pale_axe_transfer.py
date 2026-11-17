@@ -212,21 +212,46 @@ for suffix in ('','_off'):
   if k['t']>0:k['translation'][1]+=6
  anims['dual_rush'+suffix]['keyframes'][0]['translation'][1]+=6
 a['fp_pose_version']='raised_inward_v1'
+# Small polish of the accepted version: camera composition is shared by idle,
+# LMB and abilities. Bridge tails replace pauses without moving any combat hit.
+a['firstperson_offset']=[0,-.64,.8] # pixels: 4 cm down, 5 cm towards the viewer
+
+def link_tail(name,time,direction,hand):
+ clip=anims[name];old_end=end_time(clip)
+ rot,_=sample(clip,clip['keyframes'][-1]['t'])
+ edge=XYZ(rot)@dR(p.model['display']['firstperson_righthand'],1)@p.basis[:,1]
+ key=p.key(time,direction,edge,hand,False,'ease_in_out')
+ clip['keyframes'].append(key)
+ clip['hold']=round(old_end-time-clip.get('return',.3),6)
+ assert clip['hold']>0 and abs(end_time(clip)-old_end)<1e-6
+ return key
+
+def start_at(name,key):
+ clip=anims[name];ease=clip['keyframes'][0].get('ease','ease_in_out')
+ clip['keyframes'][0]=dict(copy.deepcopy(key),t=0,ease=ease)
+
+bridge=link_tail('axe_attack1',.55,(-.64,-.46,-.62),(.12,-.005,-.86));start_at('axe_attack2',bridge)
+bridge=link_tail('axe_attack2',.70,(-.12,-.42,-.90),(.18,.035,-.66));start_at('axe_attack3',bridge)
+bridge=link_tail('axe_dual_slam',.40,(-.12,-.49,-.86),(.34,.025,-.72));start_at('axe_dual_slam_final',bridge)
+a['fp_flow_version']='linked_v1'
 # The diagonal sword is not a Y-axis axe. Retarget its off-hand through its
 # own Display, rather than feeding both hands identical relative Euler angles.
 # Both paired blades now share a single phase/axis/edge trajectory.
 SX=np.diag([-1.,1.,1.]);disp=p.model['display'];right_fp=disp['firstperson_righthand'];left_fp=disp['firstperson_lefthand'];right_tp=disp['thirdperson_righthand']
 for base in ('dual_chop','dual_slam','dual_slam_final'):
  main_name='axe_'+base;main=anims[main_name];off=copy.deepcopy(main);source=anims[main['third']['source']]
- last=main['keyframes'][-1]['t'];times=sorted(set([0,last]+[round(float(t),6)for t in np.arange(0,last,1/480)]+[k['t']for k in main['keyframes']]))
+ fp_times=sorted(set([0]+[k['t']for k in main['keyframes']]))
+ last=source['keyframes'][-1]['t']
+ source_times=sorted(set([0,last]+[round(float(t),6)for t in np.arange(0,last,1/480)]+[k['t']for k in source['keyframes']]))
  off_keys=[];off_source=[]
- for at in times:
+ for at in fp_times:
   r,pos=sample(main,at);mm=fp_item_m(right_fp,r,pos,p.grip,1)
   direction=mm[:3,:3]@p.basis[:,0];edge=mm[:3,:3]@p.basis[:,1]
   hand=apply4(mm,np.array([p.grip])/16)[0]
   original_key=next((k for k in main['keyframes']if abs(k['t']-at)<1e-7),None)
-  if original_key is not None or at==0:
-   off_keys.append(p.key(at,direction,edge,hand,True,original_key.get('ease','ease_in_out')if original_key else 'ease_in_out'))
+  off_keys.append(p.key(at,direction,edge,hand,True,original_key.get('ease','ease_in_out')if original_key else 'ease_in_out'))
+ # F5 has its own sample horizon. FP bridge keys must not extend its hold.
+ for at in source_times:
   x,y,W,_=solve4(disp,1,source,at,a['third'],main['third'],p.grip,hilt,tip)
   item=WORLD[:3,:3]@Ry(y)@Rx(x)@C@W@dR(right_tp,1)
   off_source.append(carried(at,math.degrees(x-VANILLA_ARM[0]),math.degrees(y),item@p.basis[:,0],item@p.basis[:,1],True,'linear'))
@@ -235,6 +260,15 @@ for base in ('dual_chop','dual_slam','dual_slam_final'):
  anims[off['third']['source']]={**{k:source[k]for k in('length','hold','return')if k in source},'smooth':'tight','rotation_mode':'slerp','keyframes':off_source}
 for st in combo['dual_steps']:
  if st.get('off_anim'):st['off_anim']=st['off_anim']+'_off'
+# The repeated common strike begins at the preceding strike's actual end,
+# rather than returning to the first common strike's alternating-hand setup.
+for suffix in ('','_off'):
+ original='axe_dual_slam'+suffix;repeat='axe_dual_slam_repeat'+suffix
+ clip=copy.deepcopy(anims[original]);end_key=copy.deepcopy(clip['keyframes'][-1])
+ clip['keyframes'][0]=dict(end_key,t=0,ease=clip['keyframes'][0].get('ease','ease_in_out'))
+ clip['f5_reference']=original
+ anims[repeat]=clip
+combo['dual_steps'][3]['anim']='axe_dual_slam_repeat';combo['dual_steps'][3]['off_anim']='axe_dual_slam_repeat_off'
 # Restore only the single-right-hand R, including preparation and recovery.
 reference=json.loads((Path(__file__).parent/'references/pale_solo_r_8b7dd6d.json').read_text())
 for name,clip in reference['animations'].items():anims[name]=copy.deepcopy(clip)

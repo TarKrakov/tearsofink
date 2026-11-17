@@ -6,12 +6,20 @@ from pathlib import Path
 from tl import *
 a,model,fp,tp,grip=load('pale_linear_greatsword');h,tip=axis(model,fp,grip);mesh=model_points(model)/16
 assert a['fp_pose_version']=='raised_inward_v1'
-reference=json.load(open(Path(__file__).parent/'references/pale_f5_28a2a80.json'))
-for name,wanted in reference['f5'].items():
+reference=json.load(open(Path(__file__).parent/'references/pale_f5_accepted_ee55b6e.json'))
+f5=dict(reference['f5'])
+for name,c in a['animations'].items():
+ if c.get('f5_reference'):f5[name]=reference['f5'][c['f5_reference']]
+for name,wanted in f5.items():
  c=a['animations'][name];fix=c.get('third',{});src=fix.get('source')
- value={'fix':fix,'pose':a['animations'][src]if src else c,'timing':{k:c.get(k)for k in('length','hold','return')}}
+ value={'fix':fix,'pose':a['animations'][src]if src else c,'timing':{'end':round(end_time(c),6),'out':round(max(.05,c.get('return',.3))if c.get('hold',0)>0 else .15,6)}}
  assert hashlib.sha256(json.dumps(value,sort_keys=True).encode()).hexdigest()==wanted,(name,'accepted F5 changed')
-print('PASS: all',len(reference['f5']),'F5 source/fix/timing snapshots unchanged from',reference['revision'])
+print('PASS: all',len(f5),'F5 source/fix/timing snapshots unchanged from',reference['revision'])
+# Camera mount is shared by idle and all clips, matching WeaponAnims.apply.
+gesture_fp_item_m=fp_item_m
+def fp_item_m(*args,**kwargs):
+ kwargs.setdefault('view_offset',a.get('firstperson_offset'))
+ return gesture_fp_item_m(*args,**kwargs)
 # Vanilla applyItemArmTransform translates Y=-.52-.6*equippedProgress.
 # Main/off heights are independent. The fixed pale renderer passes equip=0 for both,
 # including UseAnim.NONE charge. Exercise unequal values, not just a perfect pair.
@@ -33,7 +41,8 @@ for name in('axe_attack1','axe_attack2','axe_attack3','axe_dual_chop','axe_dual_
  visible=(depth>.05)&(abs(vertices[:,0])<depth*FOV*ASPECT)&(abs(vertices[:,1])<depth*FOV)
  assert visible.mean()>.97,(name,'mesh hidden during strike',visible.mean())
  point=apply4(mat,np.array([tip])/16);xy=screen(point)[0]
- assert -.40<xy[1]<.4,(name,'impact too low/high',xy)
+ pixel_y=270-xy[1]/FOV*270
+ assert 100<pixel_y<455,(name,'impact must remain above the HUD guide at y=500',pixel_y)
 # Check the server hit time too: donor impact metadata can differ by a fraction
 # of a tick, so visibility must not rely on checking only the artistic marker.
 combo=json.load(open(COMBO+'/pale_linear_greatsword.json'))
@@ -95,3 +104,13 @@ if '--compiled' in sys.argv:
  using=code.split('isUsingItem:',1)[0].split('istore        13',1)[1]
  assert 'iload         13'in using and 'ifne'in using,'Pale NONE-charge must not bypass correction'
  print('PASS: compiled renderer checks both swing/equip and passes neutral 0/0, including pale NONE-use; legacy path preserved')
+
+ # Verify the new shared mount in the built client too: it must precede the
+ # no-playing-clip return, otherwise idle and abilities would visibly pop.
+ animation_class=compiled.parents[1]/'combat/WeaponAnims.class'
+ animation_code=subprocess.check_output([javap,'-p','-c',str(animation_class)],text=True)
+ application=animation_code.split('public static boolean apply(',1)[1].split('private static',1)[0]
+ assert application.index('Field FIRST_PERSON_OFFSET')<application.index('PoseStack.translate:')<application.index('Field ARMS'),'Camera mount missing for idle / applied after clip lookup'
+ reloader_code=subprocess.check_output([javap,'-p','-c',str(animation_class.with_name('WeaponAnims$1.class'))],text=True)
+ assert 'String firstperson_offset'in reloader_code,'Compiled loader ignores shared camera mount'
+ print('PASS: compiled client loads the shared FP mount and applies it before idle/clip lookup')

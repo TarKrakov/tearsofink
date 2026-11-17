@@ -17,7 +17,7 @@ def generate(out, only=None):
     inputs=['src/main/resources/assets/tears-of-ink/weapon_anims/pale_linear_greatsword.json',
             'src/main/resources/assets/tears-of-ink/models/item/pale_linear_greatsword.json',
             'src/main/resources/assets/tears-of-ink/models/item/pale_linear_great.json']
-    inputs += ['tools/preview/'+n+'.py'for n in('pale','tl','third','run')]
+    inputs += ['tools/preview/'+n+'.py'for n in('pale','tl','third','run','gif')]
     def snapshot():return {name:hashlib.sha256((root/name).read_bytes()).hexdigest()for name in inputs}
     before=snapshot()
     combo = json.load(open(f'{COMBO}/{ARCH}.json'))

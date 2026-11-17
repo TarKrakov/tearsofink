@@ -12,7 +12,7 @@ for row,data in enumerate((old,a)):
  for sign,suffix in((1,''),(-1,'_off')):
   clip=data['animations']['axe_dual_slam'+suffix];r,p=sample(clip,.2);f=m['display']['firstperson_'+('right'if sign==1 else'left')+'hand']
   eq=1 if row==0 and sign==1 else 0
-  quads+=item_quads(m,fp_item_m(f,r,p,g,sign,equipped=eq),(190,40,50)if sign==1 else(150,30,90))
+  quads+=item_quads(m,fp_item_m(f,r,p,g,sign,equipped=eq,view_offset=data.get('firstperson_offset')),(190,40,50)if sign==1 else(150,30,90))
  im=render(quads,[0,0,0],[0,0,-1],(960,540),70,bg=(40,40,56));d=ImageDraw.Draw(im)
  d.line((472,270,488,270),fill=(225,225,225));d.line((480,262,480,278),fill=(225,225,225));d.line((0,500,960,500),fill=(80,80,90))
  canvas.paste(im,(0,row*580+40));ImageDraw.Draw(canvas).text((10,row*580+10),labels[row],font=FONT,fill=(240,240,240))

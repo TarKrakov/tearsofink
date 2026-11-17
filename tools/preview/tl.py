@@ -25,7 +25,7 @@ def hand_pose(arch, model, grip, c, t, m, tune, continuing=False, animations=Non
     x, y, W, P = solve4(disp, m, c, t, tune, fx, grip, handle, tip)
     v0 = VANILLA_ARM
     arm = (v0[0]+(x-v0[0])*w, y*w, m*D(sample(c,t)[0][2])*w if fx.get('arm_space') else 0)
-    fq = item_quads(model, fp_item_m(fp, rot, pos, grip, m), (190,40,50) if m == 1 else (150,30,90))
+    fq = item_quads(model, fp_item_m(fp, rot, pos, grip, m, view_offset=model.get('_fp_offset')), (190,40,50) if m == 1 else (150,30,90))
     return arm, slerp_m(W, w), tp, handle, fq, y*w, P, w
 
 def build(arch, steps, dual, out, fps=20, tune=None, front=False, observer=None, render_frames=True, widescreen=False, fp_out=None):
@@ -62,7 +62,7 @@ def build(arch, steps, dual, out, fps=20, tune=None, front=False, observer=None,
             W0, W1 = previous[0][1], result[1]
             result[1] = W0 @ slerp_m(W0.T @ W1, u)
         fp = disp['firstperson_'+('right' if m == 1 else 'left')+'hand']
-        result[4] = item_quads(model, fp_item_m(fp, rot, pos, grip, m), (190,40,50) if m == 1 else (150,30,90))
+        result[4] = item_quads(model, fp_item_m(fp, rot, pos, grip, m, view_offset=model.get('_fp_offset')), (190,40,50) if m == 1 else (150,30,90))
         return result, (rot, pos)
     events = []
     for start, m, nm in sched:
@@ -84,7 +84,7 @@ def build(arch, steps, dual, out, fps=20, tune=None, front=False, observer=None,
             if sampled is None: continue
             nm = state[1]
             side='right' if m==1 else 'left'
-            shown_fp[m]=fp_item_m(disp['firstperson_'+side+'hand'],*sampled[1],grip,m)
+            shown_fp[m]=fp_item_m(disp['firstperson_'+side+'hand'],*sampled[1],grip,m,view_offset=model.get('_fp_offset'))
             arm, W, tp, handle, q, by, P, w = sampled[0]
             s = 'R' if m == 1 else 'L'
             arms[s] = arm
@@ -99,7 +99,7 @@ def build(arch, steps, dual, out, fps=20, tune=None, front=False, observer=None,
                 side = 'right' if m == 1 else 'left'
                 tp = disp['thirdperson_'+side+'hand']
                 items[s] = (model, (lambda tp, m: (lambda am: tp_item_m(am, tp, None, None, m)))(tp, m))
-                fq += item_quads(model, fp_item_m(disp['firstperson_'+side+'hand'], np.zeros(3), np.zeros(3), grip, m), (190,40,50) if m == 1 else (150,30,90))
+                fq += item_quads(model, fp_item_m(disp['firstperson_'+side+'hand'], np.zeros(3), np.zeros(3), grip, m, view_offset=model.get('_fp_offset')), (190,40,50) if m == 1 else (150,30,90))
         if len(labels) > 1: body = 0
         body = max(-D(25), min(D(25), body))
         if observer is not None:
