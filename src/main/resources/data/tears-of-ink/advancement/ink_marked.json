@@ -1,0 +1,23 @@
+{
+  "parent": "tears-of-ink:ink_shattered_heart",
+  "display": {
+    "icon": {
+      "id": "minecraft:ink_sac"
+    },
+    "title": {
+      "translate": "advancements.tears-of-ink.ink_marked.title"
+    },
+    "description": {
+      "translate": "advancements.tears-of-ink.ink_marked.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

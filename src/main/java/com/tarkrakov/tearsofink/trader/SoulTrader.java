@@ -222,6 +222,11 @@ public final class SoulTrader {
 			sendOpen(p, trader);
 			return;
 		}
+		if (d.inkMax() >= InkData.INK_CAP) {
+			say(p, "ink_full");
+			sendOpen(p, trader);
+			return;
+		}
 		if (d.sold() + d.taint() >= (InkData.SOUL_START - InkData.SOUL_MIN) / InkData.SOUL_STEP) {
 			say(p, "nothing_left");
 			sendOpen(p, trader);

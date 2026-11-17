@@ -116,6 +116,7 @@ public final class Vows {
 			sync(p);
 			PROMPTED.remove(p.getUUID());
 			if (InkPowers.get(p).inside()) prompt(p);
+			InkRank.grantReached(p); // достижения старых сохранений с уже высоким максимумом
 		});
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> PROMPTED.remove(handler.getPlayer().getUUID()));
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> sync(newPlayer));
@@ -200,6 +201,9 @@ public final class Vows {
 		if (v == Vow.SOUL) {
 			com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(p, "soul_pilgrim");
 			SoulRank.grantReached(p);
+		} else if (v == Vow.INK) {
+			com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(p, "ink_shattered_heart");
+			InkRank.grantReached(p);
 		}
 	}
 
@@ -297,6 +301,7 @@ public final class Vows {
 		pathBonus(p, d.vow(), next);
 		mark(p, next);
 		SoulRank.grantReached(p);
+		InkRank.grantReached(p);
 		return true;
 	}
 

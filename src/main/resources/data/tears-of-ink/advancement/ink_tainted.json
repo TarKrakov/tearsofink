@@ -1,0 +1,23 @@
+{
+  "parent": "tears-of-ink:ink_marked",
+  "display": {
+    "icon": {
+      "id": "minecraft:black_dye"
+    },
+    "title": {
+      "translate": "advancements.tears-of-ink.ink_tainted.title"
+    },
+    "description": {
+      "translate": "advancements.tears-of-ink.ink_tainted.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

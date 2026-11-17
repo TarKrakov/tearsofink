@@ -72,6 +72,7 @@ public final class InkPowers {
 			if (fresh.sold() > old.sold()) ModAdvancements.grant(player, ModAdvancements.CURSE_ESSENCE);
 			if (fresh.sold() < old.sold()) ModAdvancements.grant(player, ModAdvancements.ATONEMENT);
 			if (fresh.soulMax() > old.soulMax()) com.tarkrakov.tearsofink.vow.SoulRank.grantReached(player);
+			if (fresh.inkMax() > old.inkMax()) com.tarkrakov.tearsofink.vow.InkRank.grantReached(player);
 		}
 	}
 

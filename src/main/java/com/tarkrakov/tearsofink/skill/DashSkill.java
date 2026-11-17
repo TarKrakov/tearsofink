@@ -32,7 +32,8 @@ public class DashSkill extends Skill {
 	/** Сколько скорости остаётся после рывка (чтобы не улетать по инерции). */
 	public static final double END_SLOWDOWN = 0.3;
 
-	private record Dash(double dx, double dz, int ticksLeft, int invulnerableLeft) {}
+	/** dodged: выплата за уклонение уже получена (не больше раза за рывок). */
+	private record Dash(double dx, double dz, int ticksLeft, int invulnerableLeft, boolean dodged) {}
 
 	private final Map<UUID, Dash> active = new HashMap<>();
 
@@ -45,7 +46,20 @@ public class DashSkill extends Skill {
 		// кадры неуязвимости: урон в начале рывка не проходит (кроме «пустоты» и /kill)
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
 			Dash dash = active.get(entity.getUUID());
-			return dash == null || dash.invulnerableLeft() <= 0 || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY);
+			if (dash == null || dash.invulnerableLeft() <= 0 || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY))
+				return true;
+			// Пустой: лишь реально предотвращённая атака врага, не огонь/падение/свои трюки.
+			if (!dash.dodged() && amount > 0 && entity instanceof ServerPlayer player
+					&& com.tarkrakov.tearsofink.vow.InkRank.active(player)
+							.atLeast(com.tarkrakov.tearsofink.vow.InkRank.HOLLOW)
+					&& com.tarkrakov.tearsofink.vow.SoulFeats.isEnemy(player, source.getEntity())) {
+				active.put(player.getUUID(), new Dash(dash.dx(), dash.dz(), dash.ticksLeft(), dash.invulnerableLeft(), true));
+				var ink = com.tarkrakov.tearsofink.ink.InkPowers.get(player);
+				if (ink.ink() < ink.inkMax())
+					com.tarkrakov.tearsofink.ink.InkPowers.update(player,
+							ink.withInk(ink.ink() + com.tarkrakov.tearsofink.ink.InkTuning.HOLLOW_DODGE_REFUND));
+			}
+			return false;
 		});
 	}
 
@@ -75,7 +89,7 @@ public class DashSkill extends Skill {
 		double dx = strafe * cos - forward * sin;
 		double dz = forward * cos + strafe * sin;
 
-		active.put(player.getUUID(), new Dash(dx, dz, DURATION_TICKS, INVULNERABLE_TICKS));
+		active.put(player.getUUID(), new Dash(dx, dz, DURATION_TICKS, INVULNERABLE_TICKS, false));
 		push(player, dx, dz);
 
 		ServerLevel level = player.serverLevel();
@@ -117,7 +131,7 @@ public class DashSkill extends Skill {
 			if (left <= 0 && inv <= 0) {
 				it.remove();
 			} else {
-				e.setValue(new Dash(d.dx(), d.dz(), left, inv));
+				e.setValue(new Dash(d.dx(), d.dz(), left, inv, d.dodged()));
 			}
 		}
 	}

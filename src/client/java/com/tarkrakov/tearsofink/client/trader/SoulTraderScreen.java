@@ -85,13 +85,6 @@ public class SoulTraderScreen extends Screen {
 		ClientPlayNetworking.send(new SoulTrader.Action(data.entity(), action));
 	}
 
-	private static String stage(int soulMax) {
-		if (soulMax >= 90) return null;
-		if (soulMax >= 75) return "marked";
-		if (soulMax >= 60) return "tainted";
-		return "hollow";
-	}
-
 	@Override
 	public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
 		super.render(g, mouseX, mouseY, partialTick);
@@ -145,8 +138,14 @@ public class SoulTraderScreen extends Screen {
 			y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.soul", now, after), l + M, y, textW, WARN);
 			y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.ink", data.inkMax(), inkBack), l + M, y, textW, TEXT);
 			y = rankWarning(g, l, y, textW, now, after);
+			y = inkRankPreview(g, l, y, textW, data.inkMax(), inkBack);
 			y += 4;
 			y = option(g, Component.translatable("trader.tears-of-ink.sell.confirm"), l + M, y, () -> send(SoulTrader.ACTION_SELL), true, mouseX, mouseY);
+			option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { selling = false; click(); }, true, mouseX, mouseY);
+			return;
+		}
+		if (data.inkMax() >= InkData.INK_CAP) {
+			y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.ink_full"), l + M, y, textW, WARN) + 10;
 			option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { selling = false; click(); }, true, mouseX, mouseY);
 			return;
 		}
@@ -163,14 +162,22 @@ public class SoulTraderScreen extends Screen {
 		y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.ink", data.inkMax(), inkAfter), l + M, y, textW, TEXT);
 		y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.penalty", pNow, pAfter), l + M, y, textW, WARN);
 		y = rankWarning(g, l, y, textW, now, after);
-		String sNow = stage(now), sAfter = stage(after);
-		if (sAfter != null && !sAfter.equals(sNow)) {
-			y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.stage",
-					Component.translatable("trader.tears-of-ink.stage." + sAfter)).withStyle(ChatFormatting.ITALIC), l + M, y, textW, WARN);
-		}
+		y = inkRankPreview(g, l, y, textW, data.inkMax(), inkAfter);
 		y += 10;
 		y = option(g, Component.translatable("trader.tears-of-ink.sell.confirm"), l + M, y, () -> send(SoulTrader.ACTION_SELL), true, mouseX, mouseY);
 		option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { selling = false; click(); }, true, mouseX, mouseY);
+	}
+
+	/** При продаже и получении Чернил показывать новую стадию и конкретное преимущество. */
+	private int inkRankPreview(GuiGraphics g, int l, int y, int width, int before, int after) {
+		if (data.path() != com.tarkrakov.tearsofink.vow.Vow.INK) return y;
+		var first = com.tarkrakov.tearsofink.vow.InkRank.fromMaximum(before);
+		var next = com.tarkrakov.tearsofink.vow.InkRank.fromMaximum(after);
+		if (first == next) return y;
+		y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.ink_rank_gain",
+				Component.translatable("ink_rank.tears-of-ink." + first.id),
+				Component.translatable("ink_rank.tears-of-ink." + next.id)), l + M, y, width, TITLE);
+		return paragraph(g, Component.translatable("ink_rank.tears-of-ink.perk." + next.id), l + M, y, width, TITLE);
 	}
 
 	/** Предупредить о потере ранга ДО сделки, включая отключаемую боевую способность. */
