@@ -370,6 +370,18 @@ def angles(d):
     y = math.atan2(-d[0], -d[2]) if abs(math.sin(x)) > 1e-3 else 0
     return x, y
 
+def rotation_between(a, b):
+    """Rotation of the blade axis onto the forearm; mirrors ThirdPerson.followBlade."""
+    a = np.array(a, float); a /= np.linalg.norm(a)
+    b = np.array(b, float); b /= np.linalg.norm(b)
+    cross = np.cross(a, b); dot = np.clip(a @ b, -1., 1.)
+    if dot < -0.999999:
+        helper = np.array([1., 0., 0.]) if abs(a[0]) < .9 else np.array([0., 1., 0.])
+        axis = np.cross(a, helper); axis /= np.linalg.norm(axis)
+        return 2 * np.outer(axis, axis) - np.eye(3)
+    K = np.array([[0,-cross[2],cross[1]], [cross[2],0,-cross[0]], [-cross[1],cross[0],0]])
+    return np.eye(3) + K + K @ K / (1. + dot)
+
 def solve4(disp, m, clip, t, tune, fix, grip, handle, tip):
     side = 'right' if m == 1 else 'left'
     tp = disp['thirdperson_'+side+'hand']
@@ -383,4 +395,8 @@ def solve4(disp, m, clip, t, tune, fix, grip, handle, tip):
     x, y = angles(b[0]); xw, yw = angles(bw[0])
     A = Ry(yw) @ Rx(xw)
     W = np.linalg.inv(A @ C) @ Ry(D(TURN_SIGN*m*fix.get('turn', 0))) @ bw[1] @ np.linalg.inv(dR(tp, m))  # turn — к центру
+    if fix.get('follow_blade'):
+        blade = dR(tp, m) @ (np.array(tip) - np.array(handle))
+        along_arm = C.T @ np.array([0., 1., -0.15])
+        W = rotation_between(blade, along_arm)
     return x, y, W, b[2]

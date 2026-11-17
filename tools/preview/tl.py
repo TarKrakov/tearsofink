@@ -13,9 +13,9 @@ def hand_pose(arch, model, grip, c, t, m, tune, continuing=False):
         handle, tip = axis(model, disp['firstperson_righthand'], grip)
     rot, pos = sample(c, t); w = weight(c, t)
     if continuing: w = ease("ease_in_out", min(1, max(0, (end_time(c)-t)/(c.get("return", .3) if c.get("hold", 0) > 0 else .15))))
-    src = c.get('third', {}).get('source')
+    fx = dict(c.get('third', {}))  # correction belongs to the original clip, not its F5 source
+    src = fx.get('source')
     if src: c = dict(c, keyframes=json.load(open(f'{REPO}/weapon_anims/{arch}.json'))['animations'][src]['keyframes'])  # третье лицо — по другому движению
-    fx = dict(c.get('third', {}))
     if tune.get('centre'): fx['_keep_face'] = True
     x, y, W, P = solve4(disp, m, c, t, tune, fx, grip, handle, tip)
     v0 = VANILLA_ARM
@@ -45,11 +45,11 @@ def build(arch, steps, dual, out, fps=20, tune=None):
         if t >= end_time(c): return None
         result = list(hand_pose(arch, model, grip, c, t, m, tune, previous is not None))
         rot, pos = sample(c, t)
-        if previous is None and arch == 'pale_linear_greatsword' and c.get('smooth') and now-start < .12:
-            u = ease('ease_out', max(0, (now-start)/.12))
+        if previous is None and arch == 'pale_linear_greatsword' and c.get('smooth') and now-start < .20:
+            u = ease('ease_out', max(0, (now-start)/.20))
             rot, pos = rot*u, pos*u
-        if previous is not None and now-start < .12:
-            u = ease('ease_out', max(0, (now-start)/.12))
+        if previous is not None and now-start < (.20 if arch == 'pale_linear_greatsword' else .12):
+            u = ease('ease_out', max(0, (now-start)/(.20 if arch == 'pale_linear_greatsword' else .12)))
             if c.get('smooth'):
                 rot = previous[1][0]*(1-u) + rot*u
                 pos = previous[1][1]*(1-u) + pos*u
