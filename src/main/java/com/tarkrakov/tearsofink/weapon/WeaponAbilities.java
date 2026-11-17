@@ -168,7 +168,8 @@ public final class WeaponAbilities {
 				}
 				ServerLevel level = player.serverLevel();
 				AABB box = player.getBoundingBox().inflate(0.8, 0.2, 0.8).move(r.dx() * 0.6, 0, r.dz() * 0.6);
-				for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, box, t -> t != player && t.isAlive())) {
+				for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, box,
+						t -> com.tarkrakov.tearsofink.weapon.shield.ShieldStance.offensiveTarget(player, t))) {
 					if (!r.hit().add(target.getUUID())) continue;
 					float f = SoulShieldItem.factor(player, RAM); // потёртый щит слабее
 					target.hurt(player.damageSources().playerAttack(player), DAMAGE * f);

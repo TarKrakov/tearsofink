@@ -97,7 +97,9 @@ public class InkWaveEntity extends Entity {
 		}
 		Entity owner = ownerId == null ? null : level.getEntity(ownerId);
 		for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(0.3),
-				t -> t != owner && t.isAlive() && (onlyTarget == null || onlyTarget.equals(t.getUUID())))) {
+				t -> t != owner && t.isAlive() && (onlyTarget == null || onlyTarget.equals(t.getUUID()))
+						&& (!(owner instanceof ServerPlayer player && this.entityData.get(LIGHT))
+								|| com.tarkrakov.tearsofink.weapon.shield.ShieldStance.offensiveTarget(player, t)))) {
 			if (!hit.add(target.getUUID())) continue;
 			if (owner instanceof ServerPlayer player) {
 				target.hurt(player.damageSources().playerAttack(player), damage);

@@ -12,6 +12,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.RegistryFriendlyByteBuf;
@@ -31,6 +32,8 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.OwnableEntity;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -99,6 +102,15 @@ public final class ShieldStance {
 		PayloadTypeRegistry.playS2C().register(Stored.TYPE, Stored.CODEC);
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(ShieldStance::allowDamage);
 		ServerTickEvents.END_SERVER_TICK.register(ShieldStance::tick);
+		// Не сбрасывать антиспам простым убиранием щитов: очистка только при отключении игрока.
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			UUID id = handler.getPlayer().getUUID();
+			LAST_PERFECT.remove(id);
+			CHARGE.remove(id);
+			ABSORBED.remove(id);
+			RIPOSTE.remove(id);
+			CHOIR.remove(id);
+		});
 	}
 
 	/** Щиты Души в обеих руках. */
@@ -114,6 +126,15 @@ public final class ShieldStance {
 
 	public static int charge(Player p) {
 		return CHARGE.getOrDefault(p.getUUID(), 0);
+	}
+
+	/** Вращающиеся атакующие приёмы щитов не должны задевать игроков, команды и прирученных питомцев.
+	 * Нейтральных диких существ и ещё не враждебных охотников по-прежнему можно атаковать щитами.
+	 */
+	public static boolean offensiveTarget(ServerPlayer p, LivingEntity target) {
+		return target != p && target.isAlive() && !(target instanceof Player)
+				&& !(target instanceof ArmorStand) && !target.isAlliedTo(p)
+				&& !(target instanceof OwnableEntity owned && owned.getOwnerUUID() != null);
 	}
 
 	private static boolean allowDamage(LivingEntity entity, DamageSource source, float amount) {
@@ -135,7 +156,7 @@ public final class ShieldStance {
 			return false;
 		}
 		ServerLevel level = p.serverLevel();
-		long now = level.getGameTime();
+		long now = p.server.getTickCount();
 		boolean perfect = p.getTicksUsingItem() <= ShieldTuning.PERFECT_TICKS
 				&& now - LAST_PERFECT.getOrDefault(p.getUUID(), -1000000L) >= ShieldTuning.PERFECT_REPEAT_TICKS;
 		com.tarkrakov.tearsofink.vow.SoulRank rank = com.tarkrakov.tearsofink.vow.SoulRank.active(p);
@@ -246,7 +267,8 @@ public final class ShieldStance {
 				+ Math.min(cap, absorbed * factor);
 		float knock = ShieldTuning.BURST_KNOCKBACK + ShieldTuning.BURST_KNOCKBACK_PER_CHARGE * c;
 		double r = ShieldTuning.BURST_RANGE;
-		for (LivingEntity t : level.getEntitiesOfClass(LivingEntity.class, p.getBoundingBox().inflate(r), e -> e != p && e.isAlive())) {
+		for (LivingEntity t : level.getEntitiesOfClass(LivingEntity.class, p.getBoundingBox().inflate(r),
+				e -> offensiveTarget(p, e))) {
 			Vec3 d = t.position().subtract(p.position()).multiply(1, 0, 1);
 			if (d.length() > r + t.getBbWidth() / 2) continue;
 			if (d.lengthSqr() > 1.0e-4 && Math.toDegrees(Math.acos(Mth.clamp(look.dot(d.normalize()), -1, 1))) > ShieldTuning.BURST_HALF_ANGLE) continue;
@@ -303,7 +325,7 @@ public final class ShieldStance {
 			boolean stance = inStance(p);
 			rock(p, stance);
 			if (!dual(p) || !ModDimensions.isLands(p.level())) {
-				LAST_PERFECT.remove(p.getUUID());
+				// Заряд при снятии щитов теряется, но время последнего идеального блока — нет.
 				if (CHARGE.containsKey(p.getUUID())) setCharge(p, 0); // сменил щиты или ушёл — заряд сгорает
 			}
 		}
