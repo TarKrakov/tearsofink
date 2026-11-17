@@ -28,7 +28,7 @@ def hand_pose(arch, model, grip, c, t, m, tune, continuing=False, animations=Non
     fq = item_quads(model, fp_item_m(fp, rot, pos, grip, m), (190,40,50) if m == 1 else (150,30,90))
     return arm, slerp_m(W, w), tp, handle, fq, y*w, P, w
 
-def build(arch, steps, dual, out, fps=20, tune=None, front=False, observer=None, render_frames=True):
+def build(arch, steps, dual, out, fps=20, tune=None, front=False, observer=None, render_frames=True, widescreen=False, fp_out=None):
     a, model, fp0, tp0, grip = load(arch)
     tune = tune or dict(TUNE, **a.get("third", {}))
     combo = json.load(open(f'{COMBO}/{arch}.json')); tempo = combo.get('tempo', 1.0)
@@ -71,7 +71,7 @@ def build(arch, steps, dual, out, fps=20, tune=None, front=False, observer=None,
         state = (start, nm, previous)
         states[m] = state; events.append((start, m, state))
     total = T + 0.8
-    frames = []
+    frames = []; fp_frames=[]
     for i in range(int(total*fps)):
         now = i/fps
         arms = {'R': VANILLA_ARM, 'L': VANILLA_ARM}; items = {}; fq = []; body = 0; labels = []
@@ -111,7 +111,7 @@ def build(arch, steps, dual, out, fps=20, tune=None, front=False, observer=None,
             observer(now,shown_fp,carried)
         if not render_frames: continue
         q = scene(arms, items, body)
-        A_ = render(fq, [0,0,0], [0,0,-1], size=(240,180), fov=70, bg=(40,40,56))
+        A_ = render(fq, [0,0,0], [0,0,-1], size=(240,135) if widescreen else (240,180), fov=70, bg=(40,40,56))
         B_ = render(q, [0.9,2.4,2.6], [0,1.3,-0.6], size=(240,240), fov=50)
         C_ = render(q, [0,1.7,-3.3] if front else [-1.8,1.9,-2.4], [0,1.25,0], size=(240,240), fov=50)
         im = Image.new('RGB', (720, 240), (20,20,20))
@@ -122,8 +122,17 @@ def build(arch, steps, dual, out, fps=20, tune=None, front=False, observer=None,
         dr.text((484,214), f'{arch}: ' + (' + '.join(labels) or '—'), fill=(255,255,255), font=FONT)
         dr.text((4,220), f'{now:.2f} s', fill=(255,255,255), font=FONT)
         frames.append(im)
+        if fp_out:
+            first=render(fq,[0,0,0],[0,0,-1],size=(960,540),fov=70,bg=(40,40,56))
+            draw=ImageDraw.Draw(first)
+            draw.line((472,270,488,270),fill=(220,220,220),width=1);draw.line((480,262,480,278),fill=(220,220,220),width=1)
+            draw.line((0,500,960,500),fill=(65,65,75),width=1)
+            draw.text((8,8),f'{now:.2f} s  '+(' + '.join(labels) or 'rest'),font=FONT,fill=(225,225,225))
+            fp_frames.append(first)
     if not frames: return frames
     frames[0].save(out, save_all=True, append_images=frames[1:], duration=[(round((i+1)*100/fps)-round(i*100/fps))*10 for i in range(len(frames))], loop=0)
+    if fp_out and fp_frames:
+        fp_frames[0].save(fp_out,save_all=True,append_images=fp_frames[1:],duration=[(round((i+1)*100/fps)-round(i*100/fps))*10 for i in range(len(fp_frames))],loop=0)
     return frames
 
 def all_for(arch):

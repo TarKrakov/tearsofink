@@ -43,17 +43,17 @@ public abstract class ItemInHandRendererMixin {
 									  ItemStack stack, float equippedProgress, PoseStack poseStack, MultiBufferSource buffer, int light, CallbackInfo ci) {
 		Archetype archetype = Archetype.of(stack);
 		if (tearsofink$inner || archetype == null) return;
-		// Legacy weapons must keep their original first-person rendering contract.
-		// Only the pale greatsword uses the newer equip interpolation.
+		// Preserve the legacy contract. Custom pale poses also need equip=0:
+		// otherwise cooldown lowers the main hand independently of the off hand.
 		boolean pale = archetype == Archetype.PALE_LINEAR_GREATSWORD;
-		if (pale ? swingProgress == 0 : swingProgress == 0 && equippedProgress == 0) return;
+		if (swingProgress == 0 && equippedProgress == 0) return;
 		if (archetype == Archetype.BASTION && !com.tarkrakov.tearsofink.weapon.combat.Combat.bastion(player)) return; // один щит — по-ванильному
-		if (player.isUsingItem() && player.getUsedItemHand() == hand) return; // своё использование (если будет) — по-ванильному
+		if (!pale && player.isUsingItem() && player.getUsedItemHand() == hand) return; // своё использование (если будет) — по-ванильному
 		var gm = net.minecraft.client.Minecraft.getInstance().gameMode;
 		if (hand == InteractionHand.MAIN_HAND && gm != null && gm.isDestroying()) return; // копает — ванильный мах «палкой-копалкой»
 		tearsofink$inner = true;
 		try {
-			((ItemInHandRendererInvoker) this).tearsofink$renderArmWithItem(player, partialTicks, pitch, hand, 0, stack, pale ? equippedProgress : 0, poseStack, buffer, light);
+			((ItemInHandRendererInvoker) this).tearsofink$renderArmWithItem(player, partialTicks, pitch, hand, 0, stack, 0, poseStack, buffer, light);
 		} finally {
 			tearsofink$inner = false;
 		}

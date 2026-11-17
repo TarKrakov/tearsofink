@@ -31,6 +31,10 @@ jobs:
           /tmp/tearsofink-preview-venv/bin/pip install --quiet numpy pillow
       - name: validate animation positions via Claude preview
         run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale.py
+      - name: validate first-person composition and compiled renderer
+        run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale_fp.py --compiled
+      - name: validate paired attack handoffs
+        run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale_sync.py
       - name: review clip curves and whole-model visibility
         run: /tmp/tearsofink-preview-venv/bin/python tools/preview/review.py pale_linear_greatsword --check-only
       - name: render three-view review sheets
