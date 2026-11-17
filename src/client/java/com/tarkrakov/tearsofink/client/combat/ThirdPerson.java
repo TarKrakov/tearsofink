@@ -148,7 +148,7 @@ public final class ThirdPerson {
 			Quaternionf wrist = new Quaternionf().slerp(s.wrist, w);
 			float push = s.push * w;
 			float transition = p.archetype == Archetype.PALE_LINEAR_GREATSWORD ? 0.2f : BLEND;
-			if (p.from != null && p.real() < transition) {
+			if (!p.clip.third().baked() && p.from != null && p.real() < transition) {
 				float u = WeaponAnims.ease(WeaponAnims.Ease.EASE_OUT, p.real() / transition);
 				x = Mth.lerp(u, p.from.x, x);
 				y = Mth.lerp(u, p.from.y, y);
@@ -218,6 +218,7 @@ public final class ThirdPerson {
 	/** Рука плавно входит в удар из обычной позы и плавно выходит в конце. Новый удар сразу после старого — без входа. */
 	private static float weight(Playing p, float t) {
 		WeaponAnims.Clip c = p.clip;
+		if (c.third().baked()) return 1;
 		float rampIn = p.archetype == Archetype.PALE_LINEAR_GREATSWORD ? 0.18f : RAMP_IN;
 		float in = p.from != null ? 1 : Mth.clamp(t / rampIn, 0, 1);
 		float outTime = c.hold() > 0 ? Math.max(0.05f, c.back()) : RAMP_OUT;
@@ -265,11 +266,16 @@ public final class ThirdPerson {
 			Quaternionf wrist = new Quaternionf();
 			WeaponAnims.Clip wristClip = fix.wristSource() == null ? null : WeaponAnims.clip(archetype, fix.wristSource());
 			if (wristClip != null) {
-				Vector3f blade = at(ax[1], tp, m).sub(at(ax[0], tp, m)).normalize();
-				wrist.rotationAxis(WeaponAnims.sample(wristClip, t).rot().x * Mth.DEG_TO_RAD, blade);
+				Vector3f rotation = WeaponAnims.sample(wristClip, t).rot();
+				if (fix.wristXYZ()) {
+					wrist.rotationXYZ(rotation.x * Mth.DEG_TO_RAD, rotation.y * Mth.DEG_TO_RAD, rotation.z * Mth.DEG_TO_RAD);
+				} else {
+					Vector3f blade = at(ax[1], tp, m).sub(at(ax[0], tp, m)).normalize();
+					wrist.rotationAxis(rotation.x * Mth.DEG_TO_RAD, blade);
+				}
 			}
 			return new Solved(x + model.head.xRot * tune.look(), y + model.head.yRot, z,
-					wrist, at(ax[0], tp, m), y * tune.body(), hand, 0);
+					wrist, at(ax[0], tp, m), fix.baked() ? 0 : y * tune.body(), hand, 0);
 		}
 		Base b = base(tr, calc, pose, t, tune, fix, grip, ax);
 		Base bw = fix.wristHold() >= 0 ? base(tr, calc, pose, fix.wristHold(), tune, fix, grip, ax) : b;

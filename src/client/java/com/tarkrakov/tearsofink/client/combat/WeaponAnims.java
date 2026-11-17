@@ -51,10 +51,11 @@ public final class WeaponAnims {
 	 * сводятся в центр и расходятся в края); no_cross — руки не заходят за середину (не перекрещиваются);
 	 * source — третье лицо считается по другому движению (первое лицо правят, а третье остаётся как было).
 	 * arm_space: source rotations are shoulder deltas; wrist_source.x is edge roll about the blade axis.
+	 * Import-only opt-ins: wrist_xyz uses full local XYZ; baked preserves the authored timeline (no extra F5 fades).
 	 */
 	public record ThirdFix(float wristHold, boolean mirror, float center, float lateral, boolean noCross, @org.jetbrains.annotations.Nullable String source,
-						   float pushRight, float pushLeft, float turn, boolean followBlade, boolean armSpace, @org.jetbrains.annotations.Nullable String wristSource) {
-		static final ThirdFix NONE = new ThirdFix(-1, false, 1, 1, false, null, 0, 0, 0, false, false, null);
+						   float pushRight, float pushLeft, float turn, boolean followBlade, boolean armSpace, @org.jetbrains.annotations.Nullable String wristSource, boolean wristXYZ, boolean baked) {
+		static final ThirdFix NONE = new ThirdFix(-1, false, 1, 1, false, null, 0, 0, 0, false, false, null, false, false);
 	}
 
 	/** Третье лицо архетипа (поле "third" в файле движений): как поза первого лица переводится в руку Стива. */
@@ -189,7 +190,8 @@ public final class WeaponAnims {
 		return new ThirdFix(f(t, "wrist_hold", -1), t.has("mirror") && t.get("mirror").getAsBoolean(), f(t, "center", 1),
 				f(t, "lateral", 1), t.has("no_cross") && t.get("no_cross").getAsBoolean(),
 				t.has("source") ? t.get("source").getAsString() : null,
-				push(t, 0), push(t, 1), f(t, "turn", 0), t.has("follow_blade") && t.get("follow_blade").getAsBoolean(), t.has("arm_space") && t.get("arm_space").getAsBoolean(), t.has("wrist_source") ? t.get("wrist_source").getAsString() : null);
+				push(t, 0), push(t, 1), f(t, "turn", 0), t.has("follow_blade") && t.get("follow_blade").getAsBoolean(), t.has("arm_space") && t.get("arm_space").getAsBoolean(), t.has("wrist_source") ? t.get("wrist_source").getAsString() : null,
+				t.has("wrist_xyz") && t.get("wrist_xyz").getAsBoolean(), t.has("baked") && t.get("baked").getAsBoolean());
 	}
 
 	/** "push": 3 — обеим рукам; "push": [правая, левая] — по-разному. */
@@ -329,6 +331,7 @@ public final class WeaponAnims {
 	}
 
 	private static Key sample(Clip c, float t, Key restKey) {
+		if (c.third().baked() && !c.keys().isEmpty() && t >= lastT(c)) return c.keys().get(c.keys().size() - 1);
 		Key result = sampleEuler(c, t, restKey);
 		if (!c.shortestRotation() || c.keys().isEmpty()) return result;
 		List<Key> keys = c.keys();

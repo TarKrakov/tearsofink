@@ -1,34 +1,72 @@
-# Tears of Ink — Blockbench animation workspace (prototype, 17.11.2026)
+# Анимации оружия в Blockbench
 
-> **ВАЖНО — 17.11.2026, автор уже проверил сцену в настоящем Blockbench:** `pale_animation_workspace.bbmodel` открывается и timeline работает, **но модель игрока/рук отображается прозрачными контурами и FP/F5 сцены визуально мешают друг другу**. Причина подтверждена: у вспомогательных кубов `faces.*.texture=null`. **Этот файл не готов для работы художника.** Не нужно дальше пытаться поставить на нём анимацию. Codex должен сначала подготовить исправленную непрозрачную сцену с понятным переключателем FP/F5, а затем делать импортёр. Конкретные требования внесены в [задание Codex](../../docs/CODEX_BLOCKBENCH_WEAPON_ANIMATION_PIPELINE_2026-11-17.md). Не трогать авторские модели/текстуры игры.
+[Открываемый проект — pale_animation_workspace.bbmodel](pale_animation_workspace.bbmodel).
+Это отдельная редакторская сцена. Авторский меч сохранён: 31 куб, прежние UV и исходные пиксели текстуры. Непрозрачные цветные кубы манекена используют добавленную область **редакторского** атласа; игровые файлы арта не менялись.
 
-**Open:** [pale_animation_workspace.bbmodel](pale_animation_workspace.bbmodel). This is a **separate editable staging project**, not a replacement for the Minecraft item model. Its first two demo animations are disposable examples, not approved artistic choreography.
+## Быстрый старт
 
-## What is already in this prototype
+1. В Blockbench **5.2.2 или новее** установи **Cameras — JannisX11** через **File → Plugins**. Это плагин редактора, GeckoLib в мод не нужен.
+2. Там же нажми **Load Plugin from File** и выбери [toi_workspace.js](toi_workspace.js). Подтверди загрузку нашего помощника. Сохрани исходное имя файла. Плагины нужно загрузить **до открытия проекта**, иначе неизвестные камеры могут потеряться при сохранении.
+3. **File → Open Model** → `pale_animation_workspace.bbmodel`. С помощником автоматически открываются два окна: **слева свободный редактор, справа закреплённый кадр 16:9**. Кнопки сверху: **FP 1 / FP 2**, **F5 1 front / F5 2 front / F5 back**. Один риг виден, другой полностью скрыт. Если расположение окон сбилось: **View → Tears of Ink: restore split workspace**.
+4. **Animate** → `demo_single_guard` или `demo_dual_guard` → Play. Длительность секунду; ключи в **0 / 0.25 / 0.75 / 1 с**. Это примеры редактирования, а не замена принятого блока.
+5. В Outliner раскрой активный риг → `body` → `right/left_shoulder` → `right/left_arm` → `right/left_sword`. Выбери **arm** и вращай мышкой: меч идёт вместе с рукой. Выбери **sword**: собственное вращение вокруг рукояти. На нужном времени Rotate создаёт ключ. **Редактируй кости в Animate**, оставляя исходные pivot и кубы в Edit на месте.
+6. Сохраняй свою копию через **File → Save Project / Save Project As** в `.bbmodel`, **не Save Model** в Bedrock geometry. Не перезаписывай игровые модели. В веб-версии разреши обычное скачивание файла; для постоянной работы удобнее настольный Blockbench.
 
-- The *actual author's* Pale Linear Greatsword source geometry (31 original cuboids) and original embedded PNG texture, duplicated four times without changing coordinates relative to grip `[7.75,2,7.75]`.
-- A schematic Minecraft player, head/torso/legs and two independently pivoted arms in the `F5_RIG` group.
-- A separate schematic first-person pair of arms in the `FP_RIG` group.
-- Editable bones: `F5_right_arm`, `F5_left_arm`, `F5_right_sword`, `F5_left_sword`, plus the corresponding four `FP_*` bones. Each sword bone is nested under its arm for natural joint movement.
-- Two purely illustrative 1-second animations on the Animate timeline: `animation.toi.demo_single_guard` and `animation.toi.demo_dual_guard`.
+Без нашего помощника файл открывается с непрозрачным F5-манекеном; автоматический split и переключатели требуют помощника. FP и F5 — отдельные tracks в одном клипе: постановка в одном ракурсе **не переписывает** другой. При импорте они соединяются в соответствующие игровые каналы.
 
-The format is **native Blockbench Bedrock Animated Model** (`meta.model_format=bedrock`), so Animate and the bone timeline work **without adding GeckoLib to the mod**. If desired, a copy can later be converted to GeckoLib Animated Model. The artist's original `.bbmodel`, model JSON, textures and game animation JSON remain untouched.
+## Камера и границы точности
 
-## How to try it
+FP находится в **camera/hand space**, а не на голове мирового Стива. База рассчитана существующей математикой `tools/preview`: независимые правый/левый Display, масштаб 0.68, общий mount, idle offset, настоящий grip и нейтральный swing/equip Бледного. F5 — мировые плечевые pivot, исходный наклон руки и независимые third-person Display. Технические руки соединяют плечо с измеренным хватом; это **схематичные направляющие**, не Minecraft skin/IK.
 
-1. Download **only** `pale_animation_workspace.bbmodel` from this folder. In Blockbench use **File → Open Model**.
-2. Open **Animate**, select either `animation.toi.demo_single_guard` or `animation.toi.demo_dual_guard`, and press Play.
-3. In Outliner toggle `FP_RIG` and `F5_RIG` visibility to work on each staging view without the other being in the way. Under the rig, select an **arm** to move the whole sword with it, or a **sword** to adjust its blade about the grip; keep their parent-child connection.
-4. Save your **own copy** of the project with a new name. Don't export a Bedrock entity over the current Java item model.
-5. The demo clips are only to prove the editable workflow. You can add new animations and edit both view variants independently.
+FP: **70° вертикальный FOV**, крест в центре; пунктир — ориентир верха HUD при условном кадре 960×540 (зависит от GUI scale, это не полный HUD). При другом FOV меняй свойство камеры `TOI_FP_70` и нажми кнопку FP. F5 front/back — обзорные камеры, не симуляция столкновения игровой камеры со стенами.
 
-## Important current limitations
+**Не откалибровано по живому Minecraft.** Изменения FOV, покачивание, ходьба, взгляд, экипировка и реальное освещение не проверены. Правый кадр прямо помечен `Minecraft comparison pending`. Нужна сверка одинаковых моментов 0/25/50/75/100% в игре. Не называем его game-accurate до этой проверки.
 
-- **This is not yet a pixel-accurate 16:9 first-person camera** nor a verified Minecraft F5 reference. The two scene rigs are spatially separated on the editing canvas; the eye/FOV, vanilla held-item transforms and third-person shoulder/wrist alignment need calibration against the live game and the existing Python previewer.
-- **There is no automatic .bbmodel → Tears of Ink animation importer yet.** A Minecraft 1.21.1 client cannot directly consume this staging project. The current game animations still live in `assets/tears-of-ink/weapon_anims/pale_linear_greatsword.json` and their server hit timings in `data/tears-of-ink/weapon_combos/`.
-- An authored swing is transferable **only after** a tested conversion from the rig's hierarchical bone keyframes to the current FP item and F5 arm/wrist conventions, correct left-hand author Display, and server-defined hit windows. Simply copying XYZ angles is not sufficient.
-- The Steve body and simplified arms are explicitly *technical visual guides* created for this staging file, not new game artwork. They must not replace any author's model/texture.
+## Импорт пилотных клипов
 
-**The next Codex implementation assignment** is [docs/CODEX_BLOCKBENCH_WEAPON_ANIMATION_PIPELINE_2026-11-17.md](../../docs/CODEX_BLOCKBENCH_WEAPON_ANIMATION_PIPELINE_2026-11-17.md). It includes the calibrated FP/F5 cameras, validated Blockbench scene, importer and one end-to-end test before any promise of “draw once, works in game”.
+Нужны Python, `numpy`, `Pillow` — те же зависимости, что у `tools/preview`.
+Из корня репозитория:
 
-**Source fidelity:** `src/main/resources/assets/tears-of-ink/models/item/pale_linear_great.bbmodel` and the live `models/item/pale_linear_great.json` are authoritative. The staging project copies geometry relative to `grip=[7.75,2,7.75]`, but keeps its own independent scene coordinates. Keep its source files untouched.
+```bash
+python tools/blockbench/import_weapon_animation.py \
+  tools/blockbench/pale_animation_workspace.bbmodel \
+  --clip animation.toi.demo_dual_guard --name bb_test_guard \
+  --output work/blockbench/guard.json --dry-run
+```
+
+Убери `--dry-run`, чтобы сохранить отдельный JSON. Повторный импорт одинакового проекта детерминирован. Dry-run показывает diff и ничего не пишет. Выход: `animations` с шестью **новыми** именами: FP `bb_test_guard`, `bb_test_guard_off`, плюс их F5 `*_shoulder` / `*_wrist`. Существующие имена и файлы под `src/` защищены от перезаписи. Этот JSON **сам по себе не включает приём в игре**: интеграция новых имён в события — следующий этап после просмотра пилота, с отдельной игровой оценкой автора.
+
+```bash
+python tools/blockbench/preview_import.py work/blockbench/guard.json \
+  --name bb_test_guard --output work/blockbench/preview
+python -m unittest discover -s tools/blockbench -p 'test_*.py'
+```
+
+Предпросмотр использует существующую программу Claude **tools/preview**, с библиотекой клипов в памяти; ресурсы игры не переписывает. Готовые примеры: [previews](previews/README.md).
+
+### Что пересчитывается
+
+Импортёр собирает матрицы **всей цепи родителей**, включая исходный поворот sword bone и локальные ключи; Blockbench Euler **ZYX**. Из мирового положения/ориентации меча решает FP translation и XYZ rotation относительно **своего** Display и реальной рукояти. F5 отдельно решает плечевой ZYX и локальную кисть XYZ через ItemInHandLayer и независимый third-person Display. Прямого копирования XYZ руки в меч нет.
+
+Все времена — **секунды клипа**, translation — **пиксели модели (16 = блок)**, rotation — **градусы**. Сохраняются длительность и исходные времена ключей, добавляется сетка `--fps 60` (20–240). Linear, step, Catmull-Rom, Bezier запекаются. Bezier вычисляется точным решением кубической кривой времени; Blockbench показывает её приближением в 200 сегментов, небольшая разница между ними возможна. Для быстрых сложных движений увеличивай FPS и проверяй GIF. У split-keyframe есть дополнительные отсчёты по сторонам разрыва.
+
+Экспорт opt-in: `smooth:false`, quaternion `rotation_mode:slerp`, `third.arm_space`, `third.wrist_xyz`, `third.baked`. Полная кисть XYZ нужна для собственных поворотов sword bone; baked исключает повторные игровые F5 fades поверх уже поставленного движения. Старые клипы без флагов работают прежним путём. Возврат в спокойную стойку ставь ключами **внутри длительности**: импортёр не придумывает choreography, hold или return, не меняет серверные окна попаданий/tempo/урон. Последний ключ может быть удержанной позой, но игровое время её удержания отдельно задаёт механика.
+
+### Поддерживаемая область и диагностика
+
+Пилот привязан к этому ригу Бледного, а не к произвольному Blockbench-проекту. Manifest [pale_workspace_rig.json](pale_workspace_rig.json) — резерв, если редактор без помощника удалил custom metadata. Изменённые Display/mount/grip или авторские исходники требуют новой калибровки. Кубы заблокированы; pivot, иерархию, scale и геометрию в Edit не перестраивай.
+
+- FP: локальные вращения плеча, руки и меча; перемещение руки/меча вычисляется через родителей.
+- F5: вращения плеча/руки и меча. **Перемещение F5-плеча или рукояти относительно руки отклоняется**, потому что текущий Minecraft renderer привязан к плечу и кисти. Вместо незаметно неправильного результата будет понятная ошибка.
+- Scale, Molang, global/quaternion keyframes, камера/effects tracks, анимация тела/головы и циклическое wrapping не переносятся; сначала запеки поддерживаемые локальные ключи. Нужна положительная длина и snapping; обязательны кости и камеры.
+- Поворот головы/автоматическая поддерживающая рука при одиночном двуручнике остаются поведением игрового рендера, не дополнительными tracks этого пилота.
+
+## Что действительно проверено
+
+В настоящем **Blockbench 5.2.2** (официальная веб-сборка, software WebGL), Cameras 1.2.2: открытие, непрозрачные части, обе демонстрации, проигрывание timeline, пять контрольных моментов, создание ключей мышью на руке и отдельно на мече, переключатели FP/F5 front/back, изменение свободной камеры при неизменном правом кадре. [Скриншоты приложения](previews/README.md). Тестовые правки мышью отменены, в поставленном файле исходные demo.
+
+Сохранение вызвано в GUI (Blockbench показал `Saved as`), **но скачанный файл браузер этой среды не предоставил**: повторное открытие именно сохранённой редактором копии не подтверждено. Автоматические тесты проверяют исходный поставленный проект; это не замена такой проверки и проверки в Minecraft.
+
+Сборка мода и регрессионные проверки принятого Бледного выполнены; Попытка `runClient` завершилась ошибкой инициализации GLFW: `Failed to detect any supported platform`; игровой кадр и серверный round-trip нового клипа **не проверены**. Полный цикл из [ТЗ](../../docs/CODEX_BLOCKBENCH_WEAPON_ANIMATION_PIPELINE_2026-11-17.md) поэтому пока не закрыт.
+
+`build_workspace.py` воспроизводимо пересобирает **шаблон** из исходного меча; не запускай поверх собственной анимационной работы.

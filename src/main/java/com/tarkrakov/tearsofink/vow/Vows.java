@@ -3,7 +3,6 @@ package com.tarkrakov.tearsofink.vow;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.ink.InkData;
 import com.tarkrakov.tearsofink.ink.InkPowers;
-import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.particle.ModParticles;
 import com.tarkrakov.tearsofink.skill.Skill;
 import com.tarkrakov.tearsofink.travel.Guide;
@@ -26,7 +25,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.item.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,8 +32,8 @@ import java.util.UUID;
 
 /**
  * Обеты (решено 15 ноя, документ «обеты-путь-души-и-чернил»): выбор пути у Проводника, «сон» чужих умений,
- * рост Души на Пути Души (пробуждения), обмен Чернил на Душу и смена обета у Торговки.
- * Тексты — vow.tears-of-ink.* и guide.tears-of-ink.vow.* в ru_ru.json (заглушки Claude).
+ * рост Души на Пути Души (пробуждения), неизменный обет.
+ * Обратный обмен Чернил на Душу закрыт; оставлен только откат исторических сделок.
  */
 public final class Vows {
 	// ===== Настройки — крутить здесь =====
@@ -49,8 +47,6 @@ public final class Vows {
 	public static final int EXCHANGE_INK_FLOOR = 30;
 	/** Продажа души, когда Душа выше 100 за счёт обмена: Чернил возвращается только столько (обратный ход с потерей). */
 	public static final int UNEXCHANGE_INK = 5;
-	/** Смена обета у Торговки: первая бесплатно, дальше — столько Пигмента (заглушка). */
-	public static final int CHANGE_PIGMENT = 10;
 	/** Пробуждение Души — обычное +5, у Авангарда и финального босса +10. */
 	public static final int AWAKENING = 5, AWAKENING_GREAT = 10;
 	/** Путь Чернил: прибавка к запасу Чернил за сам выбор пути (зеркало стартового света паломника). */
@@ -115,8 +111,12 @@ public final class Vows {
 			ServerPlayer p = handler.getPlayer();
 			sync(p);
 			PROMPTED.remove(p.getUUID());
-			if (InkPowers.get(p).inside()) prompt(p);
-			InkRank.grantReached(p); // достижения старых сохранений с уже высоким максимумом
+			if (InkPowers.get(p).inside()) {
+				com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(p,
+						com.tarkrakov.tearsofink.advancement.ModAdvancements.INK_LANDS);
+				prompt(p);
+			}
+			grantCurrentVowAdvancements(p); // восстановить корни ветвей и ранги старых сохранений
 		});
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> PROMPTED.remove(handler.getPlayer().getUUID()));
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> sync(newPlayer));
@@ -165,7 +165,7 @@ public final class Vows {
 		}
 	}
 
-	/** Прибавка Чернил Пути Чернил: снять со старого пути, дать новому. */
+	/** Начальная прибавка Пути Чернил при выборе, снимается лишь при служебном сбросе. */
 	private static void pathBonus(ServerPlayer p, Vow from, Vow to) {
 		int delta = (to == Vow.INK ? INK_PATH_BONUS : 0) - (from == Vow.INK ? INK_PATH_BONUS : 0);
 		if (delta == 0) return;
@@ -198,10 +198,15 @@ public final class Vows {
 		pathBonus(p, Vow.NONE, v);
 		Guide.say(p, "vow.chosen." + v.id);
 		mark(p, v);
-		if (v == Vow.SOUL) {
+		grantCurrentVowAdvancements(p);
+	}
+
+	/** Достижения выбора пути и достигнутые ранги, включая прежние сохранения. */
+	private static void grantCurrentVowAdvancements(ServerPlayer p) {
+		if (vow(p) == Vow.SOUL) {
 			com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(p, "soul_pilgrim");
 			SoulRank.grantReached(p);
-		} else if (v == Vow.INK) {
+		} else if (vow(p) == Vow.INK) {
 			com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(p, "ink_shattered_heart");
 			InkRank.grantReached(p);
 		}
@@ -279,40 +284,7 @@ public final class Vows {
 		return true;
 	}
 
-	/** Цена смены обета в Пигменте (0 — бесплатно). */
-	public static int changeCost(ServerPlayer p) {
-		return get(p).changes() == 0 ? 0 : CHANGE_PIGMENT;
-	}
-
-	/** Сменить обет на другой путь. @return получилось ли (хватило Пигмента). */
-	public static boolean change(ServerPlayer p) {
-		VowData d = get(p);
-		if (d.vow() == Vow.NONE) {
-			prompt(p);
-			return false;
-		}
-		int cost = changeCost(p);
-		if (cost > 0 && !p.getAbilities().instabuild) {
-			if (count(p) < cost) return false;
-			p.getInventory().clearOrCountMatchingItems(s -> s.is(ModItems.PIGMENT), cost, p.inventoryMenu.getCraftSlots());
-		}
-		Vow next = d.vow().other();
-		set(p, d.withVow(next).withChanges(d.changes() + 1));
-		pathBonus(p, d.vow(), next);
-		mark(p, next);
-		SoulRank.grantReached(p);
-		InkRank.grantReached(p);
-		return true;
-	}
-
-	private static int count(ServerPlayer p) {
-		int n = 0;
-		for (ItemStack s : p.getInventory().items) if (s.is(ModItems.PIGMENT)) n += s.getCount();
-		for (ItemStack s : p.getInventory().offhand) if (s.is(ModItems.PIGMENT)) n += s.getCount();
-		return n;
-	}
-
-	/** Сбросить обет (команда для тестов). */
+	/** Сбросить обет только для административных тестов; не игровая смена. */
 	public static void reset(ServerPlayer p) {
 		VowData d = get(p);
 		pathBonus(p, d.vow(), Vow.NONE);

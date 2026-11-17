@@ -10,7 +10,7 @@ import java.util.List;
  * Обет и рост Души игрока (хранится на игроке, переживает смерть).
  *
  * @param vow        выбранный путь
- * @param changes    сколько раз менял обет у Торговки (первая смена бесплатно)
+ * @param changes    историческое число смен обета в старых сохранениях (теперь не меняется)
  * @param exchanged  сколько Души получено обменом Чернил у Торговки (до {@link Vows#EXCHANGE_LIMIT})
  * @param awakenings пробуждения Души — каждое раз за игру (id: contract_0…2, miniboss, vanguard, final, diary, tempering, mercy)
  */
@@ -33,10 +33,6 @@ public record VowData(Vow vow, int changes, int exchanged, List<String> awakenin
 
 	public VowData withVow(Vow v) {
 		return new VowData(v, changes, exchanged, awakenings);
-	}
-
-	public VowData withChanges(int c) {
-		return new VowData(vow, c, exchanged, awakenings);
 	}
 
 	public VowData withExchanged(int e) {

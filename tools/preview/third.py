@@ -86,6 +86,8 @@ def mix_rotation(a, b, u):
     return np.degrees([math.atan2(-r[1,2],r[2,2]), math.asin(np.clip(r[0,2],-1,1)), math.atan2(-r[0,1],r[0,0])])
 
 def sample(c, t):
+    if c.get('third',{}).get('baked') and c['keyframes'] and t >= c['keyframes'][-1]['t']:
+        last=key(c['keyframes'][-1]);return last['rot'],last['pos']
     rot, pos = _sample_euler(c, t)
     if c.get('rotation_mode') != 'slerp' or not c['keyframes']: return rot, pos
     keys = sorted((key(k) for k in c['keyframes']), key=lambda k:k['t'])
@@ -429,7 +431,7 @@ def solve4(disp, m, clip, t, tune, fix, grip, handle, tip):
             roll = D(sample(fix['_wrist_clip'],t)[0][0])
             direction = gp(tip,tp,m)-gp(handle,tp,m);direction /= np.linalg.norm(direction)
             K = np.array([[0,-direction[2],direction[1]],[direction[2],0,-direction[0]],[-direction[1],direction[0],0]])
-            W += math.sin(roll)*K+(1-math.cos(roll))*(K@K)
+            W = XYZ(sample(fix['_wrist_clip'],t)[0]) if fix.get('wrist_xyz') else W + math.sin(roll)*K+(1-math.cos(roll))*(K@K)
         x=VANILLA_ARM[0]+D(rot[0]);y=m*D(rot[1]);z=m*D(rot[2])
         hand = Rz(z)@Ry(y)@Rx(x)@C@(gp(handle,tp,m)+np.array([m/16,.125,-.625]))+np.array([-m*5/16,2/16,0])
         hand = np.array([-hand[0],-hand[1]-.119,hand[2]])

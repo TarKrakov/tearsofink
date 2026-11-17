@@ -48,7 +48,7 @@ public final class SoulTrader {
 	public static final double RADIUS = 8, TRADE_RANGE = 6;
 
 	public static final int ACTION_SELL = 1, ACTION_CONTRACTS = 2, ACTION_LEAVE = 3, ACTION_BOARD = 4, /** Исторический код запретной покупки (сохраняем ID старых клиентов, сервер его игнорирует). */
-			ACTION_EXCHANGE = 5, ACTION_VOW = 6, ACTION_ABANDON = 20,
+			ACTION_EXCHANGE = 5, /** Старый ID смены обета: сервер игнорирует. */ ACTION_VOW = 6, ACTION_ABANDON = 20,
 			/** Особый заказ: взять / отказаться / отдать эссенции надежды. */
 			ACTION_ORDER = 7, ACTION_ORDER_ABANDON = 8, ACTION_ESSENCE = 9;
 	/** Взять контракт с доски: ACTION_TAKE + номер (0 лёгкий … 2 сложный). */
@@ -56,7 +56,8 @@ public final class SoulTrader {
 
 	/**
 	 * Сервер → клиент: открыть (или обновить) окно Торговки.
-	 * vow — обеты, упаковано: путь (0–2) | цена смены в Пигменте &lt;&lt; 2 | обменяно Души &lt;&lt; 10 | продано шагов &lt;&lt; 16 | причина «нельзя обменять» &lt;&lt; 24.
+	 * vow — путь (0–2) | зарезервированные биты 2–9 (историческая цена смены) | обменяно Души &lt;&lt; 10 | продано шагов &lt;&lt; 16.
+ * Формат сетевого сообщения прежний; зарезервированная стоимость теперь равна нулю.
 	 */
 	/** order — особый заказ: 0 можно взять, 1 идёт, 2+ — перезарядка (минут + 2). */
 	public record Open(int entity, int soulMax, int inkMax, int contracts, int vow, int order) implements CustomPacketPayload {
@@ -67,7 +68,6 @@ public final class SoulTrader {
 				ByteBufCodecs.VAR_INT, Open::order, Open::new);
 
 		public com.tarkrakov.tearsofink.vow.Vow path() { return com.tarkrakov.tearsofink.vow.Vow.byIndex(vow & 3); }
-		public int changeCost() { return (vow >> 2) & 0xFF; }
 		public int exchanged() { return (vow >> 10) & 0x3F; }
 		public int sold() { return (vow >> 16) & 0xFF; }
 		/** Историческое поле обратного обмена; новый сервер всегда отправляет 0, действие отключено. */
@@ -175,8 +175,7 @@ public final class SoulTrader {
 	public static void sendOpen(ServerPlayer p, SoulTraderEntity trader) {
 		InkData d = InkPowers.get(p);
 		var v = com.tarkrakov.tearsofink.vow.Vows.get(p);
-		int packed = v.vow().ordinal() | (Math.min(255, com.tarkrakov.tearsofink.vow.Vows.changeCost(p)) << 2)
-				| (Math.min(63, v.exchanged()) << 10) | ((d.sold() + d.taint()) << 16);
+		int packed = v.vow().ordinal() | (Math.min(63, v.exchanged()) << 10) | ((d.sold() + d.taint()) << 16);
 		ServerPlayNetworking.send(p, new Open(trader.getId(), d.soulMax(), d.inkMax(), contracts(p), packed,
 				com.tarkrakov.tearsofink.hunt.MadOrders.state(p)));
 	}
@@ -187,7 +186,6 @@ public final class SoulTrader {
 		trader.keepAlive();
 		switch (a.action()) {
 			case ACTION_SELL -> sell(p, trader);
-			case ACTION_VOW -> changeVow(p, trader);
 			case ACTION_CONTRACTS -> takeContracts(p, trader);
 			case ACTION_LEAVE -> trader.farewell(p);
 			case ACTION_BOARD -> com.tarkrakov.tearsofink.hunt.HuntContracts.send(p, trader);
@@ -244,18 +242,7 @@ public final class SoulTrader {
 		sendOpen(p, trader);
 	}
 
-	/** Сменить обет (первая смена бесплатно, дальше — Пигмент). */
-	private static void changeVow(ServerPlayer p, SoulTraderEntity trader) {
-		int cost = com.tarkrakov.tearsofink.vow.Vows.changeCost(p);
-		if (!com.tarkrakov.tearsofink.vow.Vows.change(p)) {
-			say(p, "vow.no_pigment", cost);
-			sendOpen(p, trader);
-			return;
-		}
-		say(p, "vow.changed." + com.tarkrakov.tearsofink.vow.Vows.vow(p).id);
-		sendOpen(p, trader);
-	}
-
+	/** Сдать выполненные контракты. */
 	private static void takeContracts(ServerPlayer p, SoulTraderEntity trader) {
 		int n = contracts(p);
 		if (n <= 0) {
