@@ -1,26 +1,43 @@
 {
-  "_comment": "Server balance; /reload. Damage multipliers use the selected sword's attack damage before the existing tier/awakening pipeline. 20 ticks = 1 second; velocities in blocks/tick. See docs/PALE_MOVE_BALANCE.md.",
+  "_comment": "Баланс Бледного двуручника, /reload. Все уроны: базовый атрибут выбранного оружия × множитель, далее ступени и пробуждения; 20 тиков = 1 с. Парные R/ПКМ также берут числа из этого файла.",
   "single_r": {
-    "damage_multiplier": 0.75,
-    "reach": 3.6,
-    "arc": 140,
-    "knockback": 1.1,
+    "damage_multiplier": 0.7,
+    "reach": 3.4,
+    "arc": 125,
+    "knockback": 1,
     "sweep_ticks": 14,
-    "window_ticks": 70,
-    "cooldown_ticks": 180,
+    "window_ticks": 48,
+    "cooldown_ticks": 160,
     "dash_distance": 4,
-    "dash_damage_multiplier": 1.2,
+    "dash_damage_multiplier": 1.1,
     "dash_ticks": 18
   },
   "backstep": {
     "damage_multiplier": 0.35,
-    "reach": 3,
-    "arc": 120,
+    "reach": 2.8,
+    "arc": 110,
     "knockback": 0.45,
     "hit_ticks": 3,
     "duration_ticks": 12,
-    "cooldown_ticks": 50,
-    "backward_speed": 0.48,
+    "cooldown_ticks": 70,
+    "backward_speed": 0.42,
     "upward_speed": 0.12
+  },
+  "dual_r": {
+    "parry_ticks": 16,
+    "followup_window_ticks": 64,
+    "cooldown_ticks": 240,
+    "repel_damage_multiplier": 0.3,
+    "repel_reach": 3.1,
+    "repel_knockback": 1.1,
+    "slam_damage_multiplier": 1.25,
+    "slam_reach": 3.1,
+    "slam_knockback": 0.6
+  },
+  "dual_charge": {
+    "cooldown_ticks": 260,
+    "dash_distance": 5.5,
+    "min_damage_multiplier": 1.1,
+    "max_damage_multiplier": 1.8
   }
 }
