@@ -159,7 +159,7 @@ for name,t0,hand in (('attack1',.30,1),('attack2',.68,1),('attack3',.48,1),
 
 # Parry/charge: BOTH entire swords must fit horizontally inside the camera and
 # the sharpened tips stay near (but never OVER) the centre.
-for name,t0 in (('dual_parry',.35),('dual_charge',.6)):
+for name,t0 in (('dual_parry',.35),('dual_charge',1.35)):
     right=sight(name,t0,1); left=sight(name+'_off',t0,-1)
     assert right[0]>.20 and left[0]<-.10,(name,'tips crossed',right,left)
     assert right[0]-left[0]>.36,(name,'blades overlap',right,left)
@@ -183,5 +183,17 @@ for name in ('attack1','attack2','attack3','dual_attack1','dual_attack1_off',
     blade=C@W@dR(tp,sign)@(tpt-h)
     blade/=np.linalg.norm(blade)
     forearm=np.array([0.,1.,-.15]); forearm/=np.linalg.norm(forearm)
-    assert blade@forearm>.99999,(name,'third-person blade no longer follows forearm',blade)
-print('PASS: F5 blades remain aligned with their carrying forearms')
+    assert blade@forearm>math.cos(math.pi/4)-1e-5,(name,'third-person blade no longer follows forearm',blade)
+print('PASS: F5 shoulder leads blade with a natural wrist angle')
+
+# Actual handoffs occur at SERVER step duration, not at the last keyframe.
+# An early return to rest used to create a dip immediately before the next attack.
+for steps in (combo['steps'],combo['dual_steps']):
+    for previous,following in zip(steps,steps[1:]):
+        for field in ('anim','off_anim'):
+            if field not in previous: continue
+            old=anims[previous[field]]; new=anims[following[field]]
+            r0,p0=sample(old,previous['duration']/20/combo.get('tempo',1))
+            r1,p1=sample(new,0)
+            assert np.linalg.norm(r0-r1)<.01 and np.linalg.norm(p0-p1)<.01,(previous[field],following[field],'handoff discontinuity')
+print('PASS: server-timed solo/dual handoffs preserve full end pose')

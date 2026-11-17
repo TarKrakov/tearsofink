@@ -263,16 +263,6 @@ public final class ThirdPerson {
 		Quaternionf wrist = new Quaternionf(armQ).mul(LAYER).conjugate()
 				.mul(look).mul(new Quaternionf().rotationY(-m * fix.turn() * Mth.DEG_TO_RAD)) // turn — к центру
 				.mul(bw.item).mul(rot(tp, m).conjugate());
-		// Some authored greatsword poses require the blade to be carried by the forearm,
-		// rather than an independently spinning wrist. Rotating around the grip still
-		// anchors the hilt to the hand; other archetypes retain their original wrist.
-		if (fix.followBlade()) {
-			Vector3f blade = new Vector3f(ax[1]).sub(ax[0]).mul(tp.scale).normalize();
-			rot(tp, m).transform(blade);
-			Vector3f alongArm = new Vector3f(0, 1, -0.15f).normalize();
-			new Quaternionf(LAYER).conjugate().transform(alongArm);
-			wrist = new Quaternionf().rotationTo(blade, alongArm);
-		}
 		return new Solved(a[0], a[1], wrist, at(ax[0], tp, m), a[1] * tune.body(), b.hand, (tune.push() + (left ? fix.pushLeft() : fix.pushRight())) / 16f);
 	}
 
@@ -308,6 +298,13 @@ public final class ThirdPerson {
 		v.mul(tune.reach(), tune.reach(), 1).normalize();
 		Vector3f dir = new Vector3f(-v.x, -v.y, v.z);
 		Quaternionf item = new Quaternionf(CAM_TO_MODEL).mul(rel).mul(rot(fp, m));
+		if (fix.followBlade()) {
+			// Let the shoulder lead the blade; the ordinary wrist solve below preserves
+			// its full authored orientation (including edge roll), with no item translation.
+			Vector3f bladeDirection = new Vector3f(ax[1]).sub(ax[0]).mul(fp.scale).normalize();
+			item.transform(bladeDirection);
+			dir.lerp(bladeDirection, 0.75f).normalize();
+		}
 		return new Base(dir, item, ht[0]);
 	}
 

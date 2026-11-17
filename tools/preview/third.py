@@ -361,6 +361,11 @@ def base4(disp, m, clip, t, tune, fix, grip, handle, tip):
     v = v/np.linalg.norm(v)
     d = np.array([-v[0], -v[1], v[2]])
     item = MF @ Rr @ dR(fp, m)
+    if fix.get('follow_blade'):
+        blade = item @ ((np.array(tip)-np.array(handle))*dS(fp))
+        blade /= np.linalg.norm(blade)
+        d = .25*d + .75*blade
+        d /= np.linalg.norm(d)
     return d, item, h
 
 SX = np.diag([-1.,1,1])
@@ -395,8 +400,4 @@ def solve4(disp, m, clip, t, tune, fix, grip, handle, tip):
     x, y = angles(b[0]); xw, yw = angles(bw[0])
     A = Ry(yw) @ Rx(xw)
     W = np.linalg.inv(A @ C) @ Ry(D(TURN_SIGN*m*fix.get('turn', 0))) @ bw[1] @ np.linalg.inv(dR(tp, m))  # turn — к центру
-    if fix.get('follow_blade'):
-        blade = dR(tp, m) @ (np.array(tip) - np.array(handle))
-        along_arm = C.T @ np.array([0., 1., -0.15])
-        W = rotation_between(blade, along_arm)
     return x, y, W, b[2]

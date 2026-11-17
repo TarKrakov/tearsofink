@@ -27,7 +27,7 @@ def generate(out, only=None):
         raise ValueError(f'Unknown preview cases: {sorted(only - cases.keys())}')
     for name, (steps, dual) in cases.items():
         if only and name not in only: continue
-        frames = build(ARCH, steps, dual, str(out/f'{name}.gif'))
+        frames = build(ARCH, steps, dual, str(out/f'{name}.gif'), fps=30)
         # Filmstrip of the entire sequence, with each frame showing all three perspectives.
         from PIL import Image
         indices = [min(len(frames)-1, int(i*(len(frames)-1)/5)) for i in range(6)]
@@ -37,7 +37,7 @@ def generate(out, only=None):
         print(name, len(frames), flush=True)
     # A short individual comparison for every base attack.
     for st in ([] if only else solo + pair):
-        frames = build(ARCH, [st], st[1] is not None, str(out/f'{st[0]}.gif'))
+        frames = build(ARCH, [st], st[1] is not None, str(out/f'{st[0]}.gif'), fps=30)
         frames[len(frames)//3].save(out/f'{st[0]}.png')
 
 if __name__ == '__main__':

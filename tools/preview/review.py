@@ -119,7 +119,7 @@ def inspect(arch, samples=50):
             forearm = np.array([0., 1., -.15])
             forearm /= np.linalg.norm(forearm)
             f5_alignment = float(blade @ forearm)
-            if f5_alignment < .995:
+            if f5_alignment < math.cos(math.pi/4)-1e-5:
                 raise ValueError(f'{name}: F5 sword is not aligned to the carrying forearm')
         findings.append({
             'clip': name, 'hand': 'left' if hand == -1 else 'right',
@@ -166,7 +166,7 @@ def main():
     parser.add_argument('--samples', type=int, default=50)
     parser.add_argument('--render', action='store_true', help='Produce GIFs and contact sheets in three views')
     parser.add_argument('--check-only', action='store_true', help='Validate without rendering')
-    parser.add_argument('--fps', type=int, default=12)
+    parser.add_argument('--fps', type=int, default=30)
     args = parser.parse_args()
     if args.samples < 8 or args.fps < 1:
         parser.error('samples must be at least 8; fps must be positive')

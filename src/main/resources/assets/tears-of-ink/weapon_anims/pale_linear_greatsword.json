@@ -15,7 +15,7 @@
     "attack1": {
       "length": 0.86,
       "smooth": "tight",
-      "hold": 0.1,
+      "hold": 0.3,
       "return": 0.32,
       "impact": 0.45,
       "keyframes": [
@@ -97,7 +97,7 @@
     "attack2": {
       "length": 1.18,
       "smooth": "tight",
-      "hold": 0.08,
+      "hold": 0.5,
       "return": 0.3,
       "impact": 0.68,
       "keyframes": [
@@ -193,7 +193,7 @@
     "attack3": {
       "length": 1.1,
       "smooth": "tight",
-      "hold": 0,
+      "hold": 0.18,
       "return": 0.32,
       "impact": 0.48,
       "keyframes": [
@@ -551,7 +551,7 @@
     "dual_attack1": {
       "length": 0.8,
       "smooth": "tight",
-      "hold": 0.12,
+      "hold": 0.37,
       "return": 0.34,
       "impact": 0.55,
       "keyframes": [
@@ -635,7 +635,7 @@
     "dual_attack1_off": {
       "length": 0.8,
       "smooth": "tight",
-      "hold": 0.12,
+      "hold": 0.37,
       "return": 0.32,
       "impact": 0.55,
       "keyframes": [
@@ -719,7 +719,7 @@
     "dual_attack2": {
       "length": 1.35,
       "smooth": "tight",
-      "hold": 0.08,
+      "hold": 0.3,
       "return": 0.35,
       "impact": 0.9,
       "keyframes": [
@@ -809,7 +809,6 @@
         }
       ],
       "third": {
-        "source": "dual_attack2_third",
         "no_cross": true,
         "follow_blade": true,
         "center": 0.8
@@ -818,7 +817,7 @@
     "dual_attack2_off": {
       "length": 1.35,
       "smooth": "tight",
-      "hold": 0.08,
+      "hold": 0.3,
       "return": 0.35,
       "impact": 0.35,
       "keyframes": [
@@ -908,7 +907,6 @@
         }
       ],
       "third": {
-        "source": "dual_attack2_off_third",
         "no_cross": true,
         "follow_blade": true,
         "center": 0.8
@@ -917,7 +915,7 @@
     "dual_attack3": {
       "length": 1.35,
       "smooth": "tight",
-      "hold": 0.04,
+      "hold": 0.28,
       "return": 0.35,
       "impact": 0.6,
       "keyframes": [
@@ -1021,7 +1019,6 @@
         }
       ],
       "third": {
-        "source": "dual_attack3_third",
         "no_cross": true,
         "follow_blade": true,
         "center": 0.84
@@ -1030,7 +1027,7 @@
     "dual_attack3_off": {
       "length": 1.35,
       "smooth": "tight",
-      "hold": 0.04,
+      "hold": 0.28,
       "return": 0.35,
       "impact": 0.6,
       "keyframes": [
@@ -1134,7 +1131,6 @@
         }
       ],
       "third": {
-        "source": "dual_attack3_off_third",
         "no_cross": true,
         "follow_blade": true,
         "center": 0.84
@@ -1150,70 +1146,70 @@
         {
           "t": 0,
           "rotation": [
-            -29,
-            8,
-            7
+            -0.0,
+            0.0,
+            0.0
           ],
           "translation": [
-            1.6,
-            6,
-            -4
+            0.0,
+            0.0,
+            -0.0
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.28,
+          "t": 0.4,
           "rotation": [
-            -31,
-            9,
-            8
+            -8.553,
+            7.693,
+            12.863
           ],
           "translation": [
-            2.6,
-            6.5,
-            -4.4
+            1.483,
+            1.022,
+            -1.785
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.65,
+          "t": 0.85,
           "rotation": [
-            -35,
-            11,
-            9
+            -34.746,
+            31.254,
+            52.256
           ],
           "translation": [
-            4,
-            7.4,
-            -5.3
+            6.024,
+            4.151,
+            -7.252
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 1.05,
+          "t": 1.35,
           "rotation": [
-            -38,
-            13,
-            10
+            -53.455,
+            48.083,
+            80.394
           ],
           "translation": [
-            5,
-            8,
-            -6
+            9.268,
+            6.387,
+            -11.157
           ],
           "ease": "ease_in_out"
         },
         {
           "t": 1.5,
           "rotation": [
-            -38,
-            13,
-            10
+            -53.455,
+            48.083,
+            80.394
           ],
           "translation": [
-            5,
-            8,
-            -6
+            9.268,
+            6.387,
+            -11.157
           ],
           "ease": "ease_in_out"
         }
@@ -1221,7 +1217,7 @@
       "third": {
         "no_cross": true,
         "follow_blade": true,
-        "center": 0.72
+        "center": 1
       }
     },
     "dual_charge_off": {
@@ -1234,70 +1230,70 @@
         {
           "t": 0,
           "rotation": [
-            -29,
-            8,
-            7
+            -0.0,
+            0.0,
+            0.0
           ],
           "translation": [
-            1.72,
-            6,
-            -4
+            0.0,
+            0.0,
+            -0.0
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.28,
+          "t": 0.4,
           "rotation": [
-            -31,
-            9,
-            8
+            -7.099,
+            7.432,
+            11.202
           ],
           "translation": [
-            2.92,
-            6.5,
-            -4.4
+            1.8,
+            1.022,
+            -1.785
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.65,
+          "t": 0.85,
           "rotation": [
-            -35,
-            11,
-            9
+            -28.838,
+            30.193,
+            45.507
           ],
           "translation": [
-            4.6,
-            7.4,
-            -5.3
+            7.314,
+            4.151,
+            -7.252
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 1.05,
+          "t": 1.35,
           "rotation": [
-            -38,
-            13,
-            10
+            -44.366,
+            46.451,
+            70.01
           ],
           "translation": [
-            5.8,
-            8,
-            -6
+            11.252,
+            6.387,
+            -11.157
           ],
           "ease": "ease_in_out"
         },
         {
           "t": 1.5,
           "rotation": [
-            -38,
-            13,
-            10
+            -44.366,
+            46.451,
+            70.01
           ],
           "translation": [
-            5.8,
-            8,
-            -6
+            11.252,
+            6.387,
+            -11.157
           ],
           "ease": "ease_in_out"
         }
@@ -1305,7 +1301,7 @@
       "third": {
         "no_cross": true,
         "follow_blade": true,
-        "center": 0.72
+        "center": 1
       }
     },
     "dual_rush": {
@@ -2421,7 +2417,7 @@
     "dual_attack2_third": {
       "length": 1.31,
       "return": 0.35,
-      "hold": 0.08,
+      "hold": 0.3,
       "smooth": "tight",
       "keyframes": [
         {
@@ -2513,7 +2509,7 @@
     "dual_attack2_off_third": {
       "length": 1.31,
       "return": 0.35,
-      "hold": 0.08,
+      "hold": 0.3,
       "smooth": "tight",
       "keyframes": [
         {
@@ -2605,7 +2601,7 @@
     "dual_attack3_third": {
       "length": 1.33,
       "return": 0.35,
-      "hold": 0.08,
+      "hold": 0.28,
       "smooth": "tight",
       "keyframes": [
         {
@@ -2711,7 +2707,7 @@
     "dual_attack3_off_third": {
       "length": 1.33,
       "return": 0.35,
-      "hold": 0.08,
+      "hold": 0.28,
       "smooth": "tight",
       "keyframes": [
         {
