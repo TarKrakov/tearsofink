@@ -39,5 +39,16 @@
     "dash_distance": 5.5,
     "min_damage_multiplier": 1.1,
     "max_damage_multiplier": 1.8
+  },
+  "shift_guard": {
+    "_comment": "Shift+R: краткая фронтальная защита. reduction = доля поглощённого урона, arc = полный сектор спереди; 20 тиков = 1 с.",
+    "single_reduction": 0.45,
+    "dual_reduction": 0.6,
+    "single_arc": 120,
+    "dual_arc": 150,
+    "single_duration_ticks": 20,
+    "dual_duration_ticks": 24,
+    "single_cooldown_ticks": 110,
+    "dual_cooldown_ticks": 160
   }
 }
