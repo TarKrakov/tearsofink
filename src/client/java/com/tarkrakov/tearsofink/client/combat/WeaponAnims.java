@@ -219,7 +219,10 @@ public final class WeaponAnims {
 		Playing next = clip == null ? null : new Playing(clip, a, busyTicks, tempo);
 		if (next != null && clip.smooth() && !clip.absolute() && prev != null && prev.archetype == a && !prev.clip.absolute()
 				&& prev.time() < end(prev.clip)) {
-			next.from = shown(prev, sample(prev.clip, prev.time(), REST));
+			Key previous = sample(prev.clip, prev.time(), REST);
+			// Preserve the pre-greatsword handoff for every existing weapon:
+			// capturing an already blended pose is reserved for the new archetype.
+			next.from = a == Archetype.PALE_LINEAR_GREATSWORD ? shown(prev, previous) : previous;
 		} else if (next != null && a == Archetype.PALE_LINEAR_GREATSWORD && clip.smooth() && !clip.absolute()) {
 			next.from = REST; // вход из покоя тоже плавный, даже если первая ключевая поза уже в замахе
 		}
