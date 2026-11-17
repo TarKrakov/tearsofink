@@ -23,13 +23,19 @@ public final class PaleGreatswordBalance {
                         float slamDamageMultiplier, double slamReach, double slamKnockback) {}
     public record DualCharge(int cooldownTicks, double dashDistance, float minDamageMultiplier,
                              float maxDamageMultiplier) {}
-    public record Tuning(SingleR singleR, Backstep backstep, DualR dualR, DualCharge dualCharge) {}
+    /** Timed forward-facing guard; reduction is the blocked share of incoming damage. */
+    public record ShiftGuard(float singleReduction, float dualReduction, double singleArc, double dualArc,
+                             int singleDurationTicks, int dualDurationTicks,
+                             int singleCooldownTicks, int dualCooldownTicks) {}
+    public record Tuning(SingleR singleR, Backstep backstep, DualR dualR, DualCharge dualCharge,
+                         ShiftGuard shiftGuard) {}
 
     private static final Tuning DEFAULT = new Tuning(
             new SingleR(new Sweep(.70f, 3.4, 125, 1.0), 14, 48, 160, 4, 1.10f, 18),
             new Backstep(new Sweep(.35f, 2.8, 110, .45), 3, 12, 70, .42, .12),
             new DualR(16, 64, 240, .30f, 3.1, 1.1, 1.25f, 3.1, .6),
-            new DualCharge(260, 5.5, 1.10f, 1.8f));
+            new DualCharge(260, 5.5, 1.10f, 1.8f),
+            new ShiftGuard(.45f, .60f, 120, 150, 20, 24, 110, 160));
     private static Tuning current = DEFAULT;
     private PaleGreatswordBalance() {}
     public static Tuning get() { return current; }
@@ -52,9 +58,11 @@ public final class PaleGreatswordBalance {
 
     static Tuning parse(JsonObject root) {
         JsonObject r = section(root, "single_r"), b = section(root, "backstep");
-        JsonObject p = section(root, "dual_r"), c = section(root, "dual_charge");
+        JsonObject p = section(root, "dual_r"), c = section(root, "dual_charge"),
+                g = section(root, "shift_guard");
         SingleR d = DEFAULT.singleR(); Backstep k = DEFAULT.backstep();
         DualR pd = DEFAULT.dualR(); DualCharge cd = DEFAULT.dualCharge();
+        ShiftGuard gd = DEFAULT.shiftGuard();
         SingleR single = new SingleR(sweep(r, d.sweep()), ticks(r,"sweep_ticks",d.sweepTicks()),
                 ticks(r,"window_ticks",d.windowTicks()), ticks(r,"cooldown_ticks",d.cooldownTicks()),
                 number(r,"dash_distance",d.dashDistance(),.1,32),
@@ -75,11 +83,20 @@ public final class PaleGreatswordBalance {
                 number(c,"dash_distance",cd.dashDistance(),.1,32),
                 (float) number(c,"min_damage_multiplier",cd.minDamageMultiplier(),0,100),
                 (float) number(c,"max_damage_multiplier",cd.maxDamageMultiplier(),0,100));
+        ShiftGuard guard = new ShiftGuard(
+                (float) number(g,"single_reduction",gd.singleReduction(),0,.95),
+                (float) number(g,"dual_reduction",gd.dualReduction(),0,.95),
+                number(g,"single_arc",gd.singleArc(),1,360),
+                number(g,"dual_arc",gd.dualArc(),1,360),
+                ticks(g,"single_duration_ticks",gd.singleDurationTicks()),
+                ticks(g,"dual_duration_ticks",gd.dualDurationTicks()),
+                ticks(g,"single_cooldown_ticks",gd.singleCooldownTicks()),
+                ticks(g,"dual_cooldown_ticks",gd.dualCooldownTicks()));
         if (back.hitTicks() >= back.durationTicks()) throw new IllegalArgumentException("backstep hit_ticks must be before duration_ticks");
         if (dualR.parryTicks() > dualR.followupWindowTicks()) throw new IllegalArgumentException("dual_r parry_ticks must fit followup_window_ticks");
         if (dualCharge.minDamageMultiplier() > dualCharge.maxDamageMultiplier())
             throw new IllegalArgumentException("dual_charge min_damage_multiplier must not exceed max_damage_multiplier");
-        return new Tuning(single, back, dualR, dualCharge);
+        return new Tuning(single, back, dualR, dualCharge, guard);
     }
     private static Sweep sweep(JsonObject o, Sweep d) {
         return new Sweep((float) number(o,"damage_multiplier",d.damageMultiplier(),0,100),
