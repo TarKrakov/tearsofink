@@ -1,0 +1,224 @@
+{
+  "version": 1,
+  "archetype": "pale_linear_greatsword",
+  "euler_order": "ZYX",
+  "grip": [
+    7.75,
+    2,
+    7.75
+  ],
+  "bindings": {
+    "F5_right": {
+      "arm": "F5_right_arm",
+      "shoulder": "F5_right_shoulder",
+      "sword": "F5_right_sword",
+      "pivot": [
+        5.0,
+        22.016,
+        0.0
+      ],
+      "grip_position": [
+        6.142522035376563,
+        14.084276077054229,
+        -2.9111084981368025
+      ],
+      "item_rotation": [
+        [
+          0.20500387380049348,
+          0.008484682072751243,
+          -0.9787243850527664
+        ],
+        [
+          0.8706156592879014,
+          -0.45848365120431533,
+          0.17838473976507171
+        ],
+        [
+          -0.4472155917781533,
+          -0.8886623384325927,
+          -0.1013778216476955
+        ]
+      ],
+      "scale": 1.0
+    },
+    "F5_left": {
+      "arm": "F5_left_arm",
+      "shoulder": "F5_left_shoulder",
+      "sword": "F5_left_sword",
+      "pivot": [
+        -5.0,
+        22.016,
+        0.0
+      ],
+      "grip_position": [
+        -5.745904450627374,
+        15.104952681989634,
+        -2.6550968578244705
+      ],
+      "item_rotation": [
+        [
+          -0.3475656014823668,
+          0.1357897727129417,
+          -0.9277711411187396
+        ],
+        [
+          0.8153179174645151,
+          -0.44491041461704406,
+          -0.37055555106706467
+        ],
+        [
+          -0.463092697121782,
+          -0.8852207976498617,
+          0.043923721160846675
+        ]
+      ],
+      "scale": 1.0
+    },
+    "FP_right": {
+      "arm": "FP_right_arm",
+      "shoulder": "FP_right_shoulder",
+      "sword": "FP_right_sword",
+      "pivot": [
+        8.347946042964802,
+        3.6133735525641786,
+        -0.6867986401000001
+      ],
+      "grip_position": [
+        8.347946042964802,
+        -6.386626447435821,
+        -4.6867986401
+      ],
+      "item_rotation": [
+        [
+          0.2317740063965282,
+          -0.21719398081517335,
+          -0.9482128372135445
+        ],
+        [
+          0.9535038614305918,
+          -0.14231181572846385,
+          0.26566470096913225
+        ],
+        [
+          -0.19264266452645643,
+          -0.9656987738429232,
+          0.17411111969779913
+        ]
+      ],
+      "scale": 0.68
+    },
+    "FP_left": {
+      "arm": "FP_left_arm",
+      "shoulder": "FP_left_shoulder",
+      "sword": "FP_left_sword",
+      "pivot": [
+        -12.943829888154784,
+        1.68972488604647,
+        -4.865911123464654
+      ],
+      "grip_position": [
+        -12.943829888154784,
+        -8.31027511395353,
+        -8.865911123464654
+      ],
+      "item_rotation": [
+        [
+          -0.11620764355680652,
+          0.35935685778854976,
+          0.9259365163656277
+        ],
+        [
+          0.4145779030895245,
+          0.8647065037645311,
+          -0.2835627348880909
+        ],
+        [
+          -0.9025635411697432,
+          0.3509206621270127,
+          -0.2494669177335384
+        ]
+      ],
+      "scale": 0.68
+    }
+  },
+  "display": {
+    "thirdperson_righthand": {
+      "rotation": [
+        -47.61,
+        -78.16,
+        -2.37
+      ],
+      "translation": [
+        0,
+        2.75,
+        -2.5
+      ]
+    },
+    "thirdperson_lefthand": {
+      "rotation": [
+        155.24,
+        68.09,
+        158.66
+      ],
+      "translation": [
+        -0.75,
+        2.75,
+        -1.5
+      ]
+    },
+    "firstperson_righthand": {
+      "rotation": [
+        -56.76,
+        -71.48,
+        43.14
+      ],
+      "translation": [
+        -1.62,
+        2.2,
+        1.13
+      ],
+      "scale": [
+        0.68,
+        0.68,
+        0.68
+      ]
+    },
+    "firstperson_lefthand": {
+      "rotation": [
+        131.34,
+        -67.81,
+        107.92
+      ],
+      "translation": [
+        2.38,
+        4.2,
+        2.13
+      ],
+      "scale": [
+        0.68,
+        0.68,
+        0.68
+      ]
+    }
+  },
+  "camera_names": [
+    "TOI_FP_70",
+    "TOI_F5_front",
+    "TOI_F5_back"
+  ],
+  "fp_mount": [
+    0,
+    -0.64,
+    2.4
+  ],
+  "fp_idle_offset": [
+    0,
+    0,
+    -0.64
+  ],
+  "source_sha256": {
+    "src/main/resources/assets/tears-of-ink/models/item/pale_linear_great.bbmodel": "a336122c49a19367ba7ad0a30f97b8afbb13fae65695190facc3048eada51593",
+    "src/main/resources/assets/tears-of-ink/models/item/pale_linear_great.json": "70b8cdc45b289c6cb9214e2b2e1aaefdd45eb5c4d6d112b200bdcc9cafeed089"
+  },
+  "calibration": "renderer-math only; live Minecraft comparison pending"
+}

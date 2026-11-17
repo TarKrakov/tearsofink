@@ -15,6 +15,7 @@ def hand_pose(arch, model, grip, c, t, m, tune, continuing=False, animations=Non
     if arch == 'pale_linear_greatsword':
         w = ease('ease_in_out', min(min(1,t/.18), max(0,min(1,(end_time(c)-t)/(c.get('return',.3) if c.get('hold',0)>0 else .15)))))
     if continuing: w = ease("ease_in_out", min(1, max(0, (end_time(c)-t)/(c.get("return", .3) if c.get("hold", 0) > 0 else .15))))
+    if c.get('third',{}).get('baked'): w=1
     fx = dict(c.get('third', {}))  # correction belongs to the original clip, not its F5 source
     src = fx.get('source')
     if src or fx.get('wrist_source'):
@@ -26,7 +27,7 @@ def hand_pose(arch, model, grip, c, t, m, tune, continuing=False, animations=Non
     v0 = VANILLA_ARM
     arm = (v0[0]+(x-v0[0])*w, y*w, m*D(sample(c,t)[0][2])*w if fx.get('arm_space') else 0)
     fq = item_quads(model, fp_item_m(fp, rot, pos, grip, m, view_offset=fp_offset(model,idle)), (190,40,50) if m == 1 else (150,30,90))
-    return arm, slerp_m(W, w), tp, handle, fq, y*w, P, w
+    return arm, slerp_m(W, w), tp, handle, fq, 0 if fx.get('baked') else y*w, P, w
 
 def build(arch, steps, dual, out, fps=20, tune=None, front=False, observer=None, render_frames=True, widescreen=False, fp_out=None):
     a, model, fp0, tp0, grip = load(arch)
@@ -55,7 +56,7 @@ def build(arch, steps, dual, out, fps=20, tune=None, front=False, observer=None,
             u = ease('ease_out', max(0, (now-start)/.20))
             rot, pos = (mix_rotation(np.zeros(3), rot, u) if c.get('rotation_mode') == 'slerp' else rot*u), pos*u
             idle=(1-u)+u*idle
-        if previous is not None and now-start < (.20 if arch == 'pale_linear_greatsword' else .12):
+        if previous is not None and not c.get('third',{}).get('baked') and now-start < (.20 if arch == 'pale_linear_greatsword' else .12):
             u = ease('ease_out', max(0, (now-start)/(.20 if arch == 'pale_linear_greatsword' else .12)))
             if c.get('smooth'):
                 idle=previous[2]*(1-u)+idle*u
