@@ -42,6 +42,8 @@ public final class AxeMoves {
 	public static final double RUSH_ARC = 150, RUSH_REACH = 3.8;
 	public static final float RUSH_DAMAGE = 1.6f, RUSH_KNOCKBACK = 0.7f;
 	/** Казнь: дольше держишь — сильнее (до MAX_HOLD_TICKS); урон каждого из двух ударов ×(от … до) силы оружия. */
+	/** Цена охотничьей парной казни Чернилами при запуске зарядки. */
+	public static final int EXECUTION_INK_COST = 18;
 	public static final int MAX_HOLD_TICKS = 40;
 	public static final float EXECUTE_MIN = 1.6f, EXECUTE_MAX = 2.6f;
 	public static final double EXECUTE_ARC = 100, EXECUTE_REACH = 3.6;
@@ -117,7 +119,7 @@ public final class AxeMoves {
 
 	public static class ExecutionSkill extends Skill {
 		ExecutionSkill() {
-			super(TearsOfInk.id("axe_execution"), 0, 0, 160);
+			super(TearsOfInk.id("axe_execution"), EXECUTION_INK_COST, 0, 160);
 		}
 
 		@Override
