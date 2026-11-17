@@ -18,7 +18,8 @@ import java.util.List;
 
 /**
  * Выбор обета (у Г-на Проводника, после приветствия; прошедшим пролог — при входе в Земли).
- * Главная страница — два пути; выбрал путь — страница с описанием и «Принять обет» / «Назад». Закрыть без выбора нельзя.
+ * Главная страница — два пути; описание выбранного пути; отдельная страница окончательного
+ * предупреждения и финального подтверждения. Закрыть без выбора нельзя.
  * Лист — как у дневника (gui/diary.png, 192×232); свой фон автор нарисует — gui/vow.png того же размера.
  * Тексты — vow.tears-of-ink.choose.* в ru_ru.json (заглушки Claude).
  */
@@ -29,6 +30,7 @@ public class VowScreen extends Screen {
 
 	/** Какой путь сейчас рассматривает (NONE — главная страница). */
 	private Vow looking = Vow.NONE;
+	private boolean confirming;
 	private final List<Option> options = new ArrayList<>();
 
 	private record Option(int x, int y, int w, int h, Runnable click) {}
@@ -62,15 +64,28 @@ public class VowScreen extends Screen {
 		int color = looking == Vow.SOUL ? SOUL : INK;
 		FitText.drawCentered(g, font, Component.translatable("vow.tears-of-ink." + looking.id + ".name"), l + W / 2, y, textW, color);
 		y += 16;
+		if (confirming) {
+			y = paragraph(g, Component.translatable("vow.tears-of-ink.choose.irreversible"), l + M, y, textW, TITLE) + 10;
+			y = paragraph(g, Component.translatable("vow.tears-of-ink.choose.final_warning"), l + M, y, textW, TEXT) + 10;
+			y = Math.max(y, t + H - M - 30);
+			Vow chosen = looking;
+			y = option(g, Component.translatable("vow.tears-of-ink.choose.accept"), l + M, y, color, () -> accept(chosen), mouseX, mouseY);
+			option(g, Component.translatable("vow.tears-of-ink.choose.back"), l + M, y, OPTION, () -> { confirming = false; click(); }, mouseX, mouseY);
+			return;
+		}
 		y = paragraph(g, Component.translatable("vow.tears-of-ink." + looking.id + ".text"), l + M, y, textW, TEXT) + 10;
 		y = Math.max(y, t + H - M - 30);
-		Vow chosen = looking;
-		y = option(g, Component.translatable("vow.tears-of-ink.choose.accept"), l + M, y, color, () -> accept(chosen), mouseX, mouseY);
+		y = option(g, Component.translatable("vow.tears-of-ink.choose.continue"), l + M, y, color, () -> { confirming = true; click(); }, mouseX, mouseY);
 		option(g, Component.translatable("vow.tears-of-ink.choose.back"), l + M, y, OPTION, () -> look(Vow.NONE), mouseX, mouseY);
 	}
 
 	private void look(Vow v) {
 		looking = v;
+		confirming = false;
+		click();
+	}
+
+	private void click() {
 		minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1f));
 	}
 

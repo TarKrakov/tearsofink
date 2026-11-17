@@ -3,7 +3,6 @@ package com.tarkrakov.tearsofink.vow;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.ink.InkData;
 import com.tarkrakov.tearsofink.ink.InkPowers;
-import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.particle.ModParticles;
 import com.tarkrakov.tearsofink.skill.Skill;
 import com.tarkrakov.tearsofink.travel.Guide;
@@ -26,7 +25,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.item.ItemStack;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -34,29 +32,25 @@ import java.util.UUID;
 
 /**
  * Обеты (решено 15 ноя, документ «обеты-путь-души-и-чернил»): выбор пути у Проводника, «сон» чужих умений,
- * рост Души на Пути Души (пробуждения), обмен Чернил на Душу и смена обета у Торговки.
- * Тексты — vow.tears-of-ink.* и guide.tears-of-ink.vow.* в ru_ru.json (заглушки Claude).
+ * рост Души на Пути Души (пробуждения), неизменный обет.
+ * Обратный обмен Чернил на Душу закрыт; оставлен только откат исторических сделок.
  */
 public final class Vows {
 	// ===== Настройки — крутить здесь =====
-	/** Обмен у Торговки: столько запаса Чернил отдаёшь … */
+	/** Историческая цена ОБРАТНОГО обмена (только миграция и сброс старых сохранений, новых покупок нет). */
 	public static final int EXCHANGE_INK = 10;
-	/** … и столько Души получаешь. */
+	/** Историческая прибавка Души из закрытого обмена. */
 	public static final int EXCHANGE_SOUL = 5;
-	/** Сколько всего Души можно получить обменом. */
+	/** Исторический предел закрытого обмена. */
 	public static final int EXCHANGE_LIMIT = 10;
-	/** Ниже этого запас Чернил обменом не опустить. */
+	/** Устаревший порог исторической сделки; оставлен для старых сохранений. */
 	public static final int EXCHANGE_INK_FLOOR = 30;
 	/** Продажа души, когда Душа выше 100 за счёт обмена: Чернил возвращается только столько (обратный ход с потерей). */
 	public static final int UNEXCHANGE_INK = 5;
-	/** Смена обета у Торговки: первая бесплатно, дальше — столько Пигмента (заглушка). */
-	public static final int CHANGE_PIGMENT = 10;
 	/** Пробуждение Души — обычное +5, у Авангарда и финального босса +10. */
 	public static final int AWAKENING = 5, AWAKENING_GREAT = 10;
 	/** Путь Чернил: прибавка к запасу Чернил за сам выбор пути (зеркало стартового света паломника). */
 	public static final int INK_PATH_BONUS = 10;
-	/** Жажда (Путь Чернил): столько Чернил возвращает удар серии Чернильным оружием, если задел хоть кого-то. */
-	public static final float THIRST = 1.5f;
 	/** Малое сердце (Путь Чернил, заглушка до боссов): первый контракт каждой сложности — +5 к запасу, без цены. */
 	public static final int SMALL_HEART = 5;
 	/** Чернильное сердце: +10/+15/+25 к запасу Чернил и −5 к максимуму Души (Чернила занимают место в тебе). */
@@ -117,7 +111,12 @@ public final class Vows {
 			ServerPlayer p = handler.getPlayer();
 			sync(p);
 			PROMPTED.remove(p.getUUID());
-			if (InkPowers.get(p).inside()) prompt(p);
+			if (InkPowers.get(p).inside()) {
+				com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(p,
+						com.tarkrakov.tearsofink.advancement.ModAdvancements.INK_LANDS);
+				prompt(p);
+			}
+			grantCurrentVowAdvancements(p); // восстановить корни ветвей и ранги старых сохранений
 		});
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> PROMPTED.remove(handler.getPlayer().getUUID()));
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> sync(newPlayer));
@@ -166,22 +165,12 @@ public final class Vows {
 		}
 	}
 
-	/** Прибавка Чернил Пути Чернил: снять со старого пути, дать новому. */
+	/** Начальная прибавка Пути Чернил при выборе, снимается лишь при служебном сбросе. */
 	private static void pathBonus(ServerPlayer p, Vow from, Vow to) {
 		int delta = (to == Vow.INK ? INK_PATH_BONUS : 0) - (from == Vow.INK ? INK_PATH_BONUS : 0);
 		if (delta == 0) return;
 		InkData ink = InkPowers.get(p);
 		InkPowers.update(p, ink.withInkBonus(ink.inkBonus() + delta).withInk(ink.ink() + Math.max(0, delta)));
-	}
-
-	/** Жажда: удар серии Чернильным оружием возвращает немного Чернил (только Путь Чернил). */
-	public static void thirst(ServerPlayer p, ItemStack weapon) {
-		if (vow(p) != Vow.INK) return;
-		if (!(weapon.getItem() instanceof com.tarkrakov.tearsofink.weapon.InkGreatswordItem)
-				&& !(weapon.getItem() instanceof com.tarkrakov.tearsofink.weapon.InkLongknifeItem)) return;
-		InkData ink = InkPowers.get(p);
-		if (!ink.inside() || ink.ink() >= ink.inkMax()) return;
-		InkPowers.update(p, ink.withInk(ink.ink() + THIRST));
 	}
 
 	/**
@@ -209,6 +198,18 @@ public final class Vows {
 		pathBonus(p, Vow.NONE, v);
 		Guide.say(p, "vow.chosen." + v.id);
 		mark(p, v);
+		grantCurrentVowAdvancements(p);
+	}
+
+	/** Достижения выбора пути и достигнутые ранги, включая прежние сохранения. */
+	private static void grantCurrentVowAdvancements(ServerPlayer p) {
+		if (vow(p) == Vow.SOUL) {
+			com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(p, "soul_pilgrim");
+			SoulRank.grantReached(p);
+		} else if (vow(p) == Vow.INK) {
+			com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(p, "ink_shattered_heart");
+			InkRank.grantReached(p);
+		}
 	}
 
 	/** Звук и свет обета. */
@@ -252,6 +253,7 @@ public final class Vows {
 		InkData ink = InkPowers.get(p);
 		set(p, d.withAwakening(id));
 		InkPowers.update(p, ink.withExtra(ink.extra() + amount).withSoul(ink.soul() + amount));
+		SoulRank.grantReached(p);
 		p.sendSystemMessage(Component.translatable("vow.tears-of-ink.awakening." + id, amount).withStyle(ChatFormatting.AQUA, ChatFormatting.ITALIC));
 		ServerLevel level = p.serverLevel();
 		level.sendParticles(ModParticles.TEAR_GLINT, p.getX(), p.getY() + 1.0, p.getZ(), 40, 0.4, 0.8, 0.4, 0.03);
@@ -268,26 +270,6 @@ public final class Vows {
 
 	// ---------------- Торговка ----------------
 
-	/** Почему нельзя обменять Чернила на Душу (ключ причины) или null — можно. */
-	public static String exchangeBlock(ServerPlayer p) {
-		InkData ink = InkPowers.get(p);
-		VowData d = get(p);
-		if (ink.sold() + ink.taint() > 0) return "sold";
-		if (d.exchanged() >= EXCHANGE_LIMIT) return "limit";
-		if (ink.inkMax() - EXCHANGE_INK < EXCHANGE_INK_FLOOR) return "ink";
-		return null;
-	}
-
-	/** Обменять: −EXCHANGE_INK к запасу Чернил → +EXCHANGE_SOUL Души. */
-	public static boolean exchange(ServerPlayer p) {
-		if (exchangeBlock(p) != null) return false;
-		InkData ink = InkPowers.get(p);
-		set(p, get(p).withExchanged(get(p).exchanged() + EXCHANGE_SOUL));
-		InkPowers.update(p, ink.withInkBonus(ink.inkBonus() - EXCHANGE_INK).withExtra(ink.extra() + EXCHANGE_SOUL)
-				.withSoul(ink.soul() + EXCHANGE_SOUL));
-		return true;
-	}
-
 	/**
 	 * Продажа шага души, когда Душа выше 100 за счёт обмена: обмен откатывается с потерей.
 	 * @return true — откатили обмен (обычную продажу делать не надо)
@@ -302,38 +284,7 @@ public final class Vows {
 		return true;
 	}
 
-	/** Цена смены обета в Пигменте (0 — бесплатно). */
-	public static int changeCost(ServerPlayer p) {
-		return get(p).changes() == 0 ? 0 : CHANGE_PIGMENT;
-	}
-
-	/** Сменить обет на другой путь. @return получилось ли (хватило Пигмента). */
-	public static boolean change(ServerPlayer p) {
-		VowData d = get(p);
-		if (d.vow() == Vow.NONE) {
-			prompt(p);
-			return false;
-		}
-		int cost = changeCost(p);
-		if (cost > 0 && !p.getAbilities().instabuild) {
-			if (count(p) < cost) return false;
-			p.getInventory().clearOrCountMatchingItems(s -> s.is(ModItems.PIGMENT), cost, p.inventoryMenu.getCraftSlots());
-		}
-		Vow next = d.vow().other();
-		set(p, d.withVow(next).withChanges(d.changes() + 1));
-		pathBonus(p, d.vow(), next);
-		mark(p, next);
-		return true;
-	}
-
-	private static int count(ServerPlayer p) {
-		int n = 0;
-		for (ItemStack s : p.getInventory().items) if (s.is(ModItems.PIGMENT)) n += s.getCount();
-		for (ItemStack s : p.getInventory().offhand) if (s.is(ModItems.PIGMENT)) n += s.getCount();
-		return n;
-	}
-
-	/** Сбросить обет (команда для тестов). */
+	/** Сбросить обет только для административных тестов; не игровая смена. */
 	public static void reset(ServerPlayer p) {
 		VowData d = get(p);
 		pathBonus(p, d.vow(), Vow.NONE);

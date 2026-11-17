@@ -2,7 +2,6 @@ package com.tarkrakov.tearsofink.weapon.forge;
 
 import com.tarkrakov.tearsofink.hunt.HunterType;
 import com.tarkrakov.tearsofink.hunt.HunterWeaponItem;
-import com.tarkrakov.tearsofink.ink.InkPowers;
 import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.weapon.ArsenalWeaponItem;
 import net.minecraft.ChatFormatting;
@@ -27,7 +26,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Пробуждения — свойства оружия с Проклятого алтаря. Слоты по ступени (Тусклое 1, Контрастное 2, Рубрики 3; обычное — 1),
+ * Пробуждения — свойства оружия с Проклятого алтаря. Слоты у обычного и охотничьего оружия по ступени (Тусклое 1, Контрастное 2, Рубрики 3),
  * при деградации верхние слоты засыпают. Своя линия — полная сила, чужая — CROSS_LINE (Кровь — оружию Крови; Чернила — Шпилю и Чернилам).
  * Сила по уровням I / II / III — массивы ниже (крутить здесь).
  */
@@ -48,7 +47,7 @@ public enum Awakening {
 	THRIFT("thrift", false, 0.10f, 0.18f, 0.25f),
 	/** Перезарядка приёмов короче. */
 	FLOW("flow", false, 0.08f, 0.14f, 0.20f),
-	/** Шанс +1 Чернил за удар связки. */
+	/** Шанс +1 Чернил за успешный удар связки обычного оружия (всего одна проверка на взмах). */
 	ABSORB("absorb", false, 0.25f, 0.45f, 0.70f),
 	/** Урон приёмов. */
 	EDGE("edge", false, 0.10f, 0.18f, 0.25f),
@@ -89,18 +88,23 @@ public enum Awakening {
 		return null;
 	}
 
-	public static Awakening random(boolean blood, RandomSource r) {
+	/** «Впитывание» нельзя установить на охотничье/магическое оружие, даже чужой линией. */
+	public static boolean allowedOn(ItemStack weapon, Awakening awakening) {
+		return awakening != ABSORB || weapon.getItem() instanceof OrdinaryWeaponItem;
+	}
+
+	/** Подбор пробуждения с учётом предмета: запрет действует до траты реагентов. */
+	public static Awakening random(boolean blood, ItemStack weapon, RandomSource r) {
 		List<Awakening> pool = new ArrayList<>();
-		for (Awakening a : values()) if (a.blood == blood) pool.add(a);
+		for (Awakening a : values()) if (a.blood == blood && allowedOn(weapon, a)) pool.add(a);
 		return pool.get(r.nextInt(pool.size()));
 	}
 
 	// ===== Слоты и хранение =====
 	public record Slot(Awakening awakening, int level) {}
 
-	/** Сколько слотов даёт ступень (обычное — 1 всегда). */
+	/** Слоты всех видов оружия: Тусклое 1, Контрастное 2, Рубрики 3. При снижении ступени верхние спят. */
 	public static int slots(ItemStack stack) {
-		if (stack.getItem() instanceof OrdinaryWeaponItem) return 1;
 		return Gear.tier(stack) + 1;
 	}
 
@@ -125,6 +129,7 @@ public enum Awakening {
 	}
 
 	public static void set(ItemStack stack, int index, @Nullable Slot slot) {
+		if (slot != null && !allowedOn(stack, slot.awakening())) return; // не удалять старые записи из сохранений
 		CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
 			ListTag list = tag.getList(KEY, Tag.TAG_COMPOUND);
 			while (list.size() <= index) list.add(new CompoundTag());
@@ -162,7 +167,7 @@ public enum Awakening {
 
 	/** Сила свойства на этом оружии (уровень × своя/чужая линия); 0 — нет или спит. */
 	public static float power(@Nullable ItemStack stack, Awakening a) {
-		if (stack == null || !Gear.ours(stack)) return 0f;
+		if (stack == null || !Gear.ours(stack) || !allowedOn(stack, a)) return 0f;
 		List<Slot> all = read(stack);
 		int active = Math.min(all.size(), slots(stack));
 		float best = 0f;
@@ -205,15 +210,10 @@ public enum Awakening {
 		if (steal > 0 && damage > 0) p.heal(damage * steal);
 	}
 
-	/** Удар связки: Кровопускание, Впитывание, Вязкость. */
+	/** Удар связки по одной цели: Кровопускание и Вязкость. «Впитывание» обрабатывается один раз на весь взмах в Gear. */
 	public static void onComboHit(ServerPlayer p, ItemStack weapon, LivingEntity target) {
 		float bleed = power(weapon, BLOODLETTING);
 		if (bleed > 0 && p.getRandom().nextFloat() < bleed) com.tarkrakov.tearsofink.weapon.blood.Bleeding.apply(target, p, 1);
-		float absorb = power(weapon, ABSORB);
-		if (absorb > 0 && p.getRandom().nextFloat() < absorb) {
-			var d = InkPowers.get(p);
-			InkPowers.update(p, d.withInk(d.ink() + 1));
-		}
 		float slow = power(weapon, VISCOUS);
 		if (slow > 0) target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, Math.round(slow), 0), p);
 	}
@@ -230,7 +230,10 @@ public enum Awakening {
 			}
 			Component name = Component.translatable("awakening.tears-of-ink." + s.awakening().id)
 					.append(" ").append(Component.translatable("awakening.tears-of-ink.level." + s.level()));
-			if (i >= active) {
+			if (!allowedOn(stack, s.awakening())) {
+				// Старое пробуждение остаётся на предмете для совместимости, но не действует.
+				out.add(Component.translatable("awakening.tears-of-ink.incompatible", name).withStyle(ChatFormatting.DARK_GRAY));
+			} else if (i >= active) {
 				out.add(Component.translatable("awakening.tears-of-ink.asleep", name).withStyle(ChatFormatting.DARK_GRAY));
 			} else {
 				boolean own = s.awakening().blood == bloodWeapon(stack);

@@ -115,7 +115,7 @@ public class CursedAltarMenu extends AbstractContainerMenu {
 					data.set(D_PENDING, -1);
 					data.set(D_LEVEL, 0);
 				} else {
-					data.set(D_PENDING, Awakening.random(blood, r).ordinal());
+					data.set(D_PENDING, Awakening.random(blood, weapon, r).ordinal());
 					data.set(D_LEVEL, r.nextFloat() < Awakening.LEVEL_TWO_CHANCE ? 2 : 1);
 				}
 				pendingFor = weapon;
@@ -123,8 +123,10 @@ public class CursedAltarMenu extends AbstractContainerMenu {
 			}
 			case BTN_KEEP -> {
 				if (data.get(D_PENDING) < 0) return false;
+				Awakening candidate = Awakening.values()[data.get(D_PENDING)];
+				if (!Awakening.allowedOn(weapon, candidate)) return false;
 				Awakening.set(weapon, data.get(D_SLOT),
-						new Awakening.Slot(Awakening.values()[data.get(D_PENDING)], data.get(D_LEVEL)));
+						new Awakening.Slot(candidate, data.get(D_LEVEL)));
 				clearPending();
 				pendingFor = weapon;
 				sound(SoundEvents.AMETHYST_BLOCK_RESONATE, 1.2f);
@@ -133,7 +135,8 @@ public class CursedAltarMenu extends AbstractContainerMenu {
 				Awakening.Slot s = Awakening.get(weapon, data.get(D_SLOT));
 				ItemStack cat = items.getItem(CATALYST);
 				Boolean blood = Awakening.catalystIsBlood(cat);
-				if (s == null || blood == null || blood != s.awakening().blood || s.level() >= Awakening.MAX_LEVEL) return false;
+				if (s == null || !Awakening.allowedOn(weapon, s.awakening())
+						|| blood == null || blood != s.awakening().blood || s.level() >= Awakening.MAX_LEVEL) return false;
 				cat.shrink(1);
 				Awakening.set(weapon, data.get(D_SLOT), new Awakening.Slot(s.awakening(), s.level() + 1));
 				sound(SoundEvents.RESPAWN_ANCHOR_CHARGE, 1.3f);

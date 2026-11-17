@@ -1,0 +1,23 @@
+{
+  "parent": "tears-of-ink:soul_steadfast",
+  "display": {
+    "icon": {
+      "id": "tears-of-ink:ram_shield"
+    },
+    "title": {
+      "translate": "advancements.tears-of-ink.soul_luminous.title"
+    },
+    "description": {
+      "translate": "advancements.tears-of-ink.soul_luminous.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

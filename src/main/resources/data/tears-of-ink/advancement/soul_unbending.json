@@ -1,0 +1,23 @@
+{
+  "parent": "tears-of-ink:soul_luminous",
+  "display": {
+    "icon": {
+      "id": "tears-of-ink:radiant_shield"
+    },
+    "title": {
+      "translate": "advancements.tears-of-ink.soul_unbending.title"
+    },
+    "description": {
+      "translate": "advancements.tears-of-ink.soul_unbending.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

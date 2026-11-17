@@ -1,0 +1,23 @@
+{
+  "parent": "tears-of-ink:soul_pilgrim",
+  "display": {
+    "icon": {
+      "id": "tears-of-ink:mercy_shield"
+    },
+    "title": {
+      "translate": "advancements.tears-of-ink.soul_lie_down.title"
+    },
+    "description": {
+      "translate": "advancements.tears-of-ink.soul_lie_down.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

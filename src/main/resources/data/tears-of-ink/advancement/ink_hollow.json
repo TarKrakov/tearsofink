@@ -1,0 +1,23 @@
+{
+  "parent": "tears-of-ink:ink_tainted",
+  "display": {
+    "icon": {
+      "id": "minecraft:echo_shard"
+    },
+    "title": {
+      "translate": "advancements.tears-of-ink.ink_hollow.title"
+    },
+    "description": {
+      "translate": "advancements.tears-of-ink.ink_hollow.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "done": {
+      "trigger": "minecraft:impossible"
+    }
+  }
+}

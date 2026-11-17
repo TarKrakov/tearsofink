@@ -59,6 +59,8 @@ public final class ShieldStance {
 	private static final Map<UUID, Float> ABSORBED = new HashMap<>();
 	/** До какого тика открыт ответ после своевременного блока. */
 	private static final Map<UUID, Long> RIPOSTE = new HashMap<>();
+	/** Последний настоящий идеальный блок: быстрый ре-raise не даёт бесконечных бесплатных блоков. */
+	private static final Map<UUID, Long> LAST_PERFECT = new HashMap<>();
 	/** Когда у игрока последний раз звучал хор. */
 	private static final Map<UUID, Long> CHOIR = new HashMap<>();
 	/** Отражённые снаряды — развернуть на следующем тике (игра сама гасит их после блока). */
@@ -80,10 +82,21 @@ public final class ShieldStance {
 		}
 	}
 
+	/** Только собственному игроку — накопленный вытерпленный урон для HUD. */
+	public record Stored(int health) implements CustomPacketPayload {
+		public static final Type<Stored> TYPE = new Type<>(TearsOfInk.id("shield_stored"));
+		public static final StreamCodec<RegistryFriendlyByteBuf, Stored> CODEC = StreamCodec.composite(
+				ByteBufCodecs.VAR_INT, Stored::health, Stored::new);
+
+		@Override
+		public Type<? extends CustomPacketPayload> type() { return TYPE; }
+	}
+
 	private ShieldStance() {}
 
 	public static void init() {
 		PayloadTypeRegistry.playS2C().register(Glow.TYPE, Glow.CODEC);
+		PayloadTypeRegistry.playS2C().register(Stored.TYPE, Stored.CODEC);
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(ShieldStance::allowDamage);
 		ServerTickEvents.END_SERVER_TICK.register(ShieldStance::tick);
 	}
@@ -122,10 +135,14 @@ public final class ShieldStance {
 			return false;
 		}
 		ServerLevel level = p.serverLevel();
-		boolean perfect = p.getTicksUsingItem() <= ShieldTuning.PERFECT_TICKS;
+		long now = level.getGameTime();
+		boolean perfect = p.getTicksUsingItem() <= ShieldTuning.PERFECT_TICKS
+				&& now - LAST_PERFECT.getOrDefault(p.getUUID(), -1000000L) >= ShieldTuning.PERFECT_REPEAT_TICKS;
+		com.tarkrakov.tearsofink.vow.SoulRank rank = com.tarkrakov.tearsofink.vow.SoulRank.active(p);
 		if (!perfect && !p.getAbilities().instabuild) {
 			InkData d = InkPowers.get(p);
-			float cost = amount * ShieldTuning.SOUL_PER_DAMAGE;
+			float cost = amount * ShieldTuning.SOUL_PER_DAMAGE
+					* (rank.atLeast(com.tarkrakov.tearsofink.vow.SoulRank.STEADFAST) ? ShieldTuning.STEADFAST_COST_MULT : 1f);
 			if (d.soul() < cost) {
 				breakShields(p);
 				passing = true;
@@ -138,13 +155,19 @@ public final class ShieldStance {
 			}
 			InkPowers.update(p, d.withSoul(d.soul() - cost));
 		}
-		setCharge(p, Math.min(ShieldTuning.CHARGE_MAX, charge(p) + 1));
-		ABSORBED.merge(p.getUUID(), amount, Float::sum);
+		if (perfect) LAST_PERFECT.put(p.getUUID(), now);
+		int extraCharge = perfect && rank.atLeast(com.tarkrakov.tearsofink.vow.SoulRank.LUMINOUS)
+				? ShieldTuning.LUMINOUS_PERFECT_CHARGE : 1;
+		setCharge(p, Math.min(ShieldTuning.CHARGE_MAX, charge(p) + extraCharge));
+		ABSORBED.merge(p.getUUID(), Math.min(ShieldTuning.STORED_DAMAGE_CAP, amount),
+				(previous, gain) -> Math.min(ShieldTuning.STORED_DAMAGE_CAP, previous + gain));
+		syncStored(p);
+		com.tarkrakov.tearsofink.vow.SoulFeats.onBlock(p, source, amount, perfect);
 		if (charge(p) >= ShieldTuning.CHARGE_MAX) { // полный заряд — щиты поют
-			long now = level.getGameTime();
+			long choirNow = level.getGameTime();
 			Long last = CHOIR.get(p.getUUID());
-			if (last == null || now - last >= ShieldTuning.CHOIR_EVERY) {
-				CHOIR.put(p.getUUID(), now);
+			if (last == null || choirNow - last >= ShieldTuning.CHOIR_EVERY) {
+				CHOIR.put(p.getUUID(), choirNow);
 				level.playSound(null, p.blockPosition(), com.tarkrakov.tearsofink.sound.ModSounds.SHIELD_CHOIR, SoundSource.PLAYERS,
 						ShieldTuning.CHOIR_VOLUME, 0.96f + p.getRandom().nextFloat() * 0.08f);
 			}
@@ -215,8 +238,12 @@ public final class ShieldStance {
 		Vec3 look = p.getLookAngle().multiply(1, 0, 1);
 		look = look.lengthSqr() < 1.0e-4 ? new Vec3(0, 0, 1) : look.normalize();
 		// превозмогание: чем сильнее били — тем сильнее ответ
+		boolean unbending = com.tarkrakov.tearsofink.vow.SoulRank.active(p)
+				.atLeast(com.tarkrakov.tearsofink.vow.SoulRank.UNBENDING);
+		float factor = unbending ? ShieldTuning.UNBENDING_RETURN : ShieldTuning.ABSORB_TO_BURST;
+		float cap = unbending ? ShieldTuning.UNBENDING_CAP : ShieldTuning.ABSORB_BURST_CAP;
 		float dmg = ShieldTuning.BURST_DAMAGE + ShieldTuning.BURST_DAMAGE_PER_CHARGE * c
-				+ Math.min(ShieldTuning.ABSORB_BURST_CAP, absorbed * ShieldTuning.ABSORB_TO_BURST);
+				+ Math.min(cap, absorbed * factor);
 		float knock = ShieldTuning.BURST_KNOCKBACK + ShieldTuning.BURST_KNOCKBACK_PER_CHARGE * c;
 		double r = ShieldTuning.BURST_RANGE;
 		for (LivingEntity t : level.getEntitiesOfClass(LivingEntity.class, p.getBoundingBox().inflate(r), e -> e != p && e.isAlive())) {
@@ -244,11 +271,16 @@ public final class ShieldStance {
 		return c;
 	}
 
+	private static void syncStored(ServerPlayer p) {
+		ServerPlayNetworking.send(p, new Stored(Math.round(ABSORBED.getOrDefault(p.getUUID(), 0f))));
+	}
+
 	private static void setCharge(ServerPlayer p, int c) {
 		Integer old = CHARGE.get(p.getUUID());
 		if (c <= 0) {
 			CHARGE.remove(p.getUUID());
 			ABSORBED.remove(p.getUUID());
+			syncStored(p);
 		}
 		else CHARGE.put(p.getUUID(), c);
 		if ((old == null ? 0 : old) == c) return;
@@ -271,6 +303,7 @@ public final class ShieldStance {
 			boolean stance = inStance(p);
 			rock(p, stance);
 			if (!dual(p) || !ModDimensions.isLands(p.level())) {
+				LAST_PERFECT.remove(p.getUUID());
 				if (CHARGE.containsKey(p.getUUID())) setCharge(p, 0); // сменил щиты или ушёл — заряд сгорает
 			}
 		}

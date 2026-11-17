@@ -138,6 +138,12 @@ public final class Skills {
 		ItemStack gearWeapon = weaponOf(player, skill);
 		float costMult = com.tarkrakov.tearsofink.weapon.forge.Awakening.costMult(gearWeapon);
 		float inkCost = skill.inkCost() * costMult, healthCost = skill.healthCost() * costMult;
+		// Ранги Пути Чернил усиливают мобильность, но не снижают цену охотничьих приёмов.
+		var inkRank = com.tarkrakov.tearsofink.vow.InkRank.active(player);
+		if (skill == ModSkills.DASH && inkRank.atLeast(com.tarkrakov.tearsofink.vow.InkRank.MARKED))
+			inkCost = com.tarkrakov.tearsofink.ink.InkTuning.MARKED_DASH_COST * costMult;
+		else if (skill == ModSkills.INK_JUMP && inkRank.atLeast(com.tarkrakov.tearsofink.vow.InkRank.TAINTED))
+			inkCost = com.tarkrakov.tearsofink.ink.InkTuning.TAINTED_JUMP_COST * costMult;
 		if (!creative && (data.ink() < inkCost || data.soul() < skill.soulCost())) {
 			ServerPlayNetworking.send(player, new SkillPayloads.NotEnough(data.soul() < skill.soulCost()));
 			player.playNotifySound(SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.25f, 1.8f);
@@ -159,7 +165,9 @@ public final class Skills {
 					player.getX(), player.getY() + 1.0, player.getZ(), 8, 0.25, 0.4, 0.25, 0);
 		}
 
-		cooldowns.put(skill.id(), now + Math.round(skill.cooldownTicks()
+		int baseCooldown = skill == ModSkills.DASH && inkRank.atLeast(com.tarkrakov.tearsofink.vow.InkRank.TAINTED)
+				? com.tarkrakov.tearsofink.ink.InkTuning.TAINTED_DASH_COOLDOWN : skill.cooldownTicks();
+		cooldowns.put(skill.id(), now + Math.round(baseCooldown
 				* com.tarkrakov.tearsofink.weapon.forge.Awakening.cooldownMult(gearWeapon)));
 		if (gearWeapon != null) { // приёмы оружия тупят клинок (Gear) и открывают окно «Разящего приёма»
 			com.tarkrakov.tearsofink.weapon.forge.Gear.wear(player, gearWeapon, com.tarkrakov.tearsofink.weapon.forge.Gear.WEAR_ABILITY);

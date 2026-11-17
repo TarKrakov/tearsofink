@@ -30,7 +30,7 @@ public class SoulTraderScreen extends Screen {
 	private static final int TEXT = 0x2A1E2C, TITLE = 0x1E4E55, OPTION = 0x3A2A30, HOVER = 0x1E7A82, FADED = 0x8A7C7A, WARN = 0x6A1420;
 
 	private SoulTrader.Open data;
-	private boolean selling, exchanging, changing;
+	private boolean selling;
 	/** Доска контрактов (null — главная страница). */
 	private HuntContracts.BoardData board;
 	private long boardAt;
@@ -49,7 +49,7 @@ public class SoulTraderScreen extends Screen {
 		Minecraft mc = Minecraft.getInstance();
 		if (mc.screen instanceof SoulTraderScreen s && s.data.entity() == data.entity()) {
 			s.data = data;
-			s.selling = s.exchanging = s.changing = false;
+			s.selling = false;
 			return;
 		}
 		mc.setScreen(new SoulTraderScreen(data));
@@ -85,13 +85,6 @@ public class SoulTraderScreen extends Screen {
 		ClientPlayNetworking.send(new SoulTrader.Action(data.entity(), action));
 	}
 
-	private static String stage(int soulMax) {
-		if (soulMax >= 90) return null;
-		if (soulMax >= 75) return "marked";
-		if (soulMax >= 60) return "tainted";
-		return "hollow";
-	}
-
 	@Override
 	public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
 		super.render(g, mouseX, mouseY, partialTick);
@@ -105,20 +98,9 @@ public class SoulTraderScreen extends Screen {
 			renderBoard(g, l, y, textW, mouseX, mouseY);
 			return;
 		}
-		if (exchanging) {
-			renderExchange(g, l, y, textW, mouseX, mouseY);
-			return;
-		}
-		if (changing) {
-			renderVow(g, l, y, textW, mouseX, mouseY);
-			return;
-		}
 		if (!selling) {
 			y = paragraph(g, Component.translatable("trader.tears-of-ink.page"), l + M, y, textW, TEXT) + 10;
 			y = option(g, Component.translatable("trader.tears-of-ink.option.sell"), l + M, y, () -> { selling = true; click(); }, true, mouseX, mouseY);
-			y = option(g, Component.translatable("trader.tears-of-ink.option.exchange"), l + M, y, () -> { exchanging = true; click(); }, true, mouseX, mouseY);
-			y = option(g, Component.translatable("trader.tears-of-ink.option.vow"), l + M, y, () -> { changing = true; click(); },
-					data.path() != com.tarkrakov.tearsofink.vow.Vow.NONE, mouseX, mouseY);
 			y = option(g, Component.translatable("trader.tears-of-ink.option.contracts", data.contracts()), l + M, y,
 					() -> send(SoulTrader.ACTION_CONTRACTS), data.contracts() > 0, mouseX, mouseY);
 			y = option(g, Component.translatable("trader.tears-of-ink.option.board"), l + M, y,
@@ -148,8 +130,16 @@ public class SoulTraderScreen extends Screen {
 			int inkBack = Math.min(InkData.INK_CAP, data.inkMax() + com.tarkrakov.tearsofink.vow.Vows.UNEXCHANGE_INK);
 			y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.unexchange"), l + M, y, textW, TEXT) + 6;
 			y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.soul", now, after), l + M, y, textW, WARN);
-			y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.ink", data.inkMax(), inkBack), l + M, y, textW, TEXT) + 10;
+			y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.ink", data.inkMax(), inkBack), l + M, y, textW, TEXT);
+			y = rankWarning(g, l, y, textW, now, after);
+			y = inkRankPreview(g, l, y, textW, data.inkMax(), inkBack);
+			y += 4;
 			y = option(g, Component.translatable("trader.tears-of-ink.sell.confirm"), l + M, y, () -> send(SoulTrader.ACTION_SELL), true, mouseX, mouseY);
+			option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { selling = false; click(); }, true, mouseX, mouseY);
+			return;
+		}
+		if (data.inkMax() >= InkData.INK_CAP) {
+			y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.ink_full"), l + M, y, textW, WARN) + 10;
 			option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { selling = false; click(); }, true, mouseX, mouseY);
 			return;
 		}
@@ -165,47 +155,37 @@ public class SoulTraderScreen extends Screen {
 		y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.soul", now, after), l + M, y, textW, WARN);
 		y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.ink", data.inkMax(), inkAfter), l + M, y, textW, TEXT);
 		y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.penalty", pNow, pAfter), l + M, y, textW, WARN);
-		String sNow = stage(now), sAfter = stage(after);
-		if (sAfter != null && !sAfter.equals(sNow)) {
-			y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.stage",
-					Component.translatable("trader.tears-of-ink.stage." + sAfter)).withStyle(ChatFormatting.ITALIC), l + M, y, textW, WARN);
-		}
+		y = rankWarning(g, l, y, textW, now, after);
+		y = inkRankPreview(g, l, y, textW, data.inkMax(), inkAfter);
 		y += 10;
 		y = option(g, Component.translatable("trader.tears-of-ink.sell.confirm"), l + M, y, () -> send(SoulTrader.ACTION_SELL), true, mouseX, mouseY);
 		option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { selling = false; click(); }, true, mouseX, mouseY);
 	}
 
-	/** Обмен Чернил на Душу (обеты): что отдаёшь, что получаешь; или почему нельзя. */
-	private void renderExchange(GuiGraphics g, int l, int y, int textW, int mouseX, int mouseY) {
-		y = paragraph(g, Component.translatable("trader.tears-of-ink.exchange.text"), l + M, y, textW, TEXT) + 6;
-		int block = data.exchangeBlock();
-		if (block != 0) {
-			String why = block == 1 ? "sold" : block == 2 ? "limit" : "ink";
-			y = paragraph(g, Component.translatable("trader.tears-of-ink.exchange.no_" + why), l + M, y, textW, WARN) + 10;
-		} else {
-			int soulAfter = data.soulMax() + com.tarkrakov.tearsofink.vow.Vows.EXCHANGE_SOUL;
-			int inkAfter = data.inkMax() - com.tarkrakov.tearsofink.vow.Vows.EXCHANGE_INK;
-			y = paragraph(g, Component.translatable("trader.tears-of-ink.exchange.soul", data.soulMax(), soulAfter), l + M, y, textW, TITLE);
-			y = paragraph(g, Component.translatable("trader.tears-of-ink.exchange.ink", data.inkMax(), inkAfter), l + M, y, textW, WARN);
-			y = paragraph(g, Component.translatable("trader.tears-of-ink.exchange.left",
-					com.tarkrakov.tearsofink.vow.Vows.EXCHANGE_LIMIT - data.exchanged()), l + M, y, textW, FADED) + 10;
-			y = option(g, Component.translatable("trader.tears-of-ink.exchange.confirm"), l + M, y, () -> send(SoulTrader.ACTION_EXCHANGE), true, mouseX, mouseY);
-		}
-		option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { exchanging = false; click(); }, true, mouseX, mouseY);
+	/** При продаже и получении Чернил показывать новую стадию и конкретное преимущество. */
+	private int inkRankPreview(GuiGraphics g, int l, int y, int width, int before, int after) {
+		if (data.path() != com.tarkrakov.tearsofink.vow.Vow.INK) return y;
+		var first = com.tarkrakov.tearsofink.vow.InkRank.fromMaximum(before);
+		var next = com.tarkrakov.tearsofink.vow.InkRank.fromMaximum(after);
+		if (first == next) return y;
+		y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.ink_rank_gain",
+				Component.translatable("ink_rank.tears-of-ink." + first.id),
+				Component.translatable("ink_rank.tears-of-ink." + next.id)), l + M, y, width, TITLE);
+		return paragraph(g, Component.translatable("ink_rank.tears-of-ink.perk." + next.id), l + M, y, width, TITLE);
 	}
 
-	/** Смена обета: на какой путь, цена (первая бесплатно), что уснёт. */
-	private void renderVow(GuiGraphics g, int l, int y, int textW, int mouseX, int mouseY) {
-		com.tarkrakov.tearsofink.vow.Vow to = data.path().other();
-		y = paragraph(g, Component.translatable("trader.tears-of-ink.vow.text",
-				Component.translatable("vow.tears-of-ink." + data.path().id + ".name"),
-				Component.translatable("vow.tears-of-ink." + to.id + ".name")), l + M, y, textW, TEXT) + 6;
-		y = paragraph(g, data.changeCost() == 0
-				? Component.translatable("trader.tears-of-ink.vow.free")
-				: Component.translatable("trader.tears-of-ink.vow.cost", data.changeCost()), l + M, y, textW, data.changeCost() == 0 ? TITLE : WARN);
-		y = paragraph(g, Component.translatable("trader.tears-of-ink.vow.sleep"), l + M, y, textW, FADED) + 10;
-		y = option(g, Component.translatable("trader.tears-of-ink.vow.confirm"), l + M, y, () -> send(SoulTrader.ACTION_VOW), true, mouseX, mouseY);
-		option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { changing = false; click(); }, true, mouseX, mouseY);
+	/** Предупредить о потере ранга ДО сделки, включая отключаемую боевую способность. */
+	private int rankWarning(GuiGraphics g, int l, int y, int width, int before, int after) {
+		var first = com.tarkrakov.tearsofink.vow.SoulRank.fromMaximum(before);
+		var next = com.tarkrakov.tearsofink.vow.SoulRank.fromMaximum(after);
+		if (first == next) return y;
+		y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.rank_loss",
+				Component.translatable("soul_rank.tears-of-ink." + first.id),
+				Component.translatable("soul_rank.tears-of-ink." + next.id)), l + M, y, width, WARN);
+		if (data.path() == com.tarkrakov.tearsofink.vow.Vow.SOUL) {
+			y = paragraph(g, Component.translatable("soul_rank.tears-of-ink.perk." + first.id), l + M, y, width, WARN);
+		}
+		return y;
 	}
 
 	/** Доска контрактов: активный контракт, вкладки сложности, выбранный контракт, обновление. */
