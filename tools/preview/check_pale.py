@@ -60,8 +60,12 @@ assert start[0]>.25 and finish[0]<-.15,('right-to-left swing missing',start,fini
 for name,tick in [('attack1',.30),('attack2',.35),('attack3',.75),('attack4',.30),
                   ('dual_attack2',.90),('dual_attack2_off',.35)]:
     tip=screen_tip(name,tick,-1 if name.endswith('_off') else 1)
-    assert -0.48<tip[1]<0.48,(name,'outside vertical frame',tip)
-    assert abs(tip[0])<0.85,(name,'outside horizontal frame',tip)
+    # The actual field of view uses perspective: a point farther away may have
+    # larger world Y while remaining fully on screen.  FOV = 70 degrees.
+    assert tip[2]<-.05,(name,'behind camera',tip)
+    normalized=tip[:2]/(-tip[2])
+    assert -.70<normalized[1]<.70,(name,'outside vertical FOV',normalized)
+    assert abs(normalized[0])<.94,(name,'outside horizontal FOV',normalized)
 for name in ('attack1','attack2','attack3','attack4','dual_attack2','dual_attack2_off',
              'dual_attack3','dual_attack3_off'):
     source=anims[name].get('third',{}).get('source')
