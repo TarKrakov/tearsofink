@@ -4,7 +4,7 @@ from gif import *
 
 COMBO = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../src/main/resources/data/tears-of-ink/weapon_combos')
 
-def hand_pose(arch, model, grip, c, t, m, tune, continuing=False):
+def hand_pose(arch, model, grip, c, t, m, tune, continuing=False, animations=None):
     disp = model['display']; side = 'right' if m == 1 else 'left'
     fp = disp['firstperson_'+side+'hand']; tp = disp['thirdperson_'+side+'hand']
     if tune.get('centre'):  # щит — за середину
@@ -17,8 +17,10 @@ def hand_pose(arch, model, grip, c, t, m, tune, continuing=False):
     if continuing: w = ease("ease_in_out", min(1, max(0, (end_time(c)-t)/(c.get("return", .3) if c.get("hold", 0) > 0 else .15))))
     fx = dict(c.get('third', {}))  # correction belongs to the original clip, not its F5 source
     src = fx.get('source')
-    if fx.get('wrist_source'): fx['_wrist_clip'] = json.load(open(f'{REPO}/weapon_anims/{arch}.json'))['animations'][fx['wrist_source']]
-    if src: c = json.load(open(f'{REPO}/weapon_anims/{arch}.json'))['animations'][src]  # третье лицо — по другому движению
+    if src or fx.get('wrist_source'):
+        library=animations if animations is not None else json.load(open(f'{REPO}/weapon_anims/{arch}.json'))['animations']
+        if fx.get('wrist_source'): fx['_wrist_clip']=library[fx['wrist_source']]
+        if src: c=library[src]  # третье лицо — по другому движению
     if tune.get('centre'): fx['_keep_face'] = True
     x, y, W, P = solve4(disp, m, c, t, tune, fx, grip, handle, tip)
     v0 = VANILLA_ARM
@@ -26,7 +28,7 @@ def hand_pose(arch, model, grip, c, t, m, tune, continuing=False):
     fq = item_quads(model, fp_item_m(fp, rot, pos, grip, m), (190,40,50) if m == 1 else (150,30,90))
     return arm, slerp_m(W, w), tp, handle, fq, y*w, P, w
 
-def build(arch, steps, dual, out, fps=20, tune=None, front=False):
+def build(arch, steps, dual, out, fps=20, tune=None, front=False, observer=None, render_frames=True):
     a, model, fp0, tp0, grip = load(arch)
     tune = tune or dict(TUNE, **a.get("third", {}))
     combo = json.load(open(f'{COMBO}/{arch}.json')); tempo = combo.get('tempo', 1.0)
@@ -46,7 +48,7 @@ def build(arch, steps, dual, out, fps=20, tune=None, front=False):
         start, nm, previous = state
         c = anims[nm]; t = (now-start)*tempo
         if t >= end_time(c): return None
-        result = list(hand_pose(arch, model, grip, c, t, m, tune, previous is not None))
+        result = list(hand_pose(arch, model, grip, c, t, m, tune, previous is not None, anims))
         rot, pos = sample(c, t)
         if previous is None and arch == 'pale_linear_greatsword' and c.get('smooth') and now-start < .20:
             u = ease('ease_out', max(0, (now-start)/.20))
@@ -73,7 +75,7 @@ def build(arch, steps, dual, out, fps=20, tune=None, front=False):
     for i in range(int(total*fps)):
         now = i/fps
         arms = {'R': VANILLA_ARM, 'L': VANILLA_ARM}; items = {}; fq = []; body = 0; labels = []
-        active = {}
+        active = {}; shown_fp = {}
         for st_t, m, state in events:
             if st_t <= now: active[m] = state
         Pmain = None; wmain = 0
@@ -81,6 +83,8 @@ def build(arch, steps, dual, out, fps=20, tune=None, front=False):
             sampled = pose(state, now, m)
             if sampled is None: continue
             nm = state[1]
+            side='right' if m==1 else 'left'
+            shown_fp[m]=fp_item_m(disp['firstperson_'+side+'hand'],*sampled[1],grip,m)
             arm, W, tp, handle, q, by, P, w = sampled[0]
             s = 'R' if m == 1 else 'L'
             arms[s] = arm
@@ -98,6 +102,14 @@ def build(arch, steps, dual, out, fps=20, tune=None, front=False):
                 fq += item_quads(model, fp_item_m(disp['firstperson_'+side+'hand'], np.zeros(3), np.zeros(3), grip, m), (190,40,50) if m == 1 else (150,30,90))
         if len(labels) > 1: body = 0
         body = max(-D(25), min(D(25), body))
+        if observer is not None:
+            carried={}
+            for side,sign in (('R',1),('L',-1)):
+                if side in items:
+                    pivot=[-sign*5*math.cos(body),2,sign*5*math.sin(body)]
+                    carried[sign]=items[side][1](WORLD@part_m(pivot,*arms[side]))
+            observer(now,shown_fp,carried)
+        if not render_frames: continue
         q = scene(arms, items, body)
         A_ = render(fq, [0,0,0], [0,0,-1], size=(240,180), fov=70, bg=(40,40,56))
         B_ = render(q, [0.9,2.4,2.6], [0,1.3,-0.6], size=(240,240), fov=50)
@@ -110,6 +122,7 @@ def build(arch, steps, dual, out, fps=20, tune=None, front=False):
         dr.text((484,214), f'{arch}: ' + (' + '.join(labels) or '—'), fill=(255,255,255), font=FONT)
         dr.text((4,220), f'{now:.2f} s', fill=(255,255,255), font=FONT)
         frames.append(im)
+    if not frames: return frames
     frames[0].save(out, save_all=True, append_images=frames[1:], duration=[(round((i+1)*100/fps)-round(i*100/fps))*10 for i in range(len(frames))], loop=0)
     return frames
 

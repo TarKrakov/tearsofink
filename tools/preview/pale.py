@@ -37,6 +37,14 @@ def generate(out, only=None):
         sheet = Image.new('RGB', (1440, 720))
         for i, index in enumerate(indices): sheet.paste(frames[index], ((i%2)*720, (i//2)*240))
         sheet.save(out/f'{name}.png')
+        if name=='pair':
+            # Inspect the actual shared attacks, including the preceding alternating handoff.
+            focus=frames[round(.8*30):round(1.6*30)]
+            focus[0].save(out/'pair-3-4.gif',save_all=True,append_images=focus[1:],duration=[(round((i+1)*100/30)-round(i*100/30))*10 for i in range(len(focus))],loop=0)
+            contact=Image.new('RGB',(1440,960))
+            for i,t in enumerate((.8,.92,1.,1.1,1.2,1.32,1.4,1.5)):
+                contact.paste(frames[min(len(frames)-1,round(t*30))],((i%2)*720,(i//2)*240))
+            contact.save(out/'pair-3-4.png')
         print(name, len(frames), flush=True)
     # A short individual comparison for every base attack.
     for index, st in enumerate([] if only else solo + pair):
