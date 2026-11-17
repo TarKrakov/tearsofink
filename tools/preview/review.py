@@ -96,6 +96,18 @@ def inspect(arch, samples=50):
                 warnings.append(f'{name}: only {impact_fraction:.0%} of mesh visible on hit')
         if len(steps) and np.max(steps) > .2:
             warnings.append(f'{name}: unusually large per-sample tip movement; inspect curve')
+        # Compare one-sided tangents near every keyframe. Large changes are
+        # a likely source of visible snapping, even with smooth interpolation.
+        max_corner = 0.0
+        for previous, keytime, following in zip(keytimes[:-2], keytimes[1:-1], keytimes[2:]):
+            dt = min(.012, .25 * (keytime - previous), .25 * (following - keytime))
+            left = frame_data(model, grip, tip, vertices, clip, keytime-dt, hand)[1]
+            middle = frame_data(model, grip, tip, vertices, clip, keytime, hand)[1]
+            right = frame_data(model, grip, tip, vertices, clip, keytime+dt, hand)[1]
+            jump = float(np.linalg.norm((right - middle) / dt - (middle - left) / dt))
+            max_corner = max(max_corner, jump)
+        if max_corner > 6:
+            warnings.append(f'{name}: abrupt keyframe velocity change ({max_corner:.1f}); inspect blending')
         f5_clip, fix = preview_pose(anims, clip)
         f5_alignment = None
         if fix.get('follow_blade'):
@@ -116,6 +128,7 @@ def inspect(arch, samples=50):
             'impact_visible_fraction': None if impact_fraction is None else round(impact_fraction, 3),
             'largest_tip_step': round(float(np.max(steps)), 3) if len(steps) else 0,
             'highest_tip_speed': round(float(np.max(velocities)), 3) if len(velocities) else 0,
+            'largest_keyframe_velocity_change': round(max_corner, 3),
             'f5_blade_arm_alignment': None if f5_alignment is None else round(f5_alignment, 5),
         })
     return combo, {
