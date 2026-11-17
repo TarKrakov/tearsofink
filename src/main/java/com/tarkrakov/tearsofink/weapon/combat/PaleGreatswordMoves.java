@@ -125,7 +125,7 @@ public final class PaleGreatswordMoves {
                     || attacker == p || attacker.isAlliedTo(p) || attacker.distanceToSqr(p) > 25) return true;
             s.parried = true;
             play(p, s, "dual_repel", "dual_repel_off", 10);
-            area(p, s, 360, 3.3, 0, 1.2);
+            area(p, s, 360, 3.3, 0.35, 1.2);
             return false;
         });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -142,8 +142,8 @@ public final class PaleGreatswordMoves {
                     case SINGLE_WINDOW -> { if (time > s.until) finish(p, s, false); }
                     case PARRY -> { if (time > s.until) finish(p, s, true); }
                     case CHARGE -> {
-                        if (!p.isUsingItem()) cancel(p, s);
-                        else if (time - s.started >= 30) p.releaseUsingItem();
+                        if (!p.isUsingItem() && time - s.started > 3) cancel(p, s);
+                        else if (time - s.started >= 50) p.releaseUsingItem();
                     }
                     case SINGLE_DASH, DUAL_DASH -> dashTick(p, s);
                     case LEAP -> {
@@ -176,7 +176,8 @@ public final class PaleGreatswordMoves {
         if (s.phase == Phase.SINGLE_WINDOW && s.left == left && now(p) <= s.until) {
             s.phase = Phase.SINGLE_DASH;
             startDash(p, s, 4, 1.2f);
-            play(p, s, "rush", null, 12);
+            play(p, s, "rush", null, 18);
+            p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_SWEEP, net.minecraft.sounds.SoundSource.PLAYERS, 1.1f, 0.75f);
             return;
         }
         if (s.phase == Phase.PARRY && dual(p) && now(p) <= s.until) {
@@ -185,7 +186,7 @@ public final class PaleGreatswordMoves {
             // The second R is committed: start cooldown now, irrespective of landing/interruptions.
             s.dualReady = cooldown(p, s, 240);
             Vec3 d = flat(p);
-            p.setDeltaMovement(d.x * 0.3, 0.6, d.z * 0.3);
+            p.setDeltaMovement(d.x * 0.3, 1.05, d.z * 0.3);
             p.hurtMarked = true;
             play(p, s, "dual_leap", "dual_leap_off", 50);
             return;
@@ -217,11 +218,12 @@ public final class PaleGreatswordMoves {
             s.phase = Phase.CHARGE;
             play(p, s, "dual_charge", "dual_charge_off", 32);
         } else if (pair) {
-            s.phase = Phase.PARRY; s.parryUntil = now(p) + 14; s.until = now(p) + 28;
+            s.phase = Phase.PARRY; s.parryUntil = now(p) + 26; s.until = now(p) + 100;
             play(p, s, "dual_parry", "dual_parry_off", 14);
         } else {
-            s.phase = Phase.SINGLE_WINDOW; s.until = now(p) + 24;
-            play(p, s, "ability", null, 8);
+            s.phase = Phase.SINGLE_WINDOW; s.until = now(p) + 70;
+            play(p, s, "ability", null, 14);
+            p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_SWEEP, net.minecraft.sounds.SoundSource.PLAYERS, 1.1f, 0.65f);
             area(p, s, 140, 3.6, 0.75, 1.1);
         }
         return true;
@@ -230,11 +232,12 @@ public final class PaleGreatswordMoves {
     public static void release(ServerPlayer p) {
         State s = STATES.get(p.getUUID());
         if (s == null || s.phase != Phase.CHARGE || !available(p) || !valid(p, s)) return;
-        float charge = Mth.clamp((now(p) - s.started) / 30f, 0, 1);
+        float charge = Mth.clamp((now(p) - s.started) / 50f, 0, 1);
         s.phase = Phase.DUAL_DASH;
         s.chargeReady = cooldown(p, s, 240);
         startDash(p, s, 5.5, Mth.lerp(charge, 1.3f, 2.1f));
-        play(p, s, "dual_rush", "dual_rush_off", 14);
+        play(p, s, "dual_rush", "dual_rush_off", 18);
+        p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_SWEEP, net.minecraft.sounds.SoundSource.PLAYERS, 1.1f, 0.8f);
     }
 
     private static void startDash(ServerPlayer p, State s, double distance, float mult) {

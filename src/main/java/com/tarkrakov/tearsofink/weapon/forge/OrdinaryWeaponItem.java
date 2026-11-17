@@ -49,7 +49,7 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
 		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(stack)) {
 			if (entity instanceof net.minecraft.server.level.ServerPlayer sp) {
 				if (!com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.dual(sp)) sp.stopUsingItem();
-				else if (getUseDuration(stack, entity) - remaining >= 30) sp.releaseUsingItem();
+				else if (getUseDuration(stack, entity) - remaining >= 50) sp.releaseUsingItem();
 			}
 			return;
 		}
