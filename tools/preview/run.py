@@ -8,16 +8,48 @@ FP_FOV = 70
 ITEM = {'executioner':'spire_torturer_greatsword','axe':'spire_roaring_axe','dagger':'spire_rapid_knife','scimitar':'spire_shadow_scimitar','talwar':'blood_talvar','dussak':'blood_dussak','pale_linear_greatsword':'pale_linear_great'}
 TUNE = dict(reach=1.3, body=0.3, body_max=25, lead=0.5)
 
+def resolve_model(item_name, seen=None):
+    """Resolve authored parent models, preserving child display transforms.
+
+    New weapons do not need hardcoded entries in ITEM if their registered
+    item JSON points to a 3D Blockbench parent model.
+    """
+    seen = set() if seen is None else seen
+    relative = item_name.split(':', 1)[-1]
+    if relative.startswith('item/'):
+        relative = relative[5:]
+    path = f'{REPO}/models/item/{relative}.json'
+    if path in seen:
+        raise ValueError(f'Cyclic item model parent: {path}')
+    seen.add(path)
+    with open(path, encoding='utf-8') as source:
+        local = json.load(source)
+    if 'elements' in local:
+        return local
+    parent = local.get('parent', '')
+    if not parent or parent.startswith('minecraft:'):
+        raise ValueError(f'{path}: 3D Blockbench geometry is unavailable')
+    base = resolve_model(parent, seen)
+    base['display'] = {**base.get('display', {}), **local.get('display', {})}
+    return base
+
+
 def load(arch):
-    a = json.load(open(f'{REPO}/weapon_anims/{arch}.json'))
-    m = json.load(open(f'{REPO}/models/item/{ITEM[arch]}.json'))
-    # Merge item-specific transforms, preserving Blockbench geometry and source model.
-    # The registered greatsword uses an alias model that provides matching left-hand poses.
+    with open(f'{REPO}/weapon_anims/{arch}.json', encoding='utf-8') as source:
+        a = json.load(source)
+    m = resolve_model(ITEM.get(arch, arch))
+    # Backward-compatible aliases (including original authored left-hand poses).
     alias_path = f'{REPO}/models/item/{arch}.json'
-    if arch == 'pale_linear_greatsword':
-        overlay = json.load(open(alias_path))
-        m['display'] = {**m['display'], **overlay.get('display', {})}
+    if arch in ITEM and os.path.exists(alias_path):
+        with open(alias_path, encoding='utf-8') as source:
+            overlay = json.load(source)
+        m['display'] = {**m.get('display', {}), **overlay.get('display', {})}
     disp = m['display']
+    missing = [name for name in ('firstperson_righthand', 'firstperson_lefthand',
+                                 'thirdperson_righthand', 'thirdperson_lefthand')
+               if name not in disp]
+    if missing:
+        raise ValueError(f'{arch}: add authored display transforms for {missing}')
     return a, m, disp['firstperson_righthand'], disp['thirdperson_righthand'], a.get('grip')
 
 def cell(arch, clipname, t, model, disp, grip, clip, both, tune):
