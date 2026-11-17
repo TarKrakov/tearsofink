@@ -37,6 +37,8 @@ jobs:
         run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale_flow.py
       - name: validate retreat slash, flight preparation and idle composition
         run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale_moves.py
+      - name: validate new Shift+R single and double guarding poses
+        run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale_guard.py
       - name: validate paired attack handoffs
         run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale_sync.py
       - name: review clip curves and whole-model visibility
@@ -54,6 +56,19 @@ jobs:
       - name: render specialty R preview via Claude preview
         if: contains(github.event.head_commit.message, '[preview]')
         run: /tmp/tearsofink-preview-venv/bin/python tools/preview/pale.py out/pale pair-r
+      - name: render guarded stances in first-person and F5
+        if: contains(github.event.head_commit.message, '[preview]')
+        run: /tmp/tearsofink-preview-venv/bin/python tools/preview/pale.py out/pale solo-guard dual-guard
+      - name: save guard GIFs and contact sheets
+        if: contains(github.event.head_commit.message, '[preview]')
+        uses: actions/upload-artifact@v7
+        with:
+          name: PaleGreatswordShiftRGuardPreview
+          path: |
+            out/pale/solo-guard*.gif
+            out/pale/solo-guard*.png
+            out/pale/dual-guard*.gif
+            out/pale/dual-guard*.png
       - name: save specialty R preview
         if: contains(github.event.head_commit.message, '[preview]')
         uses: actions/upload-artifact@v7
