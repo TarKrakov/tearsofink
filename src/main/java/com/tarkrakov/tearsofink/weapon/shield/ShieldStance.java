@@ -159,7 +159,8 @@ public final class ShieldStance {
 		int extraCharge = perfect && rank.atLeast(com.tarkrakov.tearsofink.vow.SoulRank.LUMINOUS)
 				? ShieldTuning.LUMINOUS_PERFECT_CHARGE : 1;
 		setCharge(p, Math.min(ShieldTuning.CHARGE_MAX, charge(p) + extraCharge));
-		ABSORBED.merge(p.getUUID(), amount, (previous, gain) -> Math.min(ShieldTuning.STORED_DAMAGE_CAP, previous + gain));
+		ABSORBED.merge(p.getUUID(), Math.min(ShieldTuning.STORED_DAMAGE_CAP, amount),
+				(previous, gain) -> Math.min(ShieldTuning.STORED_DAMAGE_CAP, previous + gain));
 		syncStored(p);
 		com.tarkrakov.tearsofink.vow.SoulFeats.onBlock(p, source, amount, perfect);
 		if (charge(p) >= ShieldTuning.CHARGE_MAX) { // полный заряд — щиты поют
