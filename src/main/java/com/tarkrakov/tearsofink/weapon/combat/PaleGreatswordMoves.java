@@ -141,7 +141,8 @@ public final class PaleGreatswordMoves {
                     || attacker == null || attacker == p || attacker.isAlliedTo(p)) return true;
             s.parried = true;
             play(p, s, "dual_repel", "dual_repel_off", 10);
-            area(p, s, 360, 3.3, 0.35, 1.2);
+            area(p, s, 360, s.tuning.dualR().repelReach(),
+                    s.tuning.dualR().repelDamageMultiplier(), s.tuning.dualR().repelKnockback());
             // Same recognisable clang as the Dussak parry, without touching its sounds.
             p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.ANVIL_LAND,
                     net.minecraft.sounds.SoundSource.PLAYERS, 0.45f, 1.9f);
@@ -197,7 +198,8 @@ public final class PaleGreatswordMoves {
                         if (!s.slammed && time >= s.started + 4) {
                             s.slammed = true;
                             if (p.onGround()) {
-                                area(p, s, 360, 3.3, 1.4, 0.6);
+                                area(p, s, 360, s.tuning.dualR().slamReach(),
+                                        s.tuning.dualR().slamDamageMultiplier(), s.tuning.dualR().slamKnockback());
                                 p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.GENERIC_EXPLODE.value(),
                                         net.minecraft.sounds.SoundSource.PLAYERS, 0.75f, 0.85f);
                                 p.serverLevel().sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD,
@@ -230,7 +232,7 @@ public final class PaleGreatswordMoves {
             s.phase = Phase.LEAP; s.started = now(p); s.until = now(p) + 50;
             s.airborne = false;
             // The second R is committed: start cooldown now, irrespective of landing/interruptions.
-            s.dualReady = cooldown(p, s, 240);
+            s.dualReady = cooldown(p, s, s.tuning.dualR().cooldownTicks());
             Vec3 d = flat(p);
             p.setDeltaMovement(d.x * 0.3, 1.05, d.z * 0.3);
             p.hurtMarked = true;
@@ -282,8 +284,11 @@ public final class PaleGreatswordMoves {
             p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_IRON.value(),
                     net.minecraft.sounds.SoundSource.PLAYERS, 0.9f, 0.65f);
         } else if (pair) {
-            s.phase = Phase.PARRY; s.parryUntil = now(p) + 26; s.until = now(p) + 100;
-            play(p, s, "dual_parry", "dual_parry_off", 26);
+            var parry = s.tuning.dualR();
+            s.phase = Phase.PARRY;
+            s.parryUntil = now(p) + parry.parryTicks();
+            s.until = now(p) + parry.followupWindowTicks();
+            play(p, s, "dual_parry", "dual_parry_off", parry.parryTicks());
             p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.SHIELD_BLOCK,
                     net.minecraft.sounds.SoundSource.PLAYERS, 0.55f, 1.25f);
         } else {
@@ -300,8 +305,10 @@ public final class PaleGreatswordMoves {
         if (s == null || s.phase != Phase.CHARGE || !available(p) || !valid(p, s)) return;
         float charge = Mth.clamp((now(p) - s.started) / 50f, 0, 1);
         s.phase = Phase.DUAL_DASH;
-        s.chargeReady = cooldown(p, s, 240);
-        startDash(p, s, 5.5, Mth.lerp(charge, 1.3f, 2.1f));
+        var charged = s.tuning.dualCharge();
+        s.chargeReady = cooldown(p, s, charged.cooldownTicks());
+        startDash(p, s, charged.dashDistance(),
+                Mth.lerp(charge, charged.minDamageMultiplier(), charged.maxDamageMultiplier()));
         play(p, s, "dual_rush", "dual_rush_off", 18);
         p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.TRIDENT_RIPTIDE_1.value(), net.minecraft.sounds.SoundSource.PLAYERS, 0.9f, 0.85f);
     }
@@ -326,7 +333,7 @@ public final class PaleGreatswordMoves {
     private static void cancel(ServerPlayer p, State s) {
         if (s.phase == Phase.SINGLE_WINDOW || s.phase == Phase.SINGLE_DASH) finish(p, s, false);
         else if (s.phase == Phase.PARRY || s.phase == Phase.LEAP || s.phase == Phase.SLAM) finish(p, s, true);
-        else if (s.phase == Phase.CHARGE) s.chargeReady = cooldown(p, s, 240);
+        else if (s.phase == Phase.CHARGE) s.chargeReady = cooldown(p, s, s.tuning.dualCharge().cooldownTicks());
         Combat.play(p, ARCH, "recover", s.paired || s.left ? "recover" : null, 4);
         s.phase = Phase.IDLE;
         if (p.isUsingItem() && isWeapon(p.getUseItem())) p.stopUsingItem();
@@ -341,7 +348,7 @@ public final class PaleGreatswordMoves {
 
     private static void finish(ServerPlayer p, State s, boolean pair) {
         if (pair) {
-            if (s.dualReady <= now(p)) s.dualReady = cooldown(p, s, 240);
+            if (s.dualReady <= now(p)) s.dualReady = cooldown(p, s, s.tuning.dualR().cooldownTicks());
         } else s.singleReady = cooldown(p, s, s.tuning.singleR().cooldownTicks());
         s.phase = Phase.IDLE;
     }
