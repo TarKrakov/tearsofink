@@ -263,7 +263,10 @@ public final class PaleGreatswordMoves {
         s.main = p.getMainHandItem(); s.off = p.getOffhandItem();
         s.left = left; s.paired = pair; s.started = now(p);
         s.phase = Phase.GUARD; s.until = now(p) + duration;
-        s.guardReady = cooldown(p, s, cooldown);
+        // Defensive Shift+R has its OWN recovery timer. Do not set the item's
+        // global cooldown: doing so would unnecessarily lock regular R/RMB
+        // even after the blocking pose ends.
+        s.guardReady = now(p) + Math.round(cooldown * Awakening.cooldownMult(left ? s.off : s.main));
         play(p, s, pair ? "dual_guard" : "guard", pair ? "dual_guard_off" : null, duration);
         // Free ordinary technique; the existing weapon-wear economy still applies.
         ItemStack sword = left ? s.off : s.main;
