@@ -51,7 +51,8 @@ def screen_tip(name, t, hand=1):
     side='right' if hand==1 else 'left'
     frame=m['display']['firstperson_'+side+'hand']
     pts=apply4(fp_item_m(frame,rot,pos,g,hand),np.array([h,tpt])/16)
-    return pts[1] + np.array([hand*.56,-.52,-.72])
+    # fp_item_m already contains the vanilla camera-to-hand translation.
+    return pts[1]
 tpt=t
 start=screen_tip('attack1',0)
 finish=screen_tip('attack1',.43)
