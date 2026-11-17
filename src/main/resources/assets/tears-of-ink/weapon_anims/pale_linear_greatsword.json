@@ -28,7 +28,7 @@
           ],
           "translation": [
             -7,
-            7,
+            12,
             -2
           ],
           "ease": "ease_in_out"
@@ -42,7 +42,7 @@
           ],
           "translation": [
             -6,
-            6,
+            11,
             -3
           ],
           "ease": "ease_in"
@@ -56,7 +56,7 @@
           ],
           "translation": [
             -6,
-            6,
+            11,
             -3
           ],
           "ease": "ease_out"
@@ -65,12 +65,12 @@
           "t": 0.43,
           "rotation": [
             -38,
-            49,
-            66
+            53,
+            72
           ],
           "translation": [
             -4,
-            5,
+            7,
             -2
           ],
           "ease": "ease_out"
@@ -84,7 +84,7 @@
           ],
           "translation": [
             -4,
-            5,
+            8,
             -2
           ],
           "ease": "ease_in_out"
@@ -110,7 +110,7 @@
           ],
           "translation": [
             -4,
-            5,
+            11,
             -2
           ],
           "ease": "ease_in_out"
@@ -124,7 +124,7 @@
           ],
           "translation": [
             -3,
-            6,
+            11,
             2
           ],
           "ease": "ease_in"
@@ -138,7 +138,7 @@
           ],
           "translation": [
             -4,
-            8,
+            13,
             -5
           ],
           "ease": "ease_out"
@@ -152,7 +152,7 @@
           ],
           "translation": [
             -4,
-            8,
+            12,
             -4
           ],
           "ease": "ease_in_out"
@@ -166,7 +166,7 @@
           ],
           "translation": [
             -3,
-            7,
+            10,
             0
           ],
           "ease": "ease_in_out"
@@ -174,10 +174,6 @@
       ],
       "third": {
         "source": "attack2_third",
-        "push": [
-          7,
-          7
-        ],
         "center": 0.85
       }
     },
@@ -197,7 +193,7 @@
           ],
           "translation": [
             -3,
-            7,
+            10,
             0
           ],
           "ease": "ease_in_out"
@@ -211,7 +207,7 @@
           ],
           "translation": [
             -3,
-            3,
+            6,
             -2
           ],
           "ease": "ease_in"
@@ -225,7 +221,7 @@
           ],
           "translation": [
             -3,
-            3,
+            6,
             -2
           ],
           "ease": "heavy"
@@ -233,27 +229,27 @@
         {
           "t": 0.75,
           "rotation": [
-            -55,
+            -82,
             4,
             -2
           ],
           "translation": [
             -4,
-            7,
-            -4
+            11,
+            -3
           ],
           "ease": "ease_out"
         },
         {
           "t": 0.95,
           "rotation": [
-            -62,
+            -102,
             5,
             -6
           ],
           "translation": [
             -4,
-            7,
+            10,
             -3
           ],
           "ease": "ease_in_out"
@@ -273,13 +269,13 @@
         {
           "t": 0,
           "rotation": [
-            -62,
+            -102,
             5,
             -6
           ],
           "translation": [
             -4,
-            7,
+            10,
             -3
           ],
           "ease": "ease_in_out"
@@ -287,13 +283,13 @@
         {
           "t": 0.13,
           "rotation": [
-            -58,
+            -65,
             5,
             -4
           ],
           "translation": [
             -3,
-            8,
+            11,
             1
           ],
           "ease": "ease_in"
@@ -307,7 +303,7 @@
           ],
           "translation": [
             -3,
-            9,
+            14,
             -5
           ],
           "ease": "ease_out"
@@ -321,7 +317,7 @@
           ],
           "translation": [
             -3,
-            8,
+            12,
             -3
           ],
           "ease": "ease_in_out"
@@ -329,10 +325,6 @@
       ],
       "third": {
         "source": "attack4_third",
-        "push": [
-          7,
-          7
-        ],
         "center": 0.85
       }
     },
@@ -452,10 +444,6 @@
         }
       ],
       "third": {
-        "push": [
-          6,
-          6
-        ],
         "turn": 7
       }
     },
@@ -537,80 +525,83 @@
       "length": 0.8,
       "smooth": "tight",
       "hold": 0.12,
-      "return": 0.32,
+      "return": 0.34,
       "impact": 0.55,
       "keyframes": [
         {
           "t": 0,
           "rotation": [
-            21.79,
-            -5.79,
-            -1.17
+            -38,
+            38,
+            48
           ],
           "translation": [
-            0,
-            0,
-            0
-          ],
-          "ease": "ease_in_out"
-        },
-        {
-          "t": 0.2,
-          "rotation": [
-            18.82,
-            -1.38,
-            0.66
-          ],
-          "translation": [
-            1,
-            6,
+            -4,
+            8,
             -2
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.32,
+          "t": 0.17,
           "rotation": [
-            18.82,
-            -1.38,
-            0.66
+            -40,
+            35,
+            40
           ],
           "translation": [
-            1,
-            6,
+            -4,
+            8,
             -2
           ],
-          "ease": "heavy"
+          "ease": "ease_in"
         },
         {
-          "t": 0.48,
+          "t": 0.36,
           "rotation": [
-            -89.43,
-            8.29,
-            18.73
+            -35,
+            7,
+            6
           ],
           "translation": [
-            -3,
-            -3,
-            -5
+            -2,
+            10,
+            -3
           ],
-          "ease": "ease_in_out"
+          "ease": "ease_in"
         },
         {
-          "t": 0.7,
+          "t": 0.55,
           "rotation": [
-            -30.62,
-            7.97,
-            6.87
+            -43,
+            -30,
+            -45
           ],
           "translation": [
-            -3,
-            5,
-            1
+            -4,
+            9,
+            -2
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.74,
+          "rotation": [
+            -43,
+            -30,
+            -45
+          ],
+          "translation": [
+            -4,
+            9,
+            -2
           ],
           "ease": "ease_in_out"
         }
-      ]
+      ],
+      "third": {
+        "no_cross": true
+      }
     },
     "dual_attack1_off": {
       "length": 0.8,
@@ -622,79 +613,76 @@
         {
           "t": 0,
           "rotation": [
-            21.79,
-            -5.79,
-            -1.17
+            -38,
+            38,
+            48
           ],
           "translation": [
-            0,
-            0,
-            0
-          ],
-          "ease": "ease_in_out"
-        },
-        {
-          "t": 0.2,
-          "rotation": [
-            18.82,
-            -1.38,
-            0.66
-          ],
-          "translation": [
-            1,
-            6,
+            -4,
+            8,
             -2
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.32,
+          "t": 0.17,
           "rotation": [
-            18.82,
-            -1.38,
-            0.66
+            -40,
+            35,
+            40
           ],
           "translation": [
-            1,
-            6,
+            -4,
+            8,
             -2
           ],
-          "ease": "heavy"
+          "ease": "ease_in"
         },
         {
-          "t": 0.48,
+          "t": 0.36,
           "rotation": [
-            -89.43,
-            8.29,
-            18.73
+            -35,
+            7,
+            6
           ],
           "translation": [
-            -3,
-            -3,
-            -5
+            -2,
+            10,
+            -3
           ],
-          "ease": "ease_in_out"
+          "ease": "ease_in"
         },
         {
-          "t": 0.7,
+          "t": 0.55,
           "rotation": [
-            -30.62,
-            7.97,
-            6.87
+            -43,
+            -30,
+            -45
           ],
           "translation": [
-            -3,
-            5,
-            1
+            -4,
+            9,
+            -2
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.74,
+          "rotation": [
+            -43,
+            -30,
+            -45
+          ],
+          "translation": [
+            -4,
+            9,
+            -2
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
-        "push": [
-          5,
-          5
-        ]
+        "no_cross": true
       }
     },
     "dual_attack2": {
@@ -707,95 +695,91 @@
         {
           "t": 0,
           "rotation": [
-            -30.6,
-            8,
-            7
-          ],
-          "translation": [
-            -3,
-            7,
-            2
-          ],
-          "ease": "ease_in_out"
-        },
-        {
-          "t": 0.38,
-          "rotation": [
+            -43,
             -30,
-            8,
-            7
+            -45
           ],
           "translation": [
-            -3,
-            7,
-            2
+            -4,
+            9,
+            -2
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.7,
+          "t": 0.34,
           "rotation": [
-            8,
-            7,
-            5
+            -43,
+            -30,
+            -45
+          ],
+          "translation": [
+            -4,
+            9,
+            -2
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.67,
+          "rotation": [
+            4,
+            -20,
+            -25
           ],
           "translation": [
             -3,
-            7,
-            5
+            9,
+            2
           ],
           "ease": "ease_in"
         },
         {
           "t": 0.9,
           "rotation": [
-            -45,
-            9,
+            -35,
+            6,
             5
           ],
           "translation": [
             -4,
-            9,
-            -6
+            11,
+            -2
           ],
           "ease": "ease_out"
         },
         {
-          "t": 1.05,
+          "t": 1.08,
           "rotation": [
-            -43,
-            9,
+            -34,
+            6,
             5
           ],
           "translation": [
             -4,
-            9,
-            -5
+            11,
+            -2
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 1.17,
+          "t": 1.21,
           "rotation": [
             -29,
             8,
             7
           ],
           "translation": [
-            -2,
-            6,
-            2
+            -3,
+            9,
+            1
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
         "source": "dual_attack2_third",
-        "push": [
-          8,
-          8
-        ],
-        "center": 0.85
+        "no_cross": true
       }
     },
     "dual_attack2_off": {
@@ -808,95 +792,91 @@
         {
           "t": 0,
           "rotation": [
-            -30.6,
-            8,
-            7
+            -43,
+            -30,
+            -45
           ],
           "translation": [
-            -3,
-            7,
-            2
+            -4,
+            9,
+            -2
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.16,
+          "t": 0.14,
           "rotation": [
-            8,
-            7,
-            5
+            4,
+            -20,
+            -25
           ],
           "translation": [
             -3,
-            7,
-            5
+            9,
+            2
           ],
           "ease": "ease_in"
         },
         {
           "t": 0.35,
           "rotation": [
-            -45,
-            9,
+            -35,
+            6,
             5
           ],
           "translation": [
             -4,
-            9,
-            -6
+            11,
+            -2
           ],
           "ease": "ease_out"
         },
         {
-          "t": 0.51,
+          "t": 0.52,
           "rotation": [
-            -43,
-            9,
+            -34,
+            6,
             5
           ],
           "translation": [
             -4,
-            9,
-            -5
+            11,
+            -2
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.72,
+          "t": 0.75,
           "rotation": [
-            -31,
-            9,
-            7
+            -38,
+            -20,
+            -20
           ],
           "translation": [
             -3,
-            7,
-            2
+            9,
+            1
           ],
-          "ease": "ease_in_out"
+          "ease": "ease_in"
         },
         {
-          "t": 1.12,
+          "t": 1.21,
           "rotation": [
             -29,
             8,
             7
           ],
           "translation": [
-            -2,
-            6,
-            2
+            -3,
+            9,
+            1
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
         "source": "dual_attack2_off_third",
-        "push": [
-          8,
-          8
-        ],
-        "center": 0.85
+        "no_cross": true
       }
     },
     "dual_attack3": {
@@ -914,64 +894,64 @@
             7
           ],
           "translation": [
-            -2,
-            5,
-            2
+            -3,
+            9,
+            1
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.28,
+          "t": 0.19,
           "rotation": [
-            -63,
-            20,
-            40
+            6,
+            0,
+            0
           ],
           "translation": [
-            -6,
-            5,
+            -4,
+            7,
             -1
           ],
           "ease": "ease_in"
         },
         {
-          "t": 0.46,
+          "t": 0.38,
           "rotation": [
-            -64,
-            27,
-            55
+            10,
+            0,
+            0
           ],
           "translation": [
-            -6,
-            4,
-            -1
+            -4,
+            8,
+            -2
           ],
-          "ease": "ease_in"
+          "ease": "heavy"
         },
         {
           "t": 0.6,
           "rotation": [
-            -8,
-            -42,
-            -36
+            -75,
+            3,
+            1
           ],
           "translation": [
-            -10,
-            5,
+            -4,
+            9,
             -3
           ],
           "ease": "ease_out"
         },
         {
-          "t": 0.82,
+          "t": 0.85,
           "rotation": [
-            -7,
-            -45,
-            -38
+            -102,
+            5,
+            1
           ],
           "translation": [
-            -10,
-            4,
+            -4,
+            9,
             -3
           ],
           "ease": "ease_out"
@@ -979,40 +959,35 @@
         {
           "t": 1.05,
           "rotation": [
-            -11,
-            -48,
-            -43
+            -88,
+            4,
+            1
           ],
           "translation": [
-            -9,
-            4,
+            -4,
+            9,
             -2
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
-          "t": 1.22,
+          "t": 1.23,
           "rotation": [
-            -26,
-            10,
-            20
+            -29,
+            8,
+            7
           ],
           "translation": [
             -3,
-            5,
-            0
+            9,
+            1
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
         "source": "dual_attack3_third",
-        "push": [
-          6,
-          6
-        ],
-        "no_cross": true,
-        "center": 1
+        "no_cross": true
       }
     },
     "dual_attack3_off": {
@@ -1030,64 +1005,64 @@
             7
           ],
           "translation": [
-            -2,
-            5,
-            2
+            -3,
+            9,
+            1
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.28,
+          "t": 0.19,
           "rotation": [
-            -63,
-            20,
-            40
+            6,
+            0,
+            0
           ],
           "translation": [
-            -6,
-            5,
+            -4,
+            7,
             -1
           ],
           "ease": "ease_in"
         },
         {
-          "t": 0.46,
+          "t": 0.38,
           "rotation": [
-            -64,
-            27,
-            55
+            10,
+            0,
+            0
           ],
           "translation": [
-            -6,
-            4,
-            -1
+            -4,
+            8,
+            -2
           ],
-          "ease": "ease_in"
+          "ease": "heavy"
         },
         {
           "t": 0.6,
           "rotation": [
-            -8,
-            -42,
-            -36
+            -75,
+            3,
+            1
           ],
           "translation": [
-            -10,
-            5,
+            -4,
+            9,
             -3
           ],
           "ease": "ease_out"
         },
         {
-          "t": 0.82,
+          "t": 0.85,
           "rotation": [
-            -7,
-            -45,
-            -38
+            -102,
+            5,
+            1
           ],
           "translation": [
-            -10,
-            4,
+            -4,
+            9,
             -3
           ],
           "ease": "ease_out"
@@ -1095,92 +1070,90 @@
         {
           "t": 1.05,
           "rotation": [
-            -11,
-            -48,
-            -43
+            -88,
+            4,
+            1
           ],
           "translation": [
-            -9,
-            4,
+            -4,
+            9,
             -2
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
-          "t": 1.22,
+          "t": 1.23,
           "rotation": [
-            -26,
-            10,
-            20
+            -29,
+            8,
+            7
           ],
           "translation": [
             -3,
-            5,
-            0
+            9,
+            1
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
         "source": "dual_attack3_off_third",
-        "push": [
-          6,
-          6
-        ],
-        "no_cross": true,
-        "center": 1
+        "no_cross": true
       }
     },
     "dual_charge": {
       "length": 1.5,
       "smooth": "tight",
       "hold": 1,
-      "return": 0.2,
+      "return": 0.34,
       "impact": -1,
       "keyframes": [
         {
           "t": 0,
           "rotation": [
-            -30.53,
-            7.24,
-            5.95
+            -29,
+            8,
+            7
           ],
           "translation": [
-            -1,
+            2,
             5,
-            0
+            3
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.28,
+          "t": 0.32,
           "rotation": [
-            -36.17,
-            13.97,
-            15.52
+            -43,
+            20,
+            18
           ],
           "translation": [
-            -2,
-            5,
-            -1
+            4,
+            7,
+            3
           ],
-          "ease": "ease_in_out"
+          "ease": "ease_out"
         },
         {
           "t": 1.5,
           "rotation": [
-            -36.17,
-            13.97,
-            15.52
+            -43,
+            20,
+            18
           ],
           "translation": [
-            -2,
-            4.7,
-            -2
+            4,
+            7,
+            3
           ],
           "ease": "ease_in_out"
         }
-      ]
+      ],
+      "third": {
+        "no_cross": true
+      }
     },
     "dual_charge_off": {
       "length": 1.5,
@@ -1192,109 +1165,103 @@
         {
           "t": 0,
           "rotation": [
-            -30.53,
-            7.24,
-            5.95
+            -29,
+            8,
+            7
           ],
           "translation": [
-            -1,
+            2,
             5,
-            0
+            3
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.28,
+          "t": 0.32,
           "rotation": [
-            -36.17,
-            13.97,
-            15.52
+            -43,
+            20,
+            18
           ],
           "translation": [
-            -2,
-            5,
-            -1
+            4,
+            7,
+            3
           ],
-          "ease": "ease_in_out"
+          "ease": "ease_out"
         },
         {
           "t": 1.5,
           "rotation": [
-            -36.17,
-            13.97,
-            15.52
+            -43,
+            20,
+            18
           ],
           "translation": [
-            -2,
-            4.7,
-            -2
+            4,
+            7,
+            3
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
-        "push": [
-          5,
-          5
-        ]
+        "no_cross": true
       }
     },
     "dual_rush": {
       "length": 0.95,
       "smooth": "tight",
       "hold": 0.15,
-      "return": 0.24,
+      "return": 0.34,
       "impact": 0.12,
       "keyframes": [
         {
           "t": 0,
           "rotation": [
-            -36.17,
-            13.97,
-            15.52
+            -43,
+            20,
+            18
           ],
           "translation": [
-            -2,
-            5,
-            -2
-          ],
-          "ease": "ease_in"
-        },
-        {
-          "t": 0.162,
-          "rotation": [
-            -36.05,
-            9.97,
-            9.92
-          ],
-          "translation": [
-            -5,
-            5,
-            -5
+            4,
+            7,
+            3
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.81,
+          "t": 0.162,
           "rotation": [
-            -36.05,
-            9.97,
-            9.92
+            -36,
+            12,
+            13
           ],
           "translation": [
-            -5,
-            5,
-            -5
+            2,
+            7,
+            1
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.81,
+          "rotation": [
+            -36,
+            12,
+            13
+          ],
+          "translation": [
+            2,
+            7,
+            1
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
-        "push": [
-          6,
-          6
-        ],
-        "turn": 7
+        "turn": 7,
+        "no_cross": true
       }
     },
     "dual_rush_off": {
@@ -1307,104 +1274,104 @@
         {
           "t": 0,
           "rotation": [
-            -36.17,
-            13.97,
-            15.52
+            -43,
+            20,
+            18
           ],
           "translation": [
-            -2,
-            5,
-            -2
-          ],
-          "ease": "ease_in"
-        },
-        {
-          "t": 0.162,
-          "rotation": [
-            -36.05,
-            9.97,
-            9.92
-          ],
-          "translation": [
-            -5,
-            5,
-            -5
+            4,
+            7,
+            3
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.81,
+          "t": 0.162,
           "rotation": [
-            -36.05,
-            9.97,
-            9.92
+            -36,
+            12,
+            13
           ],
           "translation": [
-            -5,
-            5,
-            -5
+            2,
+            7,
+            1
+          ],
+          "ease": "ease_out"
+        },
+        {
+          "t": 0.81,
+          "rotation": [
+            -36,
+            12,
+            13
+          ],
+          "translation": [
+            2,
+            7,
+            1
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
-        "push": [
-          6,
-          6
-        ],
-        "turn": 7
+        "turn": 7,
+        "no_cross": true
       }
     },
     "dual_parry": {
       "length": 0.7,
       "smooth": "tight",
       "hold": 4,
-      "return": 0.3,
+      "return": 0.34,
       "impact": -1,
       "keyframes": [
         {
           "t": 0,
           "rotation": [
-            8.35,
-            36.79,
-            24.41
+            -28,
+            8,
+            8
           ],
           "translation": [
-            -2,
-            0,
+            2,
+            7,
             0
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.12,
+          "t": 0.17,
           "rotation": [
-            -3.27,
-            47.96,
-            38.76
+            -30,
+            18,
+            22
           ],
           "translation": [
-            -4,
-            2,
-            -1
+            3,
+            8,
+            1
           ],
-          "ease": "ease_in_out"
+          "ease": "ease_out"
         },
         {
           "t": 0.7,
           "rotation": [
-            -3.27,
-            47.96,
-            38.76
+            -30,
+            18,
+            22
           ],
           "translation": [
-            -4,
-            2,
-            -1
+            3,
+            8,
+            1
           ],
           "ease": "ease_in_out"
         }
-      ]
+      ],
+      "third": {
+        "no_cross": true
+      }
     },
     "dual_parry_off": {
       "length": 0.7,
@@ -1416,99 +1383,96 @@
         {
           "t": 0,
           "rotation": [
-            8.35,
-            36.79,
-            24.41
+            -28,
+            8,
+            8
           ],
           "translation": [
-            -2,
-            0,
+            2,
+            7,
             0
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.12,
+          "t": 0.17,
           "rotation": [
-            -3.27,
-            47.96,
-            38.76
+            -30,
+            18,
+            22
           ],
           "translation": [
-            -4,
-            2,
-            -1
+            3,
+            8,
+            1
           ],
-          "ease": "ease_in_out"
+          "ease": "ease_out"
         },
         {
           "t": 0.7,
           "rotation": [
-            -3.27,
-            47.96,
-            38.76
+            -30,
+            18,
+            22
           ],
           "translation": [
-            -4,
-            2,
-            -1
+            3,
+            8,
+            1
           ],
           "ease": "ease_in_out"
         }
       ],
       "third": {
-        "push": [
-          5,
-          5
-        ]
+        "no_cross": true
       }
     },
     "dual_repel": {
       "length": 0.5,
       "smooth": "tight",
       "hold": 0.2,
-      "return": 0.24,
+      "return": 0.34,
       "impact": 0.12,
       "keyframes": [
         {
           "t": 0,
           "rotation": [
-            -3.27,
-            47.96,
-            38.76
+            -30,
+            18,
+            22
           ],
           "translation": [
-            -4,
-            2,
-            -1
+            3,
+            8,
+            1
           ],
           "ease": "ease_in"
         },
         {
           "t": 0.12,
           "rotation": [
-            -40.19,
-            -48.18,
-            -67.59
+            -43,
+            -32,
+            -49
           ],
           "translation": [
             3,
-            0,
-            -3
+            5,
+            -2
           ],
           "ease": "ease_out"
         },
         {
           "t": 0.38,
           "rotation": [
-            -23.62,
-            -25.97,
-            -29.9
+            -35,
+            -20,
+            -27
           ],
           "translation": [
             2,
-            -1,
-            0
+            5,
+            1
           ],
           "ease": "ease_in_out"
         }
@@ -1524,52 +1488,47 @@
         {
           "t": 0,
           "rotation": [
-            -3.27,
-            47.96,
-            38.76
+            -30,
+            18,
+            22
           ],
           "translation": [
-            -4,
-            2,
-            -1
+            3,
+            8,
+            1
           ],
           "ease": "ease_in"
         },
         {
           "t": 0.12,
           "rotation": [
-            -40.19,
-            -48.18,
-            -67.59
+            -43,
+            -32,
+            -49
           ],
           "translation": [
             3,
-            0,
-            -3
+            5,
+            -2
           ],
           "ease": "ease_out"
         },
         {
           "t": 0.38,
           "rotation": [
-            -23.62,
-            -25.97,
-            -29.9
+            -35,
+            -20,
+            -27
           ],
           "translation": [
             2,
-            -1,
-            0
+            5,
+            1
           ],
           "ease": "ease_in_out"
         }
       ],
-      "third": {
-        "push": [
-          5,
-          5
-        ]
-      }
+      "third": {}
     },
     "dual_leap": {
       "length": 2.5,
@@ -1581,14 +1540,14 @@
         {
           "t": 0,
           "rotation": [
-            2.84,
-            -16.55,
-            -11.05
+            -30,
+            18,
+            22
           ],
           "translation": [
-            0,
-            0,
-            0
+            3,
+            8,
+            1
           ],
           "ease": "ease_in_out"
         },
@@ -1632,14 +1591,14 @@
         {
           "t": 0,
           "rotation": [
-            2.84,
-            -16.55,
-            -11.05
+            -30,
+            18,
+            22
           ],
           "translation": [
-            0,
-            0,
-            0
+            3,
+            8,
+            1
           ],
           "ease": "ease_in_out"
         },
@@ -1672,12 +1631,7 @@
           "ease": "ease_in_out"
         }
       ],
-      "third": {
-        "push": [
-          5,
-          5
-        ]
-      }
+      "third": {}
     },
     "dual_slam": {
       "length": 0.7,
@@ -1780,31 +1734,26 @@
           "ease": "ease_in_out"
         }
       ],
-      "third": {
-        "push": [
-          5,
-          5
-        ]
-      }
+      "third": {}
     },
     "dual_recover": {
       "length": 0.3,
       "smooth": "tight",
       "hold": 0,
-      "return": 0.24,
+      "return": 0.34,
       "impact": -1,
       "keyframes": [
         {
           "t": 0,
           "rotation": [
-            -30.53,
-            7.24,
-            5.95
+            -36,
+            12,
+            13
           ],
           "translation": [
-            -6,
-            4,
-            -3
+            2,
+            7,
+            1
           ],
           "ease": "ease_in_out"
         },
@@ -1834,14 +1783,14 @@
         {
           "t": 0,
           "rotation": [
-            -30.53,
-            7.24,
-            5.95
+            -36,
+            12,
+            13
           ],
           "translation": [
-            -6,
-            4,
-            -3
+            2,
+            7,
+            1
           ],
           "ease": "ease_in_out"
         },
@@ -1860,12 +1809,7 @@
           "ease": "ease_in_out"
         }
       ],
-      "third": {
-        "push": [
-          5,
-          5
-        ]
-      }
+      "third": {}
     },
     "ability_off": {
       "length": 0.4,
@@ -1931,12 +1875,7 @@
           "ease": "ease_in_out"
         }
       ],
-      "third": {
-        "push": [
-          5,
-          5
-        ]
-      }
+      "third": {}
     },
     "rush_off": {
       "length": 0.9,
@@ -1989,10 +1928,6 @@
         }
       ],
       "third": {
-        "push": [
-          6,
-          6
-        ],
         "turn": 7
       }
     },
@@ -2032,12 +1967,7 @@
           "ease": "ease_in_out"
         }
       ],
-      "third": {
-        "push": [
-          5,
-          5
-        ]
-      }
+      "third": {}
     },
     "attack1_third": {
       "length": 0.7,
@@ -2354,165 +2284,165 @@
       ]
     },
     "dual_attack2_third": {
-      "length": 1.3000000000000003,
-      "hold": 0.1,
+      "length": 1.31,
       "return": 0.35,
+      "hold": 0.08,
       "smooth": "tight",
       "keyframes": [
         {
           "t": 0,
           "rotation": [
-            -31,
-            8,
-            7
+            -43,
+            -30,
+            -45
           ],
           "translation": [
             -4,
-            5,
-            2
+            7,
+            -2
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.396,
+          "t": 0.6,
           "rotation": [
-            30,
-            4,
-            6
+            26,
+            -4,
+            -2
           ],
           "translation": [
             -2,
             8,
-            5
+            3
           ],
           "ease": "ease_in"
         },
         {
           "t": 0.9,
           "rotation": [
-            -79,
+            -66,
             8,
-            2
+            5
           ],
           "translation": [
             -3,
             8,
-            -9
+            -5
           ],
           "ease": "ease_out"
         },
         {
-          "t": 1.04,
+          "t": 1.07,
           "rotation": [
-            -72,
+            -62,
             8,
-            2
+            5
           ],
           "translation": [
             -3,
             8,
-            -8
+            -4
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 1.1800000000000002,
+          "t": 1.21,
           "rotation": [
-            -30,
+            -29,
             8,
-            4
+            7
           ],
           "translation": [
             -3,
-            6,
-            -1
+            7,
+            1
           ],
           "ease": "ease_in_out"
         }
       ]
     },
     "dual_attack2_off_third": {
-      "length": 0.75,
-      "hold": 0.1,
+      "length": 1.31,
       "return": 0.35,
+      "hold": 0.08,
       "smooth": "tight",
       "keyframes": [
         {
           "t": 0,
           "rotation": [
-            -31,
-            8,
-            7
+            -43,
+            -30,
+            -45
           ],
           "translation": [
             -4,
-            5,
-            2
+            7,
+            -2
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.154,
+          "t": 0.14,
           "rotation": [
-            30,
-            4,
-            6
+            26,
+            -4,
+            -2
           ],
           "translation": [
             -2,
             8,
-            5
+            3
           ],
           "ease": "ease_in"
         },
         {
           "t": 0.35,
           "rotation": [
-            -79,
+            -66,
             8,
-            2
+            5
           ],
           "translation": [
             -3,
             8,
-            -9
+            -5
           ],
           "ease": "ease_out"
         },
         {
-          "t": 0.49,
+          "t": 0.52,
           "rotation": [
-            -72,
+            -62,
             8,
-            2
+            5
           ],
           "translation": [
             -3,
             8,
-            -8
+            -4
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.63,
+          "t": 1.21,
           "rotation": [
-            -30,
+            -29,
             8,
-            4
+            7
           ],
           "translation": [
             -3,
-            6,
-            -1
+            7,
+            1
           ],
           "ease": "ease_in_out"
         }
       ]
     },
     "dual_attack3_third": {
-      "length": 1.3199999999999998,
-      "hold": 0.1,
+      "length": 1.33,
       "return": 0.35,
+      "hold": 0.08,
       "smooth": "tight",
       "keyframes": [
         {
@@ -2523,64 +2453,64 @@
             7
           ],
           "translation": [
-            -4,
-            5,
-            2
+            -3,
+            7,
+            1
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.28,
+          "t": 0.19,
           "rotation": [
-            -61,
-            19,
-            38
+            6,
+            0,
+            0
           ],
           "translation": [
-            -6,
-            6,
+            -3,
+            9,
             -1
           ],
           "ease": "ease_in"
         },
         {
-          "t": 0.46,
+          "t": 0.38,
           "rotation": [
-            -65,
-            28,
-            54
+            10,
+            0,
+            0
           ],
           "translation": [
-            -5,
-            5,
-            -1
+            -3,
+            10,
+            -2
           ],
-          "ease": "ease_in"
+          "ease": "heavy"
         },
         {
           "t": 0.6,
           "rotation": [
-            -9,
-            -41,
-            -35
+            -73,
+            3,
+            1
           ],
           "translation": [
-            -9,
-            5,
+            -3,
+            7,
             -3
           ],
           "ease": "ease_out"
         },
         {
-          "t": 0.82,
+          "t": 0.85,
           "rotation": [
-            -8,
-            -47,
-            -39
+            -100,
+            5,
+            1
           ],
           "translation": [
-            -10,
-            5,
+            -3,
+            7,
             -3
           ],
           "ease": "ease_out"
@@ -2588,37 +2518,37 @@
         {
           "t": 1.05,
           "rotation": [
-            -12,
-            -50,
-            -42
-          ],
-          "translation": [
-            -9,
+            -87,
             4,
-            -2
-          ],
-          "ease": "ease_out"
-        },
-        {
-          "t": 1.2,
-          "rotation": [
-            -25,
-            10,
-            20
+            1
           ],
           "translation": [
             -3,
-            5,
-            0
+            7,
+            -2
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 1.23,
+          "rotation": [
+            -29,
+            8,
+            7
+          ],
+          "translation": [
+            -3,
+            7,
+            1
           ],
           "ease": "ease_in_out"
         }
       ]
     },
     "dual_attack3_off_third": {
-      "length": 1.3199999999999998,
-      "hold": 0.1,
+      "length": 1.33,
       "return": 0.35,
+      "hold": 0.08,
       "smooth": "tight",
       "keyframes": [
         {
@@ -2629,64 +2559,64 @@
             7
           ],
           "translation": [
-            -4,
-            5,
-            2
+            -3,
+            7,
+            1
           ],
           "ease": "ease_in_out"
         },
         {
-          "t": 0.28,
+          "t": 0.19,
           "rotation": [
-            -61,
-            19,
-            38
+            6,
+            0,
+            0
           ],
           "translation": [
-            -6,
-            6,
+            -3,
+            9,
             -1
           ],
           "ease": "ease_in"
         },
         {
-          "t": 0.46,
+          "t": 0.38,
           "rotation": [
-            -65,
-            28,
-            54
+            10,
+            0,
+            0
           ],
           "translation": [
-            -5,
-            5,
-            -1
+            -3,
+            10,
+            -2
           ],
-          "ease": "ease_in"
+          "ease": "heavy"
         },
         {
           "t": 0.6,
           "rotation": [
-            -9,
-            -41,
-            -35
+            -73,
+            3,
+            1
           ],
           "translation": [
-            -9,
-            5,
+            -3,
+            7,
             -3
           ],
           "ease": "ease_out"
         },
         {
-          "t": 0.82,
+          "t": 0.85,
           "rotation": [
-            -8,
-            -47,
-            -39
+            -100,
+            5,
+            1
           ],
           "translation": [
-            -10,
-            5,
+            -3,
+            7,
             -3
           ],
           "ease": "ease_out"
@@ -2694,28 +2624,28 @@
         {
           "t": 1.05,
           "rotation": [
-            -12,
-            -50,
-            -42
-          ],
-          "translation": [
-            -9,
+            -87,
             4,
-            -2
-          ],
-          "ease": "ease_out"
-        },
-        {
-          "t": 1.2,
-          "rotation": [
-            -25,
-            10,
-            20
+            1
           ],
           "translation": [
             -3,
-            5,
-            0
+            7,
+            -2
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 1.23,
+          "rotation": [
+            -29,
+            8,
+            7
+          ],
+          "translation": [
+            -3,
+            7,
+            1
           ],
           "ease": "ease_in_out"
         }
