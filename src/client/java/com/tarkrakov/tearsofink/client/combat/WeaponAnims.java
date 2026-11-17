@@ -52,8 +52,8 @@ public final class WeaponAnims {
 	 * source — третье лицо считается по другому движению (первое лицо правят, а третье остаётся как было).
 	 */
 	public record ThirdFix(float wristHold, boolean mirror, float center, float lateral, boolean noCross, @org.jetbrains.annotations.Nullable String source,
-						   float pushRight, float pushLeft, float turn) {
-		static final ThirdFix NONE = new ThirdFix(-1, false, 1, 1, false, null, 0, 0, 0);
+						   float pushRight, float pushLeft, float turn, boolean followBlade) {
+		static final ThirdFix NONE = new ThirdFix(-1, false, 1, 1, false, null, 0, 0, 0, false);
 	}
 
 	/** Третье лицо архетипа (поле "third" в файле движений): как поза первого лица переводится в руку Стива. */
@@ -74,6 +74,9 @@ public final class WeaponAnims {
 
 	/** smooth: сколько секунд новое движение перетекает из позы, где клинок реально был (без скачка между ударами). */
 	private static final float BLEND = 0.12f;
+	private static float blend(Playing p) {
+		return p.archetype == Archetype.PALE_LINEAR_GREATSWORD ? 0.2f : BLEND;
+	}
 
 	private static final Map<String, Map<String, Clip>> CLIPS = new HashMap<>();
 
@@ -176,7 +179,7 @@ public final class WeaponAnims {
 		return new ThirdFix(f(t, "wrist_hold", -1), t.has("mirror") && t.get("mirror").getAsBoolean(), f(t, "center", 1),
 				f(t, "lateral", 1), t.has("no_cross") && t.get("no_cross").getAsBoolean(),
 				t.has("source") ? t.get("source").getAsString() : null,
-				push(t, 0), push(t, 1), f(t, "turn", 0));
+				push(t, 0), push(t, 1), f(t, "turn", 0), t.has("follow_blade") && t.get("follow_blade").getAsBoolean());
 	}
 
 	/** "push": 3 — обеим рукам; "push": [правая, левая] — по-разному. */
@@ -263,8 +266,8 @@ public final class WeaponAnims {
 
 	/** Capture the displayed pose even when an interruption happens during the previous blend. */
 	private static Key shown(Playing p, Key key) {
-		if (p.from == null || p.real() >= BLEND) return key;
-		float u = ease(Ease.EASE_OUT, p.real() / BLEND);
+		if (p.from == null || p.real() >= blend(p)) return key;
+		float u = ease(Ease.EASE_OUT, p.real() / blend(p));
 		return new Key(0, lerp(p.from.rot(), key.rot(), u), lerp(p.from.pos(), key.pos(), u),
 				lerp(p.from.scale(), key.scale(), u), Ease.LINEAR);
 	}
