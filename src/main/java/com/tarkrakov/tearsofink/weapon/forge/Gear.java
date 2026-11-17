@@ -37,6 +37,8 @@ public final class Gear {
 	/** Запас заточки по ступеням (0 — не тупится): удар связки −1, приём на R / ПКМ −5. */
 	public static final int[] SHARP_MAX = {0, 400, 300};
 	public static final int WEAR_HIT = 1, WEAR_ABILITY = 5;
+	/** Чернила за один успешный удар связки обычным оружием, независимо от числа задетых целей и обета. */
+	public static final float ORDINARY_COMBO_INK = 1f;
 	/** Ниже этой доли — оружие деградирует на ступень; на этой — предупреждение. */
 	public static final float DEGRADE_AT = 0.10f, WARN_AT = 0.25f;
 	/** Заточка на Чернильной наковальне: доля шкалы за один Пигмент (по одному в клетку). */
@@ -192,7 +194,23 @@ public final class Gear {
 		return stack.getItem() instanceof TieredItem || stack.getItem() instanceof MaceItem || stack.getItem() instanceof TridentItem;
 	}
 
-	/** Удар связки: износ и пассивки обычного оружия. */
+	/**
+	 * Одна награда за УСПЕШНЫЙ шаг связки, а не за каждую цель в секторе:
+	 * обычное оружие создаёт Чернила; охотничье и прочее оружие не создаёт их попаданиями.
+	 * Вызывается после всех целей только при hitAny, на сервере для обоих обетов.
+	 */
+	public static void onSuccessfulCombo(ServerPlayer player, ItemStack weapon) {
+		if (!(weapon.getItem() instanceof OrdinaryWeaponItem)) return;
+		var ink = com.tarkrakov.tearsofink.ink.InkPowers.get(player);
+		if (!ink.inside() || ink.ink() >= ink.inkMax()) return;
+		float gain = ORDINARY_COMBO_INK;
+		float absorb = Awakening.power(weapon, Awakening.ABSORB);
+		// «Впитывание» также бросает кубик один раз за удар, даже если задеты несколько существ.
+		if (absorb > 0f && player.getRandom().nextFloat() < absorb) gain += 1f;
+		com.tarkrakov.tearsofink.ink.InkPowers.update(player, ink.withInk(ink.ink() + gain));
+	}
+
+	/** Удар по одной цели: износ, кровотечение и замедление; Чернила начисляются отдельно за взмах. */
 	public static void onWeaponHit(LivingEntity attacker, ItemStack weapon, LivingEntity target) {
 		if (!ours(weapon)) return;
 		wear(attacker, weapon, WEAR_HIT);

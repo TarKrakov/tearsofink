@@ -55,8 +55,6 @@ public final class Vows {
 	public static final int AWAKENING = 5, AWAKENING_GREAT = 10;
 	/** Путь Чернил: прибавка к запасу Чернил за сам выбор пути (зеркало стартового света паломника). */
 	public static final int INK_PATH_BONUS = 10;
-	/** Жажда (Путь Чернил): столько Чернил возвращает удар серии Чернильным оружием, если задел хоть кого-то. */
-	public static final float THIRST = 1.5f;
 	/** Малое сердце (Путь Чернил, заглушка до боссов): первый контракт каждой сложности — +5 к запасу, без цены. */
 	public static final int SMALL_HEART = 5;
 	/** Чернильное сердце: +10/+15/+25 к запасу Чернил и −5 к максимуму Души (Чернила занимают место в тебе). */
@@ -172,16 +170,6 @@ public final class Vows {
 		if (delta == 0) return;
 		InkData ink = InkPowers.get(p);
 		InkPowers.update(p, ink.withInkBonus(ink.inkBonus() + delta).withInk(ink.ink() + Math.max(0, delta)));
-	}
-
-	/** Жажда: удар серии Чернильным оружием возвращает немного Чернил (только Путь Чернил). */
-	public static void thirst(ServerPlayer p, ItemStack weapon) {
-		if (vow(p) != Vow.INK) return;
-		if (!(weapon.getItem() instanceof com.tarkrakov.tearsofink.weapon.InkGreatswordItem)
-				&& !(weapon.getItem() instanceof com.tarkrakov.tearsofink.weapon.InkLongknifeItem)) return;
-		InkData ink = InkPowers.get(p);
-		if (!ink.inside() || ink.ink() >= ink.inkMax()) return;
-		InkPowers.update(p, ink.withInk(ink.ink() + THIRST));
 	}
 
 	/**

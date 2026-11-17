@@ -575,7 +575,7 @@
   "awakening.tears-of-ink.absorb": "Absorption",
   "awakening.tears-of-ink.edge": "Striking Art",
   "awakening.tears-of-ink.viscous": "Viscosity",
-  "jei.tears-of-ink.info.cursed_altar": "Weapon awakenings. Place a weapon and a reagent (blood clots — Blood property, ink — Ink property), pick a slot, press Awaken. The result only sticks after Keep; Again rerolls, each costlier. A Blood Crystal or Ink Echo raises a property of its line by one level (III only this way). Slots: Dim 1, Contrast 2, Rubric 3, common weapons 1. Foreign line works at 60%.",
+  "jei.tears-of-ink.info.cursed_altar": "Weapon awakenings. Place a weapon and a reagent (blood clots — Blood property, ink — Ink property), pick a slot, press Awaken. The result only sticks after Keep; Again rerolls, each costlier. A Blood Crystal or Ink Echo raises a property of its line by one level (III only this way). Slots for all weapons: Dim 1, Contrast 2, Rubric 3. Absorption can only roll and work on ordinary weapons. Foreign line works at 60%.",
   "jei.tears-of-ink.info.madness_shard": "From Ink hunters: 1–2 per contract with an Ink hunter, 2–3 for slaying one yourself. Used for the Cursed Altar.",
   "jei.tears-of-ink.info.ink_echo": "Rarely dropped by foes slain in the Inkwood. Raises an ink property by one level at the Cursed Altar.",
   "jei.tears-of-ink.info.blood_crystal": "Rarely forms in the Blood Collector tank. Raises a blood property by one level at the Cursed Altar.",
@@ -638,5 +638,6 @@
   "harvest.tears-of-ink.over_won": "The Crimson Harvest is over: the brave prevailed.",
   "harvest.tears-of-ink.over_lost": "The Crimson Harvest is over: the Arena belongs to the foe.",
   "harvest.tears-of-ink.gift_best": "Lesser Gift — for the best fighter",
-  "jei.tears-of-ink.info.crimson_gift": "Reward of the Crimson Harvest (the Arena in the largest Bloodwood). Use to open. Blood clots, Pigment, blood metal, sometimes a Crimson Flower and a Blood Crystal; the harder the Harvest, the richer."
+  "jei.tears-of-ink.info.crimson_gift": "Reward of the Crimson Harvest (the Arena in the largest Bloodwood). Use to open. Blood clots, Pigment, blood metal, sometimes a Crimson Flower and a Blood Crystal; the harder the Harvest, the richer.",
+  "awakening.tears-of-ink.incompatible": "◇ %s — incompatible with this weapon"
 }
