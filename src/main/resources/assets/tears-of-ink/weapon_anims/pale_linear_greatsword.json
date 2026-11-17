@@ -59,7 +59,7 @@
             5,
             -3
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 0.62,
@@ -971,7 +971,7 @@
             9,
             -3
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 0.85,
@@ -1083,7 +1083,7 @@
             9,
             -3
           ],
-          "ease": "ease_out"
+          "ease": "ease_in_out"
         },
         {
           "t": 0.85,
