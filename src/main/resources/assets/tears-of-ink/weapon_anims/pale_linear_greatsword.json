@@ -1266,8 +1266,8 @@
     "dual_parry": {
       "length": 0.7,
       "smooth": "tight",
-      "hold": 2.5,
-      "return": 0.4,
+      "hold": 4,
+      "return": 0.3,
       "impact": -1,
       "keyframes": [
         {
@@ -1317,8 +1317,8 @@
     "dual_parry_off": {
       "length": 0.7,
       "smooth": "tight",
-      "hold": 2.5,
-      "return": 0.4,
+      "hold": 4,
+      "return": 0.3,
       "impact": -1,
       "keyframes": [
         {
