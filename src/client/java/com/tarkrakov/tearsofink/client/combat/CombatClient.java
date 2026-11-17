@@ -25,6 +25,13 @@ public final class CombatClient {
 
 	public static void init() {
 		WeaponAnims.init();
+		// Локальный просмотр авторских тестов: не вызывает серверный боевой приём.
+		net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
+				dispatcher.register(net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal("toianimtest")
+						.then(net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal("single")
+								.executes(ctx -> playBlockbenchTest(ctx.getSource(), false)))
+						.then(net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal("dual")
+								.executes(ctx -> playBlockbenchTest(ctx.getSource(), true)))));
 		ClientPlayNetworking.registerGlobalReceiver(Combat.Anim.TYPE, (payload, ctx) -> ctx.client().execute(() -> {
 			var player = ctx.client().player;
 			var level = ctx.client().level;
@@ -53,6 +60,37 @@ public final class CombatClient {
 		}));
 		net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents.DISCONNECT.register((h, c) -> ThirdPerson.clear());
 		ClientTickEvents.END_CLIENT_TICK.register(CombatClient::tick);
+	}
+
+	/** Только визуальное воспроизведение из сохранённой сцены Blockbench, без урона и серверных событий. */
+	private static int playBlockbenchTest(net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource source, boolean dual) {
+		var player = Minecraft.getInstance().player;
+		if (player == null) return 0;
+		Archetype archetype = Archetype.PALE_LINEAR_GREATSWORD;
+		if (Archetype.of(player.getMainHandItem()) != archetype
+				|| (dual && Archetype.of(player.getOffhandItem()) != archetype)) {
+			source.sendError(net.minecraft.network.chat.Component.literal(
+					dual ? "Для теста dual возьми Бледный линейный двуручник в обе руки."
+						: "Для теста single возьми Бледный линейный двуручник в главную руку."));
+			return 0;
+		}
+		String name = dual ? "bb_test_dual" : "bb_test_single";
+		if (!WeaponAnims.has(archetype, name) || (dual && !WeaponAnims.has(archetype, name + "_off"))) {
+			source.sendError(net.minecraft.network.chat.Component.literal(
+					"Тестовая анимация не загружена. Проверь версию мода и нажми F3+T."));
+			return 0;
+		}
+		HumanoidArm main = player.getMainArm();
+		WeaponAnims.play(main, archetype, name, 0, 1f);
+		ThirdPerson.play(player.getId(), main, archetype, name, 1f);
+		if (dual) {
+			HumanoidArm off = main.getOpposite();
+			WeaponAnims.play(off, archetype, name + "_off", 0, 1f);
+			ThirdPerson.play(player.getId(), off, archetype, name + "_off", 1f);
+		}
+		source.sendFeedback(net.minecraft.network.chat.Component.literal(
+				"Blockbench: " + name + " (1 секунда; визуальный тест, без урона)."));
+		return 1;
 	}
 
 	/** ЛКМ с клинком архетипа. Решает сервер: чуть раньше времени — удар запоминается и выходит вовремя. */
