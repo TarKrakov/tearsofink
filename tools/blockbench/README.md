@@ -1,5 +1,7 @@
 # Tears of Ink — Blockbench animation workspace (prototype, 17.11.2026)
 
+> **ВАЖНО — 17.11.2026, автор уже проверил сцену в настоящем Blockbench:** `pale_animation_workspace.bbmodel` открывается и timeline работает, **но модель игрока/рук отображается прозрачными контурами и FP/F5 сцены визуально мешают друг другу**. Причина подтверждена: у вспомогательных кубов `faces.*.texture=null`. **Этот файл не готов для работы художника.** Не нужно дальше пытаться поставить на нём анимацию. Codex должен сначала подготовить исправленную непрозрачную сцену с понятным переключателем FP/F5, а затем делать импортёр. Конкретные требования внесены в [задание Codex](../../docs/CODEX_BLOCKBENCH_WEAPON_ANIMATION_PIPELINE_2026-11-17.md). Не трогать авторские модели/текстуры игры.
+
 **Open:** [pale_animation_workspace.bbmodel](pale_animation_workspace.bbmodel). This is a **separate editable staging project**, not a replacement for the Minecraft item model. Its first two demo animations are disposable examples, not approved artistic choreography.
 
 ## What is already in this prototype
