@@ -31,6 +31,18 @@ jobs:
           /tmp/tearsofink-preview-venv/bin/pip install --quiet numpy pillow
       - name: validate animation positions via Claude preview
         run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale.py
+      - name: review clip curves and whole-model visibility
+        run: /tmp/tearsofink-preview-venv/bin/python tools/preview/review.py pale_linear_greatsword --check-only
+      - name: render three-view review sheets
+        if: contains(github.event.head_commit.message, '[preview]')
+        run: /tmp/tearsofink-preview-venv/bin/python tools/preview/review.py pale_linear_greatsword --render
+      - name: upload review report and contact sheets
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: WeaponAnimationReview
+          if-no-files-found: warn
+          path: out/review/
       - name: render combat previews via Claude preview
         if: contains(github.event.head_commit.message, '[preview]')
         run: |
