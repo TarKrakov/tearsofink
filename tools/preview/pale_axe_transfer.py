@@ -105,12 +105,14 @@ for left in(False,True):
  spread=fp(.30,(.84,.12,-.53),(.50,-.38,-1.0-depth),left,edge=s_edge)
  make('dual_repel'+off,[dict(guard,t=0),spread],
       [dict(guard_s,t=0),carried(.30,-18,55,(.84,.12,-.53),ss_edge,left)])
- raised=fp(.34,(.04,.97,-.24),(.29,-.20,-.95-depth),left,edge=(0,-1,0))
- raised_s=carried(.34,-65,5,(.04,.99,-.13),(0,-1,0),left)
- make('dual_leap'+off,[zero(),raised,dict(raised,t=.7)],
-      [neutral_source(0,left),raised_s,dict(raised_s,t=.7)])
- make('dual_slam'+off,[dict(raised,t=0),fp(.20,(.02,-.70,-.71),(.29,-.30,-1.12-depth),left,edge=(0,-1,0),ease='linear'),fp(.38,(.02,-.82,-.57),(.29,-.34,-1.16-depth),left,edge=(0,-1,0)),zero(.65)],
-      [dict(raised_s,t=0),carried(.20,-40,5,(.02,-.93,-.37),(0,-1,0),left,'linear'),carried(.38,-25,5,(.02,-.96,-.28),(0,-1,0),left),neutral_source(.65,left)])
+ raised=fp(.34,(.04,.97,-.24),(.29,-.16,-.95-depth),left,edge=(0,-1,0))
+ raised_top=fp(.7,(.04,.97,-.24),(.29,-.08,-.95-depth),left,edge=(0,-1,0))
+ raised_s=carried(.34,-70,5,(.04,.99,-.13),(0,-1,0),left)
+ raised_top_s=carried(.7,-82,5,(.04,.99,-.13),(0,-1,0),left)
+ make('dual_leap'+off,[zero(),raised,raised_top],
+      [neutral_source(0,left),raised_s,raised_top_s])
+ make('dual_slam'+off,[dict(raised_top,t=0),fp(.20,(.02,-.70,-.71),(.29,-.30,-1.12-depth),left,edge=(0,-1,0),ease='linear'),fp(.38,(.02,-.82,-.57),(.29,-.34,-1.16-depth),left,edge=(0,-1,0)),zero(.65)],
+      [dict(raised_top_s,t=0),carried(.20,-40,5,(.02,-.93,-.37),(0,-1,0),left,'linear'),carried(.38,-25,5,(.02,-.96,-.28),(0,-1,0),left),neutral_source(.65,left)])
 # Prepare the response's edge against the actual carried trajectory, using
 # the same leading-edge operation as edge.py. Hilt, axis and timing stay fixed.
 for name in ('dual_repel','dual_repel_off'):
@@ -273,5 +275,17 @@ combo['dual_steps'][3]['anim']='axe_dual_slam_repeat';combo['dual_steps'][3]['of
 reference=json.loads((Path(__file__).parent/'references/pale_solo_r_8b7dd6d.json').read_text())
 for name,clip in reference['animations'].items():anims[name]=copy.deepcopy(clip)
 a['solo_r_reference']=reference['revision']
+# The new solo RMB reuses the accepted opening slash, compressed to a 3-tick hit.
+# This leaves the author's accepted R and LMB clips untouched.
+back=copy.deepcopy(anims['axe_attack1']);ratio=.15/back['impact']
+back['keyframes']=[dict(copy.deepcopy(k),t=round(k['t']*ratio,6))for k in back['keyframes']if k['t']<=.34]
+back.update(length=.6,impact=.15,hold=.12)
+back['return']=round(.6-back['keyframes'][-1]['t']-back['hold'],6)
+source=copy.deepcopy(anims[back['third']['source']])
+for k in source['keyframes']:k['t']=round(k['t']*ratio,6)
+source['length']=.6;source['hold']=.02;source['return']=round(.6-source['keyframes'][-1]['t']-.02,6)
+assert source['return']>0
+back['third']['source']='backstep_third';anims['backstep']=back;anims['backstep_third']=source
+a['firstperson_idle_offset']=[0,0,-.64] # only rest: 4cm farther, faded across entry/return
 (ANIM/'pale_linear_greatsword.json').write_text(json.dumps(a,ensure_ascii=False,indent=2)+'\n')
 (COMBO/'pale_linear_greatsword.json').write_text(json.dumps(combo,ensure_ascii=False,indent=2)+'\n')

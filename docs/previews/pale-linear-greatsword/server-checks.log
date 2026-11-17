@@ -1,0 +1,19 @@
+protocol.log
+RMB HP [97.2] target motion [0.0, 0.0, 0.0] player motion [0.0, -0.0784000015258789, -0.11849756696576312]
+RMB player pos [0.5, 200.0, 0.5]
+PASS RMB cooldown blocks repeated entry
+PASS R sweep deals 6 damage despite previous hit i-frames: 93.0
+PASS R thrust is an independent 9.6-damage hit on same target: 83.4
+PASS dash target is damaged only once
+
+reload-protocol.log
+PASS RMB: 2.8 damage, enemy displaced forward 2.5 3.504900045830012 player receives backward impulse [0.0, -0.0784000015258789, -0.21702848571787428]
+PASS switching weapon before RMB hit cancels damage
+PASS RMB cannot damage through an opaque wall
+PASS datapack reload changes RMB damage from 2.8 to 2 without Java changes
+PASS invalid balance rejected; last valid tuning retained
+
+final-protocol.log
+PASS original datapack values restored: RMB deals 2.8
+PASS mixed off-hand R retains 60% damage: 3.6
+PASS paired RMB still charges/releases the existing dash; solo retreat not entered

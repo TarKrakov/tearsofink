@@ -165,6 +165,61 @@
       "highest_tip_speed": 12.628,
       "largest_keyframe_velocity_change": 0.035,
       "f5_blade_arm_alignment": null
+    },
+    {
+      "clip": "backstep",
+      "hand": "right",
+      "frames_checked": 51,
+      "lowest_visible_fraction": 0.585,
+      "impact_visible_fraction": 1.0,
+      "largest_tip_step": 0.181,
+      "highest_tip_speed": 45.944,
+      "largest_keyframe_velocity_change": 33.479,
+      "f5_blade_arm_alignment": null
+    },
+    {
+      "clip": "dual_leap",
+      "hand": "right",
+      "frames_checked": 50,
+      "lowest_visible_fraction": 0.585,
+      "impact_visible_fraction": null,
+      "largest_tip_step": 0.059,
+      "highest_tip_speed": 4.155,
+      "largest_keyframe_velocity_change": 0.062,
+      "f5_blade_arm_alignment": null
+    },
+    {
+      "clip": "dual_leap_off",
+      "hand": "left",
+      "frames_checked": 50,
+      "lowest_visible_fraction": 0.589,
+      "impact_visible_fraction": null,
+      "largest_tip_step": 0.057,
+      "highest_tip_speed": 4.02,
+      "largest_keyframe_velocity_change": 0.098,
+      "f5_blade_arm_alignment": null
+    },
+    {
+      "clip": "dual_slam",
+      "hand": "right",
+      "frames_checked": 51,
+      "lowest_visible_fraction": 0.585,
+      "impact_visible_fraction": 1.0,
+      "largest_tip_step": 0.19,
+      "highest_tip_speed": 14.337,
+      "largest_keyframe_velocity_change": 0.649,
+      "f5_blade_arm_alignment": null
+    },
+    {
+      "clip": "dual_slam_off",
+      "hand": "left",
+      "frames_checked": 51,
+      "lowest_visible_fraction": 0.589,
+      "impact_visible_fraction": 1.0,
+      "largest_tip_step": 0.201,
+      "highest_tip_speed": 15.13,
+      "largest_keyframe_velocity_change": 0.605,
+      "f5_blade_arm_alignment": null
     }
   ],
   "warnings": [
@@ -185,7 +240,9 @@
     "axe_dual_slam_final: unusually large per-sample tip movement; inspect curve",
     "axe_dual_slam_final: abrupt keyframe velocity change (26.2); inspect blending",
     "axe_dual_slam_final_off: unusually large per-sample tip movement; inspect curve",
-    "axe_dual_slam_final_off: abrupt keyframe velocity change (26.2); inspect blending"
+    "axe_dual_slam_final_off: abrupt keyframe velocity change (26.2); inspect blending",
+    "backstep: abrupt keyframe velocity change (33.5); inspect blending",
+    "dual_slam_off: unusually large per-sample tip movement; inspect curve"
   ],
   "important": "Mathematical preview, not Minecraft playtesting or artistic approval"
 }

@@ -26,6 +26,7 @@ def generate(out, only=None):
     cases = {'baseline': ([(None,None,.1)], True), 'solo': (solo, False), 'pair': (pair, True),
              'solo-r': ([(solo[-1][0], None, .25), ('ability', None, .38), ('rush', None, .6), ('recover', None, .4)], False),
              'pair-charge': ([('dual_charge', 'dual_charge_off', 1.5), ('dual_rush', 'dual_rush_off', .7), ('dual_recover', 'dual_recover_off', .35)], True),
+             'solo-backstep': ([('backstep',None,.6)],False),
              'parry-cross': ([('dual_parry','dual_parry_off',.9)],True),
              'pair-r': ([('dual_parry', 'dual_parry_off', .65), ('dual_repel', 'dual_repel_off', .45), ('dual_leap', 'dual_leap_off', .9), ('dual_slam', 'dual_slam_off', .7)], True),
              'left-r': ([(None, 'ability_off', .4), (None, 'rush_off', .6), (None, 'recover_off', .4)], True)}
@@ -36,7 +37,7 @@ def generate(out, only=None):
         raise ValueError(f'Unknown preview cases: {sorted(only - cases.keys())}')
     for name, (steps, dual) in cases.items():
         if only and name not in only: continue
-        frames = build(ARCH, steps, dual, str(out/f'{name}.gif'), fps=30, front=True, widescreen=True, fp_out=str(out/f'{name}-fp.gif') if name in ('solo','pair','pair-charge') else None)
+        frames = build(ARCH, steps, dual, str(out/f'{name}.gif'), fps=30, front=True, widescreen=True, fp_out=str(out/f'{name}-fp.gif') if name in ('solo','pair','pair-charge','solo-backstep','pair-r') else None)
         # Filmstrip of the entire sequence, with each frame showing all three perspectives.
         from PIL import Image
         indices = [min(len(frames)-1, int(i*(len(frames)-1)/5)) for i in range(6)]
@@ -53,12 +54,14 @@ def generate(out, only=None):
             for i,t in enumerate((.8,.92,1.,1.1,1.2,1.32,1.4,1.5)):
                 contact.paste(frames[min(len(frames)-1,round(t*30))],((i%2)*720,(i//2)*240))
             contact.save(out/'pair-3-4.png')
-        if name in ('solo','pair','pair-charge'):
+        if name in ('solo','pair','pair-charge','solo-backstep','pair-r'):
             from PIL import ImageSequence
             fps_frames=[f.convert('RGB')for f in ImageSequence.Iterator(Image.open(out/f'{name}-fp.gif'))]
             moments={'solo':(.10,.23,.37,.70,.80,1.37,1.47,1.60),
                      'pair':(.08,.20,.6,.92,1.,1.32,1.4,2.06),
-                     'pair-charge':(0,.5,1.,1.35,1.5,1.62,1.85,2.2)}[name]
+                     'pair-charge':(0,.5,1.,1.35,1.5,1.62,1.85,2.2),
+                     'solo-backstep':(0,.07,.13,.17,.23,.33,.5,.7),
+                     'pair-r':(.65,1.0,1.1,1.3,1.55,1.75,2.0,2.2)}[name]
             large=Image.new('RGB',(1920,540))
             for i,t in enumerate(moments):
                 large.paste(fps_frames[min(len(fps_frames)-1,round(t*30))].resize((480,270)),((i%4)*480,(i//4)*270))

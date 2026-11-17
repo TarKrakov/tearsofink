@@ -10,11 +10,14 @@ reference=json.load(open(Path(__file__).parent/'references/pale_f5_accepted_ee55
 f5=dict(reference['f5'])
 for name,c in a['animations'].items():
  if c.get('f5_reference'):f5[name]=reference['f5'][c['f5_reference']]
+# Only the requested R flight preparation and its landing entry change F5.
+raised_f5={'dual_leap','dual_leap_off','dual_slam','dual_slam_off'}
 for name,wanted in f5.items():
+ if name in raised_f5:continue
  c=a['animations'][name];fix=c.get('third',{});src=fix.get('source')
  value={'fix':fix,'pose':a['animations'][src]if src else c,'timing':{'end':round(end_time(c),6),'out':round(max(.05,c.get('return',.3))if c.get('hold',0)>0 else .15,6)}}
  assert hashlib.sha256(json.dumps(value,sort_keys=True).encode()).hexdigest()==wanted,(name,'accepted F5 changed')
-print('PASS: all',len(f5),'F5 source/fix/timing snapshots unchanged from',reference['revision'])
+print('PASS:',len(f5)-len(raised_f5),'F5 snapshots unchanged from',reference['revision'],'; 4 R flight/landing entries intentionally revised and checked separately')
 # Camera mount is shared by idle and all clips, matching WeaponAnims.apply.
 gesture_fp_item_m=fp_item_m
 def fp_item_m(*args,**kwargs):
@@ -114,4 +117,5 @@ if '--compiled' in sys.argv:
  assert application.index('Field FIRST_PERSON_OFFSET')<application.index('PoseStack.translate:')<application.index('Field ARMS'),'Camera mount missing for idle / applied after clip lookup'
  reloader_code=subprocess.check_output([javap,'-p','-c',str(animation_class.with_name('WeaponAnims$1.class'))],text=True)
  assert 'String firstperson_offset'in reloader_code,'Compiled loader ignores shared camera mount'
+ assert 'String firstperson_idle_offset'in reloader_code and 'Method idleWeight:'in application,'Compiled idle composition/fade missing'
  print('PASS: compiled client loads the shared FP mount and applies it before idle/clip lookup')

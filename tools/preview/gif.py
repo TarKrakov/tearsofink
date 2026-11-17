@@ -37,7 +37,7 @@ def frame(arch, a, model, grip, c, t, both, label, tune):
         arms[s] = (v0[0]+(x-v0[0])*w, y*w, 0)
         Wq = slerp_m(W, w)
         items[s] = (model, (lambda tp, W, m: (lambda am: tp_item_m(am, tp, handle, W, m)))(tp, Wq, m))
-        fq += item_quads(model, fp_item_m(fp, rot, pos, grip, m, view_offset=model.get('_fp_offset')), (190,40,50) if m == 1 else (150,30,90))
+        fq += item_quads(model, fp_item_m(fp, rot, pos, grip, m, view_offset=fp_offset(model,idle_weight(c,t))), (190,40,50) if m == 1 else (150,30,90))
         if not both: body = max(-D(25), min(D(25), y*tune['body']))*w
     if not both and arch in TWO:
         x, y = aim(Pmain, -1, tune)

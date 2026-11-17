@@ -36,4 +36,4 @@ for sign in(1,-1):
    old=matrix(name,at,sign,False);new=matrix(name,at,sign)
    assert np.allclose(old[:3,:3],new[:3,:3])
    assert np.allclose(new[:3,3]-old[:3,3],[0,-.04,.15]),(name,'inconsistent mount')
-print('PASS: idle and all FP clips move uniformly 4cm down / 15cm closer; orientation and scale unchanged')
+print('PASS: common combat FP mount is 4cm down / 15cm closer; orientation and scale unchanged (idle-only offset checked separately)')

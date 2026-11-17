@@ -35,6 +35,8 @@ jobs:
         run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale_fp.py --compiled
       - name: validate connected FP series and shared camera mount
         run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale_flow.py
+      - name: validate retreat slash, flight preparation and idle composition
+        run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale_moves.py
       - name: validate paired attack handoffs
         run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale_sync.py
       - name: review clip curves and whole-model visibility

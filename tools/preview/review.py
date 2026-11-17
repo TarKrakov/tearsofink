@@ -12,7 +12,7 @@ from pathlib import Path
 
 import numpy as np
 from run import load
-from third import C, apply4, axis, dR, end_time, fp_item_m, model_points, sample, solve4
+from third import C, apply4, axis, dR, end_time, fp_item_m, fp_offset, idle_weight, model_points, sample, solve4
 from tl import COMBO, build
 
 FOV = math.tan(math.radians(70 / 2))
@@ -33,7 +33,7 @@ def frame_data(model, grip, blade_tip, vertices, clip, t, hand, aspect=ASPECT):
     side = 'right' if hand == 1 else 'left'
     display = model['display']['firstperson_' + side + 'hand']
     rot, pos = sample(clip, t)
-    mat = fp_item_m(display, rot, pos, grip, hand, view_offset=model.get('_fp_offset'))
+    mat = fp_item_m(display, rot, pos, grip, hand, view_offset=fp_offset(model,idle_weight(clip,t)))
     points = apply4(mat, vertices)
     depth = -points[:, 2]
     with np.errstate(divide='ignore', invalid='ignore'):
@@ -60,9 +60,10 @@ def inspect(arch, samples=50):
             selected.append((step['anim'], 1, step['hit'] / 20, step.get('second_hit')))
         if step.get('off_anim'):
             selected.append((step['off_anim'], -1, step['hit'] / 20, step.get('second_hit')))
-    for name in ('dual_charge', 'dual_charge_off', 'dual_parry', 'dual_parry_off'):
+    for name in ('dual_charge', 'dual_charge_off', 'dual_parry', 'dual_parry_off', 'backstep', 'dual_leap', 'dual_leap_off', 'dual_slam', 'dual_slam_off'):
         if name in anims:
-            selected.append((name, -1 if name.endswith('_off') else 1, None, None))
+            marker=anims[name].get('impact',-1)
+            selected.append((name, -1 if name.endswith('_off') else 1, marker if marker>=0 else None, None))
     seen, findings, warnings = set(), [], []
     for name, hand, impact, second_hit in selected:
         if (name, hand) in seen:

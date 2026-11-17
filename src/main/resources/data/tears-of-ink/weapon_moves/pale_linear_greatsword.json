@@ -1,0 +1,26 @@
+{
+  "_comment": "Server balance; /reload. Damage multipliers use the selected sword's attack damage before the existing tier/awakening pipeline. 20 ticks = 1 second; velocities in blocks/tick. See docs/PALE_MOVE_BALANCE.md.",
+  "single_r": {
+    "damage_multiplier": 0.75,
+    "reach": 3.6,
+    "arc": 140,
+    "knockback": 1.1,
+    "sweep_ticks": 14,
+    "window_ticks": 70,
+    "cooldown_ticks": 180,
+    "dash_distance": 4,
+    "dash_damage_multiplier": 1.2,
+    "dash_ticks": 18
+  },
+  "backstep": {
+    "damage_multiplier": 0.35,
+    "reach": 3,
+    "arc": 120,
+    "knockback": 0.45,
+    "hit_ticks": 3,
+    "duration_ticks": 12,
+    "cooldown_ticks": 50,
+    "backward_speed": 0.48,
+    "upward_speed": 0.12
+  }
+}

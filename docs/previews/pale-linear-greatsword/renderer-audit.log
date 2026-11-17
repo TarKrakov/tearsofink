@@ -1,4 +1,4 @@
-PASS: all 31 F5 source/fix/timing snapshots unchanged from ee55b6e
+PASS: 27 F5 snapshots unchanged from ee55b6e ; 4 R flight/landing entries intentionally revised and checked separately
 PASS: vanilla independent equip offsets reproduced (up to .6 blocks); corrected FP pair matches in 16:9 screen space
 PASS: full blade visible on hits; high curved opening, straight thrust, inward paired tips, raised charge
 PASS: charge is exactly +6px Y at the held keys; original angles/X/Z unchanged

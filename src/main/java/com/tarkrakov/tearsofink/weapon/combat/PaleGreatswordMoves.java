@@ -38,10 +38,11 @@ import java.util.UUID;
 public final class PaleGreatswordMoves {
     private static final Archetype ARCH = Archetype.PALE_LINEAR_GREATSWORD;
     private static final TagKey<Block> SOFT = TagKey.create(Registries.BLOCK, TearsOfInk.id("pale_dash_soft"));
-    private enum Phase { IDLE, SINGLE_WINDOW, SINGLE_DASH, PARRY, LEAP, SLAM, CHARGE, DUAL_DASH, RECOVER }
+    private enum Phase { IDLE, SINGLE_WINDOW, SINGLE_DASH, BACKSTEP, PARRY, LEAP, SLAM, CHARGE, DUAL_DASH, RECOVER }
     private static final class State {
         Phase phase = Phase.IDLE;
-        long until, started, parryUntil, singleReady, dualReady, chargeReady;
+        long until, started, parryUntil, singleReady, dualReady, chargeReady, backstepReady;
+        PaleGreatswordBalance.Tuning tuning;
         boolean left, paired, parried, killed, airborne, slammed;
         int broken;
         double travelled, maxDistance;
@@ -51,7 +52,6 @@ public final class PaleGreatswordMoves {
         ServerPlayer owner;
         ItemStack main, off;
         final Set<UUID> hit = new HashSet<>();
-        final Set<UUID> sweepHit = new HashSet<>();
     }
     private static final Map<UUID, State> STATES = new HashMap<>();
     private record DamageWeapon(ServerPlayer player, ItemStack stack) {}
@@ -67,16 +67,28 @@ public final class PaleGreatswordMoves {
         DamageWeapon previous = DAMAGE_WEAPON.get();
         DAMAGE_WEAPON.set(new DamageWeapon(p, s.left ? s.off : s.main));
         try {
-            return target.hurt(p.damageSources().playerAttack(p), damage);
+            // Each deliberate solo phase is one distinct hit, even immediately after LMB.
+            // The phase's target sets/tick gate still prevent repeated per-tick damage.
+            int previousInvulnerability = target.invulnerableTime;
+            boolean separateHit = s.phase == Phase.SINGLE_WINDOW || s.phase == Phase.SINGLE_DASH || s.phase == Phase.BACKSTEP;
+            if (separateHit) target.invulnerableTime = 0;
+            boolean hit = target.hurt(p.damageSources().playerAttack(p), damage);
+            if (!hit && separateHit) target.invulnerableTime = previousInvulnerability;
+            return hit;
         } finally {
             if (previous == null) DAMAGE_WEAPON.remove();
             else DAMAGE_WEAPON.set(previous);
         }
     }
 
-    // Skills performs the existing dimension/vow/resource/wear checks. Cooldown starts at chain end.
+    // Skills performs dimension/vow/resource/wear checks. R cooldown starts at chain end; RMB at entry.
     public static final Skill SINGLE = entry("pale_sweep", false, false);
     private static final Skill PARRY = entry("pale_pair_parry", true, false);
+    private static final Skill BACKSTEP = new Skill(TearsOfInk.id("pale_backstep"), 0, 0, 0) {
+        @Override public boolean activate(ServerPlayer p, SkillInput input) {
+            return begin(p, false, false, false, true);
+        }
+    };
     private static final Skill CHARGE = entry("pale_pair_charge", true, true);
 
     private PaleGreatswordMoves() {}
@@ -84,7 +96,7 @@ public final class PaleGreatswordMoves {
     private static Skill entry(String id, boolean pair, boolean charge) {
         return new Skill(TearsOfInk.id(id), 0, 0, 0) {
             @Override public boolean activate(ServerPlayer p, SkillInput input) {
-                return begin(p, pair, charge, input.sneaking());
+                return begin(p, pair, charge, input.sneaking(), false);
             }
         };
     }
@@ -107,6 +119,7 @@ public final class PaleGreatswordMoves {
     }
 
     public static void init() {
+        PaleGreatswordBalance.init();
         ServerPlayConnectionEvents.DISCONNECT.register((h, server) -> STATES.remove(h.getPlayer().getUUID()));
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
             if (entity instanceof ServerPlayer p) {
@@ -156,6 +169,21 @@ public final class PaleGreatswordMoves {
                         else if (time - s.started >= 50) p.releaseUsingItem();
                     }
                     case SINGLE_DASH, DUAL_DASH -> dashTick(p, s);
+                    case BACKSTEP -> {
+                        var b = s.tuning.backstep();
+                        if (!s.slammed && time >= s.started + b.hitTicks()) {
+                            s.slammed = true;
+                            area(p, s, b.sweep());
+                            if (p.isAlive()) {
+                                Vec3 back = flat(p).scale(-b.backwardSpeed());
+                                p.setDeltaMovement(back.x, p.onGround() ? b.upwardSpeed() : p.getDeltaMovement().y, back.z);
+                                p.hurtMarked = true; // normal synchronized velocity; vanilla collision handles walls
+                                p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_SWEEP,
+                                        net.minecraft.sounds.SoundSource.PLAYERS, .8f, 1.1f);
+                            }
+                        }
+                        if (time >= s.until) s.phase = Phase.IDLE;
+                    }
                     case LEAP -> {
                         // Prevent fall damage from this leap only; no immunity is kept after landing/cancel.
                         p.fallDistance = 0;
@@ -193,8 +221,8 @@ public final class PaleGreatswordMoves {
         if (s.phase != Phase.IDLE && !valid(p, s)) cancel(p, s);
         if (s.phase == Phase.SINGLE_WINDOW && s.left == left && now(p) <= s.until) {
             s.phase = Phase.SINGLE_DASH;
-            startDash(p, s, 4, 1.2f);
-            play(p, s, "rush", null, 18);
+            startDash(p, s, s.tuning.singleR().dashDistance(), s.tuning.singleR().dashDamageMultiplier());
+            play(p, s, "rush", null, s.tuning.singleR().dashTicks());
             p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.TRIDENT_RIPTIDE_1.value(), net.minecraft.sounds.SoundSource.PLAYERS, 0.9f, 0.85f);
             return;
         }
@@ -220,14 +248,20 @@ public final class PaleGreatswordMoves {
         return available(p) && dual(p) && Skills.activate(p, CHARGE, new SkillInput(0, 0, false));
     }
 
-    private static boolean begin(ServerPlayer p, boolean pair, boolean charge, boolean left) {
+    public static boolean backstep(ServerPlayer p) {
+        return available(p) && !dual(p) && isWeapon(p.getMainHandItem())
+                && Skills.activate(p, BACKSTEP, new SkillInput(0, 0, false));
+    }
+
+    private static boolean begin(ServerPlayer p, boolean pair, boolean charge, boolean left, boolean backstep) {
         if (!available(p) || (pair ? !dual(p) : !isWeapon(left ? p.getOffhandItem() : p.getMainHandItem()))) return false;
         State s = state(p);
+        if (backstep && now(p) >= s.backstepReady && s.phase == Phase.SINGLE_WINDOW) finish(p, s, false);
         if (s.phase != Phase.IDLE) return false;
-        if (now(p) < (charge ? s.chargeReady : pair ? s.dualReady : s.singleReady)) return false;
+        if (now(p) < (backstep ? s.backstepReady : charge ? s.chargeReady : pair ? s.dualReady : s.singleReady)) return false;
+        s.tuning = PaleGreatswordBalance.get();
         s.owner = p; s.level = p.serverLevel(); s.main = p.getMainHandItem(); s.off = p.getOffhandItem();
         s.left = left; s.paired = pair; s.parried = false; s.started = now(p);
-        s.sweepHit.clear();
         s.power = pair ? 1 : WeaponAbilities.power(p);
         // Read the selected sword's attributes, not a different weapon in the main hand.
         final double[] base = {p.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)};
@@ -236,7 +270,12 @@ public final class PaleGreatswordMoves {
             if (attribute.equals(Attributes.ATTACK_DAMAGE)) base[0] += modifier.amount();
         });
         s.damage = (float) (left ? base[0] : p.getAttributeValue(Attributes.ATTACK_DAMAGE)) * s.power;
-        if (charge) {
+        if (backstep) {
+            var b = s.tuning.backstep();
+            s.phase = Phase.BACKSTEP; s.until = now(p) + b.durationTicks(); s.slammed = false;
+            s.backstepReady = now(p) + Math.round(b.cooldownTicks() * Awakening.cooldownMult(s.main));
+            play(p, s, "backstep", null, b.durationTicks());
+        } else if (charge) {
             s.phase = Phase.CHARGE;
             play(p, s, "dual_charge", "dual_charge_off", 52);
             // Hunter axe charging uses this existing iron-windup sound.
@@ -248,10 +287,10 @@ public final class PaleGreatswordMoves {
             p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.SHIELD_BLOCK,
                     net.minecraft.sounds.SoundSource.PLAYERS, 0.55f, 1.25f);
         } else {
-            s.phase = Phase.SINGLE_WINDOW; s.until = now(p) + 70;
-            play(p, s, "ability", null, 14);
+            s.phase = Phase.SINGLE_WINDOW; s.until = now(p) + s.tuning.singleR().windowTicks();
+            play(p, s, "ability", null, s.tuning.singleR().sweepTicks());
             p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_SWEEP, net.minecraft.sounds.SoundSource.PLAYERS, 1.1f, 0.65f);
-            area(p, s, 140, 3.6, 0.75, 1.1);
+            area(p, s, s.tuning.singleR().sweep());
         }
         return true;
     }
@@ -303,7 +342,7 @@ public final class PaleGreatswordMoves {
     private static void finish(ServerPlayer p, State s, boolean pair) {
         if (pair) {
             if (s.dualReady <= now(p)) s.dualReady = cooldown(p, s, 240);
-        } else s.singleReady = cooldown(p, s, 180);
+        } else s.singleReady = cooldown(p, s, s.tuning.singleR().cooldownTicks());
         s.phase = Phase.IDLE;
     }
 
@@ -333,8 +372,6 @@ public final class PaleGreatswordMoves {
         for (LivingEntity target : p.serverLevel().getEntitiesOfClass(LivingEntity.class, next.inflate(0.3))) {
             if (!enemy(p, target) || s.hit.contains(target.getUUID()) || !p.hasLineOfSight(target)) continue;
             s.hit.add(target.getUUID());
-            if (s.phase == Phase.SINGLE_DASH && s.sweepHit.contains(target.getUUID()))
-                target.invulnerableTime = 0;
             if (hurt(p, s, target, s.damage) && target.isDeadOrDying()
                     && s.phase == Phase.DUAL_DASH && !s.killed) {
                 s.killed = true;
@@ -374,7 +411,7 @@ public final class PaleGreatswordMoves {
         boolean pair = s.phase == Phase.DUAL_DASH;
         Vec3 velocity = p.getDeltaMovement();
         p.setDeltaMovement(0, velocity.y, 0); p.hurtMarked = true;
-        if (!pair) s.singleReady = cooldown(p, s, 180);
+        if (!pair) s.singleReady = cooldown(p, s, s.tuning.singleR().cooldownTicks());
         s.phase = Phase.RECOVER; s.until = now(p) + 5;
         play(p, s, pair ? "dual_recover" : "recover", pair ? "dual_recover_off" : null, 5);
     }
@@ -390,6 +427,10 @@ public final class PaleGreatswordMoves {
         return look.lengthSqr() < 1e-5 ? new Vec3(0, 0, 1) : look.normalize();
     }
 
+    private static void area(ServerPlayer p, State s, PaleGreatswordBalance.Sweep sweep) {
+        area(p, s, sweep.arc(), sweep.reach(), sweep.damageMultiplier(), sweep.knockback());
+    }
+
     private static void area(ServerPlayer p, State s, double arc, double reach, double mult, double knock) {
         Vec3 forward = flat(p);
         for (LivingEntity t : p.serverLevel().getEntitiesOfClass(LivingEntity.class, p.getBoundingBox().inflate(reach))) {
@@ -398,7 +439,6 @@ public final class PaleGreatswordMoves {
             Vec3 to = t.position().subtract(p.position()).multiply(1, 0, 1);
             if (arc < 360 && to.lengthSqr() > 0.01 && to.normalize().dot(forward) < Math.cos(Math.toRadians(arc / 2))) continue;
             if (mult == 0 || hurt(p, s, t, (float) (s.damage * mult))) {
-                if (s.phase == Phase.SINGLE_WINDOW) s.sweepHit.add(t.getUUID());
                 Vec3 dir = arc >= 360 && to.lengthSqr() > 0.01 ? to.normalize() : forward;
                 t.knockback(knock, -dir.x, -dir.z);
                 t.hurtMarked = true;

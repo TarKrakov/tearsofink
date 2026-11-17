@@ -1,21 +1,25 @@
+positions.log
+PASS: 3 solo / 5 paired steps; seven literal raw axe clips including F5 source; raised camera-space FP; independent synchronized off-hand; donor timing/late/speed; authored Display retained
+PASS: 1380 finite full-mesh/pivot samples; handles back/up, tips down/in; crossed guard; straight raised-to-ground slam at server tick 4
+PASS: closer grips, reduced low excursion, held alternating handoff, exact single R from 8b7dd6d
+
 flow.log
 PASS: 6 scheduled FP handoffs match in orientation and grip, including repeated paired attack
 PASS: former holds now carry the blade towards the next preparation without a large frame jump
-PASS: idle and all FP clips move uniformly 4cm down / 15cm closer; orientation and scale unchanged
-
-fp.log
-PASS: all 31 F5 source/fix/timing snapshots unchanged from ee55b6e
-PASS: vanilla independent equip offsets reproduced (up to .6 blocks); corrected FP pair matches in 16:9 screen space
-PASS: full blade visible on hits; high curved opening, straight thrust, inward paired tips, raised charge
-PASS: charge is exactly +6px Y at the held keys; original angles/X/Z unchanged
+PASS: common combat FP mount is 4cm down / 15cm closer; orientation and scale unchanged (idle-only offset checked separately)
 
 sync.log
 PASS: actual steps 3/4 at120Hz: mirrored FP grip/tip 0.00000304 blocks; F5 axis 0.00000013; authored grip difference 0.07028 blocks
 PASS: edge-first downward impacts in both hands; normal/velocity FP 0.0469 / F5 0.0387
 PASS: accepted F5 arm angles / path preserved; max errors [0.0004538415096376758, 0.0012594084703052566]
 
+moves.log
+PASS: both hands progressively rise during R flight in FP/F5; blades stay visible; landing begins from raised pose
+PASS: retreat slash is visible at configured server hit tick
+PASS: idle-only 4cm forward offset preserves orientation and smoothly enters/returns through an interrupted action
+
 review.log
-Reviewed 15 clips for pale_linear_greatsword; warnings: 18
+Reviewed 20 clips for pale_linear_greatsword; warnings: 20
 REVIEW: axe_attack1: unusually large per-sample tip movement; inspect curve
 REVIEW: axe_attack1: abrupt keyframe velocity change (24.7); inspect blending
 REVIEW: axe_attack2: unusually large per-sample tip movement; inspect curve
@@ -34,6 +38,6 @@ REVIEW: axe_dual_slam_final: unusually large per-sample tip movement; inspect cu
 REVIEW: axe_dual_slam_final: abrupt keyframe velocity change (26.2); inspect blending
 REVIEW: axe_dual_slam_final_off: unusually large per-sample tip movement; inspect curve
 REVIEW: axe_dual_slam_final_off: abrupt keyframe velocity change (26.2); inspect blending
+REVIEW: backstep: abrupt keyframe velocity change (33.5); inspect blending
+REVIEW: dual_slam_off: unusually large per-sample tip movement; inspect curve
 Report: out/review/pale_linear_greatsword/report.json
-
-PASS: animation resource differs only in camera Z offset; all keys and F5 data are identical to 3cf9cf8

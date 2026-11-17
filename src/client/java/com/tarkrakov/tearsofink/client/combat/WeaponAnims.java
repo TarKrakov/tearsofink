@@ -65,6 +65,7 @@ public final class WeaponAnims {
 	private static final Map<String, ThirdTune> THIRD = new HashMap<>();
 	/** Camera-only composition, in model pixels; never used by ThirdPerson. */
 	private static final Map<String, Vector3f> FIRST_PERSON_OFFSET = new HashMap<>();
+	private static final Map<String, Vector3f> IDLE_OFFSET = new HashMap<>();
 
 	public static ThirdTune thirdTune(Archetype a) {
 		return THIRD.getOrDefault(a.id, ThirdTune.DEFAULT);
@@ -89,6 +90,7 @@ public final class WeaponAnims {
 		final long start;
 		final float busy; // сколько секунд клинок занят (по серверу, реальное время)
 		final float tempo; // общая скорость архетипа: движение идёт быстрее/медленнее
+		float fromIdle = 1; // composition captured with the displayed pose
 		Key from; // smooth: поза, из которой перетекаем в начале
 
 		Playing(Clip clip, Archetype archetype, int busyTicks, float tempo) {
@@ -126,6 +128,7 @@ public final class WeaponAnims {
 				GRIP.clear();
 				THIRD.clear();
 				FIRST_PERSON_OFFSET.clear();
+				IDLE_OFFSET.clear();
 				ThirdPerson.clear();
 				for (Archetype a : Archetype.values()) {
 					var res = manager.getResource(TearsOfInk.id("weapon_anims/" + a.id + ".json"));
@@ -134,6 +137,7 @@ public final class WeaponAnims {
 						JsonObject root = JsonParser.parseReader(r).getAsJsonObject();
 						CLIPS.put(a.id, parse(root));
 						if (root.has("firstperson_offset")) FIRST_PERSON_OFFSET.put(a.id, vec(root, "firstperson_offset", new Vector3f()));
+						if (root.has("firstperson_idle_offset")) IDLE_OFFSET.put(a.id, vec(root, "firstperson_idle_offset", new Vector3f()));
 						if (root.has("grip")) GRIP.put(a.id, vec(root, "grip", new Vector3f(8, 8, 8)));
 						if (root.has("third")) {
 							JsonObject t = root.getAsJsonObject("third");
@@ -227,6 +231,7 @@ public final class WeaponAnims {
 			// Preserve the pre-greatsword handoff for every existing weapon:
 			// capturing an already blended pose is reserved for the new archetype.
 			next.from = a == Archetype.PALE_LINEAR_GREATSWORD ? shown(prev, previous) : previous;
+			next.fromIdle = idleWeight(prev);
 		} else if (next != null && a == Archetype.PALE_LINEAR_GREATSWORD && clip.smooth() && !clip.absolute()) {
 			next.from = REST; // вход из покоя тоже плавный, даже если первая ключевая поза уже в замахе
 		}
@@ -261,12 +266,17 @@ public final class WeaponAnims {
 		Vector3f offset = held == null ? null : FIRST_PERSON_OFFSET.get(held.id);
 		if (offset != null) pose.translate((left ? -offset.x : offset.x) / 16f, offset.y / 16f, offset.z / 16f);
 		Playing p = ARMS[arm.ordinal()];
+		if (p != null && (p.time() >= end(p.clip) || held != p.archetype)) {
+			ARMS[arm.ordinal()] = null;
+			p = null;
+		}
+		Vector3f idle = held == null ? null : IDLE_OFFSET.get(held.id);
+		if (idle != null) {
+			float w = p == null ? 1 : idleWeight(p);
+			pose.translate((left ? -idle.x : idle.x) * w / 16f, idle.y * w / 16f, idle.z * w / 16f);
+		}
 		if (p == null) return false;
 		float t = p.time();
-		if (t >= end(p.clip) || Archetype.of(stack) != p.archetype) {
-			ARMS[arm.ordinal()] = null;
-			return false;
-		}
 		Clip c = p.clip;
 		// стойка = обычная поза Display (в относительных — нули)
 		Key restKey = c.absolute()
@@ -276,6 +286,18 @@ public final class WeaponAnims {
 		now = shown(p, now);
 		put(c, GRIP.get(p.archetype.id), rest, left, pose, now.rot(), now.pos(), now.scale());
 		return true;
+	}
+
+	/** Fade the idle-only composition with the same entry/return as the clip. */
+	private static float idleWeight(Playing p) {
+		float t = p.time();
+		float start = lastT(p.clip) + Math.max(0, p.clip.hold());
+		float target = ease(Ease.EASE_IN_OUT, Mth.clamp((t - start) / Math.max(.01f, end(p.clip) - start), 0, 1));
+		if (p.from != null && p.real() < blend(p)) {
+			float u = ease(Ease.EASE_OUT, p.real() / blend(p));
+			return Mth.lerp(u, p.fromIdle, target);
+		}
+		return target;
 	}
 
 	/** Capture the displayed pose even when an interruption happens during the previous blend. */

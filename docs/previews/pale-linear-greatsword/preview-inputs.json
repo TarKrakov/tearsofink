@@ -1,13 +1,13 @@
 {
   "inputs": {
-    "src/main/resources/assets/tears-of-ink/weapon_anims/pale_linear_greatsword.json": "ad36c57d6ba956cf126f113d9c09c53db8fa05864aa36572ae1c0fdf8174770c",
+    "src/main/resources/assets/tears-of-ink/weapon_anims/pale_linear_greatsword.json": "1de4c6016a0af77684e6e98e375ed167d59c24b4a52c0ba040c391f89671f10a",
     "src/main/resources/assets/tears-of-ink/models/item/pale_linear_greatsword.json": "b7412f5684279e63c84ca35512093d61790c3391fedbc12aad98183ea2ac4156",
     "src/main/resources/assets/tears-of-ink/models/item/pale_linear_great.json": "70b8cdc45b289c6cb9214e2b2e1aaefdd45eb5c4d6d112b200bdcc9cafeed089",
-    "tools/preview/pale.py": "5acec884c4444e1ff5ab8e477be3797b4ae90e327a5e79fdfd948e0534825707",
-    "tools/preview/tl.py": "2fb1ac116bf3b84bab7ba7e2127b42392dc877f4462b6cebf79e5d724f4c7bbd",
-    "tools/preview/third.py": "89ac69a41e5e8c479efc8e3b500b6915ea2edefc05ff6f5ca166d48ecc6ea541",
-    "tools/preview/run.py": "884bf5ba925268fc29119932524214ce253d3eff6e730629f01ec0d139b7b865",
-    "tools/preview/gif.py": "0e2ec09c4ee66aa8d538a545cfd74b75596a7fe33428e9a4e58752242784f82f"
+    "tools/preview/pale.py": "252e71585060699ddb0f18ab7fbaa8fe4e963771ba8719ad4ba7cfdc22ba188a",
+    "tools/preview/tl.py": "9c371c8f0f55cf5ba74b600fd630d7c00f9384e1a50c7d3330e5a4bdce4a5c18",
+    "tools/preview/third.py": "c63ccc31ba6b7690b397f5a24c6667a6bcf52bc3851ca98fef622ffd35e1e734",
+    "tools/preview/run.py": "4c56e8423896b7cadac156f1c69187958801180220f9d85ba69ecbe6743dfe56",
+    "tools/preview/gif.py": "d2764c1e76a5d9fc1445ca7c3476aa4beb2defbbab7b0b6a58b9c400c8c47a3e"
   },
   "fps": 30,
   "fp_aspect": "16:9",
@@ -27,6 +27,7 @@
     "pair-r",
     "parry-cross",
     "solo",
+    "solo-backstep",
     "solo-r"
   ]
 }

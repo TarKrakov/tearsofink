@@ -40,6 +40,14 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
 			player.startUsingItem(hand);
 			return net.minecraft.world.InteractionResultHolder.consume(stack);
 		}
+		if (hand == net.minecraft.world.InteractionHand.MAIN_HAND
+                && com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(player.getItemInHand(hand))) {
+            var stack = player.getItemInHand(hand);
+            if (player instanceof net.minecraft.server.level.ServerPlayer sp
+                    && !com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.backstep(sp))
+                return net.minecraft.world.InteractionResultHolder.fail(stack);
+            return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+        }
 		return super.use(level, player, hand);
 	}
 
