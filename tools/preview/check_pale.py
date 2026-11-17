@@ -8,8 +8,8 @@ from run import load
 from third import *
 a,m,fp,tp,g=load('pale_linear_greatsword'); anims=a['animations']
 combo=json.load(open(ROOT/'src/main/resources/data/tears-of-ink/weapon_combos/pale_linear_greatsword.json'))
-assert len(combo['steps'])==4 and len(combo['dual_steps'])==3
-assert combo['steps'][2]['late']>=6
+assert len(combo['steps'])==3 and len(combo['dual_steps'])==3
+assert [s['anim'] for s in combo['steps']] == ['attack1','attack2','attack3']
 assert combo['dual_steps'][1]['second_hit'] > combo['dual_steps'][1]['hit']
 for st in combo['steps']+combo['dual_steps']:
     c=anims[st['off_anim']] if st['anim']=='dual_attack2' else anims[st['anim']]
@@ -35,14 +35,14 @@ for name,c in anims.items():
             assert np.isfinite([x,y]).all() and np.isfinite(W).all()
             assert abs(np.linalg.det(W)-1)<1e-9
         count+=1
-print('PASS: 4 solo + 3 pair steps; hit markers; all clips finite; fixed hilt pivot; proper wrist rotations:',count,'samples')
-# The actual first/third-person transforms must aim each thrust along the camera centre.
-for name,sign in [('attack2',1),('dual_attack2_off',-1)]:
+print('PASS: 3 solo + 3 pair steps; hit markers; all clips finite; fixed hilt pivot; proper wrist rotations:',count,'samples')
+# The remaining paired thrust must aim along the camera; solo attack2 is now a vertical chop.
+for name,sign in [('dual_attack2_off',-1)]:
     c=anims[name];r,p=sample(c,c['impact']);disp=m['display']['firstperson_'+('right' if sign==1 else 'left')+'hand']
     points=apply4(fp_item_m(disp,r,p,g,sign),np.array([h,t])/16)
     direction=points[1]-points[0];direction/=np.linalg.norm(direction)
     assert direction[2]<-.9,(name,direction)
-print('PASS: main and off thrusts face forward')
+print('PASS: paired off-hand thrust faces forward')
 
 # Camera framing and readable right-to-left cut (based on Claude's exact item matrices).
 def screen_tip(name, t, hand=1):
@@ -55,8 +55,18 @@ def screen_tip(name, t, hand=1):
     return pts[1]
 tpt=t
 start=screen_tip('attack1',0)
-finish=screen_tip('attack1',.43)
-assert start[0]>.25 and finish[0]<-.15,('right-to-left swing missing',start,finish)
+finish=screen_tip('attack1',.45)
+def screen_xy(p):
+    return p[:2]/(-p[2])
+a0, a1 = screen_xy(start), screen_xy(finish)
+assert a0[0]>.35 and a0[1]<-.25 and a1[0]<-.35 and a1[1]>.30,('diagonal lower-right to upper-left missing',a0,a1)
+after=screen_xy(screen_tip('attack1',.78))
+assert abs(after[0])<.2 and after[1]>.35,('blade must return high to the middle before chop',after)
+chop_top=screen_xy(screen_tip('attack2',.28))
+chop_low=screen_xy(screen_tip('attack2',.68))
+assert chop_top[1]>.4 and chop_low[1]<-.25 and abs(chop_low[0])<.25,('blade-led top-down chop missing',chop_top,chop_low)
+sweep_right=screen_xy(screen_tip('attack3',.48))
+assert sweep_right[0]>.45,('third solo sweep must travel right',sweep_right)
 for name,tick in [('attack1',.30),('attack2',.35),('attack3',.75),('attack4',.30),
                   ('dual_attack2',.90),('dual_attack2_off',.35)]:
     tip=screen_tip(name,tick,-1 if name.endswith('_off') else 1)
@@ -66,7 +76,7 @@ for name,tick in [('attack1',.30),('attack2',.35),('attack3',.75),('attack4',.30
     normalized=tip[:2]/(-tip[2])
     assert -.70<normalized[1]<.70,(name,'outside vertical FOV',normalized)
     assert abs(normalized[0])<.94,(name,'outside horizontal FOV',normalized)
-for name in ('attack1','attack2','attack3','attack4','dual_attack2','dual_attack2_off',
+for name in ('attack4','dual_attack2','dual_attack2_off',
              'dual_attack3','dual_attack3_off'):
     source=anims[name].get('third',{}).get('source')
     assert source in anims,(name,'missing third-person source',source)
@@ -139,7 +149,7 @@ def visible_fraction(name, t0, side):
         good &= np.abs(world[:,1]/depth)<FOV_Y
     return np.count_nonzero(good)/len(vertices)
 
-for name,t0,hand in (('attack1',.30,1),('attack3',.32,1),('attack3',.95,1),('attack4',.30,1),
+for name,t0,hand in (('attack1',.30,1),('attack2',.68,1),('attack3',.48,1),
                      ('dual_attack1',.55,1),('dual_attack1_off',.55,-1),
                      ('dual_attack3',.38,1),('dual_attack3_off',.38,-1),
                      ('dual_attack3',.85,1),('dual_attack3_off',.85,-1)):
@@ -155,5 +165,22 @@ for name,t0 in (('dual_parry',.35),('dual_charge',.6)):
     assert max(abs(right[0]),abs(left[0]))<.85,(name,'blade tips outside view',right,left)
     for side,n in ((1,name),(-1,name+'_off')):
         frac=visible_fraction(n,t0,side)
-        assert frac>.96,(n,'blade body outside view',frac)
+        # During charge only, the handles are *intentionally* just off-screen.
+        assert frac > (.76 if name=='dual_charge' else .96),(n,'blade body outside view',frac)
 print('PASS: Claude preview: full-model screen framing, raised strikes, complete paired charge and parry, anchored grips')
+
+# The long blades should extend in the forearm's direction in F5,
+# not spin independently sideways or downwards as in the author's screenshots.
+for name in ('attack1','attack2','attack3','dual_attack1','dual_attack1_off',
+             'dual_attack2','dual_attack2_off','dual_attack3','dual_attack3_off',
+             'dual_charge','dual_charge_off','dual_parry','dual_parry_off'):
+    c=anims[name]; assert c.get('third',{}).get('follow_blade'), name
+    sign=-1 if name.endswith('_off') else 1
+    tp=m['display']['thirdperson_'+('left' if sign == -1 else 'right')+'hand']
+    at=.28 if name.startswith('dual_charge') else .3
+    _,_,W,_=solve4(m['display'],sign,c,at,a['third'],c['third'],g,h,tpt)
+    blade=C@W@dR(tp,sign)@(tpt-h)
+    blade/=np.linalg.norm(blade)
+    forearm=np.array([0.,1.,-.15]); forearm/=np.linalg.norm(forearm)
+    assert blade@forearm>.99999,(name,'third-person blade no longer follows forearm',blade)
+print('PASS: F5 blades remain aligned with their carrying forearms')
