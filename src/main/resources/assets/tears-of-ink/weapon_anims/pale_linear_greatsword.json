@@ -1,5 +1,5 @@
 {
-  "_comment": "D-023: distinct first-person weapon motion and third-person source animation clips, using the established hunter animation technique. Keep art and game mechanics unchanged.",
+  "_comment": "D-024: mirror-first horizontal slash, two edge-to-centre thrusts and vertical blade-led double strike. All item-only third.push removed: grip follows hand. Full-model Claude preview keeps parry and charge inside viewport. No authored asset changes.",
   "grip": [
     7.75,
     2,
@@ -1116,37 +1116,37 @@
             7
           ],
           "translation": [
-            2,
-            5,
-            3
+            1,
+            6,
+            -4
           ],
           "ease": "ease_in_out"
         },
         {
           "t": 0.32,
           "rotation": [
-            -43,
-            20,
-            18
+            -38,
+            13,
+            10
           ],
           "translation": [
-            4,
-            7,
-            3
+            1,
+            8,
+            -6
           ],
           "ease": "ease_out"
         },
         {
           "t": 1.5,
           "rotation": [
-            -43,
-            20,
-            18
+            -38,
+            13,
+            10
           ],
           "translation": [
-            4,
-            7,
-            3
+            1,
+            8,
+            -6
           ],
           "ease": "ease_in_out"
         }
@@ -1170,37 +1170,37 @@
             7
           ],
           "translation": [
-            2,
-            5,
-            3
+            1,
+            6,
+            -4
           ],
           "ease": "ease_in_out"
         },
         {
           "t": 0.32,
           "rotation": [
-            -43,
-            20,
-            18
+            -38,
+            13,
+            10
           ],
           "translation": [
-            4,
-            7,
-            3
+            1,
+            8,
+            -6
           ],
           "ease": "ease_out"
         },
         {
           "t": 1.5,
           "rotation": [
-            -43,
-            20,
-            18
+            -38,
+            13,
+            10
           ],
           "translation": [
-            4,
-            7,
-            3
+            1,
+            8,
+            -6
           ],
           "ease": "ease_in_out"
         }
@@ -1219,42 +1219,42 @@
         {
           "t": 0,
           "rotation": [
-            -43,
-            20,
-            18
+            -38,
+            13,
+            10
           ],
           "translation": [
-            4,
-            7,
-            3
+            1,
+            8,
+            -6
           ],
           "ease": "ease_in_out"
         },
         {
           "t": 0.162,
           "rotation": [
-            -36,
-            12,
-            13
+            -35,
+            10,
+            9
           ],
           "translation": [
-            2,
-            7,
-            1
+            1,
+            8,
+            -7
           ],
           "ease": "ease_out"
         },
         {
           "t": 0.81,
           "rotation": [
-            -36,
-            12,
-            13
+            -35,
+            10,
+            9
           ],
           "translation": [
-            2,
-            7,
-            1
+            1,
+            8,
+            -7
           ],
           "ease": "ease_in_out"
         }
@@ -1274,42 +1274,42 @@
         {
           "t": 0,
           "rotation": [
-            -43,
-            20,
-            18
+            -38,
+            13,
+            10
           ],
           "translation": [
-            4,
-            7,
-            3
+            1,
+            8,
+            -6
           ],
           "ease": "ease_in_out"
         },
         {
           "t": 0.162,
           "rotation": [
-            -36,
-            12,
-            13
+            -35,
+            10,
+            9
           ],
           "translation": [
-            2,
-            7,
-            1
+            1,
+            8,
+            -7
           ],
           "ease": "ease_out"
         },
         {
           "t": 0.81,
           "rotation": [
-            -36,
-            12,
-            13
+            -35,
+            10,
+            9
           ],
           "translation": [
-            2,
-            7,
-            1
+            1,
+            8,
+            -7
           ],
           "ease": "ease_in_out"
         }
@@ -1334,9 +1334,9 @@
             8
           ],
           "translation": [
-            2,
+            0,
             7,
-            0
+            -4
           ],
           "ease": "ease_in_out"
         },
@@ -1344,13 +1344,13 @@
           "t": 0.17,
           "rotation": [
             -30,
-            18,
-            22
+            8,
+            10
           ],
           "translation": [
-            3,
+            0,
             8,
-            1
+            -5
           ],
           "ease": "ease_out"
         },
@@ -1358,13 +1358,13 @@
           "t": 0.7,
           "rotation": [
             -30,
-            18,
-            22
+            8,
+            10
           ],
           "translation": [
-            3,
+            0,
             8,
-            1
+            -5
           ],
           "ease": "ease_in_out"
         }
@@ -1388,9 +1388,9 @@
             8
           ],
           "translation": [
-            2,
+            0,
             7,
-            0
+            -4
           ],
           "ease": "ease_in_out"
         },
@@ -1398,13 +1398,13 @@
           "t": 0.17,
           "rotation": [
             -30,
-            18,
-            22
+            8,
+            10
           ],
           "translation": [
-            3,
+            0,
             8,
-            1
+            -5
           ],
           "ease": "ease_out"
         },
@@ -1412,13 +1412,13 @@
           "t": 0.7,
           "rotation": [
             -30,
-            18,
-            22
+            8,
+            10
           ],
           "translation": [
-            3,
+            0,
             8,
-            1
+            -5
           ],
           "ease": "ease_in_out"
         }
@@ -1438,13 +1438,13 @@
           "t": 0,
           "rotation": [
             -30,
-            18,
-            22
+            8,
+            10
           ],
           "translation": [
-            3,
+            0,
             8,
-            1
+            -5
           ],
           "ease": "ease_in"
         },
@@ -1489,13 +1489,13 @@
           "t": 0,
           "rotation": [
             -30,
-            18,
-            22
+            8,
+            10
           ],
           "translation": [
-            3,
+            0,
             8,
-            1
+            -5
           ],
           "ease": "ease_in"
         },
@@ -1541,13 +1541,13 @@
           "t": 0,
           "rotation": [
             -30,
-            18,
-            22
+            8,
+            10
           ],
           "translation": [
-            3,
+            0,
             8,
-            1
+            -5
           ],
           "ease": "ease_in_out"
         },
@@ -1592,13 +1592,13 @@
           "t": 0,
           "rotation": [
             -30,
-            18,
-            22
+            8,
+            10
           ],
           "translation": [
-            3,
+            0,
             8,
-            1
+            -5
           ],
           "ease": "ease_in_out"
         },
@@ -1746,14 +1746,14 @@
         {
           "t": 0,
           "rotation": [
-            -36,
-            12,
-            13
+            -35,
+            10,
+            9
           ],
           "translation": [
-            2,
-            7,
-            1
+            1,
+            8,
+            -7
           ],
           "ease": "ease_in_out"
         },
@@ -1783,14 +1783,14 @@
         {
           "t": 0,
           "rotation": [
-            -36,
-            12,
-            13
+            -35,
+            10,
+            9
           ],
           "translation": [
-            2,
-            7,
-            1
+            1,
+            8,
+            -7
           ],
           "ease": "ease_in_out"
         },
