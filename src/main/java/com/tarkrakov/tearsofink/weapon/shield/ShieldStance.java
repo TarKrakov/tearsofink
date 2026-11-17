@@ -164,10 +164,10 @@ public final class ShieldStance {
 		syncStored(p);
 		com.tarkrakov.tearsofink.vow.SoulFeats.onBlock(p, source, amount, perfect);
 		if (charge(p) >= ShieldTuning.CHARGE_MAX) { // полный заряд — щиты поют
-			long now = level.getGameTime();
+			long choirNow = level.getGameTime();
 			Long last = CHOIR.get(p.getUUID());
-			if (last == null || now - last >= ShieldTuning.CHOIR_EVERY) {
-				CHOIR.put(p.getUUID(), now);
+			if (last == null || choirNow - last >= ShieldTuning.CHOIR_EVERY) {
+				CHOIR.put(p.getUUID(), choirNow);
 				level.playSound(null, p.blockPosition(), com.tarkrakov.tearsofink.sound.ModSounds.SHIELD_CHOIR, SoundSource.PLAYERS,
 						ShieldTuning.CHOIR_VOLUME, 0.96f + p.getRandom().nextFloat() * 0.08f);
 			}
