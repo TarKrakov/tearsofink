@@ -463,7 +463,9 @@ public final class WeaponAbilities {
 				if (t % 20 == 0) {
 					for (ServerPlayer ally : level.getEntitiesOfClass(ServerPlayer.class, player.getBoundingBox().inflate(RADIUS),
 							p -> p.isAlive() && p.distanceToSqr(player) <= RADIUS * RADIUS)) {
+						float before = ally.getHealth();
 						ally.heal(HEAL_PER_SECOND * SoulShieldItem.factor(player, MERCY) * com.tarkrakov.tearsofink.ink.SoulPenalty.multiplier(ally));
+						com.tarkrakov.tearsofink.vow.SoulFeats.onEmergencyHeal(player, ally, before);
 						level.sendParticles(ParticleTypes.HEART, ally.getX(), ally.getY() + 1.9, ally.getZ(), 1, 0.2, 0.1, 0.2, 0);
 					}
 					com.tarkrakov.tearsofink.ink.InkPowers.sync(player);

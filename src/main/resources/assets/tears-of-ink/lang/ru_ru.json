@@ -690,5 +690,9 @@
   "advancements.tears-of-ink.soul_stoicism.title": "Стоицизм",
   "advancements.tears-of-ink.soul_stoicism.description": "Поглотите щитами 1000 HP урона от врагов.",
   "advancements.tears-of-ink.soul_hundred_kills.title": "Убийца Сотни",
-  "advancements.tears-of-ink.soul_hundred_kills.description": "Победите 100 врагов с помощью щитов."
+  "advancements.tears-of-ink.soul_hundred_kills.description": "Победите 100 врагов с помощью щитов.",
+  "vow.tears-of-ink.awakening.feat_resonance_10": "Непоколебимая воля: 10 полностью заряженных Резонансов. Душа +%s.",
+  "vow.tears-of-ink.awakening.feat_emergency_heal": "«Ложись!»: ты спас товарища щитом Милосердия. Душа +%s.",
+  "advancements.tears-of-ink.soul_lie_down.title": "Ложись!",
+  "advancements.tears-of-ink.soul_lie_down.description": "Вылечите другого игрока щитом Милосердия, когда у него осталось менее одного сердца."
 }

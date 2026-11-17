@@ -666,5 +666,9 @@
   "advancements.tears-of-ink.soul_stoicism.title": "Stoicism",
   "advancements.tears-of-ink.soul_stoicism.description": "Block 1,000 HP of enemy damage with shields.",
   "advancements.tears-of-ink.soul_hundred_kills.title": "Killer of a Hundred",
-  "advancements.tears-of-ink.soul_hundred_kills.description": "Defeat 100 foes with shields."
+  "advancements.tears-of-ink.soul_hundred_kills.description": "Defeat 100 foes with shields.",
+  "vow.tears-of-ink.awakening.feat_resonance_10": "Unshaken will: 10 fully charged Resonances. Soul +%s.",
+  "vow.tears-of-ink.awakening.feat_emergency_heal": "Get down! You saved an ally with a Mercy Shield. Soul +%s.",
+  "advancements.tears-of-ink.soul_lie_down.title": "Get Down!",
+  "advancements.tears-of-ink.soul_lie_down.description": "Heal another player with a Mercy Shield while they have less than one heart remaining."
 }
