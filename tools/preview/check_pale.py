@@ -66,4 +66,14 @@ for name in ('attack1','attack2','attack3','attack4','dual_attack2','dual_attack
              'dual_attack3','dual_attack3_off'):
     source=anims[name].get('third',{}).get('source')
     assert source in anims,(name,'missing third-person source',source)
+
+# The dual X-split must move blade tips AWAY from the player centre, not inward.
+for side,name in ((1,'dual_attack3'),(-1,'dual_attack3_off')):
+    c=anims[name]; angle,position=sample(c,.6)
+    fp_model=m['display']['firstperson_'+('right' if side==1 else 'left')+'hand']
+    line=apply4(fp_item_m(fp_model,angle,position,g,side),np.array([h,tpt])/16)
+    outward=(line[1]-line[0])[0]*side
+    assert outward>.35,(name,'blade not opening outward',outward)
+print('PASS: dual split blades open outward in both hands')
+
 print('PASS: Claude preview geometry: visible attacks, right-to-left swing, 8 independent third-person sources')
