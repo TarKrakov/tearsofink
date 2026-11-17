@@ -303,7 +303,7 @@
           ],
           "translation": [
             -3,
-            14,
+            12,
             -5
           ],
           "ease": "ease_out"
@@ -317,7 +317,7 @@
           ],
           "translation": [
             -3,
-            12,
+            11,
             -3
           ],
           "ease": "ease_in_out"
