@@ -5265,7 +5265,7 @@
       },
       "keyframes": [
         {
-          "t": 0.0,
+          "t": 0,
           "rotation": [
             -62.0634,
             5.3134,
@@ -5339,7 +5339,7 @@
       "fp_pose": "raised_inward_v1"
     },
     "axe_dual_slam_final": {
-      "length": 1.0,
+      "length": 1,
       "impact": 0.46,
       "smooth": "tight",
       "third": {
@@ -6260,7 +6260,7 @@
             -1.5
           ],
           "translation": [
-            0.0,
+            0,
             0.65,
             -2.6
           ],
@@ -6270,7 +6270,7 @@
           "t": 0.34,
           "rotation": [
             23.2,
-            10.0,
+            10,
             28.9
           ],
           "translation": [
@@ -6290,10 +6290,10 @@
       "smooth": "tight",
       "keyframes": [
         {
-          "t": 0.0,
+          "t": 0,
           "rotation": [
             23.2,
-            10.0,
+            10,
             28.9
           ],
           "translation": [
@@ -6311,7 +6311,7 @@
             0
           ],
           "translation": [
-            0.0,
+            0,
             7.8,
             2.6
           ],
@@ -6322,10 +6322,10 @@
           "rotation": [
             -81.6,
             31.4,
-            -25.0
+            -25
           ],
           "translation": [
-            0.0,
+            0,
             -5.2,
             -3.9
           ],
@@ -6336,10 +6336,10 @@
           "rotation": [
             -73.6,
             31.4,
-            -25.0
+            -25
           ],
           "translation": [
-            0.0,
+            0,
             -3.9,
             -3.25
           ],
@@ -6353,14 +6353,14 @@
       "smooth": "tight",
       "keyframes": [
         {
-          "t": 0.0,
+          "t": 0,
           "rotation": [
             -73.6,
             31.4,
-            -25.0
+            -25
           ],
           "translation": [
-            0.0,
+            0,
             -3.9,
             -3.25
           ],
@@ -6374,7 +6374,7 @@
             0
           ],
           "translation": [
-            0.0,
+            0,
             1.3,
             2.6
           ],
@@ -6388,7 +6388,7 @@
             0
           ],
           "translation": [
-            0.0,
+            0,
             0.65,
             -5.2
           ],
@@ -6402,7 +6402,7 @@
             0
           ],
           "translation": [
-            0.0,
+            0,
             0.65,
             -4.55
           ],
@@ -6532,7 +6532,7 @@
       },
       "keyframes": [
         {
-          "t": 0.0,
+          "t": 0,
           "rotation": [
             -76,
             -90,
@@ -6563,7 +6563,7 @@
           "t": 0.2,
           "rotation": [
             -72.1,
-            37.0,
+            37,
             -30.2
           ],
           "translation": [
@@ -6577,7 +6577,7 @@
           "t": 0.3,
           "rotation": [
             -70.1,
-            37.0,
+            37,
             -30.2
           ],
           "translation": [
@@ -6590,7 +6590,7 @@
       ]
     },
     "axe_dual_slam_final_raw": {
-      "length": 1.0,
+      "length": 1,
       "impact": 0.46,
       "smooth": "tight",
       "third": {
@@ -6600,10 +6600,10 @@
       },
       "keyframes": [
         {
-          "t": 0.0,
+          "t": 0,
           "rotation": [
             -70.1,
-            37.0,
+            37,
             -30.2
           ],
           "translation": [
@@ -6700,7 +6700,7 @@
             -1.275
           ],
           "translation": [
-            0.0,
+            0,
             0.325,
             -1.56
           ],
@@ -6730,7 +6730,7 @@
       "smooth": "tight",
       "keyframes": [
         {
-          "t": 0.0,
+          "t": 0,
           "rotation": [
             18.56,
             8.5,
@@ -6747,11 +6747,11 @@
           "t": 0.14,
           "rotation": [
             42,
-            0.0,
-            0.0
+            0,
+            0
           ],
           "translation": [
-            0.0,
+            0,
             2.5,
             1.56
           ],
@@ -6765,7 +6765,7 @@
             -21.25
           ],
           "translation": [
-            0.0,
+            0,
             -2.3400000000000003,
             -2.34
           ],
@@ -6779,7 +6779,7 @@
             -21.25
           ],
           "translation": [
-            0.0,
+            0,
             -1.755,
             -1.95
           ],
@@ -6793,14 +6793,14 @@
       "smooth": "tight",
       "keyframes": [
         {
-          "t": 0.0,
+          "t": 0,
           "rotation": [
             -58.879999999999995,
             26.689999999999998,
             -21.25
           ],
           "translation": [
-            0.0,
+            0,
             -1.755,
             -1.95
           ],
@@ -6809,12 +6809,12 @@
         {
           "t": 0.12,
           "rotation": [
-            12.0,
-            0.0,
-            0.0
+            12,
+            0,
+            0
           ],
           "translation": [
-            0.0,
+            0,
             0.65,
             1.56
           ],
@@ -6824,11 +6824,11 @@
           "t": 0.22,
           "rotation": [
             -49.6,
-            0.0,
-            0.0
+            0,
+            0
           ],
           "translation": [
-            0.0,
+            0,
             0.325,
             -3.12
           ],
@@ -6838,11 +6838,11 @@
           "t": 0.36,
           "rotation": [
             -46.400000000000006,
-            0.0,
-            0.0
+            0,
+            0
           ],
           "translation": [
-            0.0,
+            0,
             0.325,
             -2.73
           ],
@@ -6860,12 +6860,12 @@
         {
           "t": 0.08,
           "rotation": [
-            36.0,
-            0.0,
-            0.0
+            36,
+            0,
+            0
           ],
           "translation": [
-            3.0,
+            3,
             2.5,
             1.7999999999999998
           ],
@@ -6875,13 +6875,13 @@
           "t": 0.18,
           "rotation": [
             -57.6,
-            0.0,
-            0.0
+            0,
+            0
           ],
           "translation": [
             1.7999999999999998,
             -2.7,
-            -3.0
+            -3
           ],
           "ease": "ease_out"
         },
@@ -6889,8 +6889,8 @@
           "t": 0.3,
           "rotation": [
             -60,
-            0.0,
-            0.0
+            0,
+            0
           ],
           "translation": [
             1.7999999999999998,
@@ -6917,7 +6917,7 @@
       },
       "keyframes": [
         {
-          "t": 0.0,
+          "t": 0,
           "rotation": [
             90.05167,
             -67.72431,
@@ -8284,7 +8284,7 @@
           "translation": [
             2.4,
             -2.7,
-            -3.0
+            -3
           ],
           "ease": "linear"
         },
@@ -8965,7 +8965,7 @@
       "blade_edge_roll": -60.7616
     },
     "axe_dual_slam_final_compact_third": {
-      "length": 1.0,
+      "length": 1,
       "impact": 0.46,
       "smooth": "tight",
       "third": {
@@ -8975,7 +8975,7 @@
       },
       "keyframes": [
         {
-          "t": 0.0,
+          "t": 0,
           "rotation": [
             -56.08,
             31.45,
@@ -8992,13 +8992,13 @@
           "t": 0.18,
           "rotation": [
             42,
-            0.0,
-            0.0
+            0,
+            0
           ],
           "translation": [
             2.4,
             2.5,
-            3.0
+            3
           ],
           "ease": "ease_out"
         },
@@ -9006,13 +9006,13 @@
           "t": 0.38,
           "rotation": [
             42,
-            0.0,
-            0.0
+            0,
+            0
           ],
           "translation": [
             2.4,
             2.5,
-            3.0
+            3
           ],
           "ease": "ease_in"
         },
@@ -9040,7 +9040,7 @@
           "translation": [
             2.4,
             -3.15,
-            -3.0
+            -3
           ],
           "ease": "ease_in_out"
         }
@@ -13321,7 +13321,7 @@
       ]
     },
     "axe_dual_slam_final_off": {
-      "length": 1.0,
+      "length": 1,
       "impact": 0.46,
       "smooth": "tight",
       "third": {
@@ -13403,7 +13403,7 @@
       "fp_pose": "raised_inward_v1"
     },
     "axe_dual_slam_final_off_compact_third": {
-      "length": 1.0,
+      "length": 1,
       "smooth": "tight",
       "rotation_mode": "slerp",
       "keyframes": [
@@ -17895,7 +17895,7 @@
             -1.275
           ],
           "translation": [
-            0.0,
+            0,
             0.325,
             -1.56
           ],
@@ -17912,6 +17912,550 @@
             -2.73,
             1.95,
             -0.78
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "guard": {
+      "length": 1.2,
+      "hold": 0,
+      "return": 0.2,
+      "impact": -1,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            22.2,
+            -6,
+            36
+          ],
+          "translation": [
+            -1.32,
+            1.92,
+            -3.24
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.26,
+          "rotation": [
+            37,
+            -10,
+            60
+          ],
+          "translation": [
+            -2.2,
+            3.2,
+            -5.4
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.98,
+          "rotation": [
+            37,
+            -10,
+            60
+          ],
+          "translation": [
+            -2.2,
+            3.2,
+            -5.4
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "third": {
+        "source": "guard_shoulder",
+        "arm_space": true
+      }
+    },
+    "guard_off": {
+      "length": 1.2,
+      "hold": 0,
+      "return": 0.2,
+      "impact": -1,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            82.8,
+            22.8,
+            96
+          ],
+          "translation": [
+            -3.24,
+            1.98,
+            -2.76
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.26,
+          "rotation": [
+            138,
+            38,
+            160
+          ],
+          "translation": [
+            -5.4,
+            3.3,
+            -4.6
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.98,
+          "rotation": [
+            138,
+            38,
+            160
+          ],
+          "translation": [
+            -5.4,
+            3.3,
+            -4.6
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "third": {
+        "source": "guard_off_shoulder",
+        "arm_space": true
+      }
+    },
+    "dual_guard": {
+      "length": 1.4,
+      "hold": 0,
+      "return": 0.2,
+      "impact": -1,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            19.2,
+            -7.8,
+            29.4
+          ],
+          "translation": [
+            -1.02,
+            2.4,
+            -3.48
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.26,
+          "rotation": [
+            32,
+            -13,
+            49
+          ],
+          "translation": [
+            -1.7,
+            4,
+            -5.8
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 1.18,
+          "rotation": [
+            32,
+            -13,
+            49
+          ],
+          "translation": [
+            -1.7,
+            4,
+            -5.8
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "third": {
+        "source": "dual_guard_shoulder",
+        "arm_space": true
+      }
+    },
+    "dual_guard_off": {
+      "length": 1.4,
+      "hold": 0,
+      "return": 0.2,
+      "impact": -1,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            86.4,
+            22.8,
+            99
+          ],
+          "translation": [
+            -3.24,
+            2.46,
+            -3.12
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.26,
+          "rotation": [
+            144,
+            38,
+            165
+          ],
+          "translation": [
+            -5.4,
+            4.1,
+            -5.2
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 1.18,
+          "rotation": [
+            144,
+            38,
+            165
+          ],
+          "translation": [
+            -5.4,
+            4.1,
+            -5.2
+          ],
+          "ease": "ease_in_out"
+        }
+      ],
+      "third": {
+        "source": "dual_guard_off_shoulder",
+        "arm_space": true
+      }
+    },
+    "guard_shoulder": {
+      "length": 1.2,
+      "hold": 0,
+      "return": 0.2,
+      "impact": -1,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            -31.2,
+            7.8,
+            4.2
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.26,
+          "rotation": [
+            -52,
+            13,
+            7
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.98,
+          "rotation": [
+            -52,
+            13,
+            7
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "guard_off_shoulder": {
+      "length": 1.2,
+      "hold": 0,
+      "return": 0.2,
+      "impact": -1,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            -31.2,
+            7.8,
+            4.2
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.26,
+          "rotation": [
+            -52,
+            13,
+            7
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.98,
+          "rotation": [
+            -52,
+            13,
+            7
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "dual_guard_shoulder": {
+      "length": 1.4,
+      "hold": 0,
+      "return": 0.2,
+      "impact": -1,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            -35.4,
+            11.4,
+            3.6
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.26,
+          "rotation": [
+            -59,
+            19,
+            6
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 1.18,
+          "rotation": [
+            -59,
+            19,
+            6
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        }
+      ]
+    },
+    "dual_guard_off_shoulder": {
+      "length": 1.4,
+      "hold": 0,
+      "return": 0.2,
+      "impact": -1,
+      "smooth": "tight",
+      "rotation_mode": "slerp",
+      "keyframes": [
+        {
+          "t": 0,
+          "rotation": [
+            0,
+            0,
+            0
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.12,
+          "rotation": [
+            -35.4,
+            11.4,
+            3.6
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 0.26,
+          "rotation": [
+            -59,
+            19,
+            6
+          ],
+          "translation": [
+            0,
+            0,
+            0
+          ],
+          "ease": "ease_in_out"
+        },
+        {
+          "t": 1.18,
+          "rotation": [
+            -59,
+            19,
+            6
+          ],
+          "translation": [
+            0,
+            0,
+            0
           ],
           "ease": "ease_in_out"
         }
