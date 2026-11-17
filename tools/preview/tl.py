@@ -45,11 +45,11 @@ def build(arch, steps, dual, out, fps=20, tune=None):
         if t >= end_time(c): return None
         result = list(hand_pose(arch, model, grip, c, t, m, tune, previous is not None))
         rot, pos = sample(c, t)
-        if previous is None and arch == 'pale_linear_greatsword' and c.get('smooth') and now-start < .12:
-            u = ease('ease_out', max(0, (now-start)/.12))
+        if previous is None and arch == 'pale_linear_greatsword' and c.get('smooth') and now-start < .20:
+            u = ease('ease_out', max(0, (now-start)/.20))
             rot, pos = rot*u, pos*u
-        if previous is not None and now-start < .12:
-            u = ease('ease_out', max(0, (now-start)/.12))
+        if previous is not None and now-start < (.20 if arch == 'pale_linear_greatsword' else .12):
+            u = ease('ease_out', max(0, (now-start)/(.20 if arch == 'pale_linear_greatsword' else .12)))
             if c.get('smooth'):
                 rot = previous[1][0]*(1-u) + rot*u
                 pos = previous[1][1]*(1-u) + pos*u
