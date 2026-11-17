@@ -46,6 +46,7 @@ public class TearsOfInk implements ModInitializer {
 		com.tarkrakov.tearsofink.weapon.combat.HiltStrike.init();
 		com.tarkrakov.tearsofink.weapon.combat.AxeMoves.init();
 		com.tarkrakov.tearsofink.weapon.combat.DaggerMoves.init();
+		com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.init();
 		com.tarkrakov.tearsofink.weapon.forge.ModForge.init();
 		com.tarkrakov.tearsofink.hunt.MadOrders.init();
 		com.tarkrakov.tearsofink.hunt.Harvest.init();

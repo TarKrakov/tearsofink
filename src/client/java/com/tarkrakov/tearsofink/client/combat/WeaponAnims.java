@@ -214,7 +214,9 @@ public final class WeaponAnims {
 		Playing next = clip == null ? null : new Playing(clip, a, busyTicks, tempo);
 		if (next != null && clip.smooth() && !clip.absolute() && prev != null && prev.archetype == a && !prev.clip.absolute()
 				&& prev.time() < end(prev.clip)) {
-			next.from = sample(prev.clip, prev.time(), REST);
+			next.from = shown(prev, sample(prev.clip, prev.time(), REST));
+		} else if (next != null && a == Archetype.PALE_LINEAR_GREATSWORD && clip.smooth() && !clip.absolute()) {
+			next.from = REST; // вход из покоя тоже плавный, даже если первая ключевая поза уже в замахе
 		}
 		ARMS[arm.ordinal()] = next;
 	}
@@ -254,12 +256,17 @@ public final class WeaponAnims {
 				? new Key(0, new Vector3f(rest.rotation), new Vector3f(rest.translation).mul(16), new Vector3f(rest.scale), Ease.EASE_IN_OUT)
 				: new Key(0, new Vector3f(), new Vector3f(), new Vector3f(1, 1, 1), Ease.EASE_IN_OUT);
 		Key now = sample(c, t, restKey);
-		if (p.from != null && p.real() < BLEND) {
-			float u = ease(Ease.EASE_OUT, p.real() / BLEND);
-			now = new Key(0, lerp(p.from.rot(), now.rot(), u), lerp(p.from.pos(), now.pos(), u), lerp(p.from.scale(), now.scale(), u), Ease.LINEAR);
-		}
+		now = shown(p, now);
 		put(c, GRIP.get(p.archetype.id), rest, left, pose, now.rot(), now.pos(), now.scale());
 		return true;
+	}
+
+	/** Capture the displayed pose even when an interruption happens during the previous blend. */
+	private static Key shown(Playing p, Key key) {
+		if (p.from == null || p.real() >= BLEND) return key;
+		float u = ease(Ease.EASE_OUT, p.real() / BLEND);
+		return new Key(0, lerp(p.from.rot(), key.rot(), u), lerp(p.from.pos(), key.pos(), u),
+				lerp(p.from.scale(), key.scale(), u), Ease.LINEAR);
 	}
 
 	private static final Key REST = new Key(0, new Vector3f(), new Vector3f(), new Vector3f(1, 1, 1), Ease.EASE_IN_OUT);

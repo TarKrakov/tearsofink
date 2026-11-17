@@ -80,6 +80,13 @@ public final class WeaponAbilities {
 			return;
 		}
 		ItemStack stack = payload.offhand() ? player.getOffhandItem() : player.getMainHandItem();
+		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(stack)) {
+			if (payload.offhand() && InkGreatswordItem.twoHanded(player.getMainHandItem())) return;
+			POWER.put(player.getUUID(), payload.offhand() ? OFFHAND_TWO_HANDED_POWER : 1f);
+			com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.useR(player, payload.offhand());
+			return;
+		}
+		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.locked(player)) return;
 		if (!(stack.getItem() instanceof AbilityWeapon weapon) || weapon.ability() == null) return;
 		// двуручник (Палачи) занимает обе руки: щит в левой молчит
 		if (payload.offhand() && InkGreatswordItem.twoHanded(player.getMainHandItem())) return;
