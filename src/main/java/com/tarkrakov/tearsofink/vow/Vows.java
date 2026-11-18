@@ -27,7 +27,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -99,6 +101,8 @@ public final class Vows {
 
 	/** Когда последний раз открывали окно (чтобы не заваливать). */
 	private static final Map<UUID, Integer> PROMPTED = new HashMap<>();
+	/** Какие реплики о выборе обета Проводник уже сказал этому игроку за подключение. */
+	private static final Map<UUID, Set<String>> GUIDE_PROMPTS = new HashMap<>();
 
 	private Vows() {}
 
@@ -111,6 +115,7 @@ public final class Vows {
 			ServerPlayer p = handler.getPlayer();
 			sync(p);
 			PROMPTED.remove(p.getUUID());
+			GUIDE_PROMPTS.remove(p.getUUID());
 			if (InkPowers.get(p).inside()) {
 				com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(p,
 						com.tarkrakov.tearsofink.advancement.ModAdvancements.INK_LANDS);
@@ -118,7 +123,11 @@ public final class Vows {
 			}
 			grantCurrentVowAdvancements(p); // восстановить корни ветвей и ранги старых сохранений
 		});
-		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> PROMPTED.remove(handler.getPlayer().getUUID()));
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			UUID id = handler.getPlayer().getUUID();
+			PROMPTED.remove(id);
+			GUIDE_PROMPTS.remove(id);
+		});
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> sync(newPlayer));
 		ServerTickEvents.END_SERVER_TICK.register(Vows::tick);
 	}
@@ -151,6 +160,12 @@ public final class Vows {
 		PROMPTED.put(p.getUUID(), now);
 		ServerPlayNetworking.send(p, new Open());
 		return true;
+	}
+
+	/** Окно выбора можно повторять, но каждую реплику Проводника — только раз за подключение. */
+	public static void guidePromptOnce(ServerPlayer p, String line) {
+		if (vow(p) != Vow.NONE) return;
+		if (GUIDE_PROMPTS.computeIfAbsent(p.getUUID(), id -> new HashSet<>()).add(line)) Guide.say(p, line);
 	}
 
 	/** Без обета дальше не пройти (ворота Преддверия). */
@@ -195,6 +210,7 @@ public final class Vows {
 	private static void choose(ServerPlayer p, Vow v) {
 		if (v == Vow.NONE || vow(p) != Vow.NONE) return;
 		set(p, get(p).withVow(v));
+		GUIDE_PROMPTS.remove(p.getUUID());
 		pathBonus(p, Vow.NONE, v);
 		Guide.say(p, "vow.chosen." + v.id);
 		mark(p, v);
