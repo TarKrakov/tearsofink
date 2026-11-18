@@ -197,7 +197,10 @@ class Rig:
                 if len({k['time'] for k in keys}) != len(keys):
                     raise ImportError('Duplicate key time in a channel')
             self.channels[uid]=channels
-        animated_names={self.groups[uid]['name'] for uid in self.channels}
+        # Blockbench Save includes empty animator containers for every rig bone.
+        # Only bones with actual keyed channels count as animated; keep rejecting
+        # non-empty body/head/camera tracks.
+        animated_names={self.groups[uid]['name'] for uid, channels in self.channels.items() if any(channels.values())}
         allowed={b[k] for b in self.meta['bindings'].values() for k in ('arm','shoulder','sword')}
         if animated_names-allowed:
             raise ImportError('Animate shoulder, arm or sword bones only: '+', '.join(sorted(animated_names-allowed)))
