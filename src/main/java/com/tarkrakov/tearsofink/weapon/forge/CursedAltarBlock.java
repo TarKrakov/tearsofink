@@ -1,5 +1,8 @@
 package com.tarkrakov.tearsofink.weapon.forge;
 
+import com.tarkrakov.tearsofink.prologue.DiaryEntries;
+import com.tarkrakov.tearsofink.world.ModDimensions;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
@@ -22,7 +25,11 @@ public class CursedAltarBlock extends Block {
 
 	@Override
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
-		if (!level.isClientSide) player.openMenu(state.getMenuProvider(level, pos));
+		if (!level.isClientSide) {
+			player.openMenu(state.getMenuProvider(level, pos));
+			if (player instanceof ServerPlayer sp && ModDimensions.isLands(level))
+				DiaryEntries.unlock(sp, DiaryEntries.CURSED_ALTAR);
+		}
 		return InteractionResult.sidedSuccess(level.isClientSide);
 	}
 
