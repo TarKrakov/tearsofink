@@ -96,6 +96,20 @@ public final class ModSounds {
 	public static final SoundEvent SOUL_SHIELD_RES_SUN = register("soul_shield_res_sun");
 	public static final SoundEvent SOUL_SHIELD_RES_VEIL = register("soul_shield_res_veil");
 
+	/** Pale Forest ambience pilot. */
+	public static final SoundEvent PALE_FOREST_AIR = register("pale_forest_air");
+	public static final SoundEvent PALE_FOREST_MEMORY_AIR = register("pale_forest_memory_air");
+	public static final SoundEvent PALE_FOREST_FOG_AIR = register("pale_forest_fog_air");
+	public static final SoundEvent PALE_FOREST_MEMORY_01 = register("pale_forest_memory_01");
+	public static final SoundEvent PALE_FOREST_MEMORY_02 = register("pale_forest_memory_02");
+	public static final SoundEvent PALE_FOREST_FOG_PHRASE_01 = register("pale_forest_fog_phrase_01");
+	public static final SoundEvent PALE_FOREST_FOG_PHRASE_02 = register("pale_forest_fog_phrase_02");
+	public static final SoundEvent PALE_FOREST_FOG_PHRASE_03 = register("pale_forest_fog_phrase_03");
+	public static final SoundEvent PALE_FOREST_BARK = register("pale_forest_bark");
+	public static final SoundEvent PALE_FOREST_BRANCH = register("pale_forest_branch");
+	public static final SoundEvent PALE_FOREST_TWIG = register("pale_forest_twig");
+	public static final SoundEvent PALE_FOREST_RUSTLE = register("pale_forest_rustle");
+
 	private ModSounds() {}
 
 	private static SoundEvent register(String name) {

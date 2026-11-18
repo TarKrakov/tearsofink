@@ -850,5 +850,137 @@
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_res_veil"
+  },
+  "pale_forest_air": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_air",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_memory_air": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_memory_air",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_fog_air": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_fog_air",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_memory_01": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_memory_01",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_memory_02": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_memory_02",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_fog_phrase_01": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_fog_phrase_01",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_fog_phrase_02": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_fog_phrase_02",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_fog_phrase_03": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_fog_phrase_03",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_bark": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_bark_01",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_bark_02",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_bark_03",
+        "attenuation_distance": 20
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_forest_bark"
+  },
+  "pale_forest_branch": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_branch_01",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_branch_02",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_branch_03",
+        "attenuation_distance": 20
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_forest_branch"
+  },
+  "pale_forest_twig": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_twig_01",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_twig_02",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_twig_03",
+        "attenuation_distance": 20
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_forest_twig"
+  },
+  "pale_forest_rustle": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_rustle_01",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_rustle_02",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_rustle_03",
+        "attenuation_distance": 20
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_forest_rustle"
   }
 }

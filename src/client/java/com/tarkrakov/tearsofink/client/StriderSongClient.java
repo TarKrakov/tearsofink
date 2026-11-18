@@ -35,6 +35,15 @@ final class StriderSongClient {
         }
     }
 
+    static boolean audibleNear(Minecraft client) {
+        if (client.player == null || world != client.level) return false;
+        for (SoundInstance voice : playing.values()) {
+            double dx = voice.getX() - client.player.getX(), dy = voice.getY() - client.player.getY(), dz = voice.getZ() - client.player.getZ();
+            if (dx * dx + dy * dy + dz * dz <= 32 * 32 && client.getSoundManager().isActive(voice)) return true;
+        }
+        return false;
+    }
+
     private static void receive(Minecraft client, StriderSong song) {
         update(client);
         var engine = client.getSoundManager();

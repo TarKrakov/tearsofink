@@ -5,6 +5,7 @@
 	"client": [
 		"DimensionSpecialEffectsMixin",
 		"FogRendererMixin",
+		"PaleForestMusicMixin",
 		"LevelRendererMixin",
 		"WeaponStatsMixin",
 		"ItemRendererMixin",
