@@ -46,11 +46,16 @@ public final class Combos {
 	 * tempo — общая скорость атаки архетипа: 1 — как задано, 0.8 — всё на 20% медленнее (удары, движения, шкала), 1.2 — быстрее.
 	 */
 	/** dualSteps — связка, когда в обеих руках клинки этого архетипа (пусто — обычная). */
-	public record Combo(List<Step> steps, int resetTicks, float minStrength, String abilityAnim, int abilityTicks, int early, float tempo,
+	public record Combo(List<Step> steps, int resetTicks, float minStrength, String abilityAnim, int abilityTicks, int early, float tempo, float singleTempo,
 						List<Step> dualSteps) {
 		/** Тики с учётом общей скорости. */
 		public int scaled(int ticks) {
 			return Math.max(1, Math.round(ticks / Math.max(0.1f, tempo)));
+		}
+
+		/** Отдельный темп одиночной связки; парные и остальные механики используют прежний tempo. */
+		public int scaled(int ticks, boolean dual) {
+			return Math.max(1, Math.round(ticks / Math.max(0.1f, dual ? tempo : singleTempo)));
 		}
 	}
 
@@ -64,7 +69,7 @@ public final class Combos {
 	}
 
 	private static Combo fallback() {
-		return new Combo(List.of(new Step("attack1", 12, 5, 1f, 3f, 100f, 0.4f, 1f)), 30, 0.9f, "ability", 20, 6, 1f, List.of());
+		return new Combo(List.of(new Step("attack1", 12, 5, 1f, 3f, 100f, 0.4f, 1f)), 30, 0.9f, "ability", 20, 6, 1f, 1f, List.of());
 	}
 
 	public static void init() {
@@ -114,6 +119,7 @@ public final class Combos {
 				o.has("ability_ticks") ? o.get("ability_ticks").getAsInt() : 20,
 				o.has("early_ticks") ? o.get("early_ticks").getAsInt() : 6,
 				o.has("tempo") ? o.get("tempo").getAsFloat() : 1f,
+				o.has("single_tempo") ? o.get("single_tempo").getAsFloat() : (o.has("tempo") ? o.get("tempo").getAsFloat() : 1f),
 				steps(o.getAsJsonArray("dual_steps")));
 	}
 }
