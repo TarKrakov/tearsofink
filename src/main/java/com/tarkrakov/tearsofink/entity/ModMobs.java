@@ -21,6 +21,18 @@ public final class ModMobs {
 			EntityType.Builder.of(CaterpillarEntity::new, MobCategory.CREATURE)
 					.sized(0.45f, 0.3f).clientTrackingRange(8).build("caterpillar"));
 
+	/** Бледная сова — мирная летающая фауна. */
+	public static final EntityType<PaleOwlEntity> PALE_OWL = Registry.register(BuiltInRegistries.ENTITY_TYPE,
+			TearsOfInk.id("pale_owl"),
+			EntityType.Builder.of(PaleOwlEntity::new, MobCategory.CREATURE)
+					.sized(0.75f, 0.85f).clientTrackingRange(10).updateInterval(2).build("pale_owl"));
+
+	/** Скиталец: ручной игровой тест до интеграции авторских анимаций. */
+	public static final EntityType<PaleStriderEntity> PALE_STRIDER = Registry.register(BuiltInRegistries.ENTITY_TYPE,
+			TearsOfInk.id("pale_strider"),
+			EntityType.Builder.of(PaleStriderEntity::new, MobCategory.MISC)
+					.sized(1.5f, 7.75f).clientTrackingRange(12).build("pale_strider"));
+
 	/** Бледный копейщик — патруль дорог Бледнолесья. */
 	public static final EntityType<com.tarkrakov.tearsofink.entity.spearman.PaleSpearmanEntity> PALE_SPEARMAN = Registry.register(
 			BuiltInRegistries.ENTITY_TYPE, TearsOfInk.id("pale_spearman"),
@@ -67,6 +79,8 @@ public final class ModMobs {
 
 	public static void init() {
 		FabricDefaultAttributeRegistry.register(CATERPILLAR, CaterpillarEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(PALE_OWL, PaleOwlEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(PALE_STRIDER, PaleStriderEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_SPEARMAN, com.tarkrakov.tearsofink.entity.spearman.PaleSpearmanEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_SHIELDBEARER, com.tarkrakov.tearsofink.entity.patrol.PaleShieldbearerEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_CROSSBOWMAN, com.tarkrakov.tearsofink.entity.patrol.PaleCrossbowmanEntity.createAttributes());
@@ -83,6 +97,18 @@ public final class ModMobs {
 				});
 		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(ModBiomes.PALE_FOREST), MobCategory.CREATURE,
 				CATERPILLAR, EntityTuning.PALE_WEIGHT, 2, 4);
+		SpawnPlacements.register(PALE_OWL, SpawnPlacementTypes.ON_GROUND, Heightmap.Types.MOTION_BLOCKING,
+				(type, level, reason, pos, random) -> {
+					BlockPos below = pos.below();
+					return com.tarkrakov.tearsofink.world.ModDimensions.isLands(level.getLevel())
+							&& level.getBiome(pos).is(ModBiomes.PALE_FOREST)
+							&& level.getFluidState(pos).isEmpty()
+							&& level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()
+							&& (level.getBlockState(below).isFaceSturdy(level, below, net.minecraft.core.Direction.UP)
+								|| level.getBlockState(below).is(net.minecraft.tags.BlockTags.LEAVES));
+				});
+		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(ModBiomes.PALE_FOREST), MobCategory.CREATURE,
+				PALE_OWL, PaleOwlTuning.SPAWN_WEIGHT, PaleOwlTuning.GROUP_MIN, PaleOwlTuning.GROUP_MAX);
 		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(ModBiomes.INKWOOD), MobCategory.CREATURE,
 				CATERPILLAR, EntityTuning.INK_WEIGHT, 2, 4);
 		BiomeModifications.addSpawn(BiomeSelectors.includeByKey(ModBiomes.BLOODWOOD), MobCategory.CREATURE,
