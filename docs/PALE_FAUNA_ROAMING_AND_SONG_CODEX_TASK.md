@@ -53,6 +53,8 @@
 
 Регистрация `strider_song` сохранена. [Соло и первый голос](../src/main/resources/assets/tears-of-ink/sounds/pale_strider_song.ogg), [второй голос](../src/main/resources/assets/tears-of-ink/sounds/pale_strider_song_2.ogg), [третий голос](../src/main/resources/assets/tears-of-ink/sounds/pale_strider_song_3.ogg). [Скрипт синтеза](../tools/render_strider_song.py) использует NumPy и ffmpeg. Композиция написана для D-058: вступление низких голосов, восходящая мелодия, печальная кульминация и затухание. Финальная художественная оценка остаётся за автором.
 
+[Сводный хор для прослушивания](previews/pale_strider_choir.ogg) объединяет три голоса с равным уровнем и одновременным стартом. Общая громкость выровнена до целевых −21 LUFS для прослушивания.
+
 | Запись | Формат (ffprobe) | Длительность | RMS | LUFS-I | True peak |
 |---|---|---:|---:|---:|---:|
 | 1 | Vorbis, моно, 48 кГц | 16,000 с | −19,8 dBFS | −20,4 | −7,2 dBTP |
