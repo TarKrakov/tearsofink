@@ -5,6 +5,8 @@ import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.block.fountain.InkFountainBlock;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.item.ModItems;
+import com.tarkrakov.tearsofink.vow.Vow;
+import com.tarkrakov.tearsofink.vow.Vows;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
@@ -16,6 +18,8 @@ import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -50,6 +54,12 @@ public final class DiaryEntries {
 	public static final String CURSED_ALTAR = "cursed_altar";
 	public static final String FOUNTAIN_HUNT = "fountain_hunt";
 	public static final String ASCENSION_FONT = "ascension_font";
+	/** Временные главы: автор заменит текст в ru_ru.json / en_us.json без смены ID. */
+	public static final String DRAFT_FOG = "draft_fog";
+	public static final String DRAFT_SOUL = "draft_soul";
+	public static final String DRAFT_INK = "draft_ink";
+	public static final String DRAFT_RUINS = "draft_ruins";
+	public static final String DRAFT_MEMORY = "draft_memory";
 	/** Проверка новых материалов и знаний не чаще раза в 5 секунд. */
 	private static final int INVENTORY_CHECK_TICKS = 100;
 	/** Глава о гусеницах: общая часть + страница на каждый вид (pale, blood, ink), открываются по убийствам. */
@@ -103,12 +113,19 @@ public final class DiaryEntries {
 				return;
 			}
 			ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
-			if (CREATURES.contains(id.getPath())) unlock(p, id.getPath());
+			if (CREATURES.contains(id.getPath())) {
+				if (id.getPath().startsWith("pale_")) unlock(p, id.getPath(), DRAFT_MEMORY);
+				else unlock(p, id.getPath());
+			}
 		});
 	}
 
 	private static void checkArrival(ServerPlayer p) {
-		if (ModDimensions.isLands(p.level())) unlock(p, FIRST_STEPS);
+		if (!ModDimensions.isLands(p.level())) return;
+		Vow vow = Vows.vow(p);
+		if (vow == Vow.SOUL) unlock(p, FIRST_STEPS, DRAFT_FOG, DRAFT_SOUL);
+		else if (vow == Vow.INK) unlock(p, FIRST_STEPS, DRAFT_FOG, DRAFT_INK);
+		else unlock(p, FIRST_STEPS, DRAFT_FOG);
 	}
 
 	/** Небоевые открытия на основе уже сохранённых посещений и текущих предметов. */
@@ -120,9 +137,17 @@ public final class DiaryEntries {
 		boolean needAltar = !have.contains(CURSED_ALTAR);
 		boolean needHunt = !have.contains(FOUNTAIN_HUNT);
 		boolean needFont = !have.contains(ASCENSION_FONT);
-		if (!needMetal && !needAnvil && !needAltar && !needHunt && !needFont) return;
+		boolean needRuins = !have.contains(DRAFT_RUINS);
+		Vow vow = Vows.vow(p);
+		boolean needPath = (vow == Vow.SOUL && !have.contains(DRAFT_SOUL))
+				|| (vow == Vow.INK && !have.contains(DRAFT_INK));
+		boolean needFog = !have.contains(DRAFT_FOG);
+		if (!needMetal && !needAnvil && !needAltar && !needHunt && !needFont && !needRuins && !needPath && !needFog) return;
 
-		List<String> discovered = new ArrayList<>(5);
+		List<String> discovered = new ArrayList<>(8);
+		if (needFog) discovered.add(DRAFT_FOG);
+		if (needPath) discovered.add(vow == Vow.SOUL ? DRAFT_SOUL : DRAFT_INK);
+		if (needRuins && nearRuinMasonry(p)) discovered.add(DRAFT_RUINS);
 		// Первое испитие фонтана даёт возможность призвать Торговку. Проверка
 		// сохранённого VISITED открывает запись и для персонажей из старых миров.
 		if (needHunt && !p.getAttachedOrCreate(InkFountainBlock.VISITED).isEmpty()) {
@@ -160,6 +185,22 @@ public final class DiaryEntries {
 		}
 		// За один цикл — один Sync и одно уведомление даже для нескольких страниц.
 		if (!discovered.isEmpty()) unlock(p, discovered.toArray(String[]::new));
+	}
+
+
+	/** Дешёвая однократная проверка ближайшей кладки; не требует искать структуры/загружать чанки. */
+	private static boolean nearRuinMasonry(ServerPlayer p) {
+		BlockPos c = p.blockPosition();
+		for (BlockPos pos : BlockPos.betweenClosed(c.offset(-6, -3, -6), c.offset(6, 3, 6))) {
+			if (!p.serverLevel().hasChunkAt(pos)) continue;
+			BlockState state = p.serverLevel().getBlockState(pos);
+			if (state.is(ModBlocks.RUIN_BRICKS) || state.is(ModBlocks.CRACKED_RUIN_BRICKS)
+					|| state.is(ModBlocks.OVERGROWN_RUIN_BRICKS) || state.is(ModBlocks.RUIN_TILES)
+					|| state.is(ModBlocks.CRACKED_RUIN_TILES) || state.is(ModBlocks.RUIN_PILLAR)
+					|| state.is(ModBlocks.CRACKED_RUIN_PILLAR) || state.is(ModBlocks.RUIN_PATTERN)
+					|| state.is(ModBlocks.CRACKED_RUIN_PATTERN)) return true;
+		}
+		return false;
 	}
 
 	public static void unlock(ServerPlayer p, String... entries) {
