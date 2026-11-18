@@ -13,8 +13,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import com.tarkrakov.tearsofink.sound.ModSounds;
-import com.tarkrakov.tearsofink.weapon.shield.ShieldAudio;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -143,7 +141,7 @@ public final class WeaponAbilities {
 			Vec3 dir = flatLook(player);
 			active.put(player.getUUID(), new Ram(dir.x, dir.z, DURATION_TICKS, new HashSet<>()));
 			push(player, dir.x, dir.z);
-			ShieldAudio.withPower(player, player, ModSounds.SOUL_SHIELD_RAM_START, 0.52f, SoulShieldItem.factor(player, RAM));
+			player.serverLevel().playSound(null, player.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1f, 0.6f);
 			return true;
 		}
 
@@ -176,8 +174,7 @@ public final class WeaponAbilities {
 					target.hurt(player.damageSources().playerAttack(player), DAMAGE * f);
 					target.knockback(KNOCKBACK * f, -r.dx(), -r.dz());
 					target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, SLOW_TICKS, 2));
-					if (r.hit().size() == 1)
-						ShieldAudio.withPower(player, target, ModSounds.SOUL_SHIELD_RAM_HIT, 0.49f, f);
+					level.playSound(null, target.blockPosition(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1f, 0.8f);
 				}
 				push(player, r.dx(), r.dz());
 				level.sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.5, player.getZ(), 2, 0.2, 0.2, 0.2, 0.01);
@@ -204,7 +201,7 @@ public final class WeaponAbilities {
 			active.put(player.getUUID(), DURATION_TICKS);
 			player.addEffect(new MobEffectInstance(ModEffects.RADIANCE, DURATION_TICKS, 0, false, false, true));
 			player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, DURATION_TICKS, RESISTANCE_LEVEL, false, false, false));
-			ShieldAudio.play(player, ModSounds.SOUL_SHIELD_RADIANCE, 0.48f);
+			player.serverLevel().playSound(null, player.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 0.8f, 1.5f);
 			return true;
 		}
 
@@ -413,7 +410,7 @@ public final class WeaponAbilities {
 			active.put(id, 0);
 			player.addEffect(new MobEffectInstance(ModEffects.MERCY, MobEffectInstance.INFINITE_DURATION, 0, false, false, true));
 			player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, MobEffectInstance.INFINITE_DURATION, 1, false, false, false));
-			ShieldAudio.withPower(player, player, ModSounds.SOUL_SHIELD_MERCY, 0.46f, SoulShieldItem.factor(player, MERCY));
+			player.serverLevel().playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1f, 1.2f);
 			return true;
 		}
 
@@ -426,7 +423,7 @@ public final class WeaponAbilities {
 			lockedUntil.put(player.getUUID(), player.server.getTickCount() + LOCKOUT_TICKS);
 			player.removeEffect(ModEffects.MERCY);
 			player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
-			ShieldAudio.play(player, ModSounds.SOUL_SHIELD_CHARGE_1, 0.17f);
+			player.serverLevel().playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.PLAYERS, 0.8f, 1.4f);
 		}
 
 		private static boolean holdsMercyShield(ServerPlayer player) {
@@ -493,7 +490,7 @@ public final class WeaponAbilities {
 			Vec3 dir = flatLook(player);
 			level.addFreshEntity(new InkWaveEntity(level, player, dir, true, DAMAGE, KNOCKBACK));
 			player.swing(input.sneaking() ? net.minecraft.world.InteractionHand.OFF_HAND : net.minecraft.world.InteractionHand.MAIN_HAND, true);
-			ShieldAudio.play(player, ModSounds.SOUL_SHIELD_REPEL, 0.50f);
+			level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1f, 1.5f);
 			return true;
 		}
 	}

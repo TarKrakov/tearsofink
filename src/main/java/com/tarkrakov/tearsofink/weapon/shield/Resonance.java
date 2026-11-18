@@ -19,7 +19,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import com.tarkrakov.tearsofink.sound.ModSounds;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectCategory;
@@ -110,7 +111,7 @@ public final class Resonance {
 			float power = (1 + ResonanceTuning.POWER_PER_CHARGE * charge) * com.tarkrakov.tearsofink.weapon.SoulShieldItem.pairPower(p); // потёртые — слабее
 			PENDING.put(p.getUUID(), new Pending(kind, ResonanceTuning.CLAP_TICKS, power));
 			Combat.dualAnim(p, Archetype.BASTION, "clap", "clap", ResonanceTuning.CLAP_TICKS + 8);
-			ShieldAudio.play(p, ModSounds.SOUL_SHIELD_CLAP_PREPARE, 0.35f);
+			p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.ARMOR_EQUIP_IRON.value(), SoundSource.PLAYERS, 0.8f, 0.7f);
 			return true;
 		}
 	}
@@ -201,19 +202,9 @@ public final class Resonance {
 		level.sendParticles(ParticleTypes.FLASH, at.x, at.y, at.z, 1, 0, 0, 0, 0);
 		level.sendParticles(ParticleTypes.END_ROD, at.x, at.y, at.z, 24, 0.1, 0.1, 0.1, 0.18);
 		level.sendParticles(ModParticles.TEAR_GLINT, at.x, at.y, at.z, 12, 0.4, 0.4, 0.4, 0.02);
-		ShieldAudio.play(p, ModSounds.SOUL_SHIELD_CLAP, 0.34f);
-		ShieldAudio.play(p, switch (kind) {
-			case AVALANCHE -> ModSounds.SOUL_SHIELD_RES_AVALANCHE;
-			case SUN -> ModSounds.SOUL_SHIELD_RES_SUN;
-			case GRACE -> ModSounds.SOUL_SHIELD_RES_GRACE;
-			case SHOCKWAVE -> ModSounds.SOUL_SHIELD_RES_SHOCKWAVE;
-			case ADVANCE -> ModSounds.SOUL_SHIELD_RES_ADVANCE_START;
-			case PHALANX -> ModSounds.SOUL_SHIELD_RES_PHALANX;
-			case INTERCESSOR -> ModSounds.SOUL_SHIELD_RES_INTERCESSOR;
-			case HALO -> ModSounds.SOUL_SHIELD_RES_HALO;
-			case FLASH -> ModSounds.SOUL_SHIELD_RES_FLASH;
-			case VEIL -> ModSounds.SOUL_SHIELD_RES_VEIL;
-		}, 0.52f);
+		level.playSound(null, p.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.45f, 1.9f);
+		level.playSound(null, p.blockPosition(), SoundEvents.BELL_BLOCK, SoundSource.PLAYERS, 1.0f, 1.3f);
+		level.playSound(null, p.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.2f, 0.9f);
 		p.displayClientMessage(Component.translatable("resonance.tears-of-ink." + kind.id).withStyle(ChatFormatting.GOLD), true);
 		switch (kind) {
 			case AVALANCHE -> startDash(p, kind, ResonanceTuning.AVALANCHE_TICKS, power);
@@ -227,6 +218,7 @@ public final class Resonance {
 					ResonanceTuning.SHOCKWAVE_KNOCKBACK * power, 0.25);
 			case HALO -> {
 				HALO.put(p.getUUID(), new float[]{ResonanceTuning.HALO_TICKS, power});
+				level.playSound(null, p.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.8f, 1.4f);
 			}
 			case FLASH -> flash(p, power);
 			case VEIL -> veil(p, power);
@@ -238,6 +230,7 @@ public final class Resonance {
 	private static void startDash(ServerPlayer p, Kind kind, int ticks, float power) {
 		Vec3 dir = flatLook(p);
 		DASH.put(p.getUUID(), new Dash(kind, dir.x, dir.z, ticks, power, new HashSet<>()));
+		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1f, 0.5f);
 	}
 
 	/** Один тик рывка. null — рывок кончился. */
@@ -246,7 +239,6 @@ public final class Resonance {
 		double speed = d.kind() == Kind.AVALANCHE ? ResonanceTuning.AVALANCHE_SPEED : ResonanceTuning.DASH_SPEED;
 		AABB box = p.getBoundingBox().inflate(0.9, 0.3, 0.9).move(d.dx() * 0.7, 0, d.dz() * 0.7);
 		boolean bumped = false;
-		boolean impactPlayed = false;
 		for (LivingEntity t : level.getEntitiesOfClass(LivingEntity.class, box, t -> t != p && t.isAlive() && !(t instanceof ArmorStand))) {
 			if (!d.touched().add(t.getUUID())) continue;
 			if (enemy(p, t)) {
@@ -265,14 +257,12 @@ public final class Resonance {
 					case INTERCESSOR -> t.knockback(0.6, -d.dx(), -d.dz()); // врагов просто отодвигает
 					default -> {}
 				}
-				if (!impactPlayed && d.kind() != Kind.ADVANCE) {
-					ShieldAudio.at(p, t, ModSounds.SOUL_SHIELD_RAM_HIT, 0.34f);
-					impactPlayed = true;
-				}
+				level.playSound(null, t.blockPosition(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1f, 0.7f);
 			} else if (d.kind() == Kind.INTERCESSOR) {
 				heal(t, ResonanceTuning.INTERCESSOR_HEAL * d.power());
 				t.addEffect(new MobEffectInstance(MobEffects.REGENERATION, ResonanceTuning.INTERCESSOR_REGEN_TICKS, 0));
 				level.sendParticles(ParticleTypes.HEART, t.getX(), t.getY() + t.getBbHeight() + 0.3, t.getZ(), 3, 0.3, 0.1, 0.3, 0);
+				level.playSound(null, t.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1f, 1.4f);
 			}
 		}
 		if (bumped || d.ticksLeft() <= 0) {
@@ -281,7 +271,7 @@ public final class Resonance {
 			p.hurtMarked = true;
 			if (d.kind() == Kind.ADVANCE) { // хлопок о землю — волна кольцом
 				ring(p, ResonanceTuning.ADVANCE_RADIUS, ResonanceTuning.ADVANCE_DAMAGE * d.power(), ResonanceTuning.ADVANCE_KNOCKBACK * d.power(), 0.45);
-				ShieldAudio.play(p, ModSounds.SOUL_SHIELD_RES_ADVANCE_IMPACT, 0.56f);
+				level.playSound(null, p.blockPosition(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.5f, 1.4f);
 			}
 			if (d.kind() == Kind.INTERCESSOR) heal(p, ResonanceTuning.INTERCESSOR_SELF_HEAL * d.power());
 			return null;
@@ -308,7 +298,7 @@ public final class Resonance {
 		Vec3 to = from.subtract(p.position()).multiply(1, 0, 1);
 		if (to.lengthSqr() < 1.0e-4) return true;
 		if (flatLook(p).dot(to.normalize()) < Math.cos(Math.toRadians(ResonanceTuning.PHALANX_COVER_DEGREES))) return true;
-		ShieldAudio.play(p, ModSounds.SOUL_SHIELD_BLOCK, 0.40f);
+		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1f, 1.3f);
 		return false;
 	}
 
@@ -331,6 +321,7 @@ public final class Resonance {
 		p.addEffect(new MobEffectInstance(ModEffects.RADIANCE, ticks, 0, false, false, true));
 		p.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, ticks, 1, false, false, false));
 		burst(level, p, r, ParticleTypes.END_ROD, 60);
+		level.playSound(null, p.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.2f, 1.6f);
 	}
 
 	/** Благодать: сильное лечение своих вокруг, дурные эффекты сняты. */
@@ -347,6 +338,7 @@ public final class Resonance {
 			level.sendParticles(ParticleTypes.HEART, t.getX(), t.getY() + t.getBbHeight() + 0.3, t.getZ(), 4, 0.3, 0.2, 0.3, 0);
 		}
 		burst(level, p, ResonanceTuning.GRACE_RADIUS, ModParticles.TEAR_GLINT, 50);
+		level.playSound(null, p.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.5f, 0.8f);
 	}
 
 	/** Волна кольцом вокруг (Ударная волна, конец Наступления): урон, отброс от тебя, сбить замах. */
@@ -369,6 +361,7 @@ public final class Resonance {
 			}
 		}
 		level.sendParticles(ParticleTypes.EXPLOSION, p.getX(), p.getY() + 0.3, p.getZ(), 1, 0, 0, 0, 0);
+		level.playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1.2f, 0.5f);
 	}
 
 	/** Ореол: раз в секунду свои рядом лечатся и получают сопротивление. */
@@ -415,6 +408,7 @@ public final class Resonance {
 		}
 		Vec3 at = p.position().add(look.scale(2)).add(0, 1.2, 0);
 		level.sendParticles(ParticleTypes.FLASH, at.x, at.y, at.z, 2, 0.5, 0.3, 0.5, 0);
+		level.playSound(null, p.blockPosition(), SoundEvents.FIREWORK_ROCKET_BLAST, SoundSource.PLAYERS, 1f, 1.2f);
 	}
 
 	/** Покров: импульс — свои лечатся, враги отлетают. */
@@ -434,6 +428,8 @@ public final class Resonance {
 		}
 		burst(level, p, r, ModParticles.TEAR_GLINT, 40);
 		burst(level, p, r, ParticleTypes.END_ROD, 30);
+		level.playSound(null, p.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.4f, 1.3f);
+		level.playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1f, 0.8f);
 	}
 
 	// ---------------- общее ----------------

@@ -16,7 +16,7 @@ import java.util.function.IntConsumer;
 
 /** Paginated live mixer. Does not pause the world; test in a safe spot. */
 final class AudioMixerScreen extends Screen {
-    private static AudioMixer.Group selected = AudioMixer.Group.SHIELDS;
+    private static AudioMixer.Group selected = AudioMixer.Group.FOREST;
     private int page, pageCount, left, panelWidth, sliderX, sliderWidth;
     private final List<Label> labels = new ArrayList<>();
     private SoundInstance preview;

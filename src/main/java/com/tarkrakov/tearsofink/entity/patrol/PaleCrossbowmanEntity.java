@@ -1,7 +1,7 @@
 package com.tarkrakov.tearsofink.entity.patrol;
 
 import net.minecraft.sounds.SoundEvent;
-import com.tarkrakov.tearsofink.sound.ModSounds;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -30,7 +30,6 @@ public class PaleCrossbowmanEntity extends PaleSoldier implements com.tarkrakov.
 	private static final int PHASE_AIM = 0, PHASE_SHOOT = 1, PHASE_RELOAD = 2;
 
 	int phase = PHASE_AIM, phaseTicks;
-	private int reloadSounds;
 
 	/** Цель — не игрок: прицел и перезарядка быстрее (и анимации тоже). */
 	private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> FAST =
@@ -113,7 +112,6 @@ public class PaleCrossbowmanEntity extends PaleSoldier implements com.tarkrakov.
 		if (dodgeTicks >= 0) {
 			dodgeTicks++;
 			if (dodgeTicks == SquadTuning.ARCHER_DODGE_PUSH_TICK) {
-				playSound(ModSounds.PALE_SOLDIER_DODGE, 0.34f, 1.0f);
 				this.setDeltaMovement(dodgeAway.x * SquadTuning.ARCHER_DODGE_BACK,
 						Math.max(SquadTuning.ARCHER_DODGE_UP, this.getDeltaMovement().y), dodgeAway.z * SquadTuning.ARCHER_DODGE_BACK);
 				this.hasImpulse = true;
@@ -145,30 +143,27 @@ public class PaleCrossbowmanEntity extends PaleSoldier implements com.tarkrakov.
 		bolt.shoot(dx, dy + flat * 0.12, dz, (float) SquadTuning.BOLT_SPEED,
 				SquadTuning.BOLT_SPREAD + 1f); // точность одна на всех сложностях
 		this.level().addFreshEntity(bolt);
-		this.playSound(ModSounds.PALE_CROSSBOW_SHOOT, 0.52f, 1.0f);
+		this.playSound(SoundEvents.CROSSBOW_SHOOT, 1.0f, 0.8f);
 	}
 
 	@Override
-	protected SoundEvent soldierStepSound() { return ModSounds.PALE_CROSSBOW_STEP; }
-
-	@Override
 	protected SoundEvent getAmbientSound() {
-		return ModSounds.PALE_CROSSBOW_AMBIENT;
+		return SoundEvents.SKELETON_AMBIENT;
 	}
 
 	@Override
 	protected SoundEvent getHurtSound(DamageSource source) {
-		return ModSounds.PALE_CROSSBOW_HURT;
+		return SoundEvents.SKELETON_HURT;
 	}
 
 	@Override
 	protected SoundEvent getDeathSound() {
-		return ModSounds.PALE_CROSSBOW_DEATH;
+		return SoundEvents.SKELETON_DEATH;
 	}
 
 	@Override
 	public float getVoicePitch() {
-		return 1.0f;
+		return 0.8f;
 	}
 
 	/** Бой арбалетчика: дистанция, цикл выстрела, одна отпрыжка за цикл. */
@@ -235,24 +230,9 @@ public class PaleCrossbowmanEntity extends PaleSoldier implements com.tarkrakov.
 					if (phaseTicks >= SquadTuning.SHOOT_TICKS) {
 						phase = PHASE_RELOAD;
 						phaseTicks = 0;
-						reloadSounds = 0;
 					}
 				}
 				default -> {
-					float progress = phaseTicks / (SquadTuning.RELOAD_TICKS * rate);
-					// Once per reload, only while its actual phase advances.
-					if (progress < 1f) {
-						if ((reloadSounds & 1) == 0 && progress >= 0.08f && progress < 0.45f) {
-							reloadSounds |= 1;
-							playSound(ModSounds.PALE_CROSSBOW_RELOAD_DRAW, 0.36f, 1.0f);
-						} else if ((reloadSounds & 2) == 0 && progress >= 0.45f && progress < 0.78f) {
-							reloadSounds |= 3;
-							playSound(ModSounds.PALE_CROSSBOW_RELOAD_LATCH, 0.38f, 1.0f);
-						} else if ((reloadSounds & 4) == 0 && progress >= 0.78f) {
-							reloadSounds |= 7;
-							playSound(ModSounds.PALE_CROSSBOW_RELOAD_BOLT, 0.34f, 1.0f);
-						}
-					}
 					if (phaseTicks >= SquadTuning.RELOAD_TICKS * rate) {
 						phase = PHASE_AIM;
 						phaseTicks = 0;

@@ -5,7 +5,7 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvent;
-import com.tarkrakov.tearsofink.sound.ModSounds;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.AnimationState;
 import net.minecraft.world.entity.EntityType;
@@ -160,7 +160,6 @@ public class PaleSpearmanEntity extends com.tarkrakov.tearsofink.entity.patrol.P
 
 		if (thrustTicks >= 0) {
 			thrustTicks++;
-			if (thrustTicks == SpearmanTuning.THRUST_HIT_TICK - 4) playSound(ModSounds.PALE_SPEAR_THRUST, 0.43f, 1.0f);
 			if (thrustTicks == SpearmanTuning.THRUST_HIT_TICK) spearHit();
 			if (thrustTicks >= SpearmanTuning.THRUST_TICKS) thrustTicks = -1;
 		}
@@ -168,7 +167,6 @@ public class PaleSpearmanEntity extends com.tarkrakov.tearsofink.entity.patrol.P
 			dodgeTicks++;
 			if (reverseDodge) faceAway(dodgeAway);
 			if (dodgeTicks == SpearmanTuning.DODGE_PUSH_TICK) {
-				playSound(ModSounds.PALE_SOLDIER_DODGE, 0.34f, 1.0f);
 				this.setDeltaMovement(dodgeAway.x * dodgePush, SpearmanTuning.DODGE_UP, dodgeAway.z * dodgePush);
 				this.hasImpulse = true;
 			}
@@ -200,7 +198,7 @@ public class PaleSpearmanEntity extends com.tarkrakov.tearsofink.entity.patrol.P
 			if (dir.dot(d.normalize()) < 0.85) continue; // узкий конус вдоль копья
 			e.hurt(this.damageSources().mobAttack(this), damageVs(e, SpearmanTuning.DAMAGE));
 		}
-		this.playSound(ModSounds.PALE_SPEAR_HIT, 0.48f, 1.0f);
+		this.playSound(SoundEvents.TRIDENT_HIT, 0.8f, 0.9f);
 	}
 
 	@Override
@@ -247,27 +245,24 @@ public class PaleSpearmanEntity extends com.tarkrakov.tearsofink.entity.patrol.P
 	}
 
 
-	// Собственные звуки Бледной троицы
-	@Override
-	protected SoundEvent soldierStepSound() { return ModSounds.PALE_SPEAR_STEP; }
-
+	// звуки-заглушки: глухие, «пустые» — скелет потише
 	@Override
 	protected SoundEvent getAmbientSound() {
-		return ModSounds.PALE_SPEAR_AMBIENT;
+		return SoundEvents.SKELETON_AMBIENT;
 	}
 
 	@Override
 	protected SoundEvent getHurtSound(DamageSource source) {
-		return ModSounds.PALE_SPEAR_HURT;
+		return SoundEvents.SKELETON_HURT;
 	}
 
 	@Override
 	protected SoundEvent getDeathSound() {
-		return ModSounds.PALE_SPEAR_DEATH;
+		return SoundEvents.SKELETON_DEATH;
 	}
 
 	@Override
 	public float getVoicePitch() {
-		return 1.0f;
+		return 0.7f;
 	}
 }

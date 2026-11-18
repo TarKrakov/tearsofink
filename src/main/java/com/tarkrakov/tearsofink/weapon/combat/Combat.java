@@ -13,8 +13,6 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import com.tarkrakov.tearsofink.sound.ModSounds;
-import com.tarkrakov.tearsofink.weapon.shield.ShieldAudio;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
@@ -233,11 +231,7 @@ public final class Combat {
 		p.resetAttackStrengthTicker();
 		broadcast(p, a, step.anim(), duration, s.speed, effectiveTempo); // пустое anim — правая рука в этом ударе не двигается (шкала всё равно)
 		if (step.offAnim() != null) broadcast(p, a, "off:" + step.offAnim(), duration, -2f, effectiveTempo);
-		if (a == Archetype.BASTION) {
-			// Отдельный оригинальный воздушный мах на начало каждого принятого удара,
-			// в том числе при промахе. Звук контакта остаётся в hit().
-			ShieldAudio.play(p, ModSounds.SOUL_SHIELD_SWING, 0.68f);
-		} else p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.5f,
+		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.5f,
 				a == Archetype.EXECUTIONER ? 0.6f : 0.9f);
 	}
 
@@ -441,8 +435,7 @@ public final class Combat {
 			com.tarkrakov.tearsofink.weapon.forge.Gear.onSuccessfulCombo(p, weapon); // +Чернила только обычным оружием, один раз за взмах
 			weapon.hurtAndBreak(1, p, EquipmentSlot.MAINHAND);
 			level.sendParticles(ParticleTypes.SWEEP_ATTACK, eye.x + flat.x * 1.6, eye.y - 0.4, eye.z + flat.z * 1.6, 1, 0, 0, 0, 0);
-			if (bastion) ShieldAudio.play(p, riposte ? ModSounds.SOUL_SHIELD_RIPOSTE : ModSounds.SOUL_SHIELD_BASTION, riposte ? 0.56f : 0.48f);
-			else level.playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 0.8f, 0.8f);
+			level.playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 0.8f, 0.8f);
 		}
 	}
 }

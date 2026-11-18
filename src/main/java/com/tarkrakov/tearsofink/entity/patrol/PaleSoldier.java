@@ -1,9 +1,6 @@
 package com.tarkrakov.tearsofink.entity.patrol;
 
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.core.BlockPos;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -230,20 +227,6 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 		this.patrolFrom = from;
 		this.patrolTo = to;
 	}
-
-	// Shared quiet voice level and positional equipment footsteps.
-	protected abstract SoundEvent soldierStepSound();
-
-	@Override
-	protected void playStepSound(BlockPos pos, BlockState state) {
-		if (!level().isClientSide) playSound(soldierStepSound(), 0.32f, 1.0f);
-	}
-
-	@Override
-	protected float getSoundVolume() { return 0.40f; }
-
-	@Override
-	public int getAmbientSoundInterval() { return 240; }
 
 	@Override
 	public boolean removeWhenFarAway(double distance) {
