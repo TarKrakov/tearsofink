@@ -24,8 +24,8 @@ import net.minecraft.world.phys.BlockHitResult;
 public class InkLanternBlock extends LanternBlock implements EntityBlock, FogClearing {
 	/** Legacy road flag retained only for compatibility with existing saved blocks. */
 	public static final BooleanProperty ROAD = BooleanProperty.create("road");
-	private static final VoxelShape STANDING_SHAPE = Block.box(2, 0, 3, 14, 12, 15);
-	private static final VoxelShape HANGING_SHAPE = Block.box(2, 4, 3, 14, 16, 15);
+	private static final VoxelShape STANDING_SHAPE = Block.box(2, 0, 2, 14, 12, 14);
+	private static final VoxelShape HANGING_SHAPE = Block.box(2, 4, 2, 14, 16, 14);
 	private final int clearRadius;
 	private final boolean eternal;
 
@@ -74,7 +74,6 @@ public class InkLanternBlock extends LanternBlock implements EntityBlock, FogCle
 
 	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-		if (eternal) return super.getShape(state, level, pos, context);
 		return state.getValue(HANGING) ? HANGING_SHAPE : STANDING_SHAPE;
 	}
 

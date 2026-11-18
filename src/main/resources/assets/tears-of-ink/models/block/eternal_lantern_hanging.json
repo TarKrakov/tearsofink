@@ -1,6 +1,3 @@
 {
-  "parent": "minecraft:block/template_hanging_lantern",
-  "textures": {
-    "lantern": "tears-of-ink:block/eternal_lantern"
-  }
+  "parent": "tears-of-ink:block/ink_lantern_hanging"
 }
