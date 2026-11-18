@@ -3,6 +3,7 @@ package com.tarkrakov.tearsofink.prologue;
 import com.mojang.serialization.Codec;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.block.fountain.InkFountainBlock;
+import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
@@ -45,6 +46,8 @@ public final class DiaryEntries {
 	public static final String INTRO = "intro";
 	public static final String FIRST_STEPS = "first_steps";
 	public static final String PALE_METAL = "pale_metal";
+	public static final String INK_ANVIL = "ink_anvil";
+	public static final String CURSED_ALTAR = "cursed_altar";
 	public static final String FOUNTAIN_HUNT = "fountain_hunt";
 	public static final String ASCENSION_FONT = "ascension_font";
 	/** Проверка новых материалов и знаний не чаще раза в 5 секунд. */
@@ -112,11 +115,13 @@ public final class DiaryEntries {
 	private static void checkGuidance(ServerPlayer p) {
 		List<String> have = p.getAttachedOrCreate(DATA);
 		boolean needMetal = !have.contains(PALE_METAL);
+		boolean needAnvil = !have.contains(INK_ANVIL);
+		boolean needAltar = !have.contains(CURSED_ALTAR);
 		boolean needHunt = !have.contains(FOUNTAIN_HUNT);
 		boolean needFont = !have.contains(ASCENSION_FONT);
-		if (!needMetal && !needHunt && !needFont) return;
+		if (!needMetal && !needAnvil && !needAltar && !needHunt && !needFont) return;
 
-		List<String> discovered = new ArrayList<>(3);
+		List<String> discovered = new ArrayList<>(5);
 		// Первое испитие фонтана даёт возможность призвать Торговку. Проверка
 		// сохранённого VISITED открывает запись и для персонажей из старых миров.
 		if (needHunt && !p.getAttachedOrCreate(InkFountainBlock.VISITED).isEmpty()) {
@@ -131,6 +136,14 @@ public final class DiaryEntries {
 				discovered.add(PALE_METAL);
 				needMetal = false;
 			}
+			if (needAnvil && stack.is(ModBlocks.INK_ANVIL.asItem())) {
+				discovered.add(INK_ANVIL);
+				needAnvil = false;
+			}
+			if (needAltar && stack.is(ModBlocks.CURSED_ALTAR.asItem())) {
+				discovered.add(CURSED_ALTAR);
+				needAltar = false;
+			}
 			// Контракт или Пигмент также подсказывают, где найти Торговку,
 			// если предмет попал к игроку до посещения фонтана.
 			if (needHunt && (stack.is(ModItems.FULFILLED_CONTRACT) || stack.is(ModItems.PIGMENT))) {
@@ -142,7 +155,7 @@ public final class DiaryEntries {
 				discovered.add(ASCENSION_FONT);
 				needFont = false;
 			}
-			if (!needMetal && !needHunt && !needFont) break;
+			if (!needMetal && !needAnvil && !needAltar && !needHunt && !needFont) break;
 		}
 		// За один цикл — один Sync и одно уведомление даже для нескольких страниц.
 		if (!discovered.isEmpty()) unlock(p, discovered.toArray(String[]::new));
