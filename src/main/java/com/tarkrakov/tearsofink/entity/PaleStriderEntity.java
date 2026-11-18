@@ -140,10 +140,8 @@ public final class PaleStriderEntity extends PathfinderMob {
             destination = BlockPos.of(tag.getLong("StriderDestination"));
             destinationIn = 2200;
         }
-        choirAnchor = null;
-        if (mode == Mode.TEMPLE) {
-            choirAnchor = tag.contains("StriderChoirAnchor") ? BlockPos.of(tag.getLong("StriderChoirAnchor")) : blockPosition();
-        }
+        choirAnchor = mode == Mode.TEMPLE && tag.contains("StriderChoirAnchor")
+                ? BlockPos.of(tag.getLong("StriderChoirAnchor")) : null;
         songIn = tag.contains("StriderSongIn") ? Math.max(60 + random.nextInt(120), tag.getInt("StriderSongIn")) : -1;
     }
 
@@ -166,6 +164,7 @@ public final class PaleStriderEntity extends PathfinderMob {
             return;
         }
         if (phaseStamp() == 0L) phase(Phase.IDLE);
+        if (mode == Mode.TEMPLE && choirAnchor == null) choirAnchor = blockPosition();
         if (songIn < 0) songIn = 140 + random.nextInt(180);
 
         if (singing()) {
