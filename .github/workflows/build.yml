@@ -21,6 +21,8 @@ jobs:
           distribution: 'microsoft'
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
+      - name: validate advancement icon paths
+        run: python3 tools/check_advancement_icons.py
       - name: build
         run: ./gradlew build
       # The original Claude previewer validates the real model/pivot and can render
