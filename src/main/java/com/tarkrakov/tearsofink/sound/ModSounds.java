@@ -28,6 +28,41 @@ public final class ModSounds {
 			TearsOfInk.id("pale_owl_hoot"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("pale_owl_hoot"), 26.0f));
 	public static final SoundEvent PALE_OWL_WING = register("pale_owl_wing");
 
+	/** Original pale soldier combat audio. */
+	public static final SoundEvent PALE_CROSSBOW_AMBIENT = register("pale_crossbow_ambient");
+	public static final SoundEvent PALE_CROSSBOW_BOLT_IMPACT = register("pale_crossbow_bolt_impact");
+	public static final SoundEvent PALE_CROSSBOW_DEATH = register("pale_crossbow_death");
+	public static final SoundEvent PALE_CROSSBOW_HURT = register("pale_crossbow_hurt");
+	public static final SoundEvent PALE_CROSSBOW_RELOAD_BOLT = register("pale_crossbow_reload_bolt");
+	public static final SoundEvent PALE_CROSSBOW_RELOAD_DRAW = register("pale_crossbow_reload_draw");
+	public static final SoundEvent PALE_CROSSBOW_RELOAD_LATCH = register("pale_crossbow_reload_latch");
+	public static final SoundEvent PALE_CROSSBOW_SHOOT = register("pale_crossbow_shoot");
+	public static final SoundEvent PALE_CROSSBOW_STEP = register("pale_crossbow_step");
+	public static final SoundEvent PALE_SHIELD_AMBIENT = register("pale_shield_ambient");
+	public static final SoundEvent PALE_SHIELD_BASH_HIT = register("pale_shield_bash_hit");
+	public static final SoundEvent PALE_SHIELD_BASH_SWING = register("pale_shield_bash_swing");
+	public static final SoundEvent PALE_SHIELD_BLOCK = register("pale_shield_block");
+	public static final SoundEvent PALE_SHIELD_CHARGE_BREAK_SOFT = register("pale_shield_charge_break_soft");
+	public static final SoundEvent PALE_SHIELD_CHARGE_HIT = register("pale_shield_charge_hit");
+	public static final SoundEvent PALE_SHIELD_CHARGE_PREPARE = Registry.register(BuiltInRegistries.SOUND_EVENT, TearsOfInk.id("pale_shield_charge_prepare"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("pale_shield_charge_prepare"), 22.0f));
+	public static final SoundEvent PALE_SHIELD_CHARGE_START = register("pale_shield_charge_start");
+	public static final SoundEvent PALE_SHIELD_CHARGE_STEP = register("pale_shield_charge_step");
+	public static final SoundEvent PALE_SHIELD_CHARGE_WALL = register("pale_shield_charge_wall");
+	public static final SoundEvent PALE_SHIELD_DEATH = register("pale_shield_death");
+	public static final SoundEvent PALE_SHIELD_DEFLECT = register("pale_shield_deflect");
+	public static final SoundEvent PALE_SHIELD_DISABLED = register("pale_shield_disabled");
+	public static final SoundEvent PALE_SHIELD_HURT = register("pale_shield_hurt");
+	public static final SoundEvent PALE_SHIELD_RAISE = register("pale_shield_raise");
+	public static final SoundEvent PALE_SHIELD_STEP = register("pale_shield_step");
+	public static final SoundEvent PALE_SHIELD_STUN = register("pale_shield_stun");
+	public static final SoundEvent PALE_SOLDIER_DODGE = register("pale_soldier_dodge");
+	public static final SoundEvent PALE_SPEAR_AMBIENT = register("pale_spear_ambient");
+	public static final SoundEvent PALE_SPEAR_DEATH = register("pale_spear_death");
+	public static final SoundEvent PALE_SPEAR_HIT = register("pale_spear_hit");
+	public static final SoundEvent PALE_SPEAR_HURT = register("pale_spear_hurt");
+	public static final SoundEvent PALE_SPEAR_STEP = register("pale_spear_step");
+	public static final SoundEvent PALE_SPEAR_THRUST = register("pale_spear_thrust");
+
 	private ModSounds() {}
 
 	private static SoundEvent register(String name) {

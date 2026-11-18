@@ -1,6 +1,8 @@
 package com.tarkrakov.tearsofink.entity.patrol;
 
 import com.tarkrakov.tearsofink.entity.ModMobs;
+import com.tarkrakov.tearsofink.sound.ModSounds;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
@@ -13,11 +15,13 @@ import net.minecraft.world.level.Level;
 public class PaleBoltEntity extends AbstractArrow {
 	public PaleBoltEntity(EntityType<? extends AbstractArrow> type, Level level) {
 		super(type, level);
+		setSoundEvent(ModSounds.PALE_CROSSBOW_BOLT_IMPACT);
 	}
 
 	public PaleBoltEntity(Level level, LivingEntity owner) {
 		super(ModMobs.PALE_BOLT, owner, level, new ItemStack(Items.ARROW), null);
 		this.pickup = Pickup.DISALLOWED;
+		setSoundEvent(ModSounds.PALE_CROSSBOW_BOLT_IMPACT);
 		// урон стрелы = скорость × базовый урон → подгоняем под нужный урон болта
 		this.setBaseDamage(SquadTuning.BOLT_DAMAGE * power(owner) / SquadTuning.BOLT_SPEED);
 	}
@@ -39,6 +43,9 @@ public class PaleBoltEntity extends AbstractArrow {
 		}
 		super.onHitEntity(hit);
 	}
+
+	@Override
+	protected SoundEvent getDefaultHitGroundSoundEvent() { return ModSounds.PALE_CROSSBOW_BOLT_IMPACT; }
 
 	@Override
 	protected ItemStack getDefaultPickupItem() {

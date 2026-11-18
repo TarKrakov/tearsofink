@@ -2,7 +2,7 @@ package com.tarkrakov.tearsofink.entity.patrol;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
+import com.tarkrakov.tearsofink.sound.ModSounds;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
@@ -49,6 +49,8 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 	private int lastLanded;
 	/** Сколько блоков снёс за этот рывок. */
 	private int chargeBroken;
+	private int lastChargeImpactSound = -1000, lastBlockSound = -1000, lastChargeStepSound = -1000;
+	private int stunSoundAt = -1;
 	int stun;
 	private Vec3 chargeDir = Vec3.ZERO;
 	private final java.util.Set<Integer> chargeHit = new java.util.HashSet<>();
@@ -147,6 +149,12 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 				: chargeTicks >= 0 ? (chargeTicks < SquadTuning.CHARGE_WINDUP ? ACT_CHARGE_WINDUP : ACT_CHARGE)
 				: bashTicks >= 0 ? ACT_BASH
 				: shieldRaised() ? ACT_BLOCK : ACT_NONE;
+		if (act == ACT_STUN && action() != ACT_STUN) stunSoundAt = tickCount + 6;
+		if (act != ACT_STUN) stunSoundAt = -1;
+		if (act == ACT_STUN && stunSoundAt >= 0 && tickCount >= stunSoundAt) {
+			stunSoundAt = -1;
+			playSound(ModSounds.PALE_SHIELD_STUN, 0.40f, 1.0f);
+		}
 		setAction(act);
 	}
 
@@ -159,6 +167,7 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 
 	private void tickBash() {
 		bashTicks++;
+		if (bashTicks == SquadTuning.BASH_HIT_TICK - 6) playSound(ModSounds.PALE_SHIELD_BASH_SWING, 0.43f, 1.0f);
 		if (bashTicks == SquadTuning.BASH_HIT_TICK) {
 			// щит бьёт всех врагов перед собой (дугой)
 			boolean any = false;
@@ -169,7 +178,7 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 				any = true;
 			}
 			if (any) {
-				this.playSound(SoundEvents.SHIELD_BLOCK, 1.0f, 0.6f);
+				this.playSound(ModSounds.PALE_SHIELD_BASH_HIT, 0.53f, 1.0f);
 				lastLanded = this.tickCount;
 			}
 		}
@@ -195,7 +204,7 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 		Vec3 d = target.position().subtract(this.position()).multiply(1, 0, 1);
 		chargeDir = d.lengthSqr() < 1.0E-4 ? this.getLookAngle().multiply(1, 0, 1).normalize() : d.normalize();
 		this.getNavigation().stop();
-		this.playSound(SoundEvents.RAVAGER_ROAR, 0.6f, 1.4f); // заглушка: рык перед рывком
+		this.playSound(ModSounds.PALE_SHIELD_CHARGE_PREPARE, 0.58f, 1.0f);
 	}
 
 	private void faceCharge() {
@@ -216,6 +225,7 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 			}
 			return;
 		}
+		if (chargeTicks == SquadTuning.CHARGE_WINDUP) playSound(ModSounds.PALE_SHIELD_CHARGE_START, 0.47f, 1.0f);
 		if (t != null && t.isAlive()) steerToward(t);
 		this.setDeltaMovement(chargeDir.x * SquadTuning.CHARGE_SPEED, this.getDeltaMovement().y, chargeDir.z * SquadTuning.CHARGE_SPEED);
 		this.hasImpulse = true;
@@ -226,6 +236,7 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 			if (!chargeHit.add(e.getId())) continue;
 			if (com.tarkrakov.tearsofink.weapon.shield.ShieldStance.inStance(e)) { // Скала: упёрся в два щита — отскок и оглушение
 				e.hurt(this.damageSources().mobAttack(this), damageVs(e, SquadTuning.CHARGE_DAMAGE)); // стойка примет удар (Душа, заряд)
+				chargeImpactSound();
 				endCharge(true);
 				this.setDeltaMovement(-chargeDir.x * 0.6, 0.2, -chargeDir.z * 0.6);
 				this.hasImpulse = true;
@@ -234,7 +245,7 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 			e.hurt(this.damageSources().mobAttack(this), damageVs(e, SquadTuning.CHARGE_DAMAGE));
 			e.knockback(SquadTuning.CHARGE_KNOCKBACK, -chargeDir.x, -chargeDir.z);
 			lastLanded = this.tickCount;
-			this.playSound(SoundEvents.SHIELD_BLOCK, 1.2f, 0.5f);
+			chargeImpactSound();
 			if (e == t) hitTarget = true;
 		}
 		if (hitTarget) {
@@ -243,11 +254,12 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 		}
 		if (this.horizontalCollision) {
 			int broken = chargeBroken < SquadTuning.CHARGE_BREAK_MAX ? breakSoftBlocks(SquadTuning.CHARGE_BREAK_MAX - chargeBroken) : 0;
-			this.playSound(SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, 1.0f, 0.7f);
 			if (broken > 0) { // проломил — бежит дальше
+				playSound(ModSounds.PALE_SHIELD_CHARGE_BREAK_SOFT, 0.47f, 1.0f);
 				chargeBroken += broken;
 				return;
 			}
+			playSound(ModSounds.PALE_SHIELD_CHARGE_WALL, 0.55f, 1.0f);
 			endCharge(true); // твёрдое (или лимит) — оглушён
 			return;
 		}
@@ -341,16 +353,16 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 		if (!this.level().isClientSide && shieldRaised() && source.getSourcePosition() != null
 				&& inFront(source.getSourcePosition(), 0.3)) {
 			if (source.getDirectEntity() instanceof Projectile) {
-				this.playSound(SoundEvents.SHIELD_BLOCK, 1.0f, 0.8f);
+				blockSound(ModSounds.PALE_SHIELD_DEFLECT, 0.43f);
 				return false; // стрелы спереди отскакивают
 			}
 			if (source.getEntity() instanceof LivingEntity attacker && attacker.getMainHandItem().getItem() instanceof AxeItem) {
 				shieldDisabled = SquadTuning.SHIELD_AXE_DISABLE; // топор выбил щит
 				shieldUp = 0;
 				shieldRest = SquadTuning.SHIELD_REST;
-				this.playSound(SoundEvents.SHIELD_BREAK, 1.0f, 0.8f);
+				this.playSound(ModSounds.PALE_SHIELD_DISABLED, 0.53f, 1.0f);
 			} else {
-				this.playSound(SoundEvents.SHIELD_BLOCK, 1.0f, 1.0f);
+				blockSound(ModSounds.PALE_SHIELD_BLOCK, 0.48f);
 				amount *= SquadTuning.SHIELD_PASS;
 			}
 		}
@@ -358,23 +370,48 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 	}
 
 	@Override
+	protected SoundEvent soldierStepSound() { return ModSounds.PALE_SHIELD_STEP; }
+
+	private void chargeImpactSound() {
+		if (tickCount - lastChargeImpactSound < 5) return;
+		lastChargeImpactSound = tickCount;
+		playSound(ModSounds.PALE_SHIELD_CHARGE_HIT, 0.60f, 1.0f);
+	}
+
+	private void blockSound(SoundEvent sound, float volume) {
+		if (tickCount - lastBlockSound < 4) return;
+		lastBlockSound = tickCount;
+		playSound(sound, volume, 1.0f);
+	}
+
+	@Override
+	protected void playStepSound(BlockPos pos, BlockState state) {
+		if (chargeTicks >= SquadTuning.CHARGE_WINDUP) {
+			if (!level().isClientSide && tickCount - lastChargeStepSound >= 7) {
+				lastChargeStepSound = tickCount;
+				playSound(ModSounds.PALE_SHIELD_CHARGE_STEP, 0.43f, 1.0f);
+			}
+		} else super.playStepSound(pos, state);
+	}
+
+	@Override
 	protected SoundEvent getAmbientSound() {
-		return SoundEvents.SKELETON_AMBIENT;
+		return ModSounds.PALE_SHIELD_AMBIENT;
 	}
 
 	@Override
 	protected SoundEvent getHurtSound(DamageSource source) {
-		return SoundEvents.SKELETON_HURT;
+		return ModSounds.PALE_SHIELD_HURT;
 	}
 
 	@Override
 	protected SoundEvent getDeathSound() {
-		return SoundEvents.SKELETON_DEATH;
+		return ModSounds.PALE_SHIELD_DEATH;
 	}
 
 	@Override
 	public float getVoicePitch() {
-		return 0.55f;
+		return 1.0f;
 	}
 
 	/** Бой щитовика: лезет к игроку первым, щит, удар щитом, рывок. */
@@ -426,6 +463,7 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 			}
 			if (shieldUp <= 0 && shieldRest <= 0 && shieldDisabled <= 0 && dist < SquadTuning.SHIELD_RANGE) {
 				shieldUp = SquadTuning.SHIELD_MAX;
+				playSound(ModSounds.PALE_SHIELD_RAISE, 0.38f, 1.0f);
 			}
 			if (shieldRaised() && dist <= SquadTuning.BASH_RANGE && bashCooldown <= 0) {
 				startBash();
