@@ -4,8 +4,8 @@
   "animations": {
     "bb_author_attack1": {
       "length": 0.95,
-      "hold": 0,
-      "return": 0,
+      "hold": 0.04,
+      "return": 0.26,
       "smooth": false,
       "rotation_mode": "slerp",
       "third": {
@@ -829,8 +829,8 @@
     },
     "bb_author_attack2": {
       "length": 1,
-      "hold": 0,
-      "return": 0,
+      "hold": 0.04,
+      "return": 0.26,
       "smooth": false,
       "rotation_mode": "slerp",
       "third": {
@@ -1696,8 +1696,8 @@
     },
     "bb_author_attack3": {
       "length": 1.6,
-      "hold": 0,
-      "return": 0,
+      "hold": 0.04,
+      "return": 0.26,
       "smooth": false,
       "rotation_mode": "slerp",
       "third": {
