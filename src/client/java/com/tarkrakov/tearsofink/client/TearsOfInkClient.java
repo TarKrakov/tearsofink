@@ -184,6 +184,8 @@ public class TearsOfInkClient implements ClientModInitializer {
 		}
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.POTTED_TEARBLOOM, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.PALE_TRAPDOOR, RenderType.cutout());
+		// The authored anvil texture uses alpha; render its cutouts without hiding the world behind it.
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.INK_ANVIL, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlocks(RenderType.cutout(), ModBlocks.INK_LANTERN, ModBlocks.STONE_LANTERN, ModBlocks.ETERNAL_LANTERN);
 	}
 

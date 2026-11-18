@@ -3,7 +3,6 @@ package com.tarkrakov.tearsofink.world;
 import com.mojang.serialization.Codec;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.block.lantern.FogClearing;
-import com.tarkrakov.tearsofink.block.lantern.InkLanternBlock;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.level.WorldGenLevel;
@@ -207,8 +206,7 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 				level.setBlock(pos.set(x, y + 1, z), post, 2);
 				level.setBlock(pos.set(x, y + 2, z), post, 2);
 				level.setBlock(pos.set(x, y + 3, z), ModBlocks.INK_LANTERN.defaultBlockState()
-						.setValue(FogClearing.LIT, lit).setValue(FogClearing.PLAYER_MADE, false)
-						.setValue(InkLanternBlock.ROAD, true), 2);
+						.setValue(FogClearing.LIT, lit).setValue(FogClearing.PLAYER_MADE, false), 2);
 			}
 		}
 	}

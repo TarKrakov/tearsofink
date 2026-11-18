@@ -11,16 +11,26 @@ import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.ContainerLevelAccess;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 /** Чернильная наковальня: ПКМ — окно ковки (раскладка 3×3) и заточки. */
 public class InkAnvilBlock extends Block {
 	private static final Component TITLE = Component.translatable("container.tears-of-ink.ink_anvil");
+	/** Exact bounding volume of the authored model, instead of a full block. */
+	private static final VoxelShape SHAPE = Block.box(1, 0, 4, 15, 12, 12);
 
 	public InkAnvilBlock(Properties properties) {
 		super(properties);
+	}
+
+	@Override
+	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+		return SHAPE;
 	}
 
 	@Override

@@ -22,9 +22,10 @@ import net.minecraft.world.phys.BlockHitResult;
  * Ставится как ванильный — на землю/забор или подвешенным под блок/цепь.
  */
 public class InkLanternBlock extends LanternBlock implements EntityBlock, FogClearing {
-	/** Only the road-generated standing lantern uses the authored road model; legacy lanterns remain unchanged. */
+	/** Legacy road flag retained only for compatibility with existing saved blocks. */
 	public static final BooleanProperty ROAD = BooleanProperty.create("road");
-	private static final VoxelShape ROAD_SHAPE = Block.box(2, 2, 3, 14, 14, 15);
+	private static final VoxelShape STANDING_SHAPE = Block.box(2, 0, 3, 14, 12, 15);
+	private static final VoxelShape HANGING_SHAPE = Block.box(2, 4, 3, 14, 16, 15);
 	private final int clearRadius;
 	private final boolean eternal;
 
@@ -73,8 +74,8 @@ public class InkLanternBlock extends LanternBlock implements EntityBlock, FogCle
 
 	@Override
 	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-		return state.getValue(ROAD) && !state.getValue(HANGING)
-				? ROAD_SHAPE : super.getShape(state, level, pos, context);
+		if (eternal) return super.getShape(state, level, pos, context);
+		return state.getValue(HANGING) ? HANGING_SHAPE : STANDING_SHAPE;
 	}
 
 	@Override

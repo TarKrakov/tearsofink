@@ -4,10 +4,6 @@ import com.tarkrakov.tearsofink.ink.InkData;
 import com.tarkrakov.tearsofink.ink.InkPowers;
 import com.tarkrakov.tearsofink.skill.SkillPayloads;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerChunkEvents;
-import com.tarkrakov.tearsofink.block.ModBlocks;
-import com.tarkrakov.tearsofink.world.InkLandsLayout;
-import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import com.tarkrakov.tearsofink.particle.ModParticles;
@@ -157,40 +153,6 @@ public final class Lanterns {
 			if (!playerMade && !player.getAbilities().instabuild) return InteractionResult.PASS;
 			if (state.getBlock() instanceof InkLanternBlock lantern && lantern.isEternal()) return InteractionResult.PASS;
 			return use(state, level, pos, player);
-		});
-	}
-
-	/**
-	 * Подхватить авторскую модель для старых дорожных фонарей без регенерации чанков.
-	 * Обновляется только визуальный флаг: прежние ID блока, свет, обет и взаимодействия не меняются.
-	 */
-	public static void registerRoadLanternModelUpgrade() {
-		ServerChunkEvents.CHUNK_LOAD.register((level, chunk) -> {
-			if (!ModDimensions.isLands(level)) return;
-			InkLandsLayout layout = InkLandsLayout.of(level);
-			if (layout == null) return;
-			// Снимок списка: setBlock меняет данные чанка, и обход не должен зависеть от этого.
-			for (BlockPos pos : java.util.List.copyOf(chunk.getBlockEntitiesPos())) {
-				BlockState state = chunk.getBlockState(pos);
-				if (!state.is(ModBlocks.INK_LANTERN)
-						|| state.getValue(InkLanternBlock.ROAD)
-						|| state.getValue(net.minecraft.world.level.block.LanternBlock.HANGING)
-						|| state.getValue(FogClearing.PLAYER_MADE)) continue;
-				// Старые дорожные опоры: два бледных забора, и только в точке,
-				// где генератор действительно ставил фонарь. Самодельные не затрагиваем.
-				if (!chunk.getBlockState(pos.below()).is(ModBlocks.PALE_FENCE)
-						|| !chunk.getBlockState(pos.below(2)).is(ModBlocks.PALE_FENCE)) continue;
-				double[] hit = layout.roadNear(pos.getX(), pos.getZ(), InkLandsLayout.ROAD_SHOULDER + 4);
-				if (hit == null) continue;
-				int k = (int) Math.round(hit[1] / InkLandsLayout.ROAD_LANTERN_SPACING);
-				for (int nearby = k - 1; nearby <= k + 1; nearby++) {
-					int[] expected = layout.roadLanternPost((int) hit[0], nearby);
-					if (expected != null && expected[0] == pos.getX() && expected[1] == pos.getZ()) {
-						level.setBlock(pos, state.setValue(InkLanternBlock.ROAD, true), Block.UPDATE_CLIENTS);
-						break;
-					}
-				}
-			}
 		});
 	}
 

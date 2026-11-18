@@ -1,6 +1,7 @@
 {
-  "parent": "minecraft:block/template_lantern",
+  "parent": "tears-of-ink:block/ink_lantern",
   "textures": {
-    "lantern": "tears-of-ink:block/ink_lantern_off"
+    "0": "tears-of-ink:block/ink_lantern_road_off",
+    "particle": "tears-of-ink:block/ink_lantern_road_off"
   }
 }
