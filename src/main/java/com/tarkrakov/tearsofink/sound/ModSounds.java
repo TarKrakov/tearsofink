@@ -23,6 +23,11 @@ public final class ModSounds {
 	public static final SoundEvent CATERPILLAR_BLOOD_CRAWL = register("caterpillar_blood_crawl");
 	public static final SoundEvent CATERPILLAR_INK_CRAWL = register("caterpillar_ink_crawl");
 
+	/** Quiet positional owl sounds. */
+	public static final SoundEvent PALE_OWL_HOOT = Registry.register(BuiltInRegistries.SOUND_EVENT,
+			TearsOfInk.id("pale_owl_hoot"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("pale_owl_hoot"), 26.0f));
+	public static final SoundEvent PALE_OWL_WING = register("pale_owl_wing");
+
 	private ModSounds() {}
 
 	private static SoundEvent register(String name) {

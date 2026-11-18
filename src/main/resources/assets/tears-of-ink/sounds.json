@@ -102,5 +102,39 @@
       }
     ],
     "subtitle": "subtitles.tears-of-ink.caterpillar_ink_crawl"
+  },
+  "pale_owl_hoot": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_owl_hoot_01",
+        "attenuation_distance": 24
+      },
+      {
+        "name": "tears-of-ink:pale_owl_hoot_02",
+        "attenuation_distance": 24
+      },
+      {
+        "name": "tears-of-ink:pale_owl_hoot_03",
+        "attenuation_distance": 24
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_owl_hoot"
+  },
+  "pale_owl_wing": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_owl_wing_01",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:pale_owl_wing_02",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:pale_owl_wing_03",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_owl_wing"
   }
 }
