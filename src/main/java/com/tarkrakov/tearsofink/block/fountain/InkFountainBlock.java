@@ -3,6 +3,9 @@ package com.tarkrakov.tearsofink.block.fountain;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.ink.InkData;
 import com.tarkrakov.tearsofink.ink.InkPowers;
+import com.tarkrakov.tearsofink.travel.FountainTravel;
+import com.tarkrakov.tearsofink.travel.Travel;
+import com.tarkrakov.tearsofink.world.ModDimensions;
 import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
@@ -15,7 +18,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.ItemInteractionResult;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
@@ -62,6 +68,16 @@ public class InkFountainBlock extends Block {
 	}
 
 	@Override
+	protected ItemInteractionResult useItemOn(ItemStack stack, BlockState state, Level level, BlockPos pos,
+											  Player player, InteractionHand hand, BlockHitResult hit) {
+		if (!ModDimensions.isLands(level) || player.isSecondaryUseActive() || !Travel.isMirror(stack)) {
+			return super.useItemOn(stack, state, level, pos, player, hand, hit);
+		}
+		if (hand == InteractionHand.MAIN_HAND && player instanceof ServerPlayer server) FountainTravel.open(server, pos);
+		return ItemInteractionResult.sidedSuccess(level.isClientSide);
+	}
+
+	@Override
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
 		if (!(player instanceof ServerPlayer sp) || !(level instanceof ServerLevel server)) return InteractionResult.SUCCESS;
 		InkData data = InkPowers.get(sp);
@@ -69,6 +85,7 @@ public class InkFountainBlock extends Block {
 			sp.playNotifySound(SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.25f, 1.8f);
 			return InteractionResult.CONSUME;
 		}
+		FountainTravel.activate(sp, pos);
 		Set<Long> visited = sp.getAttachedOrCreate(VISITED);
 		long key = pos.asLong();
 		if (visited.contains(key)) {

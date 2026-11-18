@@ -119,6 +119,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 				context.client().execute(() -> com.tarkrakov.tearsofink.vow.Vow.CLIENT = com.tarkrakov.tearsofink.vow.Vow.byIndex(payload.vow())));
 		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.vow.Vows.Open.TYPE, (payload, context) ->
 				context.client().execute(com.tarkrakov.tearsofink.client.vow.VowScreen::open));
+		com.tarkrakov.tearsofink.client.travel.FountainTravelScreen.register();
 		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.trader.SoulTrader.Open.TYPE, (payload, context) ->
 				context.client().execute(() -> com.tarkrakov.tearsofink.client.trader.SoulTraderScreen.open(payload)));
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.trader.SoulTraderModel.LAYER,
