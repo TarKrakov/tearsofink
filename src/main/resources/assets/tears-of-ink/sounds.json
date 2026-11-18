@@ -1053,5 +1053,22 @@
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_forest_rustle"
+  },
+  "soul_shield_swing": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_swing_01",
+        "attenuation_distance": 10
+      },
+      {
+        "name": "tears-of-ink:soul_shield_swing_02",
+        "attenuation_distance": 10
+      },
+      {
+        "name": "tears-of-ink:soul_shield_swing_03",
+        "attenuation_distance": 10
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_swing"
   }
 }

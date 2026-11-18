@@ -110,6 +110,8 @@ public final class ModSounds {
 	public static final SoundEvent PALE_FOREST_TWIG = register("pale_forest_twig");
 	public static final SoundEvent PALE_FOREST_RUSTLE = register("pale_forest_rustle");
 
+	public static final SoundEvent SOUL_SHIELD_SWING = register("soul_shield_swing");
+
 	private ModSounds() {}
 
 	private static SoundEvent register(String name) {
