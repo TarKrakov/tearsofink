@@ -80,6 +80,8 @@ public final class WeaponAnims {
 	/** smooth: сколько секунд новое движение перетекает из позы, где клинок реально был (без скачка между ударами). */
 	private static final float BLEND = 0.12f;
 	private static float blend(Playing p) {
+		// Author-baked poses already include their own interpolation; only bridge cut boundaries.
+		if (p.authored) return 0.09f;
 		return p.archetype == Archetype.PALE_LINEAR_GREATSWORD ? 0.2f : BLEND;
 	}
 
@@ -91,15 +93,17 @@ public final class WeaponAnims {
 		final long start;
 		final float busy; // сколько секунд клинок занят (по серверу, реальное время)
 		final float tempo; // общая скорость архетипа: движение идёт быстрее/медленнее
+		final boolean authored; // Blockbench-клипы: сохранять авторские кривые и стыковать независимые фазы
 		float fromIdle = 1; // composition captured with the displayed pose
 		Key from; // smooth: поза, из которой перетекаем в начале
 
-		Playing(Clip clip, Archetype archetype, int busyTicks, float tempo) {
+		Playing(Clip clip, Archetype archetype, int busyTicks, float tempo, boolean authored) {
 			this.clip = clip;
 			this.archetype = archetype;
 			this.start = System.nanoTime();
 			this.busy = busyTicks / 20f;
 			this.tempo = Math.max(0.1f, tempo);
+			this.authored = authored;
 		}
 
 		float real() {
@@ -261,15 +265,16 @@ public final class WeaponAnims {
 		Map<String, Clip> m = CLIPS.get(a.id);
 		Clip clip = m == null ? null : m.get(anim);
 		Playing prev = ARMS[arm.ordinal()];
-		Playing next = clip == null ? null : new Playing(clip, a, busyTicks, tempo);
-		if (next != null && clip.smooth() && !clip.absolute() && prev != null && prev.archetype == a && !prev.clip.absolute()
+		Playing next = clip == null ? null : new Playing(clip, a, busyTicks, tempo, anim.startsWith("bb_author_"));
+		boolean bridge = next != null && (clip.smooth() || next.authored);
+		if (bridge && !clip.absolute() && prev != null && prev.archetype == a && !prev.clip.absolute()
 				&& prev.time() < end(prev.clip)) {
 			Key previous = sample(prev.clip, prev.time(), REST);
 			// Preserve the pre-greatsword handoff for every existing weapon:
 			// capturing an already blended pose is reserved for the new archetype.
 			next.from = a == Archetype.PALE_LINEAR_GREATSWORD ? shown(prev, previous) : previous;
 			next.fromIdle = idleWeight(prev);
-		} else if (next != null && a == Archetype.PALE_LINEAR_GREATSWORD && clip.smooth() && !clip.absolute()) {
+		} else if (next != null && a == Archetype.PALE_LINEAR_GREATSWORD && bridge && !clip.absolute()) {
 			next.from = REST; // вход из покоя тоже плавный, даже если первая ключевая поза уже в замахе
 		}
 		ARMS[arm.ordinal()] = next;
