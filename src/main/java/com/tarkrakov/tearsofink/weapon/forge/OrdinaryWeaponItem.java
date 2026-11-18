@@ -43,11 +43,13 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
 		if (hand == net.minecraft.world.InteractionHand.MAIN_HAND
                 && com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(player.getItemInHand(hand))) {
             var stack = player.getItemInHand(hand);
-            // Одиночный ПКМ — включить или выключить защитную стойку.
+            // Одиночный ПКМ — защита, пока игрок держит кнопку.
+            // Ванильное использование предмета само синхронизирует отпускание ПКМ с сервером.
             // Парный ПКМ выше остался прежней заряжаемой атакой.
             if (player instanceof net.minecraft.server.level.ServerPlayer sp)
-                com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.guard(sp);
-            return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+                com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.holdGuard(sp);
+            player.startUsingItem(hand);
+            return net.minecraft.world.InteractionResultHolder.consume(stack);
         }
 		return super.use(level, player, hand);
 	}
@@ -57,8 +59,10 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
 			net.minecraft.world.item.ItemStack stack, int remaining) {
 		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(stack)) {
 			if (entity instanceof net.minecraft.server.level.ServerPlayer sp) {
-				if (!com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.dual(sp)) sp.stopUsingItem();
-				else if (getUseDuration(stack, entity) - remaining >= 50) sp.releaseUsingItem();
+				// Одиночная защита удерживается, пока игрок не отпустит ПКМ.
+				// Лимит времени существует только для прежней парной заряжаемой атаки.
+				if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.dual(sp)
+						&& getUseDuration(stack, entity) - remaining >= 50) sp.releaseUsingItem();
 			}
 			return;
 		}
@@ -69,8 +73,10 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
 	public void releaseUsing(net.minecraft.world.item.ItemStack stack, net.minecraft.world.level.Level level,
 			net.minecraft.world.entity.LivingEntity entity, int timeLeft) {
 		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(stack)) {
-			if (entity instanceof net.minecraft.server.level.ServerPlayer sp)
+			if (entity instanceof net.minecraft.server.level.ServerPlayer sp) {
+				com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.releaseHeldGuard(sp);
 				com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.release(sp);
+			}
 			return;
 		}
 		super.releaseUsing(stack, level, entity, timeLeft);
