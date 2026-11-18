@@ -1,5 +1,6 @@
 {
   "generated_from": "blockbench/pale_linear_greatsword_animations.bbmodel",
+  "time_scale_from_source": {"block_start": 0.4, "block_end": 0.4},
   "note": "Author FP animation tracks only. F5 reuses unchanged legacy poses; no F5 artist keys were authored.",
   "animations": {
     "bb_author_attack1": {
