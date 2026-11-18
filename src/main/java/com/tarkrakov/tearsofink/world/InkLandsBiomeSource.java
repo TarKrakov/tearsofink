@@ -32,6 +32,7 @@ public class InkLandsBiomeSource extends BiomeSource implements InkLandsAccess {
 	private final Holder<Biome> edge;
 	private final Map<ResourceKey<Biome>, Holder<Biome>> biomes;
 	private volatile InkLandsLayout layout;
+	private volatile InkLandsLayout worldLayout;
 	private volatile int templeLayoutVersion;
 	private boolean boundTempleLayout;
 
@@ -61,6 +62,11 @@ public class InkLandsBiomeSource extends BiomeSource implements InkLandsAccess {
 		boundTempleLayout = true;
 	}
 
+	/** Keep the worldgen plan attached to RandomState, apart from a chunk's cached sampler. */
+	synchronized void pinTempleLayout(Climate.Sampler sampler) {
+		if (templeLayoutVersion == 2) worldLayout = tearsofink$layout(sampler);
+	}
+
 	@Override
 	protected MapCodec<? extends BiomeSource> codec() {
 		return CODEC;
@@ -79,6 +85,8 @@ public class InkLandsBiomeSource extends BiomeSource implements InkLandsAccess {
 
 	@Override
 	public InkLandsLayout tearsofink$layout(Climate.Sampler sampler) {
+		InkLandsLayout canonical = worldLayout;
+		if (canonical != null && canonical.sampler() == sampler) return canonical;
 		InkLandsLayout l = layout;
 		if (l == null || l.sampler() != sampler) {
 			synchronized (this) {

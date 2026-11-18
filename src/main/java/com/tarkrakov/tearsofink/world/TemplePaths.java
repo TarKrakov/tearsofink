@@ -3,6 +3,7 @@ package com.tarkrakov.tearsofink.world;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.block.lantern.InkLanternBlock;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.Util;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -19,6 +20,13 @@ public final class TemplePaths {
 	private TemplePaths() {}
 
 	public static void init() {
+		ServerWorldEvents.LOAD.register((server, level) -> {
+			if (!ModDimensions.isLands(level)) return;
+			var source = level.getChunkSource();
+			if (source.getGenerator().getBiomeSource() instanceof InkLandsBiomeSource biomes) {
+				biomes.pinTempleLayout(source.randomState().sampler());
+			}
+		});
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
 			var level = ModDimensions.lands(server);
 			if (level == null) return;
