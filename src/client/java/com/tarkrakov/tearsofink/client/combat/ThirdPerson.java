@@ -64,12 +64,14 @@ public final class ThirdPerson {
 		final Archetype archetype;
 		final long start = System.nanoTime();
 		final float tempo;
+		final boolean authored;
 		@Nullable Pose from;
 
-		Playing(WeaponAnims.Clip clip, Archetype archetype, float tempo) {
+		Playing(WeaponAnims.Clip clip, Archetype archetype, float tempo, boolean authored) {
 			this.clip = clip;
 			this.archetype = archetype;
 			this.tempo = Math.max(0.1f, tempo);
+			this.authored = authored;
 		}
 
 		float real() {
@@ -91,7 +93,7 @@ public final class ThirdPerson {
 	public static void play(int entity, HumanoidArm arm, Archetype a, String anim, float tempo) {
 		WeaponAnims.Clip clip = WeaponAnims.clip(a, anim);
 		Playing[] slots = PLAYING.computeIfAbsent(entity, k -> new Playing[2]);
-		Playing next = clip == null ? null : new Playing(clip, a, tempo);
+		Playing next = clip == null ? null : new Playing(clip, a, tempo, anim.startsWith("bb_author_"));
 		if (next != null) {
 			Pose[] shown = SHOWN.get(entity);
 			Playing prev = slots[arm.ordinal()];
@@ -141,13 +143,13 @@ public final class ThirdPerson {
 			}
 			playing++;
 			float t = p.time();
-			Solved s = solve(model, entity, stack, side, p.clip, t);
+			Solved s = solve(model, entity, stack, side, p.clip, t, p.authored);
 			float w = weight(p, t);
 			ModelPart arm = arm(model, side);
 			float x = Mth.lerp(w, arm.xRot, s.x), y = Mth.lerp(w, arm.yRot, s.y), z = Mth.lerp(w, arm.zRot, s.z);
 			Quaternionf wrist = new Quaternionf().slerp(s.wrist, w);
 			float push = s.push * w;
-			float transition = p.archetype == Archetype.PALE_LINEAR_GREATSWORD ? 0.2f : BLEND;
+			float transition = p.authored ? 0.09f : (p.archetype == Archetype.PALE_LINEAR_GREATSWORD ? 0.2f : BLEND);
 			if (!p.clip.third().baked() && p.from != null && p.real() < transition) {
 				float u = WeaponAnims.ease(WeaponAnims.Ease.EASE_OUT, p.real() / transition);
 				x = Mth.lerp(u, p.from.x, x);
@@ -219,7 +221,7 @@ public final class ThirdPerson {
 	private static float weight(Playing p, float t) {
 		WeaponAnims.Clip c = p.clip;
 		if (c.third().baked()) return 1;
-		float rampIn = p.archetype == Archetype.PALE_LINEAR_GREATSWORD ? 0.18f : RAMP_IN;
+		float rampIn = p.authored ? 0.09f : (p.archetype == Archetype.PALE_LINEAR_GREATSWORD ? 0.18f : RAMP_IN);
 		float in = p.from != null ? 1 : Mth.clamp(t / rampIn, 0, 1);
 		float outTime = c.hold() > 0 ? Math.max(0.05f, c.back()) : RAMP_OUT;
 		float out = Mth.clamp((WeaponAnims.end(c) - t) / outTime, 0, 1);
@@ -230,7 +232,7 @@ public final class ThirdPerson {
 
 	private record Solved(float x, float y, float z, Quaternionf wrist, Vector3f pivot, float body, Vector3f hand, float push) {}
 
-	private static Solved solve(HumanoidModel<?> model, LivingEntity entity, ItemStack stack, HumanoidArm side, WeaponAnims.Clip clip, float t) {
+	private static Solved solve(HumanoidModel<?> model, LivingEntity entity, ItemStack stack, HumanoidArm side, WeaponAnims.Clip clip, float t, boolean authored) {
 		boolean left = side == HumanoidArm.LEFT;
 		float m = left ? -1 : 1;
 		Archetype archetype = Archetype.of(stack);
@@ -246,14 +248,19 @@ public final class ThirdPerson {
 		boolean mirror = fix.mirror() && left;
 		HumanoidArm calc = mirror ? HumanoidArm.RIGHT : side;
 		WeaponAnims.Clip pose = clip;
+		float poseTime = t;
 		if (fix.source() != null) { // третье лицо — по другому движению
 			WeaponAnims.Clip src = WeaponAnims.clip(archetype, fix.source());
-			if (src != null) pose = src;
+			if (src != null) {
+				pose = src;
+				// Старые F5-источники короче авторских FP-фаз: проигрывать всю дугу, а не бросать руку посреди удара.
+				if (authored) poseTime = Math.min(t, clip.length()) * src.length() / Math.max(0.01f, clip.length());
+			}
 		}
 		if (fix.armSpace()) {
 			// Local opt-in: author the shoulder, retaining this hand's exact Display.
 			// Source rotations are deltas from the vanilla held-item arm (-18°, 0, 0).
-			WeaponAnims.Key k = WeaponAnims.sample(pose, t);
+			WeaponAnims.Key k = WeaponAnims.sample(pose, poseTime);
 			float x = -Mth.PI / 10 + k.rot().x * Mth.DEG_TO_RAD;
 			float y = m * k.rot().y * Mth.DEG_TO_RAD;
 			float z = m * k.rot().z * Mth.DEG_TO_RAD;
@@ -277,7 +284,7 @@ public final class ThirdPerson {
 			return new Solved(x + model.head.xRot * tune.look(), y + model.head.yRot, z,
 					wrist, at(ax[0], tp, m), fix.baked() ? 0 : y * tune.body(), hand, 0);
 		}
-		Base b = base(tr, calc, pose, t, tune, fix, grip, ax);
+		Base b = base(tr, calc, pose, poseTime, tune, fix, grip, ax);
 		Base bw = fix.wristHold() >= 0 ? base(tr, calc, pose, fix.wristHold(), tune, fix, grip, ax) : b;
 		if (mirror) {
 			b = b.mirrored(!tune.centre());
