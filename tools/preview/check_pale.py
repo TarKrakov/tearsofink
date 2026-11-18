@@ -17,7 +17,7 @@ for name in('attack1','attack2','attack3','dual_chop','dual_chop_third','dual_sl
  expected=copy.deepcopy(axe['animations'][name])
  if expected.get('third',{}).get('source'):expected['third']['source']='axe_'+expected['third']['source']
  assert anims['axe_'+name+'_raw']==expected,('donor animation changed',name)
-for group in('steps','dual_steps'):
+for group in('dual_steps',):
  for index,(actual,expected) in enumerate(zip(c[group],donor[group])):
   for field in('duration','hit','late','second_hit'):
    assert actual.get(field)==expected.get(field),(group,field,actual)
@@ -28,7 +28,9 @@ for group in('steps','dual_steps'):
    if group=='dual_steps' and index==3 and wanted:wanted+='_repeat'
    if field=='off_anim' and wanted:wanted+='_off'
    assert actual.get(field)==wanted,(group,field)
-print('PASS: 3 solo / 5 paired steps; seven literal raw axe clips including F5 source; raised camera-space FP; independent synchronized off-hand; donor timing/late, configurable speed; authored Display retained')
+assert [s['anim'] for s in c['steps']]==['bb_author_attack1','bb_author_attack2','bb_author_attack3']
+assert [(s['duration'],s['hit']) for s in c['steps']]==[(19,13),(20,13),(32,10)]
+print('PASS: 3 authored solo / 5 unchanged paired steps; donor raw samples and F5 sources preserved; author timing; historical Display retained')
 active={st[field]for group in('steps','dual_steps')for st in c[group]for field in('anim','off_anim')if st.get(field)}
 active.update(n+s for n in('dual_charge','dual_rush','dual_parry','dual_repel','dual_leap','dual_slam')for s in('','_off'))
 vertices=model_points(m)/16;count=0

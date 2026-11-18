@@ -1,4 +1,4 @@
-"""New solo retreat, R flight preparation, and idle-only composition contracts."""
+"""Historical solo retreat (now retired), R flight and camera composition regression tests."""
 from tl import *
 a,m,fp,tp,g=load('pale_linear_greatsword');h,tip=axis(m,fp,g);mesh=model_points(m)/16
 fov=math.tan(D(35))

@@ -82,8 +82,7 @@ public final class WeaponAbilities {
 		// Shift+R is a separate defensive action for the Pale Linear Greatsword.
 		// The existing packet encodes Shift as offhand; handle either sword before
 		// normal offhand dispatch, including when both hands carry this sword.
-		if (payload.offhand() && (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(player.getMainHandItem())
-				|| com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(player.getOffhandItem()))) {
+		if (payload.offhand() && com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.dual(player)) {
 			com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.guard(player);
 			return;
 		}

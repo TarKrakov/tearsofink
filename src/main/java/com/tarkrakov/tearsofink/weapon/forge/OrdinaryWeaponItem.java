@@ -43,9 +43,10 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
 		if (hand == net.minecraft.world.InteractionHand.MAIN_HAND
                 && com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(player.getItemInHand(hand))) {
             var stack = player.getItemInHand(hand);
-            if (player instanceof net.minecraft.server.level.ServerPlayer sp
-                    && !com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.backstep(sp))
-                return net.minecraft.world.InteractionResultHolder.fail(stack);
+            // Одиночный ПКМ — включить или выключить защитную стойку.
+            // Парный ПКМ выше остался прежней заряжаемой атакой.
+            if (player instanceof net.minecraft.server.level.ServerPlayer sp)
+                com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.guard(sp);
             return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
         }
 		return super.use(level, player, hand);

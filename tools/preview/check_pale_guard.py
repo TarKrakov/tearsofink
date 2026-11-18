@@ -1,4 +1,4 @@
-"""Toggle guard geometry and actual refreshed timeline, independent from parrying."""
+"""Historical guard geometry and held timeline; authored FP guard is checked separately."""
 from tl import *
 a,m,fp,tp,g=load('pale_linear_greatsword');anims=a['animations'];h,tip=axis(m,fp,g)
 mesh=model_points(m)/16;fov=math.tan(D(35));basis=np.array([0.,0,1.])

@@ -37,6 +37,15 @@ def resolve_model(item_name, seen=None):
 def load(arch):
     with open(f'{REPO}/weapon_anims/{arch}.json', encoding='utf-8') as source:
         a = json.load(source)
+    # Совпадает с клиентским reload: авторские FP-клипы — отдельный ресурс,
+    # исторические F5 и парные движения неизменны.
+    if arch == 'pale_linear_greatsword':
+        import pathlib
+        authored = pathlib.Path(f'{REPO}/weapon_anims/{arch}_bb_author.json')
+        if authored.exists():
+            extra = json.loads(authored.read_text(encoding='utf-8'))['animations']
+            assert all(name.startswith('bb_author_') and name not in a['animations'] for name in extra)
+            a['animations'].update(extra)
     m = resolve_model(ITEM.get(arch, arch))
     # Backward-compatible aliases (including original authored left-hand poses).
     alias_path = f'{REPO}/models/item/{arch}.json'

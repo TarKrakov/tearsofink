@@ -168,6 +168,23 @@ public final class WeaponAnims {
 						TearsOfInk.LOGGER.error("Blockbench test animations could not be loaded: {}", e.toString());
 					}
 				}
+				// Авторские FP-фазы находятся отдельно от исторических/парных клипов.
+				var authored = manager.getResource(TearsOfInk.id("weapon_anims/pale_linear_greatsword_bb_author.json"));
+				if (authored.isPresent()) {
+					try (Reader r = authored.get().openAsReader()) {
+						Map<String, Clip> active = CLIPS.get(Archetype.PALE_LINEAR_GREATSWORD.id);
+						if (active != null) {
+							Map<String, Clip> imported = parse(JsonParser.parseReader(r).getAsJsonObject());
+							for (String name : imported.keySet()) {
+								if (!name.startsWith("bb_author_") || active.containsKey(name))
+									throw new IllegalArgumentException("Invalid/duplicate authored animation: " + name);
+							}
+							active.putAll(imported);
+						}
+					} catch (Exception e) {
+						TearsOfInk.LOGGER.error("Author Blockbench animations could not be loaded: {}", e.toString());
+					}
+				}
 			}
 		});
 	}

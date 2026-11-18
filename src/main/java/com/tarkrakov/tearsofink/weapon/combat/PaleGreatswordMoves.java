@@ -187,7 +187,17 @@ public final class PaleGreatswordMoves {
                 if (!available(p) || !valid(p, s)) { cancel(p, s); continue; }
                 long time = now(p);
                 switch (s.phase) {
-                    case SINGLE_WINDOW -> { if (time > s.until) finish(p, s, false); }
+                    case SINGLE_WINDOW -> {
+                        // Серверный урон совпадает с пересечением клинком цели, не с нажатием R.
+                        if (!s.slammed && time >= s.started + 8) {
+                            s.slammed = true;
+                            area(p, s, s.tuning.singleR().sweep());
+                        }
+                        if (time > s.until) {
+                            finish(p, s, false);
+                            play(p, s, s.left ? "recover" : "bb_author_r_recover", null, 10);
+                        }
+                    }
                     case PARRY -> { if (time > s.until) finish(p, s, true); }
                     case CHARGE -> {
                         if (!p.isUsingItem() && time - s.started > 3) cancel(p, s);
@@ -236,7 +246,8 @@ public final class PaleGreatswordMoves {
                     }
                     case GUARD -> {
                         if (time >= s.until) {
-                            play(p, s, s.paired ? "dual_guard_hold" : "guard_hold", s.paired ? "dual_guard_hold_off" : null, GUARD_REFRESH_TICKS);
+                            play(p, s, s.paired ? "dual_guard_hold" : s.left ? "guard_hold" : "bb_author_guard_hold",
+                                    s.paired ? "dual_guard_hold_off" : null, GUARD_REFRESH_TICKS);
                             s.until = time + GUARD_REFRESH_TICKS;
                         }
                     }
@@ -274,7 +285,8 @@ public final class PaleGreatswordMoves {
         // global cooldown: doing so would unnecessarily lock regular R/RMB
         // even after the blocking pose ends.
         s.guardReady = now(p) + Math.round(cooldown * Awakening.cooldownMult(left ? s.off : s.main));
-        play(p, s, pair ? "dual_guard" : "guard", pair ? "dual_guard_off" : null, GUARD_REFRESH_TICKS);
+        play(p, s, pair ? "dual_guard" : left ? "guard" : "bb_author_guard_start",
+                pair ? "dual_guard_off" : null, GUARD_REFRESH_TICKS);
         // Free ordinary technique; the existing weapon-wear economy still applies.
         ItemStack sword = left ? s.off : s.main;
         com.tarkrakov.tearsofink.weapon.forge.Gear.wear(p, sword,
@@ -287,7 +299,7 @@ public final class PaleGreatswordMoves {
 
     private static void lowerGuard(ServerPlayer p, State s) {
         s.phase = Phase.IDLE; // protection ends immediately; return pose can blend into another action
-        play(p, s, "guard_release", s.paired ? "guard_release_off" : null, 5);
+        play(p, s, s.paired || s.left ? "guard_release" : "bb_author_guard_end", s.paired ? "guard_release_off" : null, 10);
     }
 
     private static boolean guardFacing(ServerPlayer p, net.minecraft.world.damagesource.DamageSource source) {
@@ -306,9 +318,11 @@ public final class PaleGreatswordMoves {
         State s = state(p);
         if (s.phase != Phase.IDLE && !valid(p, s)) cancel(p, s);
         if (s.phase == Phase.SINGLE_WINDOW && s.left == left && now(p) <= s.until) {
+            // Второй R не может отменить ещё не произошедшее попадание первой фазы.
+            if (now(p) < s.started + 8) return;
             s.phase = Phase.SINGLE_DASH;
             startDash(p, s, s.tuning.singleR().dashDistance(), s.tuning.singleR().dashDamageMultiplier());
-            play(p, s, "rush", null, s.tuning.singleR().dashTicks());
+            play(p, s, s.left ? "rush" : "bb_author_r_dash", null, s.tuning.singleR().dashTicks());
             p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.TRIDENT_RIPTIDE_1.value(), net.minecraft.sounds.SoundSource.PLAYERS, 0.9f, 0.85f);
             return;
         }
@@ -378,9 +392,9 @@ public final class PaleGreatswordMoves {
                     net.minecraft.sounds.SoundSource.PLAYERS, 0.55f, 1.25f);
         } else {
             s.phase = Phase.SINGLE_WINDOW; s.until = now(p) + s.tuning.singleR().windowTicks();
-            play(p, s, "ability", null, s.tuning.singleR().sweepTicks());
+            s.slammed = false;
+            play(p, s, s.left ? "ability" : "bb_author_r_swing", null, s.tuning.singleR().sweepTicks());
             p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.PLAYER_ATTACK_SWEEP, net.minecraft.sounds.SoundSource.PLAYERS, 1.1f, 0.65f);
-            area(p, s, s.tuning.singleR().sweep());
         }
         return true;
     }
@@ -420,7 +434,7 @@ public final class PaleGreatswordMoves {
         if (s.phase == Phase.SINGLE_WINDOW || s.phase == Phase.SINGLE_DASH) finish(p, s, false);
         else if (s.phase == Phase.PARRY || s.phase == Phase.LEAP || s.phase == Phase.SLAM) finish(p, s, true);
         else if (s.phase == Phase.CHARGE) s.chargeReady = cooldown(p, s, s.tuning.dualCharge().cooldownTicks());
-        Combat.play(p, ARCH, "recover", s.paired || s.left ? "recover" : null, 4);
+        Combat.play(p, ARCH, !s.paired && !s.left ? "bb_author_r_recover" : "recover", s.paired || s.left ? "recover" : null, 4);
         s.phase = Phase.IDLE;
         if (p.isUsingItem() && isWeapon(p.getUseItem())) p.stopUsingItem();
         p.setDeltaMovement(0, p.getDeltaMovement().y, 0); p.hurtMarked = true;
@@ -506,7 +520,8 @@ public final class PaleGreatswordMoves {
         p.setDeltaMovement(0, velocity.y, 0); p.hurtMarked = true;
         if (!pair) s.singleReady = cooldown(p, s, s.tuning.singleR().cooldownTicks());
         s.phase = Phase.RECOVER; s.until = now(p) + 5;
-        play(p, s, pair ? "dual_recover" : "recover", pair ? "dual_recover_off" : null, 5);
+        play(p, s, pair ? "dual_recover" : s.left ? "recover" : "bb_author_r_recover",
+                pair ? "dual_recover_off" : null, 10);
     }
 
     private static boolean enemy(ServerPlayer p, LivingEntity t) {
