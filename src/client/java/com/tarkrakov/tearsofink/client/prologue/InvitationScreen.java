@@ -19,7 +19,7 @@ import java.util.List;
  * Авторское письмо-приглашение: весь atlas 256x256, без обрезки подвесок и складок.
  * Текст умещается на чистой части пергамента между рунами, красным узором и чёрным
  * украшением. Подпись ставится над обвязкой, отдельная сургучная роза накладывается
- * после подписи на уже нарисанное место печати в нижней части свёртка.
+ * после подписи рядом с именем на свободном поле, не поверх авторской печати на свёртке.
  * Логика серверного подписания и формат сохранений не меняются.
  */
 public class InvitationScreen extends Screen {
@@ -30,14 +30,14 @@ public class InvitationScreen extends Screen {
 
 	private static final int W = 256, H = 256;
 	/** Бумага ниже рун: не заходить на кровавый орнамент слева и железо справа. */
-	private static final int TEXT_X = 81, TEXT_Y = 49, TEXT_W = 107, TEXT_H = 107;
+	private static final int TEXT_X = 93, TEXT_Y = 53, TEXT_W = 91, TEXT_H = 102;
 	private static final int TEXT_COLOR = 0x39252A, SIGN_COLOR = 0x681C2A;
-	private static final int TEXT_LINE = 10, PARAGRAPH_GAP = 6;
+	private static final int TEXT_LINE = 10, PARAGRAPH_GAP = 4;
 
 	/** Место подписи над верхним сгибом обвязки. */
 	private static final int BW = 80, BH = 20, SIGN_X = 93, SIGN_Y = 160;
-	/** Сургучная роза на перевязи уже намечена в авторском фоне: не рисовать вторую. */
-	private static final int SEAL_X = 79, SEAL_Y = 216, SEAL_W = 32, SEAL_H = 32;
+	/** Отдельная сургучная роза появляется справа от подписи над перевязью. */
+	private static final int SEAL_X = 142, SEAL_Y = 153, SEAL_W = 32, SEAL_H = 32;
 	private static final int SEAL_TICKS = 24;
 
 	private int signedTicks = -1;
@@ -66,8 +66,8 @@ public class InvitationScreen extends Screen {
 				.getString().split("\\R\\s*\\R");
 		List<List<FormattedCharSequence>> wrapped = new ArrayList<>();
 		float textScale = 1f;
-		for (int step = 0; step <= 18; step++) {
-			textScale = 1f - step * 0.025f;
+		for (int step = 0; step <= 30; step++) {
+			textScale = 1f - step * 0.02f;
 			int wrapWidth = Math.max(1, (int) (TEXT_W / textScale));
 			wrapped.clear();
 			int rows = 0;
@@ -94,6 +94,19 @@ public class InvitationScreen extends Screen {
 		g.pose().popPose();
 	}
 
+
+	/** Ник остаётся слева от печати даже если он длинный. */
+	private void drawSignature(GuiGraphics g, Component signature) {
+		int width = 48;
+		int actual = font.width(signature);
+		float scale = actual > width ? (float) width / actual : 1f;
+		g.pose().pushPose();
+		g.pose().translate(SIGN_X + 27 - actual * scale / 2f, SIGN_Y + 6, 0);
+		g.pose().scale(scale, scale, 1f);
+		g.drawString(font, signature, 0, 0, SIGN_COLOR, false);
+		g.pose().popPose();
+	}
+
 	@Override
 	public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
 		super.render(g, mouseX, mouseY, partialTick);
@@ -116,7 +129,7 @@ public class InvitationScreen extends Screen {
 			if (minecraft.player != null) {
 				Component signature = Component.literal(minecraft.player.getName().getString())
 						.withStyle(ChatFormatting.ITALIC);
-				FitText.drawCentered(g, font, signature, SIGN_X + BW / 2, SIGN_Y + 5, BW - 12, SIGN_COLOR);
+				drawSignature(g, signature);
 			}
 			g.blit(SEAL, SEAL_X, SEAL_Y, 0, 0, SEAL_W, SEAL_H, SEAL_W, SEAL_H);
 		}
