@@ -20,12 +20,13 @@ import java.util.List;
  * Выбор обета (у Г-на Проводника, после приветствия; прошедшим пролог — при входе в Земли).
  * Главная страница — два пути; описание выбранного пути; отдельная страница окончательного
  * предупреждения и финального подтверждения. Закрыть без выбора нельзя.
- * Лист — как у дневника (gui/diary.png, 192×232); свой фон автор нарисует — gui/vow.png того же размера.
- * Тексты — vow.tears-of-ink.choose.* в ru_ru.json (заглушки Claude).
+ * Временный фон выбора — новый авторский лист gui/diary.png (256×256).
+ * Собственная vow.png может заменить его позднее; место для закладок не используется.
  */
 public class VowScreen extends Screen {
 	private static final ResourceLocation PAGE = TearsOfInk.id("textures/gui/diary.png");
-	private static final int W = 192, H = 232, M = 18, LINE = 12;
+	private static final int W = 256, H = 256, X = 64, TEXT_W = 130, LINE = 12;
+	private static final int TITLE_Y = 23, BODY_Y = 44, BOTTOM_OPTIONS_Y = 187;
 	private static final int TEXT = 0x2A1E2C, TITLE = 0x5A1E2C, OPTION = 0x3A2A30, HOVER = 0x8A2A40, INK = 0x3A1E5A, SOUL = 0x1E6A72;
 
 	/** Какой путь сейчас рассматривает (NONE — главная страница). */
@@ -45,38 +46,57 @@ public class VowScreen extends Screen {
 		mc.setScreen(new VowScreen());
 	}
 
+	/** Книжный лист целиком, без обрезки пера и переплёта; на маленьком экране уменьшаем весь интерфейс. */
+	private float bookScale() {
+		return Math.min(1f, Math.min((width - 8f) / W, (height - 8f) / H));
+	}
+
+	private float left() { return (width - W * bookScale()) * 0.5f; }
+	private float top() { return (height - H * bookScale()) * 0.5f; }
+	private double localX(double x) { return (x - left()) / bookScale(); }
+	private double localY(double y) { return (y - top()) / bookScale(); }
+
 	@Override
 	public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
 		super.render(g, mouseX, mouseY, partialTick);
-		int l = (width - W) / 2, t = (height - H) / 2, textW = W - M * 2;
-		g.blit(PAGE, l, t, 0, 0, W, H, 256, 256);
+		float scale = bookScale();
+		int mx = (int) localX(mouseX), my = (int) localY(mouseY);
+		g.pose().pushPose();
+		g.pose().translate(left(), top(), 0);
+		g.pose().scale(scale, scale, 1f);
+		g.blit(PAGE, 0, 0, 0, 0, W, H, W, H);
 		options.clear();
-		FitText.drawCentered(g, font, Component.translatable("vow.tears-of-ink.choose.title"), l + W / 2, t + M, textW, TITLE);
-		int y = t + M + 16;
+		FitText.drawCentered(g, font, Component.translatable("vow.tears-of-ink.choose.title"), X + TEXT_W / 2, TITLE_Y, TEXT_W, TITLE);
+
+		int y = BODY_Y;
 		if (looking == Vow.NONE) {
-			y = paragraph(g, Component.translatable("vow.tears-of-ink.choose.text"), l + M, y, textW, TEXT) + 10;
-			y = option(g, Component.translatable("vow.tears-of-ink.ink.name"), l + M, y, INK, () -> look(Vow.INK), mouseX, mouseY);
-			y = paragraph(g, Component.translatable("vow.tears-of-ink.ink.short"), l + M + 8, y, textW - 8, TEXT) + 8;
-			y = option(g, Component.translatable("vow.tears-of-ink.soul.name"), l + M, y, SOUL, () -> look(Vow.SOUL), mouseX, mouseY);
-			paragraph(g, Component.translatable("vow.tears-of-ink.soul.short"), l + M + 8, y, textW - 8, TEXT);
+			y = paragraph(g, Component.translatable("vow.tears-of-ink.choose.text"), X, y, TEXT_W, TEXT) + 10;
+			y = option(g, Component.translatable("vow.tears-of-ink.ink.name"), X, y, INK, () -> look(Vow.INK), mx, my);
+			y = paragraph(g, Component.translatable("vow.tears-of-ink.ink.short"), X + 7, y, TEXT_W - 7, TEXT) + 6;
+			y = option(g, Component.translatable("vow.tears-of-ink.soul.name"), X, y, SOUL, () -> look(Vow.SOUL), mx, my);
+			paragraph(g, Component.translatable("vow.tears-of-ink.soul.short"), X + 7, y, TEXT_W - 7, TEXT);
+			g.pose().popPose();
 			return;
 		}
+
 		int color = looking == Vow.SOUL ? SOUL : INK;
-		FitText.drawCentered(g, font, Component.translatable("vow.tears-of-ink." + looking.id + ".name"), l + W / 2, y, textW, color);
-		y += 16;
+		FitText.drawCentered(g, font, Component.translatable("vow.tears-of-ink." + looking.id + ".name"), X + TEXT_W / 2, y, TEXT_W, color);
+		y += 17;
 		if (confirming) {
-			y = paragraph(g, Component.translatable("vow.tears-of-ink.choose.irreversible"), l + M, y, textW, TITLE) + 10;
-			y = paragraph(g, Component.translatable("vow.tears-of-ink.choose.final_warning"), l + M, y, textW, TEXT) + 10;
-			y = Math.max(y, t + H - M - 30);
+			y = paragraph(g, Component.translatable("vow.tears-of-ink.choose.irreversible"), X, y, TEXT_W, TITLE) + 10;
+			y = paragraph(g, Component.translatable("vow.tears-of-ink.choose.final_warning"), X, y, TEXT_W, TEXT) + 10;
+			y = Math.max(y, BOTTOM_OPTIONS_Y);
 			Vow chosen = looking;
-			y = option(g, Component.translatable("vow.tears-of-ink.choose.accept"), l + M, y, color, () -> accept(chosen), mouseX, mouseY);
-			option(g, Component.translatable("vow.tears-of-ink.choose.back"), l + M, y, OPTION, () -> { confirming = false; click(); }, mouseX, mouseY);
-			return;
+			y = option(g, Component.translatable("vow.tears-of-ink.choose.accept"), X, y, color, () -> accept(chosen), mx, my);
+			option(g, Component.translatable("vow.tears-of-ink.choose.back"), X, y, OPTION, () -> { confirming = false; click(); }, mx, my);
+		} else {
+			y = paragraph(g, Component.translatable("vow.tears-of-ink." + looking.id + ".text"), X, y, TEXT_W, TEXT) + 10;
+			y = Math.max(y, BOTTOM_OPTIONS_Y);
+			y = option(g, Component.translatable("vow.tears-of-ink.choose.continue"), X, y, color,
+					() -> { confirming = true; click(); }, mx, my);
+			option(g, Component.translatable("vow.tears-of-ink.choose.back"), X, y, OPTION, () -> look(Vow.NONE), mx, my);
 		}
-		y = paragraph(g, Component.translatable("vow.tears-of-ink." + looking.id + ".text"), l + M, y, textW, TEXT) + 10;
-		y = Math.max(y, t + H - M - 30);
-		y = option(g, Component.translatable("vow.tears-of-ink.choose.continue"), l + M, y, color, () -> { confirming = true; click(); }, mouseX, mouseY);
-		option(g, Component.translatable("vow.tears-of-ink.choose.back"), l + M, y, OPTION, () -> look(Vow.NONE), mouseX, mouseY);
+		g.pose().popPose();
 	}
 
 	private void look(Vow v) {
@@ -105,7 +125,7 @@ public class VowScreen extends Screen {
 
 	private int option(GuiGraphics g, Component text, int x, int y, int color, Runnable click, int mx, int my) {
 		Component line = Component.literal("› ").append(text);
-		int w = Math.min(font.width(line), W - M * 2);
+		int w = Math.min(font.width(line), TEXT_W);
 		boolean hover = mx >= x && mx < x + w && my >= y - 1 && my < y + 10;
 		g.drawString(font, line, x, y, hover ? HOVER : color, false);
 		options.add(new Option(x, y, w, 10, click));
@@ -116,7 +136,8 @@ public class VowScreen extends Screen {
 	public boolean mouseClicked(double mx, double my, int button) {
 		if (button == 0) {
 			for (Option o : List.copyOf(options)) {
-				if (mx >= o.x() && mx < o.x() + o.w() && my >= o.y() - 1 && my < o.y() + o.h()) {
+				if (localX(mx) >= o.x() && localX(mx) < o.x() + o.w()
+						&& localY(my) >= o.y() - 1 && localY(my) < o.y() + o.h()) {
 					o.click().run();
 					return true;
 				}
