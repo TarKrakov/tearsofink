@@ -233,7 +233,11 @@ public final class Combat {
 		p.resetAttackStrengthTicker();
 		broadcast(p, a, step.anim(), duration, s.speed, effectiveTempo); // пустое anim — правая рука в этом ударе не двигается (шкала всё равно)
 		if (step.offAnim() != null) broadcast(p, a, "off:" + step.offAnim(), duration, -2f, effectiveTempo);
-		if (a != Archetype.BASTION) p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.5f,
+		if (a == Archetype.BASTION) {
+			// Отдельный короткий ванильный мах на начало каждого принятого удара,
+			// в том числе при промахе. Звук контакта остаётся в hit().
+			ShieldAudio.play(p, SoundEvents.PLAYER_ATTACK_SWEEP, 0.8f);
+		} else p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.5f,
 				a == Archetype.EXECUTIONER ? 0.6f : 0.9f);
 	}
 
