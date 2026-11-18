@@ -41,6 +41,7 @@ import net.minecraft.client.renderer.RenderType;
 public class TearsOfInkClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
+		StriderSongClient.init();
 		// /inkfog — выключить/включить туман Чернильных Земель у себя (удобно строить)
 		net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
 				dispatcher.register(net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal("inkfog").executes(ctx -> {

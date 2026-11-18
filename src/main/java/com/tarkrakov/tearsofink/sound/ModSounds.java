@@ -25,5 +25,5 @@ public final class ModSounds {
 		return Registry.register(BuiltInRegistries.SOUND_EVENT, id, SoundEvent.createVariableRangeEvent(id));
 	}
 
-	public static void init() {}
+	public static void init() { StriderSong.init(); }
 }

@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.entity;
 
-import com.tarkrakov.tearsofink.sound.ModSounds;
+import com.tarkrakov.tearsofink.sound.StriderSong;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import com.tarkrakov.tearsofink.world.sanctuary.Sanctuary;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -8,7 +9,6 @@ import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -22,6 +22,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
+import java.util.UUID;
 
 /** D-056: peaceful atmospheric walker, synchronized singing, no combat or loot. */
 public final class PaleStriderEntity extends PathfinderMob {
@@ -33,8 +34,10 @@ public final class PaleStriderEntity extends PathfinderMob {
     // Slow real movement to match the author's 10-second walk cycle. Tune after viewing.
     public static final double WALK_SPEED = 0.045;
     private static final int START_TICKS = 40, LOOP_TICKS = 80, END_TICKS = 40, LOOPS = 3;
-    private int songIn = -1, stillTicks, movingTicks, lastSoundCycle = -1;
-    private boolean choir, encounterSpawn, templeChoir;
+    private int songIn = -1, stillTicks, movingTicks;
+    private boolean encounterSpawn, templeChoir;
+    private UUID songEpisode;
+    private long songStart;
     private BlockPos choirAnchor;
 
     public PaleStriderEntity(EntityType<? extends PathfinderMob> type, Level level) {
@@ -121,7 +124,12 @@ public final class PaleStriderEntity extends PathfinderMob {
     @Override public void tick() {
         Vec3 before = position();
         super.tick();
-        if (!(level() instanceof ServerLevel server) || !isAlive() || isNoAi()) return;
+        if (!(level() instanceof ServerLevel server)) return;
+        if (!isAlive() || isNoAi()) {
+            stopSong(server);
+            if (singing()) phase(Phase.IDLE);
+            return;
+        }
         if (phaseStamp() == 0L) phase(Phase.IDLE);
         if (songIn < 0) songIn = 140 + random.nextInt(180);
 
@@ -129,31 +137,18 @@ public final class PaleStriderEntity extends PathfinderMob {
             getNavigation().stop();
             setDeltaMovement(0, getDeltaMovement().y, 0);
             if (!onGround() || isInWater()) {
+                stopSong(server);
                 phase(Phase.IDLE);
                 songIn = 200;
                 return;
             }
-            int elapsed = phaseAge();
-            switch (phase()) {
-                case SING_START -> {
-                    if (elapsed >= START_TICKS) {
-                        phase(Phase.SING_LOOP);
-                        lastSoundCycle = -1;
-                        playPhrase(server, 0);
-                    }
-                }
-                case SING_LOOP -> {
-                    if (elapsed >= LOOP_TICKS * LOOPS) phase(Phase.SING_END);
-                    else playPhrase(server, elapsed / LOOP_TICKS);
-                }
-                case SING_END -> {
-                    if (elapsed >= END_TICKS) {
-                        phase(Phase.IDLE);
-                        songIn = 500 + random.nextInt(501);
-                    }
-                }
-                default -> {}
-            }
+            long elapsed = server.getGameTime() - songStart;
+            if (elapsed >= START_TICKS + LOOP_TICKS * LOOPS + END_TICKS) {
+                songEpisode = null; // Natural end: let the audio tail finish in real time.
+                phase(Phase.IDLE);
+                songIn = 500 + random.nextInt(501);
+            } else if (elapsed >= START_TICKS + LOOP_TICKS * LOOPS) phase(Phase.SING_END);
+            else if (elapsed >= START_TICKS) phase(Phase.SING_LOOP);
             return;
         }
 
@@ -174,25 +169,29 @@ public final class PaleStriderEntity extends PathfinderMob {
                         e -> e != this && e.isAlive() && !e.isNoAi() && !e.singing() && e.onGround() && !e.isInWater()
                                 && !Sanctuary.inside(server, e.getX(), e.getZ()));
                 int count = Math.min(2, neighbours.size());
-                startSong(count > 0);
-                for (int i = 0; i < count; i++) neighbours.get(i).startSong(true);
-            } else startSong(false);
+                startSong(server, 0, count > 0);
+                for (int i = 0; i < count; i++) neighbours.get(i).startSong(server, i + 1, true);
+            } else if (!Sanctuary.inside(server, getX(), getZ())) startSong(server, 0, false);
         }
     }
-    private void startSong(boolean together) {
-        choir = together;
+    private void startSong(ServerLevel server, int part, boolean together) {
         getNavigation().stop();
         setDeltaMovement(0, getDeltaMovement().y, 0);
+        songEpisode = UUID.randomUUID();
+        songStart = server.getGameTime();
         phase(Phase.SING_START);
-        lastSoundCycle = -1;
+        StriderSong play = new StriderSong(songEpisode, getX(), getY() + 3, getZ(), part, together ? 0.28f : 0.65f);
+        for (var player : server.players()) {
+            if (player.distanceToSqr(play.x(), play.y(), play.z()) <= StriderSong.DELIVERY_RANGE * StriderSong.DELIVERY_RANGE
+                    && ServerPlayNetworking.canSend(player, StriderSong.TYPE)) ServerPlayNetworking.send(player, play);
+        }
     }
-    private void playPhrase(ServerLevel server, int cycle) {
-        if (lastSoundCycle == cycle) return;
-        lastSoundCycle = cycle;
-        // Fixed-range event and client attenuation are independent of source loudness.
-        // Short, quiet 4s phrases; no loud volume multiplier to extend range.
-        float pitch = choir ? 0.98f + (getUUID().hashCode() & 3) * 0.013f : 1.0f;
-        server.playSound(null, getX(), getY() + 3.0, getZ(), ModSounds.STRIDER_SONG,
-                SoundSource.NEUTRAL, choir ? 0.28f : 0.65f, pitch);
+
+    void stopSong(ServerLevel server) {
+        if (songEpisode == null) return;
+        StriderSong stop = new StriderSong(songEpisode, 0, 0, 0, -1, 0);
+        for (var player : server.players())
+            if (ServerPlayNetworking.canSend(player, StriderSong.TYPE)) ServerPlayNetworking.send(player, stop);
+        songEpisode = null;
     }
 }

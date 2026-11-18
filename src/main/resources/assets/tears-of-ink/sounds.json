@@ -33,5 +33,23 @@
       }
     ],
     "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_2": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_2",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_3": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_3",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
   }
 }
