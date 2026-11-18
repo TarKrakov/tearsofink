@@ -236,7 +236,7 @@
       {
         "name": "tears-of-ink:pale_crossbow_bolt_impact_01",
         "attenuation_distance": 12,
-        "volume": 0.42
+        "volume": 0.84
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_crossbow_bolt_impact"
@@ -245,7 +245,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_crossbow_death_01",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_crossbow_death"
@@ -254,7 +255,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_crossbow_hurt_01",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_crossbow_hurt"
@@ -263,7 +265,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_crossbow_reload_bolt_01",
-        "attenuation_distance": 10
+        "attenuation_distance": 10,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_crossbow_reload_bolt"
@@ -272,7 +275,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_crossbow_reload_draw_01",
-        "attenuation_distance": 10
+        "attenuation_distance": 10,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_crossbow_reload_draw"
@@ -281,7 +285,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_crossbow_reload_latch_01",
-        "attenuation_distance": 10
+        "attenuation_distance": 10,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_crossbow_reload_latch"
@@ -290,11 +295,13 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_crossbow_shoot_01",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       },
       {
         "name": "tears-of-ink:pale_crossbow_shoot_02",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_crossbow_shoot"
@@ -303,11 +310,13 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_crossbow_step_01",
-        "attenuation_distance": 8
+        "attenuation_distance": 8,
+        "volume": 2
       },
       {
         "name": "tears-of-ink:pale_crossbow_step_02",
-        "attenuation_distance": 8
+        "attenuation_distance": 8,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_crossbow_step"
@@ -329,11 +338,13 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_bash_hit_01",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       },
       {
         "name": "tears-of-ink:pale_shield_bash_hit_02",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_bash_hit"
@@ -342,7 +353,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_bash_swing_01",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_bash_swing"
@@ -351,11 +363,13 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_block_01",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       },
       {
         "name": "tears-of-ink:pale_shield_block_02",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_block"
@@ -364,7 +378,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_charge_break_soft_01",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_charge_break_soft"
@@ -373,7 +388,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_charge_hit_01",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_charge_hit"
@@ -382,11 +398,13 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_charge_prepare_01",
-        "attenuation_distance": 20
+        "attenuation_distance": 20,
+        "volume": 2
       },
       {
         "name": "tears-of-ink:pale_shield_charge_prepare_02",
-        "attenuation_distance": 20
+        "attenuation_distance": 20,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_charge_prepare"
@@ -395,7 +413,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_charge_start_01",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_charge_start"
@@ -404,11 +423,13 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_charge_step_01",
-        "attenuation_distance": 10
+        "attenuation_distance": 10,
+        "volume": 2
       },
       {
         "name": "tears-of-ink:pale_shield_charge_step_02",
-        "attenuation_distance": 10
+        "attenuation_distance": 10,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_charge_step"
@@ -417,7 +438,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_charge_wall_01",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_charge_wall"
@@ -426,7 +448,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_death_01",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_death"
@@ -435,7 +458,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_deflect_01",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_deflect"
@@ -444,7 +468,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_disabled_01",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_disabled"
@@ -453,7 +478,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_hurt_01",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_hurt"
@@ -462,7 +488,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_raise_01",
-        "attenuation_distance": 10
+        "attenuation_distance": 10,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_raise"
@@ -471,11 +498,13 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_step_01",
-        "attenuation_distance": 8
+        "attenuation_distance": 8,
+        "volume": 2
       },
       {
         "name": "tears-of-ink:pale_shield_step_02",
-        "attenuation_distance": 8
+        "attenuation_distance": 8,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_step"
@@ -484,7 +513,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_shield_stun_01",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_shield_stun"
@@ -493,7 +523,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_soldier_dodge_01",
-        "attenuation_distance": 10
+        "attenuation_distance": 10,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_soldier_dodge"
@@ -515,7 +546,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_spear_death_01",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_spear_death"
@@ -524,11 +556,13 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_spear_hit_01",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       },
       {
         "name": "tears-of-ink:pale_spear_hit_02",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_spear_hit"
@@ -537,7 +571,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_spear_hurt_01",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_spear_hurt"
@@ -546,11 +581,13 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_spear_step_01",
-        "attenuation_distance": 8
+        "attenuation_distance": 8,
+        "volume": 2
       },
       {
         "name": "tears-of-ink:pale_spear_step_02",
-        "attenuation_distance": 8
+        "attenuation_distance": 8,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_spear_step"
@@ -559,11 +596,13 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_spear_thrust_01",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       },
       {
         "name": "tears-of-ink:pale_spear_thrust_02",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_spear_thrust"
@@ -572,7 +611,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_bastion",
-        "attenuation_distance": 10
+        "attenuation_distance": 10,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_bastion"
@@ -581,11 +621,13 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_block_1",
-        "attenuation_distance": 10
+        "attenuation_distance": 10,
+        "volume": 2
       },
       {
         "name": "tears-of-ink:soul_shield_block_2",
-        "attenuation_distance": 10
+        "attenuation_distance": 10,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_block"
@@ -594,7 +636,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_break",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_break"
@@ -603,7 +646,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_burst_full",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_burst_full"
@@ -612,7 +656,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_burst_low",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_burst_low"
@@ -621,7 +666,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_charge_1",
-        "attenuation_distance": 8
+        "attenuation_distance": 8,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_charge_1"
@@ -630,7 +676,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_charge_2",
-        "attenuation_distance": 8
+        "attenuation_distance": 8,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_charge_2"
@@ -639,7 +686,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_charge_3",
-        "attenuation_distance": 8
+        "attenuation_distance": 8,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_charge_3"
@@ -648,7 +696,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_charge_4",
-        "attenuation_distance": 8
+        "attenuation_distance": 8,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_charge_4"
@@ -657,7 +706,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_clap",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_clap"
@@ -666,7 +716,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_clap_prepare",
-        "attenuation_distance": 8
+        "attenuation_distance": 8,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_clap_prepare"
@@ -675,7 +726,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_full_charge",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_full_charge"
@@ -684,7 +736,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_perfect",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_perfect"
@@ -693,7 +746,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_raise",
-        "attenuation_distance": 8
+        "attenuation_distance": 8,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_raise"
@@ -702,7 +756,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_riposte",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_riposte"
@@ -711,7 +766,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_mercy",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_mercy"
@@ -720,7 +776,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_radiance",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_radiance"
@@ -729,7 +786,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_ram_hit",
-        "attenuation_distance": 12
+        "attenuation_distance": 12,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_ram_hit"
@@ -738,7 +796,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_ram_start",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_ram_start"
@@ -747,7 +806,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_repel",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_repel"
@@ -756,7 +816,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_res_advance_impact",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_res_advance_impact"
@@ -765,7 +826,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_res_advance_start",
-        "attenuation_distance": 14
+        "attenuation_distance": 14,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_res_advance_start"
@@ -774,7 +836,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_res_avalanche",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_res_avalanche"
@@ -783,7 +846,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_res_flash",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_res_flash"
@@ -792,7 +856,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_res_grace",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_res_grace"
@@ -801,7 +866,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_res_halo",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_res_halo"
@@ -810,7 +876,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_res_intercessor",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_res_intercessor"
@@ -819,7 +886,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_res_phalanx",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_res_phalanx"
@@ -828,7 +896,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_res_shockwave",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_res_shockwave"
@@ -837,7 +906,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_res_sun",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_res_sun"
@@ -846,7 +916,8 @@
     "sounds": [
       {
         "name": "tears-of-ink:soul_shield_res_veil",
-        "attenuation_distance": 16
+        "attenuation_distance": 16,
+        "volume": 2
       }
     ],
     "subtitle": "subtitles.tears-of-ink.soul_shield_res_veil"

@@ -21,6 +21,9 @@ import net.minecraft.util.RandomSource;
 /** Client-only soundscape. No gameplay state, fake creatures, world changes or chunk loading. */
 public final class PaleForestAmbience {
     private static final RandomSource RANDOM = RandomSource.create();
+    // D-066 author playtest: a barely audible background, not a foreground effect.
+    private static final float WIND_VOLUME = 0.075f;
+    private static final float MUSIC_VOLUME = 0.080f;
     private static final SoundEvent[] AIR = {ModSounds.PALE_FOREST_AIR, ModSounds.PALE_FOREST_MEMORY_AIR, ModSounds.PALE_FOREST_FOG_AIR};
     private static final SoundEvent[] MEMORY = {ModSounds.PALE_FOREST_MEMORY_01, ModSounds.PALE_FOREST_MEMORY_02};
     private static final SoundEvent[] FOG = {ModSounds.PALE_FOREST_FOG_PHRASE_01, ModSounds.PALE_FOREST_FOG_PHRASE_02, ModSounds.PALE_FOREST_FOG_PHRASE_03};
@@ -56,7 +59,7 @@ public final class PaleForestAmbience {
         if (music != null) engine.stop(music);
         if (detail != null) engine.stop(detail);
         music = null; detail = null; musicAge = 0; musicDuration = 0;
-        musicWait = between(500, 900); woodWait = between(180, 400);
+        musicWait = between(500, 900); woodWait = between(500, 1000);
         passageWait = between(600, 1200); darkPassage = false; dark = 0f;
         dangerScan = 0; combatHold = 0; lastMemory = lastFog = -1;
     }
@@ -77,7 +80,7 @@ public final class PaleForestAmbience {
             }
             if (detail != null) { engine.stop(detail); detail = null; }
             dark = 0f; darkPassage = false;
-            passageWait = between(600, 1200); musicWait = between(500, 900); woodWait = between(180, 400);
+            passageWait = between(600, 1200); musicWait = between(500, 900); woodWait = between(500, 1000);
             combatHold = 0;
             return;
         }
@@ -103,7 +106,7 @@ public final class PaleForestAmbience {
         boolean musicEnabled = c.options.getSoundSourceVolume(SoundSource.MUSIC) > 0f;
         if (music != null) {
             musicAge++;
-            music.target = !musicEnabled ? 0f : singing ? 0.025f : fighting ? 0.045f : 0.24f;
+            music.target = !musicEnabled ? 0f : singing ? 0.008f : fighting ? 0.015f : MUSIC_VOLUME;
             if (!musicEnabled || musicAge > musicDuration + 60 || (musicAge > 40 && !engine.isActive(music))) {
                 engine.stop(music); music = null;
                 musicWait = between(1100, 2200);
@@ -115,11 +118,11 @@ public final class PaleForestAmbience {
             int index;
             if (fogMusic) {
                 index = nextIndex(FOG.length, lastFog); lastFog = index;
-                music = new Layer(FOG[index], SoundSource.MUSIC, false, 0.24f);
+                music = new Layer(FOG[index], SoundSource.MUSIC, false, MUSIC_VOLUME);
                 musicDuration = FOG_TICKS[index];
             } else {
                 index = nextIndex(MEMORY.length, lastMemory); lastMemory = index;
-                music = new Layer(MEMORY[index], SoundSource.MUSIC, false, 0.24f);
+                music = new Layer(MEMORY[index], SoundSource.MUSIC, false, MUSIC_VOLUME);
                 musicDuration = MEMORY_TICKS[index];
             }
             musicAge = 0; engine.play(music);
@@ -127,13 +130,13 @@ public final class PaleForestAmbience {
 
         // One constant-level bed, smoothly redistributed among the three versions.
         float memory = music != null && !fogMusic ? 0.8f * (1f - dark) : 0f;
-        float bed = (0.24f - 0.035f * clarity) * (fighting ? 0.42f : singing ? 0.65f : 1f);
+        float bed = (WIND_VOLUME - 0.011f * clarity) * (fighting ? 0.42f : singing ? 0.65f : 1f);
         updateWind(c, 0, bed * Math.max(0f, 1f - dark - memory));
         updateWind(c, 1, bed * memory);
         updateWind(c, 2, bed * dark);
 
         if (--woodWait <= 0) {
-            woodWait = dark > 0.5f ? between(260, 620) : between(180, 440);
+            woodWait = dark > 0.5f ? between(700, 1400) : between(500, 1100);
             if (!fighting && !singing && c.options.getSoundSourceVolume(SoundSource.AMBIENT) > 0f
                     && (detail == null || !engine.isActive(detail))) playWood(c);
         }
@@ -155,7 +158,7 @@ public final class PaleForestAmbience {
                 engine.stop(layer); wind[i] = null; layer = null;
             }
         }
-        if (layer == null && wanted > 0.006f) {
+        if (layer == null && wanted > 0.0025f) {
             wind[i] = new Layer(AIR[i], SoundSource.AMBIENT, true, wanted);
             windAge[i] = 0; engine.play(wind[i]);
         }
@@ -175,13 +178,14 @@ public final class PaleForestAmbience {
                 pos.setY(from.getY() + dy);
                 var state = world.getBlockState(pos);
                 if (!state.is(ModBlocks.PALE_LOG) && !state.is(ModBlocks.PALE_WOOD)) continue;
-                SoundEvent event = switch (RANDOM.nextInt(8)) {
-                    case 0, 1, 2 -> ModSounds.PALE_FOREST_TWIG;
-                    case 3, 4 -> ModSounds.PALE_FOREST_BARK;
-                    case 5 -> ModSounds.PALE_FOREST_BRANCH;
+                SoundEvent event = switch (RANDOM.nextInt(10)) {
+                    case 0, 1, 2, 3 -> ModSounds.PALE_FOREST_TWIG;
+                    case 4, 5, 6, 7 -> ModSounds.PALE_FOREST_BARK;
+                    case 8 -> ModSounds.PALE_FOREST_BRANCH;
                     default -> ModSounds.PALE_FOREST_RUSTLE;
                 };
-                float volume = (0.20f + RANDOM.nextFloat() * 0.12f) * (dark > 0.5f ? 0.8f : 1f);
+                float volume = (0.060f + RANDOM.nextFloat() * 0.030f) * (dark > 0.5f ? 0.8f : 1f);
+                if (event == ModSounds.PALE_FOREST_RUSTLE) volume *= 0.5f;
                 detail = new SimpleSoundInstance(event.getLocation(), SoundSource.AMBIENT, volume, 0.96f + 0.08f * RANDOM.nextFloat(),
                         SoundInstance.createUnseededRandom(), false, 0, SoundInstance.Attenuation.LINEAR,
                         pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, false);
@@ -209,7 +213,11 @@ public final class PaleForestAmbience {
             this.target = target;
         }
 
-        @Override public void tick() { volume = Math.max(0.001f, approach(volume, target, 0.0025f)); }
+        @Override public void tick() {
+            // Slow recovery/transition, quicker ducking so combat and songs stay clear.
+            float step = target < volume ? 0.0020f : looping ? 0.00065f : 0.0010f;
+            volume = Math.max(0.001f, approach(volume, target, step));
+        }
 
         boolean quiet() { return volume <= 0.002f; }
     }
