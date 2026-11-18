@@ -50,6 +50,7 @@ public class BloodTankBlock extends HorizontalDirectionalBlock implements Entity
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
 		if (!(level.getBlockEntity(pos) instanceof BloodTankBlockEntity tank)) return InteractionResult.PASS;
 		if (level.isClientSide) return InteractionResult.SUCCESS;
+		if (player instanceof net.minecraft.server.level.ServerPlayer p) com.tarkrakov.tearsofink.prologue.DiaryEntries.discover(p, "draft_blood_collector");
 		int clots = tank.takeClots();
 		int crystals = tank.takeCrystals();
 		if (clots > 0) give(player, new ItemStack(ModItems.BLOOD_CLOT, clots));

@@ -185,6 +185,7 @@ public final class Harvest {
 
 	// ===== Меню у Хранителя (чат с кнопками) =====
 	public static void menu(ServerPlayer p) {
+		com.tarkrakov.tearsofink.prologue.DiaryEntries.discover(p, "draft_harvest");
 		say(p, Component.translatable("harvest.tears-of-ink.keeper_hello"));
 		long now = p.server.getTickCount();
 		switch (phase) {

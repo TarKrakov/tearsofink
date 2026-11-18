@@ -208,6 +208,11 @@ public final class DiaryEntries {
 		return false;
 	}
 
+	/** Discoveries from direct interaction with world content, never outside the Lands. */
+	public static void discover(ServerPlayer p, String... entries) {
+		if (ModDimensions.isLands(p.level()) && p.isAlive() && !p.isSpectator()) unlock(p, entries);
+	}
+
 	public static void unlock(ServerPlayer p, String... entries) {
 		List<String> have = p.getAttachedOrCreate(DATA);
 		Set<String> next = new LinkedHashSet<>(have);

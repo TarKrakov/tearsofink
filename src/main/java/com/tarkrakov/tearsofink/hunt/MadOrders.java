@@ -121,6 +121,7 @@ public final class MadOrders {
 		long now = p.server.getTickCount();
 		Order o = new Order(nextId++, p.getUUID(), type, rank, mod, arms[0], arms[1], x, at != null ? at.getY() : p.getY(), z, now + TIME);
 		ORDERS.put(p.getUUID(), o);
+		com.tarkrakov.tearsofink.prologue.DiaryEntries.discover(p, "draft_mad_order");
 		COOLDOWNS.put(p.getUUID(), now + COOLDOWN);
 		say(p, "order.tears-of-ink.taken", name(o));
 		p.playNotifySound(SoundEvents.RAID_HORN.value(), SoundSource.HOSTILE, 0.4f, 0.7f);

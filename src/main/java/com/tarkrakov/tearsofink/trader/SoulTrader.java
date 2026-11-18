@@ -173,6 +173,7 @@ public final class SoulTrader {
 	}
 
 	public static void sendOpen(ServerPlayer p, SoulTraderEntity trader) {
+		com.tarkrakov.tearsofink.prologue.DiaryEntries.discover(p, "draft_soul_bargain");
 		InkData d = InkPowers.get(p);
 		var v = com.tarkrakov.tearsofink.vow.Vows.get(p);
 		int packed = v.vow().ordinal() | (Math.min(63, v.exchanged()) << 10) | ((d.sold() + d.taint()) << 16);

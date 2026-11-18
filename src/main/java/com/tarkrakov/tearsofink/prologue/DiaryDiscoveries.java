@@ -23,7 +23,7 @@ final class DiaryDiscoveries {
 			"draft_pale_owl", "draft_pale_strider", "draft_soul_bargain", "draft_harvest",
 			"draft_hunt_field", "draft_hunter_spire", "draft_hunter_blood", "draft_hunter_ink", "draft_mad_order");
 	private static final List<String> ITEMS = List.of("draft_asphoda", "draft_blood_metal",
-			"draft_ink_metal", "draft_armor", "draft_alchemy", "draft_mad_order", "draft_harvest");
+			"draft_ink_metal", "draft_armor", "draft_alchemy", "draft_mad_order", "draft_harvest", "draft_blood_collector");
 
 	private DiaryDiscoveries() {}
 
@@ -37,6 +37,9 @@ final class DiaryDiscoveries {
 
 	static void collect(ServerPlayer p, List<String> known, List<String> found) {
 		if (p.isSpectator() || !p.isAlive()) return;
+		var vow = com.tarkrakov.tearsofink.vow.Vows.vow(p);
+		if (vow == com.tarkrakov.tearsofink.vow.Vow.SOUL) add(known, found, "draft_soul_deeds");
+		else if (vow == com.tarkrakov.tearsofink.vow.Vow.INK) add(known, found, "draft_ink_ranks");
 		var level = p.serverLevel();
 		var pos = p.blockPosition();
 		// The player chunk is already loaded; no locate or world generation.
@@ -68,6 +71,7 @@ final class DiaryDiscoveries {
 						|| s.is(ModItems.STRONG_TEARBLOOM_BREW)) add(known, found, "draft_alchemy");
 				if (s.is(ModItems.HOPE_ESSENCE)) add(known, found, "draft_mad_order");
 				if (s.is(ModItems.CRIMSON_GIFT)) add(known, found, "draft_harvest");
+				if (s.is(ModItems.BLOOD_CLOT) || s.is(ModItems.BLOOD_CRYSTAL)) add(known, found, "draft_blood_collector");
 			}
 		}
 

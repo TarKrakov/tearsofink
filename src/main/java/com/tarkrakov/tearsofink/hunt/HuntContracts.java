@@ -107,6 +107,7 @@ public final class HuntContracts {
 
 	/** Открыть доску в окне Торговки. */
 	public static void send(ServerPlayer p, SoulTraderEntity trader) {
+		com.tarkrakov.tearsofink.prologue.DiaryEntries.discover(p, "draft_hunt_field");
 		Board b = board(p);
 		List<Entry> list = new ArrayList<>();
 		for (int i = 0; i < 3; i++) {
