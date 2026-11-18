@@ -1,0 +1,31 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_ingot": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "tears-of-ink:ink_ingot"
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "recipes": [
+      "tears-of-ink:ink_woven_hood",
+      "tears-of-ink:ink_leather_jerkin",
+      "tears-of-ink:ink_cloth_pants",
+      "tears-of-ink:ink_travel_boots",
+      "tears-of-ink:ink_kettle_hat",
+      "tears-of-ink:ink_scale_armor",
+      "tears-of-ink:ink_padded_leggings",
+      "tears-of-ink:ink_high_boots",
+      "tears-of-ink:ink_bascinet",
+      "tears-of-ink:ink_plate_cuirass",
+      "tears-of-ink:ink_plate_leggings",
+      "tears-of-ink:ink_armored_boots"
+    ]
+  }
+}

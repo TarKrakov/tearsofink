@@ -1,0 +1,31 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_ingot": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "tears-of-ink:blood_ingot"
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "recipes": [
+      "tears-of-ink:blood_veil",
+      "tears-of-ink:blood_robe",
+      "tears-of-ink:blood_skirt",
+      "tears-of-ink:blood_sandals",
+      "tears-of-ink:blood_reinforced_mask",
+      "tears-of-ink:blood_padded_mantle",
+      "tears-of-ink:blood_reinforced_skirt",
+      "tears-of-ink:blood_caligae",
+      "tears-of-ink:blood_closed_helmet",
+      "tears-of-ink:blood_chainmail",
+      "tears-of-ink:blood_plate_kilt",
+      "tears-of-ink:blood_armored_boots"
+    ]
+  }
+}

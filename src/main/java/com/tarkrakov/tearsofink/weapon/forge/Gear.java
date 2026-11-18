@@ -43,9 +43,8 @@ public final class Gear {
 	public static final float DEGRADE_AT = 0.10f, WARN_AT = 0.25f;
 	/** Заточка на Чернильной наковальне: доля шкалы за один Пигмент (по одному в клетку). */
 	public static final float SHARPEN_PER_PIGMENT = 0.25f;
-	/** Ванильное оружие (и всё не из мода) по существам в Землях: ×0,6. Броня — когда будет своя (0 — выключено). */
+	/** Ванильное оружие (и всё не из мода) по существам в Землях: ×0,6. */
 	public static final float VANILLA_WEAPON_MULT = 0.6f; // 16 ноя: было 0,7 — зачарованный алмаз обгонял наше оружие
-	public static final float VANILLA_ARMOR_CUT = 0f;
 	/** Пассивки обычного оружия: Кровь — шанс кровотечения; Чернила — замедление (тики, сила 0 = I). */
 	public static final float ORDINARY_BLEED_CHANCE = 0.10f;
 	public static final int INK_SLOW_TICKS = 30, INK_SLOW_AMP = 0;

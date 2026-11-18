@@ -171,6 +171,7 @@ public final class ModCreativeTab {
 								output.accept(((com.tarkrakov.tearsofink.hunt.HunterWeaponItem) ModItems.HUNTER_SABER).make(line, tier));
 							}
 						}
+						ModArmor.items().forEach(output::accept);
 						output.accept(ModItems.ATONEMENT);
 						output.accept(ModItems.CATERPILLAR_SPAWN_EGG);
 						output.accept(ModItems.PALE_SPEARMAN_SPAWN_EGG);

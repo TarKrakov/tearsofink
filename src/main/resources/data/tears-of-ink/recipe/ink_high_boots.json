@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "I I",
+    "I I"
+  ],
+  "key": {
+    "I": {
+      "item": "tears-of-ink:ink_ingot"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:ink_high_boots"
+  }
+}

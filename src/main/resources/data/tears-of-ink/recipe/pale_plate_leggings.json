@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "III",
+    "A A",
+    "I I"
+  ],
+  "key": {
+    "I": {
+      "item": "tears-of-ink:pale_ingot"
+    },
+    "A": {
+      "item": "tears-of-ink:asphoda"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:pale_plate_leggings"
+  }
+}

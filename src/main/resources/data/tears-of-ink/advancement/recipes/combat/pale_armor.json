@@ -1,0 +1,31 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_ingot": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "tears-of-ink:pale_ingot"
+          }
+        ]
+      }
+    }
+  },
+  "rewards": {
+    "recipes": [
+      "tears-of-ink:pale_headband",
+      "tears-of-ink:pale_quilted_jacket",
+      "tears-of-ink:pale_pants",
+      "tears-of-ink:pale_shoes",
+      "tears-of-ink:pale_chain_hood",
+      "tears-of-ink:pale_brigandine",
+      "tears-of-ink:pale_reinforced_leggings",
+      "tears-of-ink:pale_leather_boots",
+      "tears-of-ink:pale_closed_helmet",
+      "tears-of-ink:pale_cuirass",
+      "tears-of-ink:pale_plate_leggings",
+      "tears-of-ink:pale_sabatons"
+    ]
+  }
+}

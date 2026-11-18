@@ -66,6 +66,7 @@ public class TearsOfInk implements ModInitializer {
 		ModBlocks.init();
 		ModBlockEntities.init();
 		ModItems.init();
+		com.tarkrakov.tearsofink.world.VanillaArmorPenalty.init();
 		ModCreativeTab.init();
 		ModParticles.init();
 		ModEffects.init();

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "III",
+    "I I",
+    "I I"
+  ],
+  "key": {
+    "I": {
+      "item": "tears-of-ink:pale_ingot"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:pale_reinforced_leggings"
+  }
+}

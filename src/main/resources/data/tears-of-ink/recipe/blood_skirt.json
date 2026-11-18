@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "SIS",
+    "I I"
+  ],
+  "key": {
+    "I": {
+      "item": "tears-of-ink:blood_ingot"
+    },
+    "S": {
+      "item": "tears-of-ink:silk_thread"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:blood_skirt"
+  }
+}

@@ -17,7 +17,9 @@
 		"SanctuaryAttackMixin",
 		"NoSunBurnMixin",
 		"PreyDamageMixin",
-		"GearDamageMixin"
+		"GearDamageMixin",
+		"PlayerArmorMixin",
+		"PlayerArmorMixin$EquippedArmor"
 	],
 	"injectors": {
 		"defaultRequire": 1

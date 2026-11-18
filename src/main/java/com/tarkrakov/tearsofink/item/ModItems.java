@@ -278,5 +278,7 @@ public final class ModItems {
 		return Registry.register(BuiltInRegistries.ITEM, TearsOfInk.id(name), item);
 	}
 
-	public static void init() {}
+	public static void init() {
+		ModArmor.init();
+	}
 }

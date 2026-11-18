@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "I I",
+    "AI "
+  ],
+  "key": {
+    "I": {
+      "item": "tears-of-ink:ink_ingot"
+    },
+    "A": {
+      "item": "tears-of-ink:asphoda"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:ink_armored_boots"
+  }
+}
