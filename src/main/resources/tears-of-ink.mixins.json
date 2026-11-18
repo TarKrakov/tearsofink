@@ -15,6 +15,7 @@
 		"PlayerDifficultyMixin",
 		"ServerPlayerRespawnMixin",
 		"RespawnRequestMixin",
+		"RespawnPlayerCreationMixin",
 		"MobAccessor",
 		"LivingEntityAttackAccessor",
 		"SanctuaryAttackMixin",

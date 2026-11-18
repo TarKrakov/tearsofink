@@ -48,6 +48,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 /**
  * Переходы между обычным миром и Землями (зеркальце), возрождение в Землях,
@@ -88,6 +89,7 @@ public final class Travel {
 	private static final Map<ServerPlayer, ChunkPos> RESPAWN_CHUNKS = new HashMap<>();
 	private static final Set<ServerPlayer> RESPAWNING = new HashSet<>();
 	private static final Map<ServerPlayer, MirrorArrival> MIRROR_ARRIVALS = new HashMap<>();
+	private static final ThreadLocal<ServerLevel> RESPAWN_CONSTRUCTION = new ThreadLocal<>();
 
 	private record MirrorArrival(ServerLevel level, Optional<BlockPos> last, float yaw, int deadline) {}
 	private record Spawn(Vec3 pos, float yaw, boolean lostBed) {}
@@ -329,6 +331,22 @@ public final class Travel {
 		if (RESPAWNING.add(p)) waiting(p, "respawn_loading");
 		prepareRespawn(p);
 		return true;
+	}
+
+	public static ServerPlayer createRespawnPlayer(ServerLevel level, Supplier<ServerPlayer> create) {
+		if (!ModDimensions.isLands(level)) return create.get();
+		ServerLevel previous = RESPAWN_CONSTRUCTION.get();
+		RESPAWN_CONSTRUCTION.set(level);
+		try {
+			return create.get();
+		} finally {
+			if (previous == null) RESPAWN_CONSTRUCTION.remove();
+			else RESPAWN_CONSTRUCTION.set(previous);
+		}
+	}
+
+	public static boolean skipProvisionalSpawn(ServerLevel level) {
+		return RESPAWN_CONSTRUCTION.get() == level;
 	}
 
 	private static void tickLoading(int now) {
