@@ -1,0 +1,56 @@
+name: D-069 audio render
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audio-d069.yml'
+permissions:
+  contents: write
+jobs:
+  render:
+    if: contains(github.event.head_commit.message, 'Render D-069 once')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Prepare offline renderer
+        run: |
+          python3 -m venv /tmp/d069
+          /tmp/d069/bin/pip install numpy scipy soundfile
+      - name: Render and validate each original recording
+        run: /tmp/d069/bin/python tools/audio/revise_timbres.py
+      - name: Validate exact changed paths and record technical report
+        run: |
+          python3 - <<'PY'
+          import json, pathlib, subprocess
+          p=pathlib.Path('out/audio-d069.json')
+          report=json.loads(p.read_text())
+          paths=set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
+          expected={'src/main/resources/assets/tears-of-ink/sounds/'+r['file'] for r in report['changed']}
+          assert paths==expected and len(paths)==81, (paths^expected)
+          assert all(not p.startswith('pale_strider') for p in [r['file'] for r in report['changed']])
+          print('Validated exact 81 changed audio paths.')
+          with open('docs/PROJECT_STATUS.md','a') as f:
+              f.write('\n### D-069 — Первый технический проход по тембрам\n')
+              f.write('Обработаны 81 OGG: 46 Бледной троицы, 32 щитов Души и 3 голоса совы. Сохранены все прочие OGG по SHA-256, включая Скитальцев, Бастион, перья, ползание, лес/музыку. Контакты и механизмы пересобраны по физическим источникам; ноты, хор и голоса очищены спектральной маской с сохранением исходной фразировки. Проверены моно Vorbis, частоты, число отсчётов, пики, RMS и изменённые пути. Холдинг уровней приблизительный; человеческая оценка звучания и проверка в игре ещё не выполнялись. Микшер, события, громкости, тайминги и Java неизменны. Настройки пользователя сохраняются.\n')
+          PY
+      - name: Validate Gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: microsoft
+      - name: Build revision
+        run: bash ./gradlew build
+      - name: Publish only validated audio and documentation to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/main/resources/assets/tears-of-ink/sounds/ docs/PROJECT_STATUS.md
+          git commit -m "Render D-069 source-specific audio revision; verified Gradle build"
+          git push origin HEAD:main
+      - name: Upload per-file verification report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: D069-audio-validation
+          path: out/audio-d069.json
