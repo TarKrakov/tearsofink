@@ -20,13 +20,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Окно Торговки душами. Пока лист — как у дневника (gui/diary.png, 192×232); свой фон — gui/soul_trader.png, когда нарисует автор.
+ * Окно Торговки душами на авторском листе gui/diary.png (256×256). Текст и кнопки
+ * остаются в колонке пергамента, длинные страницы прокручиваются колёсиком/клавишами.
  * Главная страница: продать душу / отдать контракты / доска контрактов / уйти. Страница продажи — что теряешь, и подтверждение.
  * Доска контрактов — три вкладки (лёгкий, средний, сложный), активный контракт сверху.
  */
 public class SoulTraderScreen extends Screen {
 	private static final ResourceLocation PAGE = TearsOfInk.id("textures/gui/diary.png");
-	private static final int W = 192, H = 232, M = 18, LINE = 12;
+	private static final int W = 256, H = 256, M = 64, LINE = 12;
+	private static final int TEXT_W = W - M * 2, TITLE_Y = 23, BODY_Y = 43, BODY_BOTTOM = 216;
 	private static final int TEXT = 0x2A1E2C, TITLE = 0x1E4E55, OPTION = 0x3A2A30, HOVER = 0x1E7A82, FADED = 0x8A7C7A, WARN = 0x6A1420;
 
 	private SoulTrader.Open data;
@@ -36,8 +38,11 @@ public class SoulTraderScreen extends Screen {
 	private long boardAt;
 	private int tab;
 	private final List<Option> options = new ArrayList<>();
+	private int scroll;
+	private int contentExtent = BODY_Y;
+	private int maxScroll;
 
-	private record Option(Component text, int x, int y, int w, Runnable click, boolean enabled) {}
+	private record Option(Component text, int x, int y, int w, int h, Runnable click, boolean enabled) {}
 
 	private SoulTraderScreen(SoulTrader.Open data) {
 		super(Component.translatable("trader.tears-of-ink.title"));
@@ -50,6 +55,7 @@ public class SoulTraderScreen extends Screen {
 		if (mc.screen instanceof SoulTraderScreen s && s.data.entity() == data.entity()) {
 			s.data = data;
 			s.selling = false;
+			s.scroll = 0;
 			return;
 		}
 		mc.setScreen(new SoulTraderScreen(data));
@@ -63,6 +69,7 @@ public class SoulTraderScreen extends Screen {
 			s.board = d;
 			s.boardAt = System.currentTimeMillis();
 			if (first) { // первая свободная вкладка
+				s.scroll = 0;
 				for (HuntContracts.Entry e : d.entries()) {
 					if (!e.taken()) {
 						s.tab = e.rank();
@@ -78,33 +85,74 @@ public class SoulTraderScreen extends Screen {
 		return (seconds / 60) + ":" + String.format("%02d", seconds % 60);
 	}
 
-	private int l() { return (width - W) / 2; }
-	private int t() { return (height - H) / 2; }
+	
+	/** Сохраняем размеры авторского атласа, масштабируя весь GUI лишь на маленьких окнах. */
+	private float paperScale() {
+		return Math.min(1f, Math.min((width - 8f) / W, (height - 8f) / H));
+	}
+	private float left() { return (width - W * paperScale()) / 2f; }
+	private float top() { return (height - H * paperScale()) / 2f; }
+	private double localX(double mouseX) { return (mouseX - left()) / paperScale(); }
+	private double localY(double mouseY) { return (mouseY - top()) / paperScale(); }
+	private void resetScroll() { scroll = 0; maxScroll = 0; }
+
 
 	private void send(int action) {
 		ClientPlayNetworking.send(new SoulTrader.Action(data.entity(), action));
 	}
 
+
 	@Override
 	public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
 		super.render(g, mouseX, mouseY, partialTick);
-		int l = l(), t = t();
-		g.blit(PAGE, l, t, 0, 0, W, H, 256, 256);
-		FitText.drawCentered(g, font, Component.translatable("trader.tears-of-ink.title"), l + W / 2, t + M, W - M * 2, TITLE);
+		float scale = paperScale(), lx = left(), ty = top();
+		int mx = (int) localX(mouseX), my = (int) localY(mouseY);
+
+		g.pose().pushPose();
+		g.pose().translate(lx, ty, 0);
+		g.pose().scale(scale, scale, 1f);
+		g.blit(PAGE, 0, 0, 0, 0, W, H, W, H);
+		FitText.drawCentered(g, font, Component.translatable("trader.tears-of-ink.title"), W / 2, TITLE_Y, TEXT_W, TITLE);
+
+		// Обрезаем прокручиваемое содержимое строго по бумаге, а не по окну.
+		g.enableScissor((int) Math.ceil(lx + (M - 3) * scale),
+				(int) Math.ceil(ty + BODY_Y * scale),
+				(int) Math.floor(lx + (M + TEXT_W + 3) * scale),
+				(int) Math.floor(ty + BODY_BOTTOM * scale));
 		options.clear();
-		int y = t + M + 16;
-		int textW = W - M * 2;
+		contentExtent = BODY_Y;
+		g.pose().pushPose();
+		g.pose().translate(0, -scroll, 0);
+		renderContent(g, mx, my + scroll);
+		g.pose().popPose();
+		g.disableScissor();
+
+		maxScroll = Math.max(0, contentExtent - BODY_BOTTOM + 3);
+		if (scroll > maxScroll) scroll = maxScroll;
+		if (maxScroll > 0) {
+			int track = BODY_BOTTOM - BODY_Y;
+			int thumb = Math.max(12, track * track / (track + maxScroll));
+			int y = BODY_Y + (track - thumb) * scroll / maxScroll;
+			g.fill(M + TEXT_W + 4, BODY_Y, M + TEXT_W + 6, BODY_BOTTOM, 0x553A2226);
+			g.fill(M + TEXT_W + 4, y, M + TEXT_W + 6, y + thumb, 0xBB7A4549);
+		}
+		g.pose().popPose();
+	}
+
+	/** Все действия остаются прежними; изменена только композиция текста и кнопок. */
+	private void renderContent(GuiGraphics g, int mouseX, int mouseY) {
+		int l = 0, y = BODY_Y, textW = TEXT_W;
 		if (board != null) {
 			renderBoard(g, l, y, textW, mouseX, mouseY);
 			return;
 		}
 		if (!selling) {
 			y = paragraph(g, Component.translatable("trader.tears-of-ink.page"), l + M, y, textW, TEXT) + 10;
-			y = option(g, Component.translatable("trader.tears-of-ink.option.sell"), l + M, y, () -> { selling = true; click(); }, true, mouseX, mouseY);
+			y = option(g, Component.translatable("trader.tears-of-ink.option.sell"), l + M, y, () -> { selling = true; resetScroll(); click(); }, true, mouseX, mouseY);
 			y = option(g, Component.translatable("trader.tears-of-ink.option.contracts", data.contracts()), l + M, y,
 					() -> send(SoulTrader.ACTION_CONTRACTS), data.contracts() > 0, mouseX, mouseY);
 			y = option(g, Component.translatable("trader.tears-of-ink.option.board"), l + M, y,
-					() -> { send(SoulTrader.ACTION_BOARD); click(); }, true, mouseX, mouseY);
+					() -> { resetScroll(); send(SoulTrader.ACTION_BOARD); click(); }, true, mouseX, mouseY);
 			// особый заказ: обезумевший охотник
 			int order = data.order();
 			if (order == 1) {
@@ -135,17 +183,17 @@ public class SoulTraderScreen extends Screen {
 			y = inkRankPreview(g, l, y, textW, data.inkMax(), inkBack);
 			y += 4;
 			y = option(g, Component.translatable("trader.tears-of-ink.sell.confirm"), l + M, y, () -> send(SoulTrader.ACTION_SELL), true, mouseX, mouseY);
-			option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { selling = false; click(); }, true, mouseX, mouseY);
+			option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { selling = false; resetScroll(); click(); }, true, mouseX, mouseY);
 			return;
 		}
 		if (data.inkMax() >= InkData.INK_CAP) {
 			y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.ink_full"), l + M, y, textW, WARN) + 10;
-			option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { selling = false; click(); }, true, mouseX, mouseY);
+			option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { selling = false; resetScroll(); click(); }, true, mouseX, mouseY);
 			return;
 		}
 		if (data.sold() >= (InkData.SOUL_START - InkData.SOUL_MIN) / InkData.SOUL_STEP) {
 			y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.none"), l + M, y, textW, TEXT) + 10;
-			option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { selling = false; click(); }, true, mouseX, mouseY);
+			option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { selling = false; resetScroll(); click(); }, true, mouseX, mouseY);
 			return;
 		}
 		y = paragraph(g, Component.translatable("trader.tears-of-ink.sell.text"), l + M, y, textW, TEXT) + 6;
@@ -159,7 +207,7 @@ public class SoulTraderScreen extends Screen {
 		y = inkRankPreview(g, l, y, textW, data.inkMax(), inkAfter);
 		y += 10;
 		y = option(g, Component.translatable("trader.tears-of-ink.sell.confirm"), l + M, y, () -> send(SoulTrader.ACTION_SELL), true, mouseX, mouseY);
-		option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { selling = false; click(); }, true, mouseX, mouseY);
+		option(g, Component.translatable("trader.tears-of-ink.sell.cancel"), l + M, y, () -> { selling = false; resetScroll(); click(); }, true, mouseX, mouseY);
 	}
 
 	/** При продаже и получении Чернил показывать новую стадию и конкретное преимущество. */
@@ -203,12 +251,13 @@ public class SoulTraderScreen extends Screen {
 		for (HuntContracts.Entry e : b.entries()) {
 			Component name = Component.translatable("trader.tears-of-ink.board.rank." + e.rank());
 			int w = font.width(name);
+			if (x > l + M && x + w > l + M + textW) { x = l + M; y += 13; }
 			boolean sel = e.rank() == tab;
 			boolean hover = mouseX >= x && mouseX < x + w && mouseY >= y - 1 && mouseY < y + 10;
 			int color = sel ? TITLE : e.taken() ? FADED : hover ? HOVER : OPTION;
 			g.drawString(font, sel ? name.copy().withStyle(ChatFormatting.UNDERLINE) : name, x, y, color, false);
 			int rank = e.rank();
-			options.add(new Option(name, x, y, w, () -> { tab = rank; click(); }, true));
+			options.add(new Option(name, x, y, w, 10, () -> { tab = rank; resetScroll(); click(); }, true));
 			x += w + 10;
 		}
 		y += 16;
@@ -223,10 +272,9 @@ public class SoulTraderScreen extends Screen {
 			Component take = Component.translatable(cur.taken() ? "trader.tears-of-ink.board.taken" : "trader.tears-of-ink.board.take");
 			y = option(g, take, l + M, y, () -> send(SoulTrader.ACTION_TAKE + rank), !cur.taken() && !b.hasActive(), mouseX, mouseY) + 2;
 		}
-		int bottom = t() + H - M - 22;
-		y = Math.max(y, bottom);
+		y += 8;
 		y = paragraph(g, Component.translatable("trader.tears-of-ink.board.refresh", clock(b.refreshSeconds() - passed)), l + M, y, textW, FADED);
-		option(g, Component.translatable("trader.tears-of-ink.board.back"), l + M, y, () -> { board = null; click(); }, true, mouseX, mouseY);
+		option(g, Component.translatable("trader.tears-of-ink.board.back"), l + M, y, () -> { board = null; resetScroll(); click(); }, true, mouseX, mouseY);
 		if (b.refreshSeconds() - passed < 0 && passed % 2 == 0 && (System.currentTimeMillis() - boardAt) > 1500) {
 			boardAt = System.currentTimeMillis(); // доска обновилась — попросить свежую
 			send(SoulTrader.ACTION_BOARD);
@@ -238,6 +286,7 @@ public class SoulTraderScreen extends Screen {
 			g.drawString(font, line, x, y, color, false);
 			y += 10;
 		}
+		contentExtent = Math.max(contentExtent, y + 2);
 		return y;
 	}
 
@@ -250,36 +299,68 @@ public class SoulTraderScreen extends Screen {
 		return n;
 	}
 
+
 	private int option(GuiGraphics g, Component text, int x, int y, Runnable click, boolean enabled, int mx, int my) {
 		Component line = Component.literal("› ").append(text);
-		int w = Math.min(font.width(line), W - M * 2);
-		boolean hover = enabled && mx >= x && mx < x + w && my >= y - 1 && my < y + 10;
+		var lines = font.split(line, TEXT_W);
+		int h = Math.max(LINE, lines.size() * 10 + 2);
+		boolean hover = enabled && mx >= x && mx < x + TEXT_W && my >= y && my < y + h;
 		int color = !enabled ? FADED : hover ? HOVER : OPTION;
-		var lines = font.split(line, W - M * 2);
 		int yy = y;
-		for (var l : lines) {
-			g.drawString(font, l, x, yy, color, false);
+		for (var part : lines) {
+			g.drawString(font, part, x, yy, color, false);
 			yy += 10;
 		}
-		options.add(new Option(text, x, y, W - M * 2, click, enabled));
-		return y + Math.max(LINE, lines.size() * 10 + 2);
+		options.add(new Option(text, x, y, TEXT_W, h, click, enabled));
+		contentExtent = Math.max(contentExtent, y + h);
+		return y + h;
 	}
 
 	private void click() {
 		minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1f));
 	}
 
+
 	@Override
 	public boolean mouseClicked(double mx, double my, int button) {
 		if (button == 0) {
-			for (Option o : List.copyOf(options)) {
-				if (o.enabled() && mx >= o.x() && mx < o.x() + o.w() && my >= o.y() - 1 && my < o.y() + 10) {
-					o.click().run();
-					return true;
+			double x = localX(mx), screenY = localY(my), y = screenY + scroll;
+			if (screenY >= BODY_Y && screenY <= BODY_BOTTOM) {
+				for (Option o : List.copyOf(options)) {
+					if (o.enabled() && x >= o.x() && x < o.x() + o.w() && y >= o.y() && y < o.y() + o.h()) {
+						o.click().run();
+						return true;
+					}
 				}
 			}
 		}
 		return super.mouseClicked(mx, my, button);
+	}
+
+	@Override
+	public boolean mouseScrolled(double mx, double my, double scrollX, double scrollY) {
+		double x = localX(mx), y = localY(my);
+		if (x >= M && x < M + TEXT_W + 8 && y >= BODY_Y && y <= BODY_BOTTOM && maxScroll > 0) {
+			scroll = Math.max(0, Math.min(maxScroll, scroll - (int) Math.signum(scrollY) * 22));
+			return true;
+		}
+		return super.mouseScrolled(mx, my, scrollX, scrollY);
+	}
+
+	@Override
+	public boolean keyPressed(int key, int scan, int modifiers) {
+		int delta = switch (key) {
+			case 264 -> 20; // down
+			case 265 -> -20; // up
+			case 267 -> BODY_BOTTOM - BODY_Y; // PageDown
+			case 266 -> BODY_Y - BODY_BOTTOM; // PageUp
+			default -> 0;
+		};
+		if (delta != 0 && maxScroll > 0) {
+			scroll = Math.max(0, Math.min(maxScroll, scroll + delta));
+			return true;
+		}
+		return super.keyPressed(key, scan, modifiers);
 	}
 
 	@Override
