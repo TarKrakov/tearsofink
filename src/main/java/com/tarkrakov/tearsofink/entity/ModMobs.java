@@ -27,6 +27,12 @@ public final class ModMobs {
 			EntityType.Builder.of(PaleOwlEntity::new, MobCategory.CREATURE)
 					.sized(0.75f, 0.85f).clientTrackingRange(10).updateInterval(2).build("pale_owl"));
 
+	/** Скиталец: ручной игровой тест до интеграции авторских анимаций. */
+	public static final EntityType<PaleStriderEntity> PALE_STRIDER = Registry.register(BuiltInRegistries.ENTITY_TYPE,
+			TearsOfInk.id("pale_strider"),
+			EntityType.Builder.of(PaleStriderEntity::new, MobCategory.MISC)
+					.sized(1.5f, 7.75f).clientTrackingRange(12).build("pale_strider"));
+
 	/** Бледный копейщик — патруль дорог Бледнолесья. */
 	public static final EntityType<com.tarkrakov.tearsofink.entity.spearman.PaleSpearmanEntity> PALE_SPEARMAN = Registry.register(
 			BuiltInRegistries.ENTITY_TYPE, TearsOfInk.id("pale_spearman"),
@@ -74,6 +80,7 @@ public final class ModMobs {
 	public static void init() {
 		FabricDefaultAttributeRegistry.register(CATERPILLAR, CaterpillarEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_OWL, PaleOwlEntity.createAttributes());
+		FabricDefaultAttributeRegistry.register(PALE_STRIDER, PaleStriderEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_SPEARMAN, com.tarkrakov.tearsofink.entity.spearman.PaleSpearmanEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_SHIELDBEARER, com.tarkrakov.tearsofink.entity.patrol.PaleShieldbearerEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_CROSSBOWMAN, com.tarkrakov.tearsofink.entity.patrol.PaleCrossbowmanEntity.createAttributes());

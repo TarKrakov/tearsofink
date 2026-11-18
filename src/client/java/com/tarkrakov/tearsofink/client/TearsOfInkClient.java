@@ -138,6 +138,9 @@ public class TearsOfInkClient implements ClientModInitializer {
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.entity.PaleOwlModel.LAYER,
 				com.tarkrakov.tearsofink.client.entity.PaleOwlModel::createBodyLayer);
 		EntityRendererRegistry.register(ModMobs.PALE_OWL, com.tarkrakov.tearsofink.client.entity.PaleOwlRenderer::new);
+		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.entity.PaleStriderModel.LAYER,
+				com.tarkrakov.tearsofink.client.entity.PaleStriderModel::createBodyLayer);
+		EntityRendererRegistry.register(ModMobs.PALE_STRIDER, com.tarkrakov.tearsofink.client.entity.PaleStriderRenderer::new);
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.entity.PaleSpearmanModel.LAYER,
 				com.tarkrakov.tearsofink.client.entity.PaleSpearmanModel::createBodyLayer);
 		EntityRendererRegistry.register(ModMobs.PALE_SPEARMAN, com.tarkrakov.tearsofink.client.entity.PaleSpearmanRenderer::new);
