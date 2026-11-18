@@ -237,7 +237,7 @@ public final class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.IRON_ORE).mapColor(MapColor.COLOR_RED)));
 	/** Чернильная наковальня — ковка оружия (раскладка 3×3) и заточка за Пигмент. */
 	public static final Block INK_ANVIL = register("ink_anvil", new com.tarkrakov.tearsofink.weapon.forge.InkAnvilBlock(
-			BlockBehaviour.Properties.ofFullCopy(Blocks.SMITHING_TABLE).mapColor(MapColor.COLOR_BLACK).requiresCorrectToolForDrops().strength(3.5f)));
+			BlockBehaviour.Properties.ofFullCopy(Blocks.SMITHING_TABLE).mapColor(MapColor.COLOR_BLACK).noOcclusion().requiresCorrectToolForDrops().strength(3.5f)));
 
 	/** Проклятый алтарь — пробуждения оружия кровью и чернилами. */
 	public static final Block CURSED_ALTAR = register("cursed_altar", new com.tarkrakov.tearsofink.weapon.forge.CursedAltarBlock(
@@ -381,7 +381,6 @@ public final class ModBlocks {
 
 	/** Вызывается при запуске мода, чтобы блоки зарегистрировались. */
 	public static void init() {
-		com.tarkrakov.tearsofink.block.lantern.Lanterns.registerRoadLanternModelUpgrade();
 		// Обтёсывание топором
 		StrippableBlockRegistry.register(PALE_LOG, STRIPPED_PALE_LOG);
 		StrippableBlockRegistry.register(PALE_WOOD, STRIPPED_PALE_WOOD);

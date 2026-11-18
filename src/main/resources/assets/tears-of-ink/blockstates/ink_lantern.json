@@ -4,7 +4,7 @@
       "model": "tears-of-ink:block/ink_lantern"
     },
     "hanging=false,lit=true,road=true": {
-      "model": "tears-of-ink:block/ink_lantern_road"
+      "model": "tears-of-ink:block/ink_lantern"
     },
     "hanging=true,lit=true,road=false": {
       "model": "tears-of-ink:block/ink_lantern_hanging"
@@ -16,7 +16,7 @@
       "model": "tears-of-ink:block/ink_lantern_off"
     },
     "hanging=false,lit=false,road=true": {
-      "model": "tears-of-ink:block/ink_lantern_road_off"
+      "model": "tears-of-ink:block/ink_lantern_off"
     },
     "hanging=true,lit=false,road=false": {
       "model": "tears-of-ink:block/ink_lantern_hanging_off"
