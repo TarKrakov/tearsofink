@@ -22,9 +22,11 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.UUID;
@@ -38,6 +40,8 @@ public final class PaleStriderEntity extends PathfinderMob {
 
     // Slow real movement to match the author's 10-second walk cycle. Tune after viewing.
     public static final double WALK_SPEED = 0.045;
+    private static final int RECENT_STEPS = 10;
+    private static final int[] TURN_OFFSETS = {0, 30, -30, 60, -60, 100, -100};
     private static final int[] FLOOR_OFFSETS = {0, 1, -1};
     private static final int START_TICKS = 40, LOOP_TICKS = 80, END_TICKS = 40, LOOPS = 3;
     private int songIn = -1, stillTicks, movingTicks;
@@ -49,8 +53,10 @@ public final class PaleStriderEntity extends PathfinderMob {
     private UUID group;
     private BlockPos choirAnchor, destination;
     private Vec3 waypoint;
+    private final ArrayDeque<Vec3> recentSteps = new ArrayDeque<>();
     private float heading;
     private int routeIn, destinationIn, wanderPause, groupIn, waitForGroup;
+    private int followerSide = 1;
     private UUID leader;
     private boolean followerBehind;
 
@@ -87,6 +93,10 @@ public final class PaleStriderEntity extends PathfinderMob {
         entityData.set(PHASE, (level().getGameTime() << 3) | next.ordinal());
     }
     private boolean singing() { return phase().ordinal() >= Phase.SING_START.ordinal(); }
+
+    @Override protected void registerGoals() {
+        goalSelector.addGoal(0, new FloatGoal(this));
+    }
 
     public void configureEncounter(boolean temple, UUID group, float heading) {
         encounterSpawn = true;
@@ -130,7 +140,10 @@ public final class PaleStriderEntity extends PathfinderMob {
             destination = BlockPos.of(tag.getLong("StriderDestination"));
             destinationIn = 2200;
         }
-        choirAnchor = mode == Mode.TEMPLE && tag.contains("StriderChoirAnchor") ? BlockPos.of(tag.getLong("StriderChoirAnchor")) : null;
+        choirAnchor = null;
+        if (mode == Mode.TEMPLE) {
+            choirAnchor = tag.contains("StriderChoirAnchor") ? BlockPos.of(tag.getLong("StriderChoirAnchor")) : blockPosition();
+        }
         songIn = tag.contains("StriderSongIn") ? Math.max(60 + random.nextInt(120), tag.getInt("StriderSongIn")) : -1;
     }
 
@@ -220,13 +233,14 @@ public final class PaleStriderEntity extends PathfinderMob {
             waypoint = null;
             if (horizontalCollision) routeIn = 8 + random.nextInt(12);
         }
-        if (guide != null && distanceToSqr(guide) < 4 * 4) {
+        Vec3 followAt = guide == null ? null : followerTarget(guide);
+        if (followAt != null && followAt.subtract(position()).horizontalDistanceSqr() < 1.4 * 1.4) {
             waypoint = null;
             return;
         }
         if (waypoint == null && --routeIn <= 0 && LoadedFaunaTerrain.search(level)) {
             routeIn = 10 + random.nextInt(12);
-            planStep(level, guide);
+            planStep(level, followAt);
         }
         if (waypoint == null) return;
         Vec3 direction = waypoint.subtract(position()).multiply(1, 0, 1).normalize();
@@ -249,15 +263,22 @@ public final class PaleStriderEntity extends PathfinderMob {
                 mob -> mob != this && mob.isAlive() && group.equals(mob.group));
         var first = members.stream().min(Comparator.comparing(PaleStriderEntity::getUUID)).orElse(this);
         leader = first.getUUID().compareTo(getUUID()) < 0 ? first.getUUID() : null;
+        followerSide = leader != null && members.stream().anyMatch(mob ->
+                mob.getUUID().compareTo(leader) > 0 && mob.getUUID().compareTo(getUUID()) < 0) ? 1 : -1;
         followerBehind = leader == null && members.stream().anyMatch(mob -> distanceToSqr(mob) > 12 * 12);
     }
 
-    private void planStep(ServerLevel level, PaleStriderEntity guide) {
-        if (guide != null) {
-            heading = guide.heading;
-            Vec3 side = Vec3.directionFromRotation(0, heading + (getUUID().hashCode() % 2 == 0 ? 90 : -90));
-            Vec3 site = guide.position().add(side.scale(3 + Math.floorMod(getUUID().hashCode(), 3)));
-            waypoint = localStep(level, site);
+    private Vec3 followerTarget(PaleStriderEntity guide) {
+        heading = guide.heading;
+        Vec3 side = Vec3.directionFromRotation(0, heading + 90 * followerSide);
+        Vec3 forward = Vec3.directionFromRotation(0, heading);
+        double spread = Math.floorMod(getUUID().hashCode(), 5) * .35;
+        return guide.position().add(side.scale(3.2 + spread)).subtract(forward.scale(1.5 + spread));
+    }
+
+    private void planStep(ServerLevel level, Vec3 followAt) {
+        if (followAt != null) {
+            waypoint = localStep(level, followAt, false);
             return;
         }
         if (destination != null && (distanceToSqr(Vec3.atBottomCenterOf(destination)) < 2.5 * 2.5)) {
@@ -273,12 +294,14 @@ public final class PaleStriderEntity extends PathfinderMob {
         }
         Vec3 target = destination != null ? Vec3.atBottomCenterOf(destination)
                 : position().add(Vec3.directionFromRotation(0, heading).scale(8));
-        waypoint = localStep(level, target);
+        waypoint = localStep(level, target, true);
         if (waypoint == null) {
             destination = null;
             heading += 65 + random.nextInt(135);
             routeIn = 25 + random.nextInt(35);
         } else {
+            if (recentSteps.size() == RECENT_STEPS) recentSteps.removeFirst();
+            recentSteps.addLast(position());
             Vec3 delta = waypoint.subtract(position());
             heading = (float)Math.toDegrees(Math.atan2(-delta.x, delta.z));
         }
@@ -300,15 +323,19 @@ public final class PaleStriderEntity extends PathfinderMob {
         return null;
     }
 
-    private Vec3 localStep(ServerLevel level, Vec3 goal) {
+    private Vec3 localStep(ServerLevel level, Vec3 goal, boolean exploring) {
         Vec3 offset = goal.subtract(position());
         float yaw = (float)Math.toDegrees(Math.atan2(-offset.x, offset.z));
         int side = random.nextBoolean() ? 1 : -1;
-        for (int turn : new int[]{0, 30 * side, -30 * side, 60 * side, -60 * side, 100 * side, -100 * side}) {
-            Vec3 delta = Vec3.directionFromRotation(0, yaw + turn);
+        Vec3 best = null;
+        double bestScore = Double.NEGATIVE_INFINITY;
+        double goalDistance = offset.horizontalDistance();
+        int samples = Mth.clamp((int)Math.ceil(goalDistance * 2), 3, 10);
+        for (int turn : TURN_OFFSETS) {
+            Vec3 delta = Vec3.directionFromRotation(0, yaw + turn * side);
             Vec3 last = position();
             int y = Mth.floor(getY() + .05);
-            for (int i = 1; i <= 10; i++) {
+            for (int i = 1; i <= samples; i++) {
                 Vec3 sample = position().add(delta.scale(i * .5));
                 Vec3 floor = floorNear(level, sample.x, sample.z, y);
                 if (floor == null || !validDistrict(level, BlockPos.containing(floor))
@@ -316,9 +343,23 @@ public final class PaleStriderEntity extends PathfinderMob {
                 last = floor;
                 y = Mth.floor(floor.y);
             }
-            if (last.subtract(position()).horizontalDistanceSqr() >= 2.25) return last;
+            double length = last.subtract(position()).horizontalDistance();
+            if (length < 1.4) continue;
+            double progress = goalDistance - last.subtract(goal).horizontalDistance();
+            double score = progress + .35 * length;
+            if (exploring) {
+                double nearestVisit = 16;
+                for (Vec3 visited : recentSteps)
+                    nearestVisit = Math.min(nearestVisit, last.subtract(visited).horizontalDistanceSqr());
+                score -= (16 - nearestVisit) * .4;
+            }
+            if (score > bestScore) {
+                best = last;
+                bestScore = score;
+            }
+            if (turn == 0 && progress > 4 && score > 5) break;
         }
-        return null;
+        return best;
     }
 
     private boolean validDistrict(ServerLevel level, BlockPos at) {

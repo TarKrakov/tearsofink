@@ -34,6 +34,8 @@ import static com.tarkrakov.tearsofink.entity.PaleOwlTuning.*;
 /** Peaceful, server-driven bird with bounded local steering and collision-checked destinations. */
 public final class PaleOwlEntity extends PathfinderMob {
     public enum Phase { IDLE, SWAY, TAKEOFF, FLY, DIVE, LAND }
+    private static final int[] HUNT_HOP_LENGTHS = {2, 4};
+    private static final int[] WATER_TURNS = {0, 90, 180, 270};
     private static final Phase[] PHASES = Phase.values();
     // Phase and its start time travel together; previous phase allows a brief visual handoff.
     private static final EntityDataAccessor<Long> PHASE = SynchedEntityData.defineId(PaleOwlEntity.class, EntityDataSerializers.LONG);
@@ -137,6 +139,10 @@ public final class PaleOwlEntity extends PathfinderMob {
         if (searchIn > 0) --searchIn;
         if (retryIn > 0) --retryIn;
         if (fleeIn > 0) --fleeIn;
+        if (isInWater()) {
+            escapeWater();
+            return;
+        }
         switch (phase()) {
             case IDLE, SWAY -> tickRest();
             case TAKEOFF -> tickTakeoff();
@@ -144,6 +150,21 @@ public final class PaleOwlEntity extends PathfinderMob {
             case DIVE -> tickDive();
             case LAND -> tickLand();
         }
+    }
+
+    private void escapeWater() {
+        beginTakeoff();
+        ServerLevel level = (ServerLevel)level();
+        Vec3 up = new Vec3(0, FLIGHT_SPEED, 0);
+        for (int i = -1; i < WATER_TURNS.length; i++) {
+            Vec3 move = i == -1 ? up : up.add(Vec3.directionFromRotation(0, getYRot() + WATER_TURNS[i]).scale(.12));
+            if (LoadedFaunaTerrain.free(level, this, getBoundingBox().move(move))) {
+                setNoGravity(true);
+                setDeltaMovement(move);
+                return;
+            }
+        }
+        setNoGravity(false);
     }
 
     private void restMotion() {
@@ -192,6 +213,17 @@ public final class PaleOwlEntity extends PathfinderMob {
     private void tickTakeoff() {
         if (phaseAge() < 5 && onGround()) { restMotion(); return; }
         setNoGravity(true);
+        if (prey != null) {
+            if (waypoint == null || !prey.isAlive() || phaseAge() >= 45) {
+                returnToTrees();
+            } else if (position().distanceToSqr(waypoint) < .04) {
+                waypoint = null;
+                phase(Phase.DIVE);
+            } else if (!steer(waypoint, FLIGHT_SPEED)) {
+                returnToTrees();
+            }
+            return;
+        }
         if (route.isEmpty() && waypoint == null) {
             if (!planPerch(true)) waypoint = chooseWaypoint(true);
             if (route.isEmpty() && waypoint == null) {
@@ -246,27 +278,43 @@ public final class PaleOwlEntity extends PathfinderMob {
     }
 
     private boolean tryHunt() {
-        if (huntIn != 0 || searchIn != 0 || fleeIn != 0) return false;
+        if (huntIn != 0 || searchIn != 0 || fleeIn != 0 ||
+                !LoadedFaunaTerrain.search((ServerLevel)level())) return false;
         searchIn = SEARCH_INTERVAL;
         CaterpillarEntity found = null;
+        Vec3 launch = null;
+        boolean perched = onGround();
         double best = Double.MAX_VALUE;
         for (var candidate : level().getEntitiesOfClass(CaterpillarEntity.class, getBoundingBox().inflate(HUNT_RADIUS, 20, HUNT_RADIUS),
                 c -> c.isAlive() && c.variant() == CaterpillarEntity.Variant.PALE)) {
             Vec3 delta = candidate.position().subtract(position());
             if (delta.y > -.45 || delta.horizontalDistanceSqr() > HUNT_RADIUS * HUNT_RADIUS
-                    || delta.lengthSqr() >= best || !clearPath(position(), candidate.position().add(0, .25, 0))) continue;
+                    || delta.lengthSqr() >= best) continue;
+            Vec3 strike = candidate.position().add(0, .25, 0);
+            Vec3 from = perched ? launchTowards(strike) : position();
+            if (from == null || (!perched && !clearPath(from, strike))) continue;
             found = candidate;
+            launch = perched ? from : null;
             best = delta.lengthSqr();
         }
         if (found == null) return false;
         prey = found;
-        waypoint = null;
+        waypoint = launch;
         perch = null;
         route.clear();
         huntIn = duration(HUNT_MIN, HUNT_SPREAD);
         setNoGravity(true);
-        phase(Phase.DIVE);
+        phase(launch == null ? Phase.DIVE : Phase.TAKEOFF);
         return true;
+    }
+
+    private Vec3 launchTowards(Vec3 strike) {
+        Vec3 direction = strike.subtract(position()).multiply(1, 0, 1).normalize();
+        for (int length : HUNT_HOP_LENGTHS) {
+            Vec3 hop = position().add(direction.scale(length)).add(0, 1.5, 0);
+            if (clearPath(position(), hop) && clearPath(hop, strike)) return hop;
+        }
+        return null;
     }
 
     private void returnToTrees() {
