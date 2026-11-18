@@ -714,5 +714,15 @@
   "item.tears-of-ink.blood_katana.desc1": "Blood · two-handed. Flowing strikes that cause bleeding wounds.",
   "item.tears-of-ink.blood_obsi_club.desc1": "Blood · two-handed. Club studded with obsidian shards.",
   "item.tears-of-ink.blood_talvar.desc1": "Blood · one-handed. Graceful cutting swings.",
-  "item.tears-of-ink.blood_dussak.desc1": "Blood · one-handed. Absorbs a strike and answers with a slash."
+  "item.tears-of-ink.blood_dussak.desc1": "Blood · one-handed. Absorbs a strike and answers with a slash.",
+  "diary.tears-of-ink.entry.draft_fog.title": "Fog and Flame",
+  "diary.tears-of-ink.entry.draft_fog.text": "The fog here hides even nearby paths. A hand lantern helps you see the road: it parts the mist more effectively in your off-hand than on your hotbar. Placed Ink and Stone Lanterns create pockets of clearer air. But do not mistake visibility for safety. I think I made that mistake once…",
+  "diary.tears-of-ink.entry.draft_soul.title": "Vow of Soul: Two Shields",
+  "diary.tears-of-ink.entry.draft_soul.text": "You chose Soul. Hold a Soul shield in each hand and hold right-click to receive an attack. Ordinary blocks spend Soul; a perfectly timed block can preserve it. Your shields gather strength from blows you withstand, and releasing right-click sends it back at your foes. Press R with two shields to unleash a Resonance, whose effect depends on the pair. Remember: endurance is not the same as standing still.",
+  "diary.tears-of-ink.entry.draft_ink.title": "Vow of Ink: Borrowed Power",
+  "diary.tears-of-ink.entry.draft_ink.text": "You chose Ink. It replenishes slowly on its own, while dashes and abilities draw from your reserves. Successful swings with ordinary weapons restore a little Ink; hits from hunter weapons do not. Watch how much power remains before charging into a fight. I will not tell you that borrowed strength must be your ruin. But remember that it is borrowed.",
+  "diary.tears-of-ink.entry.draft_ruins.title": "Traces of Those Before",
+  "diary.tears-of-ink.entry.draft_ruins.text": "Roads, temples, fallen walls… Someone built all this long before you arrived. Chests sometimes remain in ruins, and Ink Fountains can be found in temples. Do not pass them by, but do not take silence for an invitation. I know this masonry. I should know it. Why can I not remember whose it was?",
+  "diary.tears-of-ink.entry.draft_memory.title": "A Fragment of Memory",
+  "diary.tears-of-ink.entry.draft_memory.text": "The pale soldier has fallen, yet I can still picture his formation. I recognize that discipline — or am I merely convincing myself that I do? Words, names, faces slip away whenever I try to hold on to them. Only a strange certainty remains: these soldiers were once more than shells beneath armor. Forgive me. I cannot tell you more just yet."
 }
