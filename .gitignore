@@ -41,3 +41,12 @@ hs_err_*.log
 replay_*.log
 *.hprof
 *.jfr
+
+# Python tooling and local animation imports
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+work/
