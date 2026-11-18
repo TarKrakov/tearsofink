@@ -23,8 +23,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
+import com.tarkrakov.tearsofink.sound.ModSounds;
 import net.minecraft.tags.DamageTypeTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -179,25 +178,32 @@ public final class ShieldStance {
 		if (perfect) LAST_PERFECT.put(p.getUUID(), now);
 		int extraCharge = perfect && rank.atLeast(com.tarkrakov.tearsofink.vow.SoulRank.LUMINOUS)
 				? ShieldTuning.LUMINOUS_PERFECT_CHARGE : 1;
-		setCharge(p, Math.min(ShieldTuning.CHARGE_MAX, charge(p) + extraCharge));
+		int previousCharge = charge(p);
+		setCharge(p, Math.min(ShieldTuning.CHARGE_MAX, previousCharge + extraCharge));
 		ABSORBED.merge(p.getUUID(), Math.min(ShieldTuning.STORED_DAMAGE_CAP, amount),
 				(previous, gain) -> Math.min(ShieldTuning.STORED_DAMAGE_CAP, previous + gain));
 		syncStored(p);
 		com.tarkrakov.tearsofink.vow.SoulFeats.onBlock(p, source, amount, perfect);
-		if (charge(p) >= ShieldTuning.CHARGE_MAX) { // полный заряд — щиты поют
+		ShieldAudio.play(p, perfect ? ModSounds.SOUL_SHIELD_PERFECT : ModSounds.SOUL_SHIELD_BLOCK, perfect ? 0.58f : 0.44f);
+		int currentCharge = charge(p);
+		if (currentCharge >= ShieldTuning.CHARGE_MAX) {
 			long choirNow = level.getGameTime();
 			Long last = CHOIR.get(p.getUUID());
-			if (last == null || choirNow - last >= ShieldTuning.CHOIR_EVERY) {
+			if (previousCharge < ShieldTuning.CHARGE_MAX || last == null || choirNow - last >= ShieldTuning.CHOIR_EVERY) {
 				CHOIR.put(p.getUUID(), choirNow);
-				level.playSound(null, p.blockPosition(), com.tarkrakov.tearsofink.sound.ModSounds.SHIELD_CHOIR, SoundSource.PLAYERS,
-						ShieldTuning.CHOIR_VOLUME, 0.96f + p.getRandom().nextFloat() * 0.08f);
+				ShieldAudio.play(p, ModSounds.SOUL_SHIELD_FULL_CHARGE, 0.36f);
 			}
+		} else if (currentCharge > previousCharge) {
+			ShieldAudio.play(p, switch (currentCharge) {
+				case 1 -> ModSounds.SOUL_SHIELD_CHARGE_1;
+				case 2 -> ModSounds.SOUL_SHIELD_CHARGE_2;
+				case 3 -> ModSounds.SOUL_SHIELD_CHARGE_3;
+				default -> ModSounds.SOUL_SHIELD_CHARGE_4;
+			}, perfect ? 0.15f : 0.24f);
 		}
-		level.playSound(null, p.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1f, perfect ? 1.4f : 0.9f);
 		Entity by = source.getEntity(), direct = source.getDirectEntity();
 		if (perfect) {
 			RIPOSTE.put(p.getUUID(), level.getGameTime() + ShieldTuning.RIPOSTE_TICKS); // ответ открыт
-			level.playSound(null, p.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1f, 1.6f);
 			level.sendParticles(ParticleTypes.END_ROD, p.getX() + look.x * 0.8, p.getY() + 1.2, p.getZ() + look.z * 0.8, 10, 0.3, 0.3, 0.3, 0.05);
 			if (direct instanceof Projectile proj) {
 				Vec3 v = proj.getDeltaMovement();
@@ -225,7 +231,6 @@ public final class ShieldStance {
 	/** Сбить цель ответом (для удара Бастиона). */
 	public static void riposteHit(ServerPlayer p, LivingEntity t) {
 		stagger(p, t, ShieldTuning.PERFECT_STAGGER, 0.6f);
-		p.serverLevel().playSound(null, t.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 0.4f, 1.8f);
 		p.serverLevel().sendParticles(ParticleTypes.END_ROD, t.getX(), t.getY() + t.getBbHeight() * 0.6, t.getZ(), 10, 0.3, 0.3, 0.3, 0.08);
 	}
 
@@ -245,8 +250,7 @@ public final class ShieldStance {
 		p.getCooldowns().addCooldown(p.getOffhandItem().getItem(), ShieldTuning.BREAK_TICKS);
 		p.stopUsingItem();
 		setCharge(p, 0);
-		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.SHIELD_BREAK, SoundSource.PLAYERS, 1f, 0.8f);
-		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.PLAYERS, 1f, 0.6f);
+		ShieldAudio.play(p, ModSounds.SOUL_SHIELD_BREAK, 0.55f);
 	}
 
 	/** Отпустил ПКМ в стойке (из щита): заряд — выброс конусом перед собой. */
@@ -282,8 +286,7 @@ public final class ShieldStance {
 			level.sendParticles(ParticleTypes.END_ROD, p.getX() + dir.x * dist, p.getY() + 0.6 + p.getRandom().nextDouble(), p.getZ() + dir.z * dist,
 					1, 0, 0, 0, 0.02);
 		}
-		level.playSound(null, p.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.2f, 0.7f);
-		level.playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1f, 0.6f);
+		ShieldAudio.play(p, c >= ShieldTuning.CHARGE_MAX ? ModSounds.SOUL_SHIELD_BURST_FULL : ModSounds.SOUL_SHIELD_BURST_LOW, 0.42f + 0.035f * c);
 	}
 
 	/** Забрать весь заряд (Резонанс тратит его на силу). */

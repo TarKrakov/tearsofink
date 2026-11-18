@@ -63,6 +63,39 @@ public final class ModSounds {
 	public static final SoundEvent PALE_SPEAR_STEP = register("pale_spear_step");
 	public static final SoundEvent PALE_SPEAR_THRUST = register("pale_spear_thrust");
 
+	/** Approved Soul shield sound palette D. */
+	public static final SoundEvent SOUL_SHIELD_BASTION = register("soul_shield_bastion");
+	public static final SoundEvent SOUL_SHIELD_BLOCK = register("soul_shield_block");
+	public static final SoundEvent SOUL_SHIELD_BREAK = register("soul_shield_break");
+	public static final SoundEvent SOUL_SHIELD_BURST_FULL = register("soul_shield_burst_full");
+	public static final SoundEvent SOUL_SHIELD_BURST_LOW = register("soul_shield_burst_low");
+	public static final SoundEvent SOUL_SHIELD_CHARGE_1 = register("soul_shield_charge_1");
+	public static final SoundEvent SOUL_SHIELD_CHARGE_2 = register("soul_shield_charge_2");
+	public static final SoundEvent SOUL_SHIELD_CHARGE_3 = register("soul_shield_charge_3");
+	public static final SoundEvent SOUL_SHIELD_CHARGE_4 = register("soul_shield_charge_4");
+	public static final SoundEvent SOUL_SHIELD_CLAP = register("soul_shield_clap");
+	public static final SoundEvent SOUL_SHIELD_CLAP_PREPARE = register("soul_shield_clap_prepare");
+	public static final SoundEvent SOUL_SHIELD_FULL_CHARGE = register("soul_shield_full_charge");
+	public static final SoundEvent SOUL_SHIELD_PERFECT = register("soul_shield_perfect");
+	public static final SoundEvent SOUL_SHIELD_RAISE = register("soul_shield_raise");
+	public static final SoundEvent SOUL_SHIELD_RIPOSTE = register("soul_shield_riposte");
+	public static final SoundEvent SOUL_SHIELD_MERCY = register("soul_shield_mercy");
+	public static final SoundEvent SOUL_SHIELD_RADIANCE = register("soul_shield_radiance");
+	public static final SoundEvent SOUL_SHIELD_RAM_HIT = register("soul_shield_ram_hit");
+	public static final SoundEvent SOUL_SHIELD_RAM_START = register("soul_shield_ram_start");
+	public static final SoundEvent SOUL_SHIELD_REPEL = register("soul_shield_repel");
+	public static final SoundEvent SOUL_SHIELD_RES_ADVANCE_IMPACT = register("soul_shield_res_advance_impact");
+	public static final SoundEvent SOUL_SHIELD_RES_ADVANCE_START = register("soul_shield_res_advance_start");
+	public static final SoundEvent SOUL_SHIELD_RES_AVALANCHE = register("soul_shield_res_avalanche");
+	public static final SoundEvent SOUL_SHIELD_RES_FLASH = register("soul_shield_res_flash");
+	public static final SoundEvent SOUL_SHIELD_RES_GRACE = register("soul_shield_res_grace");
+	public static final SoundEvent SOUL_SHIELD_RES_HALO = register("soul_shield_res_halo");
+	public static final SoundEvent SOUL_SHIELD_RES_INTERCESSOR = register("soul_shield_res_intercessor");
+	public static final SoundEvent SOUL_SHIELD_RES_PHALANX = register("soul_shield_res_phalanx");
+	public static final SoundEvent SOUL_SHIELD_RES_SHOCKWAVE = register("soul_shield_res_shockwave");
+	public static final SoundEvent SOUL_SHIELD_RES_SUN = register("soul_shield_res_sun");
+	public static final SoundEvent SOUL_SHIELD_RES_VEIL = register("soul_shield_res_veil");
+
 	private ModSounds() {}
 
 	private static SoundEvent register(String name) {
