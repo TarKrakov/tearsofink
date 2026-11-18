@@ -211,10 +211,11 @@ public final class Combat {
 		}
 		Combos.Step step = steps.get(index);
 		s.window = step.late() >= 0 ? step.late() : combo.resetTicks();
-		int duration = combo.scaled(step.duration());
+		float effectiveTempo = dual ? combo.tempo() : combo.singleTempo();
+		int duration = combo.scaled(step.duration(), dual);
 		s.busyUntil = now + duration;
 		s.lastEnd = now + duration;
-		s.hitAt = now + combo.scaled(step.hit());
+		s.hitAt = now + combo.scaled(step.hit(), dual);
 		s.hitArchetype = a;
 		s.hitStep = step;
 		s.hitScale = scale;
@@ -224,12 +225,12 @@ public final class Combat {
 			s.paleOff = p.getOffhandItem();
 		} else s.paleMain = s.paleOff = null;
 		if (step.secondHit() >= 0)
-			s.extra.add(new Pending(now + combo.scaled(step.secondHit()), a, step, scale));
-		s.speed = step.speed() * combo.tempo();
+			s.extra.add(new Pending(now + combo.scaled(step.secondHit(), dual), a, step, scale));
+		s.speed = step.speed() * effectiveTempo;
 		s.carry = 0;
 		p.resetAttackStrengthTicker();
-		broadcast(p, a, step.anim(), duration, s.speed, combo.tempo()); // пустое anim — правая рука в этом ударе не двигается (шкала всё равно)
-		if (step.offAnim() != null) broadcast(p, a, "off:" + step.offAnim(), duration, -2f, combo.tempo());
+		broadcast(p, a, step.anim(), duration, s.speed, effectiveTempo); // пустое anim — правая рука в этом ударе не двигается (шкала всё равно)
+		if (step.offAnim() != null) broadcast(p, a, "off:" + step.offAnim(), duration, -2f, effectiveTempo);
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.5f,
 				a == Archetype.EXECUTIONER ? 0.6f : 0.9f);
 	}
