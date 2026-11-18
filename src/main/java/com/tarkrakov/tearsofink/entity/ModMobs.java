@@ -27,7 +27,7 @@ public final class ModMobs {
 			EntityType.Builder.of(PaleOwlEntity::new, MobCategory.CREATURE)
 					.sized(0.75f, 0.85f).clientTrackingRange(10).updateInterval(2).build("pale_owl"));
 
-	/** Скиталец: ручной игровой тест до интеграции авторских анимаций. */
+	/** Скиталец — атмосферные встречи и хор вне безопасной зоны храмов. */
 	public static final EntityType<PaleStriderEntity> PALE_STRIDER = Registry.register(BuiltInRegistries.ENTITY_TYPE,
 			TearsOfInk.id("pale_strider"),
 			EntityType.Builder.of(PaleStriderEntity::new, MobCategory.MISC)
@@ -81,6 +81,7 @@ public final class ModMobs {
 		FabricDefaultAttributeRegistry.register(CATERPILLAR, CaterpillarEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_OWL, PaleOwlEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_STRIDER, PaleStriderEntity.createAttributes());
+		PaleStriderEncounters.init();
 		FabricDefaultAttributeRegistry.register(PALE_SPEARMAN, com.tarkrakov.tearsofink.entity.spearman.PaleSpearmanEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_SHIELDBEARER, com.tarkrakov.tearsofink.entity.patrol.PaleShieldbearerEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_CROSSBOWMAN, com.tarkrakov.tearsofink.entity.patrol.PaleCrossbowmanEntity.createAttributes());

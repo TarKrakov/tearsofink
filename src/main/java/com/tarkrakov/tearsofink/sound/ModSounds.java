@@ -14,6 +14,10 @@ public final class ModSounds {
 	/** Шорох пера при первой записи в Дневник (только личное уведомление). */
 	public static final SoundEvent DIARY_QUILL_WRITE = register("diary_quill_write");
 
+	/** Quiet source with a long server delivery range, independent of volume. */
+	public static final SoundEvent STRIDER_SONG = Registry.register(BuiltInRegistries.SOUND_EVENT,
+			TearsOfInk.id("strider_song"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("strider_song"), 112f));
+
 	private ModSounds() {}
 
 	private static SoundEvent register(String name) {

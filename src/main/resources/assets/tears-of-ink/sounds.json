@@ -24,5 +24,14 @@
       }
     ],
     "subtitle": "subtitles.tears-of-ink.diary_quill_write"
+  },
+  "strider_song": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
   }
 }

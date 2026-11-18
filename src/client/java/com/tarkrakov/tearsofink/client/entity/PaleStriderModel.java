@@ -3,15 +3,20 @@ package com.tarkrakov.tearsofink.client.entity;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.entity.PaleStriderEntity;
 import net.minecraft.client.model.HierarchicalModel;
+import net.minecraft.client.animation.AnimationDefinition;
+import net.minecraft.client.animation.KeyframeAnimations;
+import net.minecraft.util.Mth;
+import org.joml.Vector3f;
 import net.minecraft.client.model.geom.ModelLayerLocation;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
 
-/** Authored geometry; the animation export is not yet present in the accessible main. */
+/** Authored geometry and all five clips; state is synchronized by the server. */
 public final class PaleStriderModel extends HierarchicalModel<PaleStriderEntity> {
     public static final ModelLayerLocation LAYER = new ModelLayerLocation(TearsOfInk.id("pale_strider"), "main");
     private final ModelPart root;
+    private final Vector3f animationScratch = new Vector3f();
     public PaleStriderModel(ModelPart root) { this.root = root; }
     @Override public ModelPart root() { return root; }
 
@@ -57,9 +62,29 @@ public final class PaleStriderModel extends HierarchicalModel<PaleStriderEntity>
 	}
 
 
+    private static AnimationDefinition clip(PaleStriderEntity.Phase phase) {
+        return switch (phase) {
+            case IDLE -> PaleStriderAnimations.IDLE;
+            case WALK -> PaleStriderAnimations.WALK;
+            case SING_START -> PaleStriderAnimations.SING_START;
+            case SING_LOOP -> PaleStriderAnimations.SING_LOOP;
+            case SING_END -> PaleStriderAnimations.SING_END;
+        };
+    }
+
     @Override public void setupAnim(PaleStriderEntity entity, float limbSwing, float limbSwingAmount,
                                     float ageInTicks, float netHeadYaw, float headPitch) {
         root.getAllParts().forEach(ModelPart::resetPose);
-        // No invented animation: integrate the author's ready tracks when available.
+        long now = entity.phaseStamp(), old = entity.previousPhaseStamp();
+        float partial = Mth.clamp(ageInTicks - entity.tickCount, 0f, 1f);
+        float elapsed = now == 0L ? ageInTicks :
+                Math.max(0L, entity.level().getGameTime() - PaleStriderEntity.startTick(now)) + partial;
+        float weight = old == 0L || now == old ? 1f : Mth.clamp(elapsed / 8f, 0f, 1f);
+        weight = weight * weight * (3f - 2f * weight);
+        if (weight < 1f) {
+            long oldMs = Math.max(0L, PaleStriderEntity.startTick(now) - PaleStriderEntity.startTick(old)) * 50L;
+            KeyframeAnimations.animate(this, clip(PaleStriderEntity.phaseOf(old)), oldMs, 1f - weight, animationScratch);
+        }
+        KeyframeAnimations.animate(this, clip(PaleStriderEntity.phaseOf(now)), (long)(elapsed * 50f), weight, animationScratch);
     }
 }
