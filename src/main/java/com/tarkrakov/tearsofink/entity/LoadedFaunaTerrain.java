@@ -50,6 +50,11 @@ final class LoadedFaunaTerrain {
         return true;
     }
 
+    static boolean canTick(ServerLevel level, Entity mob) {
+        // Vanilla fluid checks and movement also query blocks around the swept volume.
+        return loaded(level, mob.getBoundingBox().expandTowards(mob.getDeltaMovement()), 2);
+    }
+
     static boolean free(ServerLevel level, Entity mob, AABB box) {
         return box.minY >= level.getMinBuildHeight() && box.maxY < level.getMaxBuildHeight()
                 && loaded(level, box, 2) && level.getWorldBorder().isWithinBounds(box)

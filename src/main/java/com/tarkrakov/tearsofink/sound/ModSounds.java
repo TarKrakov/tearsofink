@@ -16,7 +16,7 @@ public final class ModSounds {
 
 	/** Quiet source with a long server delivery range, independent of volume. */
 	public static final SoundEvent STRIDER_SONG = Registry.register(BuiltInRegistries.SOUND_EVENT,
-			TearsOfInk.id("strider_song"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("strider_song"), 112f));
+			TearsOfInk.id("strider_song"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("strider_song"), (float) StriderSong.DELIVERY_RANGE));
 
 	private ModSounds() {}
 

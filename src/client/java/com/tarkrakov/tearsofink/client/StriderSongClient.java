@@ -30,6 +30,8 @@ final class StriderSongClient {
             playing.values().forEach(engine::stop);
             playing.clear();
             world = client.level;
+        } else {
+            playing.values().removeIf(voice -> !engine.isActive(voice));
         }
     }
 
@@ -41,7 +43,6 @@ final class StriderSongClient {
             if (voice != null) engine.stop(voice);
             return;
         }
-        playing.values().removeIf(voice -> !engine.isActive(voice));
         if (world == null || song.part() > 2 || playing.containsKey(song.episode()) || playing.size() >= 4) return;
         String id = song.part() == 0 ? "strider_song" : "strider_song_" + (song.part() + 1);
         var voice = new SimpleSoundInstance(TearsOfInk.id(id), SoundSource.NEUTRAL, song.volume(), 1,

@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.entity;
 
 import com.tarkrakov.tearsofink.sound.StriderSong;
+import com.tarkrakov.tearsofink.sound.ModSounds;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import com.tarkrakov.tearsofink.world.sanctuary.Sanctuary;
 import com.tarkrakov.tearsofink.world.ModDimensions;
@@ -24,8 +25,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 import java.util.UUID;
 
 /** D-056: peaceful atmospheric walker, synchronized singing, no combat or loot. */
@@ -37,6 +38,7 @@ public final class PaleStriderEntity extends PathfinderMob {
 
     // Slow real movement to match the author's 10-second walk cycle. Tune after viewing.
     public static final double WALK_SPEED = 0.045;
+    private static final int[] FLOOR_OFFSETS = {0, 1, -1};
     private static final int START_TICKS = 40, LOOP_TICKS = 80, END_TICKS = 40, LOOPS = 3;
     private int songIn = -1, stillTicks, movingTicks;
     private boolean encounterSpawn;
@@ -48,7 +50,7 @@ public final class PaleStriderEntity extends PathfinderMob {
     private BlockPos choirAnchor, destination;
     private Vec3 waypoint;
     private float heading;
-    private int routeIn, wanderPause, groupIn, waitForGroup;
+    private int routeIn, destinationIn, wanderPause, groupIn, waitForGroup;
     private UUID leader;
     private boolean followerBehind;
 
@@ -124,12 +126,24 @@ public final class PaleStriderEntity extends PathfinderMob {
         group = tag.hasUUID("StriderGroup") ? tag.getUUID("StriderGroup") : null;
         heading = tag.contains("StriderHeading") && Float.isFinite(tag.getFloat("StriderHeading"))
                 ? tag.getFloat("StriderHeading") : getYRot();
-        if (tag.contains("StriderDestination")) destination = BlockPos.of(tag.getLong("StriderDestination"));
+        if (tag.contains("StriderDestination")) {
+            destination = BlockPos.of(tag.getLong("StriderDestination"));
+            destinationIn = 2200;
+        }
         choirAnchor = mode == Mode.TEMPLE && tag.contains("StriderChoirAnchor") ? BlockPos.of(tag.getLong("StriderChoirAnchor")) : null;
         songIn = tag.contains("StriderSongIn") ? Math.max(60 + random.nextInt(120), tag.getInt("StriderSongIn")) : -1;
     }
 
     @Override public void tick() {
+        if (level() instanceof ServerLevel level && !LoadedFaunaTerrain.canTick(level, this)) {
+            setDeltaMovement(Vec3.ZERO);
+            if (singing()) {
+                stopSong(level);
+                phase(Phase.IDLE);
+                songIn = 200;
+            }
+            return;
+        }
         Vec3 before = position();
         super.tick();
         if (!(level() instanceof ServerLevel server)) return;
@@ -169,14 +183,15 @@ public final class PaleStriderEntity extends PathfinderMob {
 
         if (songIn > 0) --songIn;
         if (songIn <= 0 && canSing(server)) {
-            List<PaleStriderEntity> neighbours = server.getEntitiesOfClass(PaleStriderEntity.class,
+            var neighbours = server.getEntitiesOfClass(PaleStriderEntity.class,
                     getBoundingBox().inflate(mode == Mode.TEMPLE ? 24 : 12, 8, mode == Mode.TEMPLE ? 24 : 12),
                     e -> e != this && e.canSing(server) && (mode == Mode.TEMPLE && e.mode == Mode.TEMPLE
                             || group != null && group.equals(e.group)));
-            neighbours.sort(Comparator.comparing(PaleStriderEntity::getUUID));
-            int count = Math.min(2, neighbours.size());
-            startSong(server, 0, count > 0);
-            for (int i = 0; i < count; i++) neighbours.get(i).startSong(server, i + 1, true);
+            neighbours.sort(Comparator.comparingDouble(this::distanceToSqr));
+            var singers = new ArrayList<>(neighbours.subList(0, Math.min(2, neighbours.size())));
+            singers.add(this);
+            singers.sort(Comparator.comparing(PaleStriderEntity::getUUID));
+            for (int i = 0; i < singers.size(); i++) singers.get(i).startSong(server, i, singers.size() > 1);
             return;
         }
         walk(server);
@@ -191,6 +206,10 @@ public final class PaleStriderEntity extends PathfinderMob {
     private void walk(ServerLevel level) {
         if (!ModDimensions.isLands(level) || !onGround() || isInWater()) return;
         if (wanderPause > 0) { --wanderPause; return; }
+        if (destination != null && --destinationIn <= 0) {
+            destination = null;
+            waypoint = null;
+        }
         if (group != null && --groupIn <= 0) updateGroup(level);
         PaleStriderEntity guide = leader != null && level.getEntity(leader) instanceof PaleStriderEntity mob
                 && mob.isAlive() && group.equals(mob.group) ? mob : null;
@@ -211,7 +230,8 @@ public final class PaleStriderEntity extends PathfinderMob {
         }
         if (waypoint == null) return;
         Vec3 direction = waypoint.subtract(position()).multiply(1, 0, 1).normalize();
-        Vec3 step = direction.scale(WALK_SPEED);
+        double speed = guide != null && distanceToSqr(guide) > 8 * 8 ? WALK_SPEED * 1.15 : WALK_SPEED;
+        Vec3 step = direction.scale(speed);
         Vec3 next = position().add(direction.scale(.28));
         if (floorNear(level, next.x, next.z, Mth.floor(getY() + .05)) == null) {
             waypoint = null;
@@ -247,7 +267,10 @@ public final class PaleStriderEntity extends PathfinderMob {
         }
         if (destination != null && (!validDistrict(level, destination)
                 || !LoadedFaunaTerrain.free(level, this, boxAt(Vec3.atBottomCenterOf(destination))))) destination = null;
-        if (destination == null) destination = chooseDestination(level);
+        if (destination == null) {
+            destination = chooseDestination(level);
+            destinationIn = 2200;
+        }
         Vec3 target = destination != null ? Vec3.atBottomCenterOf(destination)
                 : position().add(Vec3.directionFromRotation(0, heading).scale(8));
         waypoint = localStep(level, target);
@@ -272,7 +295,7 @@ public final class PaleStriderEntity extends PathfinderMob {
             int y = LoadedFaunaTerrain.surface(chunk, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, column.getX(), column.getZ());
             BlockPos at = column.atY(y);
             if (Math.abs(at.getY() - getY()) <= 10 && validDistrict(level, at)
-                    && floorAt(level, sample.x, sample.z, y)) return BlockPos.containing(sample.x, y, sample.z);
+                    && floorAt(level, at.getX() + .5, at.getZ() + .5, y)) return at;
         }
         return null;
     }
@@ -305,7 +328,7 @@ public final class PaleStriderEntity extends PathfinderMob {
     }
 
     private Vec3 floorNear(ServerLevel level, double x, double z, int y) {
-        for (int dy : new int[]{0, 1, -1})
+        for (int dy : FLOOR_OFFSETS)
             if (floorAt(level, x, z, y + dy)) return new Vec3(x, y + dy, z);
         return null;
     }
@@ -328,8 +351,9 @@ public final class PaleStriderEntity extends PathfinderMob {
         songStart = server.getGameTime();
         phase(Phase.SING_START);
         StriderSong play = new StriderSong(songEpisode, getX(), getY() + 3, getZ(), part, together ? 0.28f : 0.65f);
+        double range = ModSounds.STRIDER_SONG.getRange(play.volume());
         for (var player : server.players()) {
-            if (player.distanceToSqr(play.x(), play.y(), play.z()) <= StriderSong.DELIVERY_RANGE * StriderSong.DELIVERY_RANGE
+            if (player.distanceToSqr(play.x(), play.y(), play.z()) <= range * range
                     && ServerPlayNetworking.canSend(player, StriderSong.TYPE)) ServerPlayNetworking.send(player, play);
         }
     }

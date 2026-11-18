@@ -20,6 +20,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -41,10 +42,10 @@ public final class PaleOwlEntity extends PathfinderMob {
     private final ArrayDeque<Vec3> route = new ArrayDeque<>();
     private Vec3 waypoint, perch, restingAt;
     private BlockPos familyArea;
-    private boolean treeRest;
+    private boolean treeRest, treeDestination;
     private record Family(BlockPos area) implements SpawnGroupData {}
     private CaterpillarEntity prey;
-    private int swayIn, restIn, flightIn, huntIn, searchIn, retryIn, fleeIn;
+    private int swayIn, restIn, flightIn, huntIn, searchIn, retryIn, fleeIn, approachIn;
     private boolean initialized;
 
     public PaleOwlEntity(EntityType<? extends PathfinderMob> type, Level level) { super(type, level); }
@@ -116,6 +117,10 @@ public final class PaleOwlEntity extends PathfinderMob {
     private int duration(int min, int spread) { return min + random.nextInt(spread + 1); }
 
     @Override public void tick() {
+        if (level() instanceof ServerLevel level && !LoadedFaunaTerrain.canTick(level, this)) {
+            setDeltaMovement(Vec3.ZERO);
+            return;
+        }
         super.tick();
         if (level().isClientSide || !isAlive()) return;
         if (isNoAi()) { setNoGravity(false); return; }
@@ -160,7 +165,7 @@ public final class PaleOwlEntity extends PathfinderMob {
     }
 
     private void tickRest() {
-        if (isInWater() || !onGround() || (treeRest && !treeAt(restingAt))) {
+        if (isInWater() || !onGround() || (treeRest && (!treeAt(restingAt) || !validPerch(restingAt)))) {
             beginTakeoff();
             return;
         }
@@ -284,7 +289,7 @@ public final class PaleOwlEntity extends PathfinderMob {
     }
 
     private void followPerch() {
-        if (perch == null || !validPerch(perch)) { returnToTrees(); return; }
+        if (--approachIn <= 0 || !validTargetPerch()) { returnToTrees(); return; }
         while (!route.isEmpty() && position().distanceToSqr(route.peek()) < .035) route.remove();
         if (route.isEmpty()) { phase(Phase.LAND); return; }
         Vec3 target = route.peek();
@@ -296,7 +301,7 @@ public final class PaleOwlEntity extends PathfinderMob {
 
     private void tickLand() {
         if (isInWater()) { beginTakeoff(); return; }
-        if (perch != null && !validPerch(perch)) { returnToTrees(); return; }
+        if (perch != null && !validTargetPerch()) { returnToTrees(); return; }
         if (onGround()) {
             restMotion();
             if (phaseAge() >= LAND_TICKS) beginRest();
@@ -358,11 +363,14 @@ public final class PaleOwlEntity extends PathfinderMob {
         }));
         for (int i = 0; i < Math.min(6, candidates.size()); i++) {
             Vec3 site = candidates.get(i);
-            if (!level.getEntitiesOfClass(PaleOwlEntity.class, new AABB(site, site).inflate(2),
-                    owl -> owl != this && owl.position().distanceToSqr(site) < 4).isEmpty()) continue;
+            if (!level.getEntitiesOfClass(PaleOwlEntity.class, new AABB(site, site).inflate(24, 24, 24),
+                    owl -> owl != this && (owl.position().distanceToSqr(site) < 4
+                            || owl.perch != null && owl.perch.distanceToSqr(site) < 2)).isEmpty()) continue;
             List<Vec3> path = approach(site);
             if (path.isEmpty()) continue;
             perch = site;
+            treeDestination = trees;
+            approachIn = 220;
             waypoint = null;
             route.clear();
             route.addAll(path);
@@ -374,7 +382,9 @@ public final class PaleOwlEntity extends PathfinderMob {
     private List<Vec3> approach(Vec3 site) {
         Vec3 from = position();
         Vec3 arrival = site.add(0, .85, 0);
-        if (clearPath(from, arrival)) return List.of(arrival);
+        if ((phase() != Phase.TAKEOFF || arrival.y >= from.y + 1) && clearPath(from, arrival)) {
+            return List.of(arrival);
+        }
         double above = Math.max(from.y + 2, arrival.y + 1);
         for (int lift : new int[]{0, 3, 6}) {
             Vec3 rise = new Vec3(from.x, above + lift, from.z);
@@ -392,8 +402,12 @@ public final class PaleOwlEntity extends PathfinderMob {
         return chunk != null && isTree(chunk.getBlockState(below));
     }
 
-    private static boolean isTree(net.minecraft.world.level.block.state.BlockState state) {
+    private static boolean isTree(BlockState state) {
         return state.is(ModBlocks.PALE_LEAVES) || state.is(ModBlocks.PALE_LOG) || state.is(ModBlocks.PALE_WOOD);
+    }
+
+    private boolean validTargetPerch() {
+        return perch != null && (!treeDestination || treeAt(perch)) && validPerch(perch);
     }
 
     private boolean validPerch(Vec3 site) {

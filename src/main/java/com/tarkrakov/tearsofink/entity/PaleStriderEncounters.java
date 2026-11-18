@@ -11,6 +11,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -49,9 +50,9 @@ public final class PaleStriderEncounters {
         return LoadedFaunaTerrain.loaded(level, new AABB(pos), 4) && level.getBiome(pos).is(ModBiomes.PALE_FOREST);
     }
 
-    private static int count(ServerLevel level, Vec3 center, PaleStriderEntity excluded) {
+    private static int count(ServerLevel level, Vec3 center) {
         return level.getEntitiesOfClass(PaleStriderEntity.class, new AABB(center, center).inflate(LOCAL_RADIUS, 64, LOCAL_RADIUS),
-                mob -> mob != excluded && mob.isAlive() &&
+                mob -> mob.isAlive() &&
                         mob.position().subtract(center).horizontalDistanceSqr() <= LOCAL_RADIUS * LOCAL_RADIUS).size();
     }
 
@@ -64,7 +65,7 @@ public final class PaleStriderEncounters {
             if (distance < best) { best = distance; temple = p; }
         }
         boolean templeChoir = temple != null;
-        int nearby = count(level, player.position(), null);
+        int nearby = count(level, player.position());
         if (nearby >= (templeChoir ? 3 : 2)) return;
         int roll = level.random.nextInt(10);
         int size = templeChoir ? 3 : roll < 6 ? 1 : roll < 9 ? 2 : 3;
@@ -90,7 +91,7 @@ public final class PaleStriderEncounters {
             }
         }
         if (start == null) return;
-        if (size == 3 && !templeChoir && count(level, start, null) != 0) {
+        if (size == 3 && !templeChoir && count(level, start) != 0) {
             size = 2;
             cap = 2;
         }
@@ -101,7 +102,7 @@ public final class PaleStriderEncounters {
             int dx = level.random.nextInt(17) - 8, dz = level.random.nextInt(17) - 8;
             int distance = dx * dx + dz * dz;
             if (distance < 9 || distance > 64) continue;
-            Vec3 next = site(level, layout, player, net.minecraft.util.Mth.floor(start.x) + dx, net.minecraft.util.Mth.floor(start.z) + dz);
+            Vec3 next = site(level, layout, player, Mth.floor(start.x) + dx, Mth.floor(start.z) + dz);
             if (next != null && Math.abs(next.y - start.y) <= 3 &&
                     spawn(level, player, next, templeChoir, group, heading, cap)) placed++;
         }
@@ -129,11 +130,11 @@ public final class PaleStriderEncounters {
     }
 
     private static boolean spawn(ServerLevel level, ServerPlayer player, Vec3 at, boolean temple, UUID group, float heading, int cap) {
-        if (count(level, at, null) >= cap || count(level, player.position(), null) >= cap) return false;
+        if (count(level, at) >= cap || count(level, player.position()) >= cap) return false;
         for (var other : level.players()) {
             if (other == player || !other.isAlive() || other.isSpectator()
                     || other.position().subtract(at).horizontalDistanceSqr() > LOCAL_RADIUS * LOCAL_RADIUS) continue;
-            if (count(level, other.position(), null) >= cap) return false;
+            if (count(level, other.position()) >= cap) return false;
         }
         if (!level.getEntitiesOfClass(PaleStriderEntity.class, new AABB(at, at).inflate(2.8, 5, 2.8), PaleStriderEntity::isAlive)
                 .isEmpty()) return false;
