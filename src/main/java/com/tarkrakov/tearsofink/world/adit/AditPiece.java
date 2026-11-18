@@ -108,6 +108,11 @@ final class AditPiece extends StructurePiece {
 		skip(seed, chunk, failure);
 	}
 
+	boolean nearPassage(BlockPos pos) {
+		return entrance != null && (entrance.distSqr(pos) <= 64.0
+				|| (landing != null && landing.distSqr(pos) <= 64.0));
+	}
+
 	private void skip(long seed, ChunkPos chunk, String reason) {
 		TearsOfInk.LOGGER.warn("[adit] seed={} sector={} band={} chunk={} skipped: {}",
 				seed, sector + 1, band + 1, chunk, reason);

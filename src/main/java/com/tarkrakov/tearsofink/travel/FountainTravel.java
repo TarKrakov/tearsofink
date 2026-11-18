@@ -147,6 +147,11 @@ public final class FountainTravel {
 		});
 	}
 
+	/** Read existing personal travel discoveries; no chunk loads. */
+	public static boolean hasOpenedFountain(ServerPlayer player) {
+		return !FountainTravelData.get(player).opened().isEmpty();
+	}
+
 	public static void activate(ServerPlayer player, BlockPos pos) {
 		if (ModDimensions.isLands(player.level()) && !player.isSpectator()) FountainTravelData.get(player).activate(player, pos);
 	}

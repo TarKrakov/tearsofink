@@ -63,6 +63,23 @@ public final class AditStructure extends Structure {
 		}
 	}
 
+	/** Only already generated, loaded passages with a real entrance/landing. */
+	public static boolean nearBuiltPassage(ServerLevel level, BlockPos pos) {
+		var structure = level.registryAccess().registryOrThrow(Registries.STRUCTURE).get(TearsOfInk.id("pale_adit"));
+		if (structure == null) return false;
+		int cx = pos.getX() >> 4, cz = pos.getZ() >> 4;
+		for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
+			var chunk = level.getChunkSource().getChunkNow(cx + dx, cz + dz);
+			if (chunk == null) continue;
+			var start = chunk.getStartForStructure(structure);
+			if (start == null || !start.isValid()) continue;
+			for (var piece : start.getPieces()) {
+				if (piece instanceof AditPiece adit && adit.nearPassage(pos)) return true;
+			}
+		}
+		return false;
+	}
+
 	@Override
 	public StructureType<?> type() {
 		return TYPE;

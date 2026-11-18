@@ -113,9 +113,13 @@ public final class DiaryEntries {
 				return;
 			}
 			ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(entity.getType());
-			if (CREATURES.contains(id.getPath())) {
+			if (CREATURES.contains(id.getPath()) && (id.getNamespace().equals("tears-of-ink") || id.getNamespace().equals("minecraft"))) {
 				if (id.getPath().startsWith("pale_")) unlock(p, id.getPath(), DRAFT_MEMORY);
 				else unlock(p, id.getPath());
+			} else {
+				List<String> discoveries = new ArrayList<>();
+				DiaryDiscoveries.observe(entity, p.getAttachedOrCreate(DATA), discoveries);
+				if (!discoveries.isEmpty()) unlock(p, discoveries.toArray(String[]::new));
 			}
 		});
 	}
@@ -142,7 +146,7 @@ public final class DiaryEntries {
 		boolean needPath = (vow == Vow.SOUL && !have.contains(DRAFT_SOUL))
 				|| (vow == Vow.INK && !have.contains(DRAFT_INK));
 		boolean needFog = !have.contains(DRAFT_FOG);
-		if (!needMetal && !needAnvil && !needAltar && !needHunt && !needFont && !needRuins && !needPath && !needFog) return;
+		// Новые наблюдения проверяются независимо от старых уже известных глав.
 
 		List<String> discovered = new ArrayList<>(8);
 		if (needFog) discovered.add(DRAFT_FOG);
@@ -183,6 +187,7 @@ public final class DiaryEntries {
 			}
 			if (!needMetal && !needAnvil && !needAltar && !needHunt && !needFont) break;
 		}
+		DiaryDiscoveries.collect(p, have, discovered);
 		// За один цикл — один Sync и одно уведомление даже для нескольких страниц.
 		if (!discovered.isEmpty()) unlock(p, discovered.toArray(String[]::new));
 	}
