@@ -227,6 +227,8 @@ public final class ModItems {
 	public static final Item ICON_CURSED_VESSEL = register("icon_cursed_vessel", new Item(new Item.Properties()));
 	public static final Item ICON_CURSE_ESSENCE = register("icon_curse_essence", new Item(new Item.Properties()));
 	public static final Item ICON_ATONEMENT = register("icon_atonement", new Item(new Item.Properties()));
+	public static final Item ICON_SOUL_PILGRIM = register("icon_soul_pilgrim", new Item(new Item.Properties()));
+	public static final Item ICON_INK_SHATTERED_HEART = register("icon_ink_shattered_heart", new Item(new Item.Properties()));
 
 	// ===== Книги навыков =====
 	/** Книга Рывка (название и текст — рабочие, автор придумает свои). */

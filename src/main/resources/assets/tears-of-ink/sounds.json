@@ -4,5 +4,25 @@
       "tears-of-ink:shield_choir"
     ],
     "subtitle": "subtitles.tears-of-ink.shield_choir"
+  },
+  "diary_page_turn": {
+    "sounds": [
+      {
+        "name": "minecraft:item.book.page_turn",
+        "type": "event",
+        "volume": 0.45
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.diary_page_turn"
+  },
+  "diary_quill_write": {
+    "sounds": [
+      {
+        "name": "minecraft:item.brush.brushing.generic",
+        "type": "event",
+        "volume": 0.5
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.diary_quill_write"
   }
 }

@@ -116,7 +116,8 @@ public final class Prologue {
 					else { // без обета дальше не пройти — назад от ворот и окно выбора
 						BlockPos a = v.arrival();
 						p.teleportTo(a.getX() + 0.5, a.getY(), a.getZ() + 0.5);
-						if (com.tarkrakov.tearsofink.vow.Vows.prompt(p)) com.tarkrakov.tearsofink.travel.Guide.say(p, "vow.gate");
+						com.tarkrakov.tearsofink.vow.Vows.prompt(p);
+						com.tarkrakov.tearsofink.vow.Vows.guidePromptOnce(p, "vow.gate");
 					}
 				}
 				else if (p.getY() < level.getMinBuildHeight() + 20) { // упал с островка — обратно

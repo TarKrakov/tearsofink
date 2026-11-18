@@ -8,7 +8,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.sounds.SoundEvents;
+import com.tarkrakov.tearsofink.sound.ModSounds;
 import net.minecraft.util.FormattedCharSequence;
 
 import java.util.ArrayList;
@@ -171,7 +171,7 @@ public class DiaryScreen extends Screen {
 
 	private void turn(int d) {
 		page += d;
-		minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PAGE_TURN, 1f));
+		minecraft.getSoundManager().play(SimpleSoundInstance.forUI(ModSounds.DIARY_PAGE_TURN, 1.0f));
 	}
 
 	@Override

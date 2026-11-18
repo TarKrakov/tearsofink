@@ -2,7 +2,7 @@
   "parent": "tears-of-ink:ink_lands",
   "display": {
     "icon": {
-      "id": "minecraft:shield"
+      "id": "tears-of-ink:icon_soul_pilgrim"
     },
     "title": {
       "translate": "advancements.tears-of-ink.soul_pilgrim.title"
