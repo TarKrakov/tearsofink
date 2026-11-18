@@ -35,7 +35,7 @@ import static com.tarkrakov.tearsofink.entity.PaleOwlTuning.*;
 /** Peaceful, server-driven bird with bounded local steering and collision-checked destinations. */
 public final class PaleOwlEntity extends PathfinderMob {
     public enum Phase { IDLE, SWAY, TAKEOFF, FLY, DIVE, LAND }
-    private static final int[] HUNT_HOP_LENGTHS = {2, 4};
+    private static final int[] HUNT_HOP_ANGLES = {0, 45, -45, 90, -90};
     private static final int[] WATER_TURNS = {0, 90, 180, 270};
     private static final Phase[] PHASES = Phase.values();
     // Phase and its start time travel together; previous phase allows a brief visual handoff.
@@ -48,7 +48,8 @@ public final class PaleOwlEntity extends PathfinderMob {
     private boolean treeRest, treeDestination;
     private record Family(BlockPos area) implements SpawnGroupData {}
     private CaterpillarEntity prey;
-    private int swayIn, restIn, flightIn, huntIn, searchIn, retryIn, fleeIn, approachIn;
+    private int swayIn, restIn, flightIn, searchIn, retryIn, fleeIn, approachIn;
+    private int huntIn = -1, huntAge, huntReturnIn;
     private boolean initialized;
     private int hootIn = -1, wingSoundIn;
 
@@ -88,6 +89,7 @@ public final class PaleOwlEntity extends PathfinderMob {
         boolean accepted = super.hurt(source, amount);
         if (accepted && !level().isClientSide && isAlive() && !isNoAi()) {
             fleeIn = 100;
+            abortHunt();
             if (initialized) {
                 if (phase() == Phase.IDLE || phase() == Phase.SWAY || onGround()) beginTakeoff();
                 else beginFlight();
@@ -106,12 +108,13 @@ public final class PaleOwlEntity extends PathfinderMob {
 
     @Override public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        tag.putInt("OwlHuntCooldown", huntIn);
+        tag.putInt("OwlHuntCooldown", Math.max(-1, huntIn));
         if (familyArea != null) tag.putLong("OwlFamilyArea", familyArea.asLong());
     }
     @Override public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
-        huntIn = Math.max(0, tag.getInt("OwlHuntCooldown"));
+        huntIn = tag.contains("OwlHuntCooldown")
+                ? Math.max(-1, Math.min(HUNT_MIN + HUNT_SPREAD, tag.getInt("OwlHuntCooldown"))) : -1;
         if (tag.contains("OwlFamilyArea")) familyArea = BlockPos.of(tag.getLong("OwlFamilyArea"));
         initialized = false;
         // A loaded owl chooses a safe new destination; no stale entity or chunk references.
@@ -131,13 +134,16 @@ public final class PaleOwlEntity extends PathfinderMob {
         if (!initialized) {
             initialized = true;
             if (familyArea == null || familyArea.distSqr(blockPosition()) > 32 * 32) familyArea = blockPosition();
-            huntIn = Math.max(huntIn, duration(HUNT_MIN, HUNT_SPREAD));
+            // New owls become hungry soon; reloading a saved owl must not restart its cooldown.
+            if (huntIn < 0) huntIn = duration(HUNT_FIRST_MIN, HUNT_FIRST_SPREAD);
             if (onGround()) {
                 beginRest();
                 if (fleeIn > 0) beginTakeoff();
             } else beginFlight();
         }
         if (huntIn > 0) --huntIn;
+        if (huntReturnIn > 0) --huntReturnIn;
+        if (prey != null && ++huntAge >= HUNT_LIMIT) returnToTrees();
         if (searchIn > 0) --searchIn;
         if (retryIn > 0) --retryIn;
         if (fleeIn > 0) --fleeIn;
@@ -206,12 +212,14 @@ public final class PaleOwlEntity extends PathfinderMob {
         setDeltaMovement(0, -0.08, 0);
     }
     private void beginRest() {
+        abortHunt();
         waypoint = null;
         perch = null;
         prey = null;
         route.clear();
         restingAt = position();
         treeRest = treeAt(restingAt);
+        if (treeRest) huntReturnIn = 0;
         restMotion();
         swayIn = duration(SWAY_MIN, SWAY_SPREAD);
         restIn = treeRest ? duration(REST_MIN, REST_SPREAD) : duration(40, 60);
@@ -235,6 +243,7 @@ public final class PaleOwlEntity extends PathfinderMob {
     }
 
     private void beginTakeoff() {
+        abortHunt();
         if (phase() == Phase.TAKEOFF) return;
         waypoint = null;
         perch = null;
@@ -247,7 +256,7 @@ public final class PaleOwlEntity extends PathfinderMob {
         if (phaseAge() < 5 && onGround()) { restMotion(); return; }
         setNoGravity(true);
         if (prey != null) {
-            if (waypoint == null || !prey.isAlive() || phaseAge() >= 45) {
+            if (waypoint == null || !prey.isAlive() || phaseAge() >= HUNT_LAUNCH_LIMIT) {
                 returnToTrees();
             } else if (position().distanceToSqr(waypoint) < .04) {
                 waypoint = null;
@@ -275,6 +284,7 @@ public final class PaleOwlEntity extends PathfinderMob {
     }
 
     private void beginFlight() {
+        abortHunt();
         prey = null;
         perch = null;
         waypoint = null;
@@ -288,8 +298,8 @@ public final class PaleOwlEntity extends PathfinderMob {
     private void tickFlight() {
         setNoGravity(true);
         if (flightIn > 0) --flightIn;
-        if (perch != null) { followPerch(); return; }
         if (fleeIn == 0 && tryHunt()) return;
+        if (perch != null) { followPerch(); return; }
         if (retryIn == 0) {
             retryIn = duration(16, 12);
             if (planPerch(true) || (flightIn == 0 && planPerch(false))) {
@@ -311,43 +321,80 @@ public final class PaleOwlEntity extends PathfinderMob {
     }
 
     private boolean tryHunt() {
-        if (huntIn != 0 || searchIn != 0 || fleeIn != 0 ||
-                !LoadedFaunaTerrain.search((ServerLevel)level())) return false;
+        if (huntIn != 0 || searchIn != 0 || fleeIn != 0 || huntReturnIn != 0) return false;
+        ServerLevel level = (ServerLevel)level();
+        if (!LoadedFaunaTerrain.search(level)) return false;
         searchIn = SEARCH_INTERVAL;
-        CaterpillarEntity found = null;
-        Vec3 launch = null;
+        Vec3 origin = position();
         boolean perched = onGround();
-        double best = Double.MAX_VALUE;
-        for (var candidate : level().getEntitiesOfClass(CaterpillarEntity.class, getBoundingBox().inflate(HUNT_RADIUS, 20, HUNT_RADIUS),
-                c -> c.isAlive() && c.variant() == CaterpillarEntity.Variant.PALE)) {
-            Vec3 delta = candidate.position().subtract(position());
-            if (delta.y > -.45 || delta.horizontalDistanceSqr() > HUNT_RADIUS * HUNT_RADIUS
-                    || delta.lengthSqr() >= best) continue;
+        var candidates = new ArrayList<>(level.getEntitiesOfClass(CaterpillarEntity.class,
+                getBoundingBox().inflate(HUNT_RADIUS, HUNT_VERTICAL_RANGE, HUNT_RADIUS), c -> {
+                    Vec3 delta = c.position().subtract(origin);
+                    return c.isAlive() && c.variant() == CaterpillarEntity.Variant.PALE
+                            && delta.y < -.45 && delta.y >= -HUNT_VERTICAL_RANGE
+                            && delta.horizontalDistanceSqr() <= HUNT_RADIUS * HUNT_RADIUS;
+                }));
+        candidates.sort(Comparator.comparingDouble(c -> c.position().distanceToSqr(origin)));
+        // Bound expensive swept-volume probes even in a dense caterpillar colony.
+        for (int i = 0; i < Math.min(HUNT_CANDIDATES, candidates.size()); i++) {
+            CaterpillarEntity candidate = candidates.get(i);
             Vec3 strike = candidate.position().add(0, .25, 0);
-            Vec3 from = perched ? launchTowards(strike) : position();
-            if (from == null || (!perched && !clearPath(from, strike))) continue;
-            found = candidate;
-            launch = perched ? from : null;
-            best = delta.lengthSqr();
+            List<Vec3> path = huntPath(strike, perched);
+            if (path == null) continue;
+            prey = candidate;
+            huntAge = 0;
+            perch = null;
+            route.clear();
+            route.addAll(path);
+            waypoint = perched ? route.removeFirst() : null;
+            setNoGravity(true);
+            phase(perched ? Phase.TAKEOFF : Phase.DIVE);
+            return true;
         }
-        if (found == null) return false;
-        prey = found;
-        waypoint = launch;
-        perch = null;
-        route.clear();
-        huntIn = duration(HUNT_MIN, HUNT_SPREAD);
-        setNoGravity(true);
-        phase(launch == null ? Phase.DIVE : Phase.TAKEOFF);
-        return true;
+        return false;
     }
 
-    private Vec3 launchTowards(Vec3 strike) {
-        Vec3 direction = strike.subtract(position()).multiply(1, 0, 1).normalize();
-        for (int length : HUNT_HOP_LENGTHS) {
-            Vec3 hop = position().add(direction.scale(length)).add(0, 1.5, 0);
-            if (clearPath(position(), hop) && clearPath(hop, strike)) return hop;
+    /**
+     * A seated owl must clear its own branch first. Try a few sideways exits instead
+     * of requiring the one line through the crown to the prey to be unobstructed.
+     * All segments use the existing loaded-chunk and full-body collision checks.
+     * Null = unreachable; empty = direct approach from flight.
+     */
+    private List<Vec3> huntPath(Vec3 strike, boolean perched) {
+        Vec3 origin = position();
+        if (!perched) {
+            if (clearPath(origin, strike)) return List.of();
+            Vec3 above = strike.add(0, 3, 0);
+            if (above.y < origin.y && clearPath(origin, above) && clearPath(above, strike))
+                return List.of(above);
+            return null;
         }
+        Vec3 direction = strike.subtract(origin).multiply(1, 0, 1).normalize();
+        if (direction.horizontalDistanceSqr() < .01) direction = Vec3.directionFromRotation(0, getYRot());
+        for (int angle : HUNT_HOP_ANGLES) {
+            double radians = Math.toRadians(angle);
+            double dx = direction.x * Math.cos(radians) - direction.z * Math.sin(radians);
+            double dz = direction.x * Math.sin(radians) + direction.z * Math.cos(radians);
+            Vec3 hop = origin.add(dx * 3, angle == 0 ? 1.5 : 2.5, dz * 3);
+            if (!clearPath(origin, hop)) continue;
+            if (clearPath(hop, strike)) return List.of(hop);
+            Vec3 above = strike.add(0, 3, 0);
+            if (above.y < hop.y && clearPath(hop, above) && clearPath(above, strike))
+                return List.of(hop, above);
+        }
+        // Some crowns have a narrow vertical exit but no diagonal exit.
+        Vec3 rise = origin.add(0, 3, 0);
+        if (clearPath(origin, rise) && clearPath(rise, strike)) return List.of(rise);
         return null;
+    }
+
+    private void abortHunt() {
+        if (prey == null) return;
+        prey = null;
+        waypoint = null;
+        route.clear();
+        huntIn = duration(HUNT_RETRY_MIN, HUNT_RETRY_SPREAD);
+        huntReturnIn = HUNT_RETURN_LIMIT;
     }
 
     private void returnToTrees() {
@@ -357,16 +404,28 @@ public final class PaleOwlEntity extends PathfinderMob {
 
     private void tickDive() {
         if (prey == null) { followPerch(); return; }
-        Vec3 target = prey.position().add(0, .25, 0);
-        if (!prey.isAlive() || prey.variant() != CaterpillarEntity.Variant.PALE ||
-                phaseAge() >= DIVE_LIMIT || !clearPath(position(), target)) {
+        if (!prey.isAlive() || prey.variant() != CaterpillarEntity.Variant.PALE) {
             returnToTrees();
             return;
         }
+        while (!route.isEmpty() && position().distanceToSqr(route.peek()) < .04) route.remove();
+        if (!route.isEmpty()) {
+            if (!steer(route.peek(), DIVE_SPEED)) returnToTrees();
+            return;
+        }
+
+        Vec3 target = prey.position().add(0, .25, 0);
         if (getBoundingBox().inflate(.16).intersects(prey.getBoundingBox())) {
-            prey.hurt(damageSources().mobAttack(this), HUNT_DAMAGE);
+            // Never bite through a newly placed block or across an unloaded boundary.
+            if (!clearPath(position(), target)) { returnToTrees(); return; }
+            boolean hit = prey.hurt(damageSources().mobAttack(this), HUNT_DAMAGE);
+            prey = null;
+            huntIn = hit ? duration(HUNT_MIN, HUNT_SPREAD) : duration(HUNT_RETRY_MIN, HUNT_RETRY_SPREAD);
+            huntReturnIn = HUNT_RETURN_LIMIT;
             returnToTrees();
-        } else if (!steer(target, DIVE_SPEED)) returnToTrees();
+        } else if ((huntAge % 5 == 0 && !clearPath(position(), target)) || !steer(target, DIVE_SPEED)) {
+            returnToTrees();
+        }
     }
 
     private void followPerch() {
