@@ -33,5 +33,954 @@
       }
     ],
     "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_2": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_2",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_3": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_3",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_close_prayer_1": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_close_prayer_1",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_close_prayer_2": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_close_prayer_2",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_close_prayer_3": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_close_prayer_3",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_echoes_of_grief_1": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_echoes_of_grief_1",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_echoes_of_grief_2": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_echoes_of_grief_2",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_echoes_of_grief_3": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_echoes_of_grief_3",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_light_in_exile_1": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_light_in_exile_1",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_light_in_exile_2": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_light_in_exile_2",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_light_in_exile_3": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_light_in_exile_3",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "caterpillar_pale_crawl": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:caterpillar_pale_crawl_01",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:caterpillar_pale_crawl_02",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:caterpillar_pale_crawl_03",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.caterpillar_pale_crawl"
+  },
+  "caterpillar_blood_crawl": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:caterpillar_blood_crawl_01",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:caterpillar_blood_crawl_02",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:caterpillar_blood_crawl_03",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.caterpillar_blood_crawl"
+  },
+  "caterpillar_ink_crawl": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:caterpillar_ink_crawl_01",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:caterpillar_ink_crawl_02",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:caterpillar_ink_crawl_03",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.caterpillar_ink_crawl"
+  },
+  "pale_owl_hoot": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_owl_hoot_01",
+        "attenuation_distance": 24
+      },
+      {
+        "name": "tears-of-ink:pale_owl_hoot_02",
+        "attenuation_distance": 24
+      },
+      {
+        "name": "tears-of-ink:pale_owl_hoot_03",
+        "attenuation_distance": 24
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_owl_hoot"
+  },
+  "pale_owl_wing": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_owl_wing_01",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:pale_owl_wing_02",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:pale_owl_wing_03",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_owl_wing"
+  },
+  "pale_crossbow_ambient": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_crossbow_ambient_01",
+        "attenuation_distance": 12
+      },
+      {
+        "name": "tears-of-ink:pale_crossbow_ambient_02",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_crossbow_ambient"
+  },
+  "pale_crossbow_bolt_impact": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_crossbow_bolt_impact_01",
+        "attenuation_distance": 12,
+        "volume": 0.42
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_crossbow_bolt_impact"
+  },
+  "pale_crossbow_death": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_crossbow_death_01",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_crossbow_death"
+  },
+  "pale_crossbow_hurt": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_crossbow_hurt_01",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_crossbow_hurt"
+  },
+  "pale_crossbow_reload_bolt": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_crossbow_reload_bolt_01",
+        "attenuation_distance": 10
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_crossbow_reload_bolt"
+  },
+  "pale_crossbow_reload_draw": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_crossbow_reload_draw_01",
+        "attenuation_distance": 10
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_crossbow_reload_draw"
+  },
+  "pale_crossbow_reload_latch": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_crossbow_reload_latch_01",
+        "attenuation_distance": 10
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_crossbow_reload_latch"
+  },
+  "pale_crossbow_shoot": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_crossbow_shoot_01",
+        "attenuation_distance": 16
+      },
+      {
+        "name": "tears-of-ink:pale_crossbow_shoot_02",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_crossbow_shoot"
+  },
+  "pale_crossbow_step": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_crossbow_step_01",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:pale_crossbow_step_02",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_crossbow_step"
+  },
+  "pale_shield_ambient": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_ambient_01",
+        "attenuation_distance": 12
+      },
+      {
+        "name": "tears-of-ink:pale_shield_ambient_02",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_ambient"
+  },
+  "pale_shield_bash_hit": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_bash_hit_01",
+        "attenuation_distance": 14
+      },
+      {
+        "name": "tears-of-ink:pale_shield_bash_hit_02",
+        "attenuation_distance": 14
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_bash_hit"
+  },
+  "pale_shield_bash_swing": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_bash_swing_01",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_bash_swing"
+  },
+  "pale_shield_block": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_block_01",
+        "attenuation_distance": 12
+      },
+      {
+        "name": "tears-of-ink:pale_shield_block_02",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_block"
+  },
+  "pale_shield_charge_break_soft": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_charge_break_soft_01",
+        "attenuation_distance": 14
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_charge_break_soft"
+  },
+  "pale_shield_charge_hit": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_charge_hit_01",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_charge_hit"
+  },
+  "pale_shield_charge_prepare": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_charge_prepare_01",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_shield_charge_prepare_02",
+        "attenuation_distance": 20
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_charge_prepare"
+  },
+  "pale_shield_charge_start": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_charge_start_01",
+        "attenuation_distance": 14
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_charge_start"
+  },
+  "pale_shield_charge_step": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_charge_step_01",
+        "attenuation_distance": 10
+      },
+      {
+        "name": "tears-of-ink:pale_shield_charge_step_02",
+        "attenuation_distance": 10
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_charge_step"
+  },
+  "pale_shield_charge_wall": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_charge_wall_01",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_charge_wall"
+  },
+  "pale_shield_death": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_death_01",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_death"
+  },
+  "pale_shield_deflect": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_deflect_01",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_deflect"
+  },
+  "pale_shield_disabled": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_disabled_01",
+        "attenuation_distance": 14
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_disabled"
+  },
+  "pale_shield_hurt": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_hurt_01",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_hurt"
+  },
+  "pale_shield_raise": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_raise_01",
+        "attenuation_distance": 10
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_raise"
+  },
+  "pale_shield_step": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_step_01",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:pale_shield_step_02",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_step"
+  },
+  "pale_shield_stun": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_shield_stun_01",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_shield_stun"
+  },
+  "pale_soldier_dodge": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_soldier_dodge_01",
+        "attenuation_distance": 10
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_soldier_dodge"
+  },
+  "pale_spear_ambient": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_spear_ambient_01",
+        "attenuation_distance": 12
+      },
+      {
+        "name": "tears-of-ink:pale_spear_ambient_02",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_spear_ambient"
+  },
+  "pale_spear_death": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_spear_death_01",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_spear_death"
+  },
+  "pale_spear_hit": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_spear_hit_01",
+        "attenuation_distance": 14
+      },
+      {
+        "name": "tears-of-ink:pale_spear_hit_02",
+        "attenuation_distance": 14
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_spear_hit"
+  },
+  "pale_spear_hurt": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_spear_hurt_01",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_spear_hurt"
+  },
+  "pale_spear_step": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_spear_step_01",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:pale_spear_step_02",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_spear_step"
+  },
+  "pale_spear_thrust": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_spear_thrust_01",
+        "attenuation_distance": 12
+      },
+      {
+        "name": "tears-of-ink:pale_spear_thrust_02",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_spear_thrust"
+  },
+  "soul_shield_bastion": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_bastion",
+        "attenuation_distance": 10
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_bastion"
+  },
+  "soul_shield_block": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_block_1",
+        "attenuation_distance": 10
+      },
+      {
+        "name": "tears-of-ink:soul_shield_block_2",
+        "attenuation_distance": 10
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_block"
+  },
+  "soul_shield_break": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_break",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_break"
+  },
+  "soul_shield_burst_full": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_burst_full",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_burst_full"
+  },
+  "soul_shield_burst_low": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_burst_low",
+        "attenuation_distance": 14
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_burst_low"
+  },
+  "soul_shield_charge_1": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_charge_1",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_charge_1"
+  },
+  "soul_shield_charge_2": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_charge_2",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_charge_2"
+  },
+  "soul_shield_charge_3": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_charge_3",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_charge_3"
+  },
+  "soul_shield_charge_4": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_charge_4",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_charge_4"
+  },
+  "soul_shield_clap": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_clap",
+        "attenuation_distance": 14
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_clap"
+  },
+  "soul_shield_clap_prepare": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_clap_prepare",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_clap_prepare"
+  },
+  "soul_shield_full_charge": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_full_charge",
+        "attenuation_distance": 14
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_full_charge"
+  },
+  "soul_shield_perfect": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_perfect",
+        "attenuation_distance": 14
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_perfect"
+  },
+  "soul_shield_raise": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_raise",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_raise"
+  },
+  "soul_shield_riposte": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_riposte",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_riposte"
+  },
+  "soul_shield_mercy": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_mercy",
+        "attenuation_distance": 14
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_mercy"
+  },
+  "soul_shield_radiance": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_radiance",
+        "attenuation_distance": 14
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_radiance"
+  },
+  "soul_shield_ram_hit": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_ram_hit",
+        "attenuation_distance": 12
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_ram_hit"
+  },
+  "soul_shield_ram_start": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_ram_start",
+        "attenuation_distance": 14
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_ram_start"
+  },
+  "soul_shield_repel": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_repel",
+        "attenuation_distance": 14
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_repel"
+  },
+  "soul_shield_res_advance_impact": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_res_advance_impact",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_res_advance_impact"
+  },
+  "soul_shield_res_advance_start": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_res_advance_start",
+        "attenuation_distance": 14
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_res_advance_start"
+  },
+  "soul_shield_res_avalanche": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_res_avalanche",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_res_avalanche"
+  },
+  "soul_shield_res_flash": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_res_flash",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_res_flash"
+  },
+  "soul_shield_res_grace": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_res_grace",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_res_grace"
+  },
+  "soul_shield_res_halo": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_res_halo",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_res_halo"
+  },
+  "soul_shield_res_intercessor": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_res_intercessor",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_res_intercessor"
+  },
+  "soul_shield_res_phalanx": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_res_phalanx",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_res_phalanx"
+  },
+  "soul_shield_res_shockwave": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_res_shockwave",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_res_shockwave"
+  },
+  "soul_shield_res_sun": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_res_sun",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_res_sun"
+  },
+  "soul_shield_res_veil": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:soul_shield_res_veil",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.soul_shield_res_veil"
+  },
+  "pale_forest_air": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_air",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_memory_air": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_memory_air",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_fog_air": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_fog_air",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_memory_01": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_memory_01",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_memory_02": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_memory_02",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_fog_phrase_01": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_fog_phrase_01",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_fog_phrase_02": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_fog_phrase_02",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_fog_phrase_03": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_fog_phrase_03",
+        "stream": true
+      }
+    ]
+  },
+  "pale_forest_bark": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_bark_01",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_bark_02",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_bark_03",
+        "attenuation_distance": 20
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_forest_bark"
+  },
+  "pale_forest_branch": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_branch_01",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_branch_02",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_branch_03",
+        "attenuation_distance": 20
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_forest_branch"
+  },
+  "pale_forest_twig": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_twig_01",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_twig_02",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_twig_03",
+        "attenuation_distance": 20
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_forest_twig"
+  },
+  "pale_forest_rustle": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_forest_rustle_01",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_rustle_02",
+        "attenuation_distance": 20
+      },
+      {
+        "name": "tears-of-ink:pale_forest_rustle_03",
+        "attenuation_distance": 20
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_forest_rustle"
   }
 }

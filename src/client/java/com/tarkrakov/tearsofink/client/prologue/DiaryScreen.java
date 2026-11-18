@@ -12,12 +12,14 @@ import com.tarkrakov.tearsofink.sound.ModSounds;
 import net.minecraft.util.FormattedCharSequence;
 
 import java.util.ArrayList;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.List;
 
 /**
  * Дневник Историка. Авторский atlas gui/diary_base.png 256x256 и подвижное перо:
  * переплёт и кольца слева, перо сверху справа, внизу печать, справа от книги
- * прозрачное место для будущих разделов (пока ни кнопок, ни категорий нет).
+ * свободный декоративный край; шесть вкладок снаружи корешка слева.
  *
  * Записи не меняют id и формат сохранений. Текст переносится на следующие листы
  * без уменьшения шрифта; заголовки тоже переносятся, а не упираются в перо.
@@ -28,6 +30,10 @@ public class DiaryScreen extends Screen {
 	private final long openedAt = System.nanoTime();
 
 	private static final int W = 256, H = 256;
+	/** Temporary tab atlas: rows in DiarySection order, columns normal/hover/active. */
+	private static final ResourceLocation TABS = TearsOfInk.id("textures/gui/diary_tabs.png");
+	private static final int TAB_W = 24, TAB_H = 24, TAB_X = -18, TAB_ACTIVE_X = -22;
+	private static final int TAB_TOP = 38, TAB_STEP = 30, LEFT_EXTRA = 22;
 	/** Безопасная колонка пергамента: за кольцами и левее пера. */
 	private static final int TEXT_X = 64, TEXT_W = 130;
 	private static final int TITLE_Y = 23, UNTITLED_Y = 27, TITLE_LINE = 12, AFTER_TITLE = 8;
@@ -45,6 +51,10 @@ public class DiaryScreen extends Screen {
 	private final List<Sheet> sheets = new ArrayList<>();
 	private List<String> builtFrom = null;
 	private int page;
+	private DiarySection section = DiarySection.CHRONICLES;
+	private DiarySection builtSection;
+	private final Map<DiarySection, Integer> remembered = new EnumMap<>(DiarySection.class);
+	private final Map<DiarySection, Integer> counts = new EnumMap<>(DiarySection.class);
 
 	public DiaryScreen() {
 		super(Component.translatable("diary.tears-of-ink.title"));
@@ -52,10 +62,10 @@ public class DiaryScreen extends Screen {
 
 	/** Уместить целый лист на экране; не растягивать пиксель-арт на больших мониторах. */
 	private float bookScale() {
-		return Math.min(1f, Math.min((width - 8f) / W, (height - 8f) / H));
+		return Math.min(1f, Math.min((width - 8f) / (W + LEFT_EXTRA), (height - 8f) / H));
 	}
 
-	private float left() { return (width - W * bookScale()) * 0.5f; }
+	private float left() { return (width - (W + LEFT_EXTRA) * bookScale()) * 0.5f + LEFT_EXTRA * bookScale(); }
 	private float top() { return (height - H * bookScale()) * 0.5f; }
 	private double localX(double mouseX) { return (mouseX - left()) / bookScale(); }
 	private double localY(double mouseY) { return (mouseY - top()) / bookScale(); }
@@ -68,13 +78,17 @@ public class DiaryScreen extends Screen {
 		return Math.max(1, (LAST_TEXT_BOTTOM - FONT_H - textStart(headingLines)) / LINE + 1);
 	}
 
-	/** Переразметка нужна только когда сервер прислал новые записи. */
+	/** Preserve discovery order inside each section. */
 	private void build() {
-		if (entries.equals(builtFrom)) return;
+		if (section == builtSection && entries.equals(builtFrom)) return;
 		builtFrom = List.copyOf(entries);
+		builtSection = section;
+		counts.clear();
+		for (String id : builtFrom) counts.merge(DiarySection.of(id), 1, Integer::sum);
 		sheets.clear();
 		boolean caterpillars = false;
-		for (String id : entries) {
+		for (String id : builtFrom) {
+			if (DiarySection.of(id) != section) continue;
 			if (id.equals(DiaryEntries.CATERPILLAR) || id.startsWith(DiaryEntries.CATERPILLAR + "_")) {
 				if (caterpillars) continue;
 				caterpillars = true;
@@ -108,7 +122,8 @@ public class DiaryScreen extends Screen {
 		build();
 
 		float scale = bookScale();
-		int mx = (int) localX(mouseX), my = (int) localY(mouseY);
+		double mx = localX(mouseX), my = localY(mouseY);
+		DiarySection hovered = tabAt(mx, my);
 		g.pose().pushPose();
 		g.pose().translate(left(), top(), 0);
 		g.pose().scale(scale, scale, 1f);
@@ -118,10 +133,13 @@ public class DiaryScreen extends Screen {
 		PaperMotion.layer(g, FEATHER, 181, 1, 60, 150, 182.5f, 2.5f,
 				PaperMotion.sway(seconds, 4.8, 1.25, 0.0, 0.10));
 
+		drawTabs(g, hovered);
 		if (sheets.isEmpty()) {
-			FitText.draw(g, font, Component.translatable("diary.tears-of-ink.empty"),
-					TEXT_X, UNTITLED_Y, TEXT_W, LAST_TEXT_BOTTOM - UNTITLED_Y, TEXT);
+			FitText.drawCentered(g, font, sectionTitle(section), TEXT_X + TEXT_W / 2, TITLE_Y, TEXT_W, TITLE);
+			FitText.draw(g, font, Component.translatable("diary.tears-of-ink.section.empty").withStyle(ChatFormatting.ITALIC),
+					TEXT_X, TITLE_Y + 23, TEXT_W, LAST_TEXT_BOTTOM - TITLE_Y - 23, FADED);
 			g.pose().popPose();
+			if (hovered != null) tabTooltip(g, hovered, mouseX, mouseY);
 			return;
 		}
 
@@ -143,9 +161,47 @@ public class DiaryScreen extends Screen {
 		if (page > 0) arrow(g, "diary_prev", PREV_X, mx, my);
 		if (page < sheets.size() - 1) arrow(g, "diary_next", NEXT_X, mx, my);
 		g.pose().popPose();
+		if (hovered != null) tabTooltip(g, hovered, mouseX, mouseY);
 	}
 
-	private void arrow(GuiGraphics g, String name, int x, int mx, int my) {
+	private static Component sectionTitle(DiarySection section) {
+		return Component.translatable("diary.tears-of-ink.section." + section.id);
+	}
+	private static int tabY(DiarySection section) { return TAB_TOP + section.ordinal() * TAB_STEP; }
+	private int tabX(DiarySection tab) { return tab == section ? TAB_ACTIVE_X : TAB_X; }
+
+	private DiarySection tabAt(double x, double y) {
+		for (DiarySection tab : DiarySection.values()) {
+			int tx = tabX(tab), ty = tabY(tab);
+			if (x >= tx && x < tx + TAB_W && y >= ty && y < ty + TAB_H) return tab;
+		}
+		return null;
+	}
+
+	private void drawTabs(GuiGraphics g, DiarySection hovered) {
+		for (DiarySection tab : DiarySection.values()) {
+			int state = tab == section ? 2 : tab == hovered ? 1 : 0;
+			g.blit(TABS, tabX(tab), tabY(tab), state * TAB_W, tab.ordinal() * TAB_H,
+					TAB_W, TAB_H, 72, 144);
+		}
+	}
+
+	private void tabTooltip(GuiGraphics g, DiarySection tab, int mouseX, int mouseY) {
+		g.renderTooltip(font, Component.translatable("diary.tears-of-ink.section.tooltip",
+				sectionTitle(tab), counts.getOrDefault(tab, 0)), mouseX, mouseY);
+	}
+
+	private void select(DiarySection next) {
+		if (next == section) return;
+		remembered.put(section, page);
+		section = next;
+		page = remembered.getOrDefault(next, 0);
+		build();
+		page = Math.max(0, Math.min(page, sheets.size() - 1));
+		playTurn();
+	}
+
+	private void arrow(GuiGraphics g, String name, int x, double mx, double my) {
 		boolean hover = mx >= x && mx < x + AW && my >= ARROW_Y && my < ARROW_Y + AH;
 		g.blit(TearsOfInk.id("textures/gui/" + name + (hover ? "_hover" : "") + ".png"),
 				x, ARROW_Y, 0, 0, AW, AH, AW, AH);
@@ -160,6 +216,8 @@ public class DiaryScreen extends Screen {
 	public boolean mouseClicked(double mx, double my, int button) {
 		if (button == 0) {
 			double x = localX(mx), y = localY(my);
+			DiarySection tab = tabAt(x, y);
+			if (tab != null) { select(tab); return true; }
 			if (y >= ARROW_Y && y < ARROW_Y + AH) {
 				if (page > 0 && x >= PREV_X && x < PREV_X + AW) { turn(-1); return true; }
 				if (page < sheets.size() - 1 && x >= NEXT_X && x < NEXT_X + AW) { turn(1); return true; }
@@ -170,6 +228,12 @@ public class DiaryScreen extends Screen {
 
 	@Override
 	public boolean keyPressed(int key, int scan, int mods) {
+		if (key == 264 || key == 265) {
+			DiarySection[] tabs = DiarySection.values();
+			int next = Math.max(0, Math.min(tabs.length - 1, section.ordinal() + (key == 264 ? 1 : -1)));
+			select(tabs[next]);
+			return true;
+		}
 		if (key == 262 && page < sheets.size() - 1) { turn(1); return true; }
 		if (key == 263 && page > 0) { turn(-1); return true; }
 		return super.keyPressed(key, scan, mods);
@@ -177,6 +241,10 @@ public class DiaryScreen extends Screen {
 
 	private void turn(int d) {
 		page += d;
+		playTurn();
+	}
+
+	private void playTurn() {
 		minecraft.getSoundManager().play(SimpleSoundInstance.forUI(ModSounds.DIARY_PAGE_TURN, 1.0f));
 	}
 

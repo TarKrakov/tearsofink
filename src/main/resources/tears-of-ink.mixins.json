@@ -18,6 +18,7 @@
 		"RespawnPlayerCreationMixin",
 		"MobAccessor",
 		"LivingEntityAttackAccessor",
+		"SoulShieldSoundMixin",
 		"SanctuaryAttackMixin",
 		"NoSunBurnMixin",
 		"PreyDamageMixin",

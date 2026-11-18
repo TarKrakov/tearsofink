@@ -3,6 +3,8 @@ package com.tarkrakov.tearsofink.weapon;
 import com.tarkrakov.tearsofink.item.Descriptions;
 import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.skill.Skill;
+import com.tarkrakov.tearsofink.sound.ModSounds;
+import com.tarkrakov.tearsofink.weapon.shield.ShieldAudio;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -78,7 +80,12 @@ public class SoulShieldItem extends ShieldItem implements AbilityWeapon {
 		if (hand == InteractionHand.OFF_HAND && InkGreatswordItem.twoHanded(player.getMainHandItem())) {
 			return InteractionResultHolder.pass(player.getItemInHand(hand));
 		}
-		return super.use(level, player, hand);
+		boolean wasUsing = player.isUsingItem();
+		InteractionResultHolder<ItemStack> result = super.use(level, player, hand);
+		if (!wasUsing && player instanceof net.minecraft.server.level.ServerPlayer p
+				&& p.isUsingItem() && p.getUseItem().getItem() == this)
+			ShieldAudio.play(p, ModSounds.SOUL_SHIELD_RAISE, 0.30f);
+		return result;
 	}
 
 	/** Отпустил ПКМ: в стойке двух щитов — выброс заряда (ShieldStance). */

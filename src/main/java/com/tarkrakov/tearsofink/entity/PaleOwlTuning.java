@@ -6,12 +6,18 @@ public final class PaleOwlTuning {
     public static final double HEALTH = 10.0;
     public static final int SPAWN_WEIGHT = 4, GROUP_MIN = 1, GROUP_MAX = 3;
     public static final int SWAY_MIN = 160, SWAY_SPREAD = 240;
-    public static final int REST_MIN = 240, REST_SPREAD = 360;
-    public static final int FLIGHT_MIN = 100, FLIGHT_SPREAD = 100;
+    public static final int REST_MIN = 400, REST_SPREAD = 600;
+    public static final int FLIGHT_MIN = 100, FLIGHT_SPREAD = 140;
+    public static final double PERCH_WING_CLEARANCE = .40;
     public static final double FLIGHT_SPEED = 0.23, DIVE_SPEED = 0.34, LAND_SPEED = 0.13;
     public static final int HUNT_MIN = 1200, HUNT_SPREAD = 1200, SEARCH_INTERVAL = 20;
-    public static final double HUNT_RADIUS = 12.0, STRIKE_RANGE = 1.05;
+    public static final double HUNT_RADIUS = 12.0;
     public static final float HUNT_DAMAGE = 3.0f;
     public static final int DIVE_LIMIT = 80;
     public static final int TAKEOFF_TICKS = 26, SWAY_TICKS = 60, LAND_TICKS = 20;
+    // Audio only; no gameplay tuning changes.
+    public static final int HOOT_FIRST_MIN = 240, HOOT_FIRST_SPREAD = 320;
+    public static final int HOOT_MIN = 500, HOOT_SPREAD = 500;
+    public static final float HOOT_VOLUME = 0.24f;
+    public static final float TAKEOFF_WING_VOLUME = 0.34f, FLY_WING_VOLUME = 0.25f, LAND_WING_VOLUME = 0.28f;
 }
