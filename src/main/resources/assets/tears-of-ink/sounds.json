@@ -52,6 +52,87 @@
     ],
     "subtitle": "subtitles.tears-of-ink.strider_song"
   },
+  "strider_song_close_prayer_1": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_close_prayer_1",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_close_prayer_2": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_close_prayer_2",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_close_prayer_3": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_close_prayer_3",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_echoes_of_grief_1": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_echoes_of_grief_1",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_echoes_of_grief_2": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_echoes_of_grief_2",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_echoes_of_grief_3": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_echoes_of_grief_3",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_light_in_exile_1": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_light_in_exile_1",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_light_in_exile_2": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_light_in_exile_2",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "strider_song_light_in_exile_3": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_strider_song_light_in_exile_3",
+        "attenuation_distance": 96
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
   "caterpillar_pale_crawl": {
     "sounds": [
       {

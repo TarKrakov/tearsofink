@@ -1,5 +1,6 @@
 package com.tarkrakov.tearsofink.entity;
 
+import com.tarkrakov.tearsofink.sound.StriderRepertoire;
 import com.tarkrakov.tearsofink.sound.StriderSong;
 import com.tarkrakov.tearsofink.sound.ModSounds;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -29,6 +30,7 @@ import net.minecraft.world.phys.Vec3;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.UUID;
 
 /** D-056: peaceful atmospheric walker, synchronized singing, no combat or loot. */
@@ -48,6 +50,7 @@ public final class PaleStriderEntity extends PathfinderMob {
     private boolean encounterSpawn;
     private UUID songEpisode;
     private long songStart;
+    private StriderRepertoire lastComposition;
     private enum Mode { TEMPLE, ROAMING }
     private Mode mode = Mode.ROAMING;
     private UUID group;
@@ -127,6 +130,7 @@ public final class PaleStriderEntity extends PathfinderMob {
         if (destination != null) tag.putLong("StriderDestination", destination.asLong());
         if (choirAnchor != null) tag.putLong("StriderChoirAnchor", choirAnchor.asLong());
         tag.putInt("StriderSongIn", Math.max(0, songIn));
+        if (lastComposition != null) tag.putInt("StriderLastComposition", lastComposition.ordinal());
     }
     @Override public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
@@ -142,6 +146,8 @@ public final class PaleStriderEntity extends PathfinderMob {
         }
         choirAnchor = mode == Mode.TEMPLE && tag.contains("StriderChoirAnchor")
                 ? BlockPos.of(tag.getLong("StriderChoirAnchor")) : null;
+        lastComposition = tag.contains("StriderLastComposition")
+                ? StriderRepertoire.fromIndex(tag.getInt("StriderLastComposition")) : null;
         songIn = tag.contains("StriderSongIn") ? Math.max(60 + random.nextInt(120), tag.getInt("StriderSongIn")) : -1;
     }
 
@@ -203,7 +209,16 @@ public final class PaleStriderEntity extends PathfinderMob {
             var singers = new ArrayList<>(neighbours.subList(0, Math.min(2, neighbours.size())));
             singers.add(this);
             singers.sort(Comparator.comparing(PaleStriderEntity::getUUID));
-            for (int i = 0; i < singers.size(); i++) singers.get(i).startSong(server, i, singers.size() > 1);
+            var recent = EnumSet.noneOf(StriderRepertoire.class);
+            for (var singer : singers) {
+                if (singer.lastComposition != null) recent.add(singer.lastComposition);
+            }
+            var composition = StriderRepertoire.choose(random, lastComposition, recent);
+            boolean together = singers.size() > 1;
+            int firstPart = together ? 0 : random.nextInt(StriderRepertoire.PARTS);
+            for (int i = 0; i < singers.size(); i++) {
+                singers.get(i).startSong(server, composition, firstPart + i, together);
+            }
             return;
         }
         walk(server);
@@ -384,13 +399,14 @@ public final class PaleStriderEntity extends PathfinderMob {
                 && level.getBlockState(below).isFaceSturdy(level, below, Direction.UP);
     }
 
-    private void startSong(ServerLevel server, int part, boolean together) {
+    private void startSong(ServerLevel server, StriderRepertoire composition, int part, boolean together) {
+        lastComposition = composition;
         getNavigation().stop();
         setDeltaMovement(0, getDeltaMovement().y, 0);
         songEpisode = UUID.randomUUID();
         songStart = server.getGameTime();
         phase(Phase.SING_START);
-        StriderSong play = new StriderSong(songEpisode, getX(), getY() + 3, getZ(), part, together ? 0.28f : 0.65f);
+        StriderSong play = new StriderSong(songEpisode, getX(), getY() + 3, getZ(), composition.voice(part), together ? 0.28f : 0.65f);
         double range = ModSounds.STRIDER_SONG.getRange(play.volume());
         for (var player : server.players()) {
             if (player.distanceToSqr(play.x(), play.y(), play.z()) <= range * range

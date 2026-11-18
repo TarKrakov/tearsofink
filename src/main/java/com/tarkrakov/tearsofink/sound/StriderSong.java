@@ -9,7 +9,7 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import java.util.UUID;
 
 /** One positional voice, identified independently of the entity tracking range. */
-public record StriderSong(UUID episode, double x, double y, double z, int part, float volume)
+public record StriderSong(UUID episode, double x, double y, double z, int voiceIndex, float volume)
         implements CustomPacketPayload {
     public static final double DELIVERY_RANGE = 112;
     public static final Type<StriderSong> TYPE = new Type<>(TearsOfInk.id("strider_song_voice"));
@@ -19,7 +19,7 @@ public record StriderSong(UUID episode, double x, double y, double z, int part, 
                 buf.writeDouble(song.x);
                 buf.writeDouble(song.y);
                 buf.writeDouble(song.z);
-                buf.writeVarInt(song.part);
+                buf.writeVarInt(song.voiceIndex);
                 buf.writeFloat(song.volume);
             },
             buf -> new StriderSong(buf.readUUID(), buf.readDouble(), buf.readDouble(), buf.readDouble(),

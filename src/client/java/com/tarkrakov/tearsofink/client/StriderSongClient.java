@@ -1,6 +1,6 @@
 package com.tarkrakov.tearsofink.client;
 
-import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.sound.StriderRepertoire;
 import com.tarkrakov.tearsofink.sound.StriderSong;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
@@ -38,14 +38,14 @@ final class StriderSongClient {
     private static void receive(Minecraft client, StriderSong song) {
         update(client);
         var engine = client.getSoundManager();
-        if (song.part() < 0) {
+        if (song.voiceIndex() < 0) {
             SoundInstance voice = playing.remove(song.episode());
             if (voice != null) engine.stop(voice);
             return;
         }
-        if (world == null || song.part() > 2 || playing.containsKey(song.episode()) || playing.size() >= 4) return;
-        String id = song.part() == 0 ? "strider_song" : "strider_song_" + (song.part() + 1);
-        var voice = new SimpleSoundInstance(TearsOfInk.id(id), SoundSource.NEUTRAL, song.volume(), 1,
+        var sound = StriderRepertoire.sound(song.voiceIndex());
+        if (world == null || sound == null || playing.containsKey(song.episode()) || playing.size() >= 4) return;
+        var voice = new SimpleSoundInstance(sound, SoundSource.NEUTRAL, song.volume(), 1,
                 SoundInstance.createUnseededRandom(), false, 0, SoundInstance.Attenuation.LINEAR,
                 song.x(), song.y(), song.z(), false);
         engine.play(voice);
