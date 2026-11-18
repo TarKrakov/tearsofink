@@ -381,6 +381,7 @@ public final class ModBlocks {
 
 	/** Вызывается при запуске мода, чтобы блоки зарегистрировались. */
 	public static void init() {
+		com.tarkrakov.tearsofink.block.lantern.Lanterns.registerRoadLanternModelUpgrade();
 		// Обтёсывание топором
 		StrippableBlockRegistry.register(PALE_LOG, STRIPPED_PALE_LOG);
 		StrippableBlockRegistry.register(PALE_WOOD, STRIPPED_PALE_WOOD);

@@ -12,6 +12,9 @@ import net.minecraft.world.level.block.LanternBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import net.minecraft.world.phys.BlockHitResult;
 
 /**
@@ -19,6 +22,9 @@ import net.minecraft.world.phys.BlockHitResult;
  * Ставится как ванильный — на землю/забор или подвешенным под блок/цепь.
  */
 public class InkLanternBlock extends LanternBlock implements EntityBlock, FogClearing {
+	/** Only the road-generated standing lantern uses the authored road model; legacy lanterns remain unchanged. */
+	public static final BooleanProperty ROAD = BooleanProperty.create("road");
+	private static final VoxelShape ROAD_SHAPE = Block.box(2, 2, 3, 14, 14, 15);
 	private final int clearRadius;
 	private final boolean eternal;
 
@@ -29,14 +35,14 @@ public class InkLanternBlock extends LanternBlock implements EntityBlock, FogCle
 		super(properties);
 		this.clearRadius = clearRadius;
 		this.eternal = eternal;
-		this.registerDefaultState(this.defaultBlockState().setValue(LIT, true).setValue(PLAYER_MADE, false));
+		this.registerDefaultState(this.defaultBlockState().setValue(LIT, true).setValue(PLAYER_MADE, false).setValue(ROAD, false));
 	}
 
 	@Override
 	protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
 		super.createBlockStateDefinition(builder);
 		// у вечного эти свойства тоже есть, но не используются: он всегда горит и всегда мировой
-		builder.add(LIT, PLAYER_MADE);
+		builder.add(LIT, PLAYER_MADE, ROAD);
 	}
 
 	public boolean isEternal() {
@@ -63,6 +69,12 @@ public class InkLanternBlock extends LanternBlock implements EntityBlock, FogCle
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
 		if (eternal) return InteractionResult.PASS;
 		return Lanterns.use(state, level, pos, player);
+	}
+
+	@Override
+	protected VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+		return state.getValue(ROAD) && !state.getValue(HANGING)
+				? ROAD_SHAPE : super.getShape(state, level, pos, context);
 	}
 
 	@Override
