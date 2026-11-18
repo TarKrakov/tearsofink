@@ -94,7 +94,7 @@ public final class DiaryEntries {
 			for (ServerPlayer p : server.getPlayerList().getPlayers()) checkGuidance(p);
 		});
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
-			if (!(source.getEntity() instanceof ServerPlayer p)) return;
+			if (!(source.getEntity() instanceof ServerPlayer p) || !ModDimensions.isLands(p.level())) return;
 			if (entity instanceof com.tarkrakov.tearsofink.entity.CaterpillarEntity c) {
 				// гусеницы открываются по видам; общая часть — с первой бледной
 				String kind = CATERPILLAR + "_" + c.variant().name().toLowerCase(java.util.Locale.ROOT);
@@ -113,6 +113,7 @@ public final class DiaryEntries {
 
 	/** Небоевые открытия на основе уже сохранённых посещений и текущих предметов. */
 	private static void checkGuidance(ServerPlayer p) {
+		if (!ModDimensions.isLands(p.level())) return;
 		List<String> have = p.getAttachedOrCreate(DATA);
 		boolean needMetal = !have.contains(PALE_METAL);
 		boolean needAnvil = !have.contains(INK_ANVIL);
