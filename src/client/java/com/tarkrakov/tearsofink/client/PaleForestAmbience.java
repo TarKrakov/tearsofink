@@ -182,7 +182,7 @@ public final class PaleForestAmbience {
                     default -> ModSounds.PALE_FOREST_RUSTLE;
                 };
                 float volume = (0.20f + RANDOM.nextFloat() * 0.12f) * (dark > 0.5f ? 0.8f : 1f);
-                detail = new SimpleSoundInstance(event, SoundSource.AMBIENT, volume, 0.96f + 0.08f * RANDOM.nextFloat(),
+                detail = new SimpleSoundInstance(event.getLocation(), SoundSource.AMBIENT, volume, 0.96f + 0.08f * RANDOM.nextFloat(),
                         SoundInstance.createUnseededRandom(), false, 0, SoundInstance.Attenuation.LINEAR,
                         pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, false);
                 c.getSoundManager().play(detail);
