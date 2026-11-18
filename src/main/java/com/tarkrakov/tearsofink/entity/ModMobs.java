@@ -82,6 +82,7 @@ public final class ModMobs {
 		FabricDefaultAttributeRegistry.register(PALE_OWL, PaleOwlEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_STRIDER, PaleStriderEntity.createAttributes());
 		PaleStriderEncounters.init();
+		PaleOwlEncounters.init();
 		FabricDefaultAttributeRegistry.register(PALE_SPEARMAN, com.tarkrakov.tearsofink.entity.spearman.PaleSpearmanEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_SHIELDBEARER, com.tarkrakov.tearsofink.entity.patrol.PaleShieldbearerEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_CROSSBOWMAN, com.tarkrakov.tearsofink.entity.patrol.PaleCrossbowmanEntity.createAttributes());

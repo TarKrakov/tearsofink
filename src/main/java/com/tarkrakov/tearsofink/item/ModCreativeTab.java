@@ -174,6 +174,8 @@ public final class ModCreativeTab {
 						ModArmor.items().forEach(output::accept);
 						output.accept(ModItems.ATONEMENT);
 						output.accept(ModItems.CATERPILLAR_SPAWN_EGG);
+						output.accept(ModItems.PALE_OWL_SPAWN_EGG);
+						output.accept(ModItems.PALE_STRIDER_SPAWN_EGG);
 						output.accept(ModItems.PALE_SPEARMAN_SPAWN_EGG);
 						output.accept(ModItems.PALE_SHIELDBEARER_SPAWN_EGG);
 						output.accept(ModItems.PALE_CROSSBOWMAN_SPAWN_EGG);
