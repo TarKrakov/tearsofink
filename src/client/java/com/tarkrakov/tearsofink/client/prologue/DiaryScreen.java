@@ -15,20 +15,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Дневник: у каждого существа — своя страница (позже на ней будет рисунок). Длинный текст переносится
- * на следующие страницы того же существа, шрифт не уменьшается. Гусеницы — глава из 4 страниц
- * (общее + 3 вида); не открытые виды показаны неразборчивыми.
- * Страница — gui/diary.png (левый верхний угол 192×232 картинки 256×256), стрелки gui/diary_next|prev(_hover).png 18×12.
+ * Дневник Историка. Новый авторский atlas gui/diary.png целиком 256x256:
+ * переплёт и кольца слева, перо сверху справа, внизу печать, справа от книги
+ * прозрачное место для будущих разделов (пока ни кнопок, ни категорий нет).
+ *
+ * Записи не меняют id и формат сохранений. Текст переносится на следующие листы
+ * без уменьшения шрифта; заголовки тоже переносятся, а не упираются в перо.
  */
 public class DiaryScreen extends Screen {
 	private static final ResourceLocation PAGE = TearsOfInk.id("textures/gui/diary.png");
-	private static final int W = 192, H = 232, M = 18, AW = 18, AH = 12, LINE = 10, TITLE_GAP = 16;
-	private static final int TEXT = 0x2A1E2C, TITLE = 0x5A1018, FADED = 0x6E5E62;
-	/** Записи, открытые у этого игрока (присылает сервер). */
+
+	private static final int W = 256, H = 256;
+	/** Безопасная колонка пергамента: за кольцами и левее пера. */
+	private static final int TEXT_X = 64, TEXT_W = 130;
+	private static final int TITLE_Y = 23, UNTITLED_Y = 27, TITLE_LINE = 12, AFTER_TITLE = 8;
+	private static final int LINE = 11, LAST_TEXT_BOTTOM = 220, FONT_H = 9;
+	/** Управление только на нижнем поле бумаги, в стороне от печати. */
+	private static final int AW = 18, AH = 12, PREV_X = 65, NEXT_X = 174, ARROW_Y = 225, NUMBER_Y = 227;
+	private static final int TEXT = 0x2A1E2C, TITLE = 0x5A1018, FADED = 0x6E5E62, NUMBER = 0x5A4A40;
+
+	/** Записи, открытые у игрока (присылает сервер). */
 	public static List<String> entries = new ArrayList<>();
 
-	/** Одна физическая страница: чья запись, заголовок (только на первой), строки. */
-	private record Sheet(Component title, List<FormattedCharSequence> lines, int color) {}
+	/** Один физический лист: строки заголовка (только на первом листе записи) и текст. */
+	private record Sheet(List<FormattedCharSequence> heading, List<FormattedCharSequence> lines, int color) {}
 
 	private final List<Sheet> sheets = new ArrayList<>();
 	private List<String> builtFrom = null;
@@ -38,16 +48,25 @@ public class DiaryScreen extends Screen {
 		super(Component.translatable("diary.tears-of-ink.title"));
 	}
 
-	private int l() { return (width - W) / 2; }
-	private int t() { return (height - H) / 2; }
-	private int nextX() { return l() + W - M - AW; }
-	private int prevX() { return l() + M; }
-	private int arrowY() { return t() + H - M - AH + 4; }
-	private int textW() { return W - M * 2; }
-	/** Строк на странице: с заголовком и без. */
-	private int rows(boolean titled) { return (H - M - (titled ? TITLE_GAP : 0) - (M + AH + 2)) / LINE; }
+	/** Уместить целый лист на экране; не растягивать пиксель-арт на больших мониторах. */
+	private float bookScale() {
+		return Math.min(1f, Math.min((width - 8f) / W, (height - 8f) / H));
+	}
 
-	/** Раскладка записей по страницам (заново — когда сервер прислал новые записи). */
+	private float left() { return (width - W * bookScale()) * 0.5f; }
+	private float top() { return (height - H * bookScale()) * 0.5f; }
+	private double localX(double mouseX) { return (mouseX - left()) / bookScale(); }
+	private double localY(double mouseY) { return (mouseY - top()) / bookScale(); }
+
+	private static int textStart(int headingLines) {
+		return headingLines == 0 ? UNTITLED_Y : TITLE_Y + headingLines * TITLE_LINE + AFTER_TITLE;
+	}
+
+	private static int rows(int headingLines) {
+		return Math.max(1, (LAST_TEXT_BOTTOM - FONT_H - textStart(headingLines)) / LINE + 1);
+	}
+
+	/** Переразметка нужна только когда сервер прислал новые записи. */
 	private void build() {
 		if (entries.equals(builtFrom)) return;
 		builtFrom = List.copyOf(entries);
@@ -55,7 +74,7 @@ public class DiaryScreen extends Screen {
 		boolean caterpillars = false;
 		for (String id : entries) {
 			if (id.equals(DiaryEntries.CATERPILLAR) || id.startsWith(DiaryEntries.CATERPILLAR + "_")) {
-				if (caterpillars) continue; // глава гусениц — одним блоком, в момент первой встречи
+				if (caterpillars) continue;
 				caterpillars = true;
 				for (String part : DiaryEntries.CATERPILLAR_PAGES) addEntry(part, entries.contains(part));
 			} else {
@@ -68,12 +87,14 @@ public class DiaryScreen extends Screen {
 		Component title = Component.translatable("diary.tears-of-ink.entry." + id + ".title");
 		Component text = open ? Component.translatable("diary.tears-of-ink.entry." + id + ".text")
 				: Component.translatable("diary.tears-of-ink.illegible").withStyle(ChatFormatting.ITALIC);
-		List<FormattedCharSequence> all = font.split(text, textW());
+		List<FormattedCharSequence> heading = font.split(title, TEXT_W);
+		List<FormattedCharSequence> all = font.split(text, TEXT_W);
 		int i = 0;
 		boolean first = true;
 		do {
-			int n = Math.min(rows(first), all.size() - i);
-			sheets.add(new Sheet(first ? title : null, all.subList(i, i + n), open ? TEXT : FADED));
+			List<FormattedCharSequence> sheetHeading = first ? heading : List.of();
+			int n = Math.min(rows(sheetHeading.size()), all.size() - i);
+			sheets.add(new Sheet(sheetHeading, all.subList(i, i + n), open ? TEXT : FADED));
 			i += n;
 			first = false;
 		} while (i < all.size());
@@ -83,31 +104,45 @@ public class DiaryScreen extends Screen {
 	public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
 		super.render(g, mouseX, mouseY, partialTick);
 		build();
-		int l = l(), t = t();
-		g.blit(PAGE, l, t, 0, 0, W, H, 256, 256);
+
+		float scale = bookScale();
+		int mx = (int) localX(mouseX), my = (int) localY(mouseY);
+		g.pose().pushPose();
+		g.pose().translate(left(), top(), 0);
+		g.pose().scale(scale, scale, 1f);
+		g.blit(PAGE, 0, 0, 0, 0, W, H, W, H);
+
 		if (sheets.isEmpty()) {
-			FitText.draw(g, font, Component.translatable("diary.tears-of-ink.empty"), l + M, t + M, textW(), H - M * 2, 0x3A2226);
+			FitText.draw(g, font, Component.translatable("diary.tears-of-ink.empty"),
+					TEXT_X, UNTITLED_Y, TEXT_W, LAST_TEXT_BOTTOM - UNTITLED_Y, TEXT);
+			g.pose().popPose();
 			return;
 		}
+
 		page = Math.max(0, Math.min(page, sheets.size() - 1));
 		Sheet sheet = sheets.get(page);
-		int y = t + M;
-		if (sheet.title() != null) {
-			FitText.drawCentered(g, font, sheet.title(), l + W / 2, y, textW(), TITLE);
-			y += TITLE_GAP;
+		int y = TITLE_Y;
+		for (FormattedCharSequence h : sheet.heading()) {
+			g.drawString(font, h, TEXT_X + (TEXT_W - font.width(h)) / 2, y, TITLE, false);
+			y += TITLE_LINE;
 		}
+		y = textStart(sheet.heading().size());
 		for (FormattedCharSequence line : sheet.lines()) {
-			g.drawString(font, line, l + M, y, sheet.color(), false);
+			g.drawString(font, line, TEXT_X, y, sheet.color(), false);
 			y += LINE;
 		}
+
 		String num = (page + 1) + " / " + sheets.size();
-		g.drawString(font, num, l + (W - font.width(num)) / 2, arrowY() + 2, 0x5A4A40, false);
-		if (page > 0) arrow(g, "diary_prev", prevX(), mouseX, mouseY);
-		if (page < sheets.size() - 1) arrow(g, "diary_next", nextX(), mouseX, mouseY);
+		g.drawString(font, num, TEXT_X + (TEXT_W - font.width(num)) / 2, NUMBER_Y, NUMBER, false);
+		if (page > 0) arrow(g, "diary_prev", PREV_X, mx, my);
+		if (page < sheets.size() - 1) arrow(g, "diary_next", NEXT_X, mx, my);
+		g.pose().popPose();
 	}
+
 	private void arrow(GuiGraphics g, String name, int x, int mx, int my) {
-		boolean hover = mx >= x && mx < x + AW && my >= arrowY() && my < arrowY() + AH;
-		g.blit(TearsOfInk.id("textures/gui/" + name + (hover ? "_hover" : "") + ".png"), x, arrowY(), 0, 0, AW, AH, AW, AH);
+		boolean hover = mx >= x && mx < x + AW && my >= ARROW_Y && my < ARROW_Y + AH;
+		g.blit(TearsOfInk.id("textures/gui/" + name + (hover ? "_hover" : "") + ".png"),
+				x, ARROW_Y, 0, 0, AW, AH, AW, AH);
 	}
 
 	@Override
@@ -117,17 +152,20 @@ public class DiaryScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(double mx, double my, int button) {
-		if (button == 0 && my >= arrowY() && my < arrowY() + AH) {
-			if (page > 0 && mx >= prevX() && mx < prevX() + AW) { turn(-1); return true; }
-			if (page < sheets.size() - 1 && mx >= nextX() && mx < nextX() + AW) { turn(1); return true; }
+		if (button == 0) {
+			double x = localX(mx), y = localY(my);
+			if (y >= ARROW_Y && y < ARROW_Y + AH) {
+				if (page > 0 && x >= PREV_X && x < PREV_X + AW) { turn(-1); return true; }
+				if (page < sheets.size() - 1 && x >= NEXT_X && x < NEXT_X + AW) { turn(1); return true; }
+			}
 		}
 		return super.mouseClicked(mx, my, button);
 	}
 
 	@Override
 	public boolean keyPressed(int key, int scan, int mods) {
-		if (key == 262 && page < sheets.size() - 1) { turn(1); return true; }  // →
-		if (key == 263 && page > 0) { turn(-1); return true; }                  // ←
+		if (key == 262 && page < sheets.size() - 1) { turn(1); return true; }
+		if (key == 263 && page > 0) { turn(-1); return true; }
 		return super.keyPressed(key, scan, mods);
 	}
 
