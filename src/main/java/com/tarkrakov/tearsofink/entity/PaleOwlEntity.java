@@ -459,7 +459,10 @@ public final class PaleOwlEntity extends PathfinderMob {
     }
 
     private boolean validPerch(Vec3 site) {
-        if (!freeAt(site) || !freeAt(site.add(0, .85, 0))) return false;
+        if (!freeAt(site)) return false;
+        AABB wingSpace = getBoundingBox().move(site.add(0, .85, 0).subtract(position()))
+                .inflate(PERCH_WING_CLEARANCE, 0, PERCH_WING_CLEARANCE);
+        if (!LoadedFaunaTerrain.free((ServerLevel)level(), this, wingSpace)) return false;
         BlockPos foot = BlockPos.containing(site);
         BlockPos below = foot.below();
         var support = level().getBlockState(below);
