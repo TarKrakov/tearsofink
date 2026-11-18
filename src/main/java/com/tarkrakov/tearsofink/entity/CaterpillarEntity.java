@@ -3,6 +3,7 @@ package com.tarkrakov.tearsofink.entity;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.particle.ModParticles;
+import com.tarkrakov.tearsofink.sound.ModSounds;
 import com.tarkrakov.tearsofink.world.ModBiomes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
@@ -76,7 +77,13 @@ public class CaterpillarEntity extends PathfinderMob {
 	/** Длина анимации bite из Blockbench, в тиках (2 с). */
 	private static final int BITE_TICKS = 40;
 
-	// Анимации (только на клиенте)
+	// Звук ползания: фактический пройденный путь + нижний предел интервала.
+	private static final double CRAWL_SOUND_DISTANCE = 0.6;
+	private static final double CRAWL_MIN_MOVEMENT = 0.008;
+	private int crawlSoundCooldown;
+	private double crawlDistance;
+
+	// Анимации (состояния на клиенте; счётчик укуса также на сервере)
 	public final AnimationState idleState = new AnimationState();
 	public final AnimationState biteState = new AnimationState();
 	private int biteTicksLeft;
@@ -200,7 +207,45 @@ public class CaterpillarEntity extends PathfinderMob {
 		}
 	}
 
-	// ----- Звуки (заглушки — ванильная чешуйница, тоньше) -----
+	// ----- Звуки -----
+	/** Не добавлять ванильные шаги поверх собственного звука ползания. */
+	@Override
+	protected void playStepSound(BlockPos pos, BlockState state) {
+	}
+
+	/** Единственное место запуска звука: сервер после фактического перемещения. */
+	private void tickCrawlSound(double oldX, double oldZ) {
+		if (crawlSoundCooldown > 0) --crawlSoundCooldown;
+		double dx = getX() - oldX, dz = getZ() - oldZ;
+		double distance = Math.sqrt(dx * dx + dz * dz);
+		if (!isAlive() || isSilent() || !onGround() || isInWater() || isPassenger() || isNoAi()
+				|| biteTicksLeft > 0 || distance < CRAWL_MIN_MOVEMENT || distance > 1.0) {
+			crawlDistance = 0;
+			return;
+		}
+		crawlDistance = Math.min(CRAWL_SOUND_DISTANCE, crawlDistance + distance);
+		if (crawlSoundCooldown > 0 || crawlDistance < CRAWL_SOUND_DISTANCE) return;
+		SoundEvent sound = switch (variant()) {
+			case PALE -> ModSounds.CATERPILLAR_PALE_CRAWL;
+			case BLOOD -> ModSounds.CATERPILLAR_BLOOD_CRAWL;
+			case INK -> ModSounds.CATERPILLAR_INK_CRAWL;
+		};
+		float volume = switch (variant()) {
+			case PALE -> 0.35f;
+			case BLOOD -> 0.35f;
+			case INK -> 0.30f;
+		};
+		crawlSoundCooldown = switch (variant()) {
+			case PALE -> 9;
+			case BLOOD -> 11;
+			case INK -> 7;
+		};
+		crawlDistance = 0;
+		// Не менять высоту сэмпла по getVoicePitch(): тембр уже выбран автором.
+		level().playSound(null, getX(), getY(), getZ(), sound, getSoundSource(), volume, 1.0f);
+	}
+
+	// Урон, смерть и еда пока используют прежние ванильные заглушки.
 	@Override
 	protected SoundEvent getHurtSound(DamageSource source) {
 		return SoundEvents.SILVERFISH_HURT;
@@ -228,6 +273,7 @@ public class CaterpillarEntity extends PathfinderMob {
 
 	/** Укус по цветку — анимация bite у всех, кто видит. */
 	public void bite() {
+		if (!this.level().isClientSide) biteTicksLeft = BITE_TICKS;
 		this.level().broadcastEntityEvent(this, BITE_EVENT);
 	}
 
@@ -243,11 +289,15 @@ public class CaterpillarEntity extends PathfinderMob {
 
 	@Override
 	public void tick() {
+		double oldX = getX(), oldZ = getZ();
 		super.tick();
 		if (this.level().isClientSide) {
 			if (biteTicksLeft > 0 && --biteTicksLeft == 0) biteState.stop();
 			// стоит и не ест — дышит
 			idleState.animateWhen(!this.walkAnimation.isMoving() && biteTicksLeft == 0, this.tickCount);
+		} else {
+			tickCrawlSound(oldX, oldZ);
+			if (biteTicksLeft > 0) --biteTicksLeft;
 		}
 	}
 

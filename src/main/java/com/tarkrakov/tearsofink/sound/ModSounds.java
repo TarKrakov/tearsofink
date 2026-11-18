@@ -18,6 +18,11 @@ public final class ModSounds {
 	public static final SoundEvent STRIDER_SONG = Registry.register(BuiltInRegistries.SOUND_EVENT,
 			TearsOfInk.id("strider_song"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("strider_song"), (float) StriderSong.DELIVERY_RANGE));
 
+	/** Оригинальные короткие звуки ползания, по три сэмпла на вид. */
+	public static final SoundEvent CATERPILLAR_PALE_CRAWL = register("caterpillar_pale_crawl");
+	public static final SoundEvent CATERPILLAR_BLOOD_CRAWL = register("caterpillar_blood_crawl");
+	public static final SoundEvent CATERPILLAR_INK_CRAWL = register("caterpillar_ink_crawl");
+
 	private ModSounds() {}
 
 	private static SoundEvent register(String name) {

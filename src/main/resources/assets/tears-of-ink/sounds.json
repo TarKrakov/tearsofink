@@ -51,5 +51,56 @@
       }
     ],
     "subtitle": "subtitles.tears-of-ink.strider_song"
+  },
+  "caterpillar_pale_crawl": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:caterpillar_pale_crawl_01",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:caterpillar_pale_crawl_02",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:caterpillar_pale_crawl_03",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.caterpillar_pale_crawl"
+  },
+  "caterpillar_blood_crawl": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:caterpillar_blood_crawl_01",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:caterpillar_blood_crawl_02",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:caterpillar_blood_crawl_03",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.caterpillar_blood_crawl"
+  },
+  "caterpillar_ink_crawl": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:caterpillar_ink_crawl_01",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:caterpillar_ink_crawl_02",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:caterpillar_ink_crawl_03",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.caterpillar_ink_crawl"
   }
 }
