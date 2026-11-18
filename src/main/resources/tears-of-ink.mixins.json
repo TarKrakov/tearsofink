@@ -6,6 +6,8 @@
 		"NoiseGeneratorSettingsMixin",
 		"NoiseColumnAccessor",
 		"AditLightingMixin",
+		"TempleLayoutVersionMixin",
+		"TempleWorldStorageMixin",
 		"PlayerEatMixin",
 		"HealEffectsMixin",
 		"VisibilityMixin",

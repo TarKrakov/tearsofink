@@ -111,6 +111,9 @@ public final class InkLandsLayout {
 	public static final int ROAD_LANTERN_SPACING = 64;
 
 	private final Climate.Sampler sampler;
+	private final int templeLayoutVersion;
+	private final Object templePlanLock = new Object();
+	private volatile TempleNetwork templeNetwork;
 	private final BlockPos center;
 	private final long seed;
 	/** Шум рваного края — один для всех миров, чтобы клиент сам знал, где край (туман сгущается). */
@@ -128,8 +131,9 @@ public final class InkLandsLayout {
 	/** Высота дна для каждого пятна Кроволесья (считается один раз на пятно). */
 	private final java.util.concurrent.ConcurrentHashMap<Long, Double> valleyFloors = new java.util.concurrent.ConcurrentHashMap<>();
 
-	private InkLandsLayout(Climate.Sampler sampler, long seed) {
+	private InkLandsLayout(Climate.Sampler sampler, long seed, int templeLayoutVersion) {
 		this.sampler = sampler;
+		this.templeLayoutVersion = templeLayoutVersion;
 		this.center = BlockPos.ZERO;
 		this.seed = seed;
 		RandomSource random = RandomSource.create(seed);
@@ -252,7 +256,37 @@ public final class InkLandsLayout {
 	}
 
 	public static InkLandsLayout create(Climate.Sampler sampler) {
-		return new InkLandsLayout(sampler, seedOf(sampler));
+		return create(sampler, 1);
+	}
+
+	static InkLandsLayout create(Climate.Sampler sampler, int templeLayoutVersion) {
+		return new InkLandsLayout(sampler, seedOf(sampler), templeLayoutVersion);
+	}
+
+	public boolean hasTempleNetwork() {
+		return templeLayoutVersion == 2;
+	}
+
+	public TempleNetwork templeNetwork() {
+		return templeNetwork;
+	}
+
+	public TempleNetwork prepareTempleNetwork(net.minecraft.world.level.levelgen.structure.Structure.GenerationContext context) {
+		var plan = templeNetwork;
+		return plan != null ? plan : prepareTempleNetwork(new TempleNetwork.Inputs(
+				new RoadTerrain(context.chunkGenerator(), context.heightAccessor(), context.randomState()),
+				context.registryAccess(), context.structureTemplateManager(), context.seed()));
+	}
+
+	public TempleNetwork prepareTempleNetwork(TempleNetwork.Inputs inputs) {
+		TempleNetwork plan = templeNetwork;
+		if (plan == null) {
+			synchronized (templePlanLock) {
+				plan = templeNetwork;
+				if (plan == null) templeNetwork = plan = TempleNetwork.plan(this, inputs);
+			}
+		}
+		return plan;
 	}
 
 	/** Сид раскладки из сида мира: берём климат в нескольких точках (он зависит только от сида). */

@@ -94,19 +94,30 @@ public final class Ruins {
 	}
 
 	private static final Map<InkLandsLayout, List<int[]>> TEMPLE_CACHE = new WeakHashMap<>();
-	private static final Map<InkLandsLayout, double[]> START_CACHE = new WeakHashMap<>();
+	private static final Map<InkLandsLayout, Start> START_CACHE = new WeakHashMap<>();
+
+	private record Start(double[] coordinates, int road) {}
 
 	/**
 	 * Стартовый храм и место прибытия (один раз на мир): {храм x, храм z, прибытие x, прибытие z}.
 	 * Прибытие — на дороге у края Бледнолесья (как раньше), храм — сбоку от дороги.
 	 */
-	public static synchronized double[] start(InkLandsLayout layout) {
-		double[] cached = START_CACHE.get(layout);
+	public static double[] start(InkLandsLayout layout) {
+		return startSite(layout).coordinates();
+	}
+
+	public static int startRoad(InkLandsLayout layout) {
+		return startSite(layout).road();
+	}
+
+	private static synchronized Start startSite(InkLandsLayout layout) {
+		Start cached = START_CACHE.get(layout);
 		if (cached != null) return cached;
 		RandomSource random = RandomSource.create(layout.seed() ^ 0x51A27L);
 		int first = random.nextInt(InkLandsLayout.ROADS);
 		double firstSide = random.nextBoolean() ? 1 : -1;
 		double[] result = null;
+		int selectedRoad = first;
 		for (int i = 0; i < InkLandsLayout.ROADS && result == null; i++) {
 			int road = (first + i) % InkLandsLayout.ROADS;
 			double[] a = layout.arrivalPoint(road);
@@ -117,6 +128,7 @@ public final class Ruins {
 				int x = (int) Math.floor(tx), z = (int) Math.floor(tz);
 				if (layout.pick(x, z, null) != ModBiomes.PALE_FOREST) continue;
 				if (layout.roadNear(x, z, 18) != null || layout.nearLake(x, z, LAKE_GAP + 20) || layout.nearHerald(x, z, HERALD_GAP + 20)) continue;
+				selectedRoad = road;
 				result = new double[]{x, z, a[0] - dir[1] * side * START_ARRIVAL_SHIFT, a[1] + dir[0] * side * START_ARRIVAL_SHIFT};
 				break;
 			}
@@ -127,8 +139,9 @@ public final class Ruins {
 			double[] dir = layout.roadDirection(first, along);
 			result = new double[]{Math.floor(a[0] - dir[1] * firstSide * START_SIDE), Math.floor(a[1] + dir[0] * firstSide * START_SIDE), a[0], a[1]};
 		}
-		START_CACHE.put(layout, result);
-		return result;
+		Start site = new Start(result, selectedRoad);
+		START_CACHE.put(layout, site);
+		return site;
 	}
 
 	public static boolean isStartTemple(InkLandsLayout layout, int x, int z) {
@@ -147,7 +160,19 @@ public final class Ruins {
 	 * Места храмов (один раз на мир): первый — стартовый у места прибытия, остальные по кругу,
 	 * на разной глубине, в Бледнолесье, не у дорог, Озера и Вестников.
 	 */
-	public static synchronized List<int[]> templePoints(InkLandsLayout layout) {
+	public static List<int[]> templePoints(InkLandsLayout layout) {
+		if (!layout.hasTempleNetwork()) return legacyTemplePoints(layout);
+		var network = layout.templeNetwork();
+		if (network != null) return network.points();
+		return startTemplePoints(layout);
+	}
+
+	static List<int[]> startTemplePoints(InkLandsLayout layout) {
+		var starter = start(layout);
+		return List.of(new int[]{(int) starter[0], (int) starter[1]});
+	}
+
+	private static synchronized List<int[]> legacyTemplePoints(InkLandsLayout layout) {
 		List<int[]> cached = TEMPLE_CACHE.get(layout);
 		if (cached != null) return cached;
 		RandomSource random = RandomSource.create(layout.seed() ^ 0x7E3B1E5L);
@@ -183,7 +208,15 @@ public final class Ruins {
 	}
 
 	public static boolean nearTemple(InkLandsLayout layout, int x, int z) {
-		for (int[] p : templePoints(layout)) {
+		return nearTemple(templePoints(layout), x, z);
+	}
+
+	static boolean nearLegacyTemple(InkLandsLayout layout, int x, int z) {
+		return nearTemple(legacyTemplePoints(layout), x, z);
+	}
+
+	private static boolean nearTemple(List<int[]> points, int x, int z) {
+		for (int[] p : points) {
 			if (Mth.square(p[0] - x) + Mth.square(p[1] - z) < TEMPLE_GAP * TEMPLE_GAP) return true;
 		}
 		return false;
