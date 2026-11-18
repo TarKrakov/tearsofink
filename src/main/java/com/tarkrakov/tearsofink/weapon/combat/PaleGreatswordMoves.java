@@ -194,8 +194,9 @@ public final class PaleGreatswordMoves {
                             area(p, s, s.tuning.singleR().sweep());
                         }
                         if (time > s.until) {
+                            // Авторский swing самостоятельно отпускает held-позу; повторный
+                            // Combat.play здесь мог стереть уже начатый игроком удар ЛКМ.
                             finish(p, s, false);
-                            play(p, s, s.left ? "recover" : "bb_author_r_recover", null, 10);
                         }
                     }
                     case PARRY -> { if (time > s.until) finish(p, s, true); }
