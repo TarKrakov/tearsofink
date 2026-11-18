@@ -23,7 +23,11 @@ import java.util.List;
  * Логика серверного подписания и формат сохранений не меняются.
  */
 public class InvitationScreen extends Screen {
-	private static final ResourceLocation PAGE = TearsOfInk.id("textures/gui/invitation.png");
+	private static final ResourceLocation PAGE = TearsOfInk.id("textures/gui/invitation_base.png");
+	private static final ResourceLocation CHARM_LEFT = TearsOfInk.id("textures/gui/invitation_charm_left.png");
+	private static final ResourceLocation CHARM_RIGHT_1 = TearsOfInk.id("textures/gui/invitation_charm_right_1.png");
+	private static final ResourceLocation CHARM_RIGHT_2 = TearsOfInk.id("textures/gui/invitation_charm_right_2.png");
+	private static final double OPEN_SECONDS = 0.45;
 	private static final ResourceLocation BUTTON = TearsOfInk.id("textures/gui/sign_button.png");
 	private static final ResourceLocation BUTTON_HOVER = TearsOfInk.id("textures/gui/sign_button_hover.png");
 	private static final ResourceLocation SEAL = TearsOfInk.id("textures/gui/wax_seal.png");
@@ -41,6 +45,31 @@ public class InvitationScreen extends Screen {
 	private static final int SEAL_TICKS = 24;
 
 	private int signedTicks = -1;
+	private long openedAt = -1L;
+
+	private double elapsed() {
+		return openedAt < 0L ? 0.0 : (System.nanoTime() - openedAt) / 1_000_000_000.0;
+	}
+
+	private double openingProgress(double seconds) {
+		return Math.min(1.0, Math.max(0.0, seconds / OPEN_SECONDS));
+	}
+
+	private float animatedTop(double seconds) {
+		double remaining = 1.0 - openingProgress(seconds);
+		return top() + (height - top() + 4f) * (float) (remaining * remaining * remaining);
+	}
+
+	/** Три независимых подвески. Точки на полном холсте восстановлены по invitation_full.png. */
+	private void drawCharms(GuiGraphics g, double seconds) {
+		// Более тяжёлый крестик — медленнее, две цепочки — каждая в своём ритме.
+		PaperMotion.layer(g, CHARM_LEFT, -11, 54, 50, 50, 14.5f, 56f,
+				PaperMotion.sway(seconds, 5.8, 3.2, 0.0, 2.0));
+		PaperMotion.layer(g, CHARM_RIGHT_1, 238, 42, 15, 45, 242.5f, 42.5f,
+				PaperMotion.sway(seconds, 3.35, 4.5, 1.0, 2.3));
+		PaperMotion.layer(g, CHARM_RIGHT_2, 228, 43, 11, 35, 234.5f, 43.5f,
+				PaperMotion.sway(seconds, 4.55, 3.0, 2.4, 1.6));
+	}
 
 	public InvitationScreen() {
 		super(Component.translatable("item.tears-of-ink.invitation_letter"));
@@ -111,16 +140,20 @@ public class InvitationScreen extends Screen {
 	public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
 		super.render(g, mouseX, mouseY, partialTick);
 
+		if (openedAt < 0L) openedAt = System.nanoTime();
+		double seconds = elapsed();
 		float scale = paperScale();
-		int mx = (int) localX(mouseX), my = (int) localY(mouseY);
+		float animatedTop = animatedTop(seconds);
+		int mx = (int) localX(mouseX), my = (int) ((mouseY - animatedTop) / scale);
 		g.pose().pushPose();
-		g.pose().translate(left(), top(), 0);
+		g.pose().translate(left(), animatedTop, 0);
 		g.pose().scale(scale, scale, 1f);
 
 		g.blit(PAGE, 0, 0, 0, 0, W, H, W, H);
+		drawCharms(g, seconds);
 		drawLetter(g);
 		if (signedTicks < 0) {
-			boolean hover = over(mx, my);
+			boolean hover = openingProgress(seconds) >= 1.0 && over(mx, my);
 			g.blit(hover ? BUTTON_HOVER : BUTTON, SIGN_X, SIGN_Y, 0, 0, BW, BH, BW, BH);
 			Component label = Component.translatable("letter.tears-of-ink.sign");
 			g.drawString(font, label, SIGN_X + (BW - font.width(label)) / 2, SIGN_Y + 6, 0xF0E0D0, false);
@@ -147,7 +180,8 @@ public class InvitationScreen extends Screen {
 
 	@Override
 	public boolean mouseClicked(double mx, double my, int button) {
-		if (signedTicks < 0 && button == 0 && over(localX(mx), localY(my))) {
+		if (signedTicks < 0 && openedAt >= 0L && openingProgress(elapsed()) >= 1.0
+				&& button == 0 && over(localX(mx), localY(my))) {
 			signedTicks = 0;
 			minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.AMETHYST_BLOCK_PLACE, 0.6f));
 			minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.BOOK_PUT, 0.8f));

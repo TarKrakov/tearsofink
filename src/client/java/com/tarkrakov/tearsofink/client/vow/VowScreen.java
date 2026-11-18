@@ -24,7 +24,7 @@ import java.util.List;
  * Собственная vow.png может заменить его позднее; место для закладок не используется.
  */
 public class VowScreen extends Screen {
-	private static final ResourceLocation PAGE = TearsOfInk.id("textures/gui/diary.png");
+	private static final ResourceLocation PAGE = TearsOfInk.id("textures/gui/diary_full.png");
 	private static final int W = 256, H = 256, X = 64, TEXT_W = 130, LINE = 12;
 	private static final int TITLE_Y = 23, BODY_Y = 44, BOTTOM_OPTIONS_Y = 187;
 	private static final int TEXT = 0x2A1E2C, TITLE = 0x5A1E2C, OPTION = 0x3A2A30, HOVER = 0x8A2A40, INK = 0x3A1E5A, SOUL = 0x1E6A72;

@@ -26,7 +26,7 @@ import java.util.List;
  * Доска контрактов — три вкладки (лёгкий, средний, сложный), активный контракт сверху.
  */
 public class SoulTraderScreen extends Screen {
-	private static final ResourceLocation PAGE = TearsOfInk.id("textures/gui/diary.png");
+	private static final ResourceLocation PAGE = TearsOfInk.id("textures/gui/diary_full.png");
 	private static final int W = 256, H = 256, M = 64, LINE = 12;
 	private static final int TEXT_W = W - M * 2, TITLE_Y = 23, BODY_Y = 43, BODY_BOTTOM = 216;
 	private static final int TEXT = 0x2A1E2C, TITLE = 0x1E4E55, OPTION = 0x3A2A30, HOVER = 0x1E7A82, FADED = 0x8A7C7A, WARN = 0x6A1420;

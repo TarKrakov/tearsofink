@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Дневник Историка. Новый авторский atlas gui/diary.png целиком 256x256:
+ * Дневник Историка. Авторский atlas gui/diary_base.png 256x256 и подвижное перо:
  * переплёт и кольца слева, перо сверху справа, внизу печать, справа от книги
  * прозрачное место для будущих разделов (пока ни кнопок, ни категорий нет).
  *
@@ -23,7 +23,9 @@ import java.util.List;
  * без уменьшения шрифта; заголовки тоже переносятся, а не упираются в перо.
  */
 public class DiaryScreen extends Screen {
-	private static final ResourceLocation PAGE = TearsOfInk.id("textures/gui/diary.png");
+	private static final ResourceLocation PAGE = TearsOfInk.id("textures/gui/diary_base.png");
+	private static final ResourceLocation FEATHER = TearsOfInk.id("textures/gui/diary_feather.png");
+	private final long openedAt = System.nanoTime();
 
 	private static final int W = 256, H = 256;
 	/** Безопасная колонка пергамента: за кольцами и левее пера. */
@@ -111,6 +113,10 @@ public class DiaryScreen extends Screen {
 		g.pose().translate(left(), top(), 0);
 		g.pose().scale(scale, scale, 1f);
 		g.blit(PAGE, 0, 0, 0, 0, W, H, W, H);
+		// Мягкое движение свободного пера вокруг верхней точки крепления, без смены размеров текста.
+		double seconds = (System.nanoTime() - openedAt) / 1_000_000_000.0;
+		PaperMotion.layer(g, FEATHER, 181, 1, 60, 150, 182.5f, 2.5f,
+				PaperMotion.sway(seconds, 4.8, 1.25, 0.0, 0.10));
 
 		if (sheets.isEmpty()) {
 			FitText.draw(g, font, Component.translatable("diary.tears-of-ink.empty"),
