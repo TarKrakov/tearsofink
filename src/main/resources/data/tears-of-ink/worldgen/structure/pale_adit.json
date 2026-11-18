@@ -1,0 +1,7 @@
+{
+  "type": "tears-of-ink:pale_adit",
+  "biomes": "tears-of-ink:pale_forest",
+  "step": "top_layer_modification",
+  "spawn_overrides": {},
+  "terrain_adaptation": "none"
+}

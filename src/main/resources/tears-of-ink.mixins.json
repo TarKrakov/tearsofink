@@ -4,6 +4,7 @@
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 		"NoiseGeneratorSettingsMixin",
+		"AditLightingMixin",
 		"PlayerEatMixin",
 		"HealEffectsMixin",
 		"VisibilityMixin",

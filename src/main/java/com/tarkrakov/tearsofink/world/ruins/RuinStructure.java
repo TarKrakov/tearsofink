@@ -34,51 +34,26 @@ public class RuinStructure extends Structure {
 		this.kind = kind;
 	}
 
+	private record Site(InkLandsLayout layout, ResourceLocation template, int x, int z, int half,
+						Rotation rotation, boolean temple, boolean pale) {}
+
+	/** Быстрый прогноз горизонтального объёма, включая запас terrain_adaptation и фундамент. */
+	public boolean mayOverlap(GenerationContext context, ChunkPos target) {
+		Site site = findSite(context);
+		if (site == null) return false;
+		int radius = site.half() + 12;
+		return target.getMinBlockX() <= site.x() + radius && target.getMaxBlockX() >= site.x() - radius
+				&& target.getMinBlockZ() <= site.z() + radius && target.getMaxBlockZ() >= site.z() - radius;
+	}
+
 	@Override
 	protected Optional<GenerationStub> findGenerationPoint(GenerationContext context) {
+		Site site = findSite(context);
+		if (site == null) return Optional.empty();
 		ChunkGenerator generator = context.chunkGenerator();
-		if (!(generator.getBiomeSource() instanceof InkLandsAccess access)) return Optional.empty();
-		InkLandsLayout layout = access.tearsofink$layout(context.randomState().sampler());
-		if (layout == null) return Optional.empty();
-		ChunkPos chunk = context.chunkPos();
-		RandomSource random = context.random();
-		ResourceLocation template;
-		int x, z;
-
-		if (kind.equals("temple")) {
-			int[] at = null;
-			for (int[] p : Ruins.templePoints(layout)) {
-				if ((p[0] >> 4) == chunk.x && (p[1] >> 4) == chunk.z) { at = p; break; }
-			}
-			if (at == null) return Optional.empty();
-			template = Ruins.TEMPLE;
-			x = at[0];
-			z = at[1];
-		} else {
-			template = pick(random);
-			x = chunk.getMinBlockX() + random.nextInt(16);
-			z = chunk.getMinBlockZ() + random.nextInt(16);
-		}
-
-		StructureTemplate t = context.structureTemplateManager().getOrCreate(template);
-		Vec3i size = t.getSize();
-		if (size.getX() == 0) return Optional.empty();
-		int half = Math.max(size.getX(), size.getZ()) / 2 + 1;
-		boolean monumentByRoad = false;
-		if (template.equals(Ruins.MONUMENT) && random.nextFloat() < Ruins.MONUMENT_NEAR_ROAD) {
-			int[] side = besideRoad(layout, x, z, random, half);
-			if (side != null) { x = side[0]; z = side[1]; monumentByRoad = true; }
-		}
-		if (!kind.equals("temple") && Ruins.nearTemple(layout, x, z)) return Optional.empty();
-		if (!kind.equals("temple") && !monumentByRoad && !Ruins.clear(layout, x, z, half)) return Optional.empty();
-		if (monumentByRoad && (layout.roadNear(x, z, half - InkLandsLayout.ROAD_HALF_WIDTH + 1) != null
-				|| layout.nearLake(x, z, Ruins.LAKE_GAP) || layout.nearHerald(x, z, Ruins.HERALD_GAP))) return Optional.empty();
-		if (layout.depthInside(x, z) < 12) return Optional.empty();
-		boolean temple = kind.equals("temple");
-		boolean pale = layout.pick(x, z, null) == com.tarkrakov.tearsofink.world.ModBiomes.PALE_FOREST;
-		if (!temple && !pale && random.nextFloat() < Ruins.INKWOOD_SKIP) return Optional.empty(); // в Чернолесье реже
-
-		Rotation rotation = Rotation.getRandom(random);
+		InkLandsLayout layout = site.layout();
+		int x = site.x(), z = site.z(), half = site.half();
+		boolean temple = site.temple();
 		// высота: «нижняя середина» земли под постройкой (чтобы не висела, но и не тонула)
 		// (с учётом низин Кроволесья — их выкапывает генерация позже, по рельефу их не видно)
 		java.util.function.IntBinaryOperator base = (bx, bz) ->
@@ -97,11 +72,58 @@ public class RuinStructure extends Structure {
 		}
 
 		BlockPos center = new BlockPos(x, y, z);
-		ResourceLocation chosen = template;
+		ResourceLocation chosen = site.template();
 		int tier = Ruins.tier(layout, x, z);
 		boolean start = temple && Ruins.isStartTemple(layout, x, z);
 		return Optional.of(new GenerationStub(center, builder ->
-				builder.addPiece(new RuinPiece(context.structureTemplateManager(), chosen, center, rotation, tier, start, pale))));
+				builder.addPiece(new RuinPiece(context.structureTemplateManager(), chosen, center, site.rotation(), tier, start, site.pale()))));
+	}
+
+	private Site findSite(GenerationContext context) {
+		ChunkGenerator generator = context.chunkGenerator();
+		if (!(generator.getBiomeSource() instanceof InkLandsAccess access)) return null;
+		InkLandsLayout layout = access.tearsofink$layout(context.randomState().sampler());
+		if (layout == null) return null;
+		ChunkPos chunk = context.chunkPos();
+		RandomSource random = context.random();
+		ResourceLocation template;
+		int x, z;
+
+		if (kind.equals("temple")) {
+			int[] at = null;
+			for (int[] p : Ruins.templePoints(layout)) {
+				if ((p[0] >> 4) == chunk.x && (p[1] >> 4) == chunk.z) { at = p; break; }
+			}
+			if (at == null) return null;
+			template = Ruins.TEMPLE;
+			x = at[0];
+			z = at[1];
+		} else {
+			template = pick(random);
+			x = chunk.getMinBlockX() + random.nextInt(16);
+			z = chunk.getMinBlockZ() + random.nextInt(16);
+		}
+
+		StructureTemplate t = context.structureTemplateManager().getOrCreate(template);
+		Vec3i size = t.getSize();
+		if (size.getX() == 0) return null;
+		int half = Math.max(size.getX(), size.getZ()) / 2 + 1;
+		boolean monumentByRoad = false;
+		if (template.equals(Ruins.MONUMENT) && random.nextFloat() < Ruins.MONUMENT_NEAR_ROAD) {
+			int[] side = besideRoad(layout, x, z, random, half);
+			if (side != null) { x = side[0]; z = side[1]; monumentByRoad = true; }
+		}
+		if (!kind.equals("temple") && Ruins.nearTemple(layout, x, z)) return null;
+		if (!kind.equals("temple") && !monumentByRoad && !Ruins.clear(layout, x, z, half)) return null;
+		if (monumentByRoad && (layout.roadNear(x, z, half - InkLandsLayout.ROAD_HALF_WIDTH + 1) != null
+				|| layout.nearLake(x, z, Ruins.LAKE_GAP) || layout.nearHerald(x, z, Ruins.HERALD_GAP))) return null;
+		if (layout.depthInside(x, z) < 12) return null;
+		boolean temple = kind.equals("temple");
+		boolean pale = layout.pick(x, z, null) == com.tarkrakov.tearsofink.world.ModBiomes.PALE_FOREST;
+		if (!temple && !pale && random.nextFloat() < Ruins.INKWOOD_SKIP) return null; // в Чернолесье реже
+
+		Rotation rotation = Rotation.getRandom(random);
+		return new Site(layout, template, x, z, half, rotation, temple, pale);
 	}
 
 	private static ResourceLocation pick(RandomSource random) {
