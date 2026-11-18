@@ -6,6 +6,7 @@
 		"DimensionSpecialEffectsMixin",
 		"FogRendererMixin",
 		"PaleForestMusicMixin",
+		"AudioMixerSoundMixin",
 		"LevelRendererMixin",
 		"WeaponStatsMixin",
 		"ItemRendererMixin",

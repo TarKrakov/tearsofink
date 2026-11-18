@@ -1,0 +1,242 @@
+package com.tarkrakov.tearsofink.client.audio;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.mojang.blaze3d.platform.InputConstants;
+import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.client.SkillKeys;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundSource;
+import org.lwjgl.glfw.GLFW;
+
+import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+/** Local authoring mixer. Values are relative to the shipped mix, not game balance or server state. */
+public final class AudioMixer {
+    public static final int MAX_PERCENT = 300;
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("tearsofink-audio.json");
+
+    public enum Group {
+        SHIELDS, RESONANCES, SOLDIERS, FOREST, MUSIC, OWLS, CATERPILLARS, DIARY;
+        public String key() { return name().toLowerCase(Locale.ROOT); }
+        public Component label() { return Component.translatable("mixer.tears-of-ink.group." + key()); }
+    }
+
+    public record Entry(ResourceLocation id, Group group, SoundSource source, float previewVolume, String translation) {
+        public String key() { return id.getPath(); }
+        public Component label() { return Component.translatable(translation); }
+    }
+
+    // Explicit allowlist: Strider sounds and any unrelated/vanilla sounds never pass through this mixer.
+    private static final List<Entry> ENTRIES = List.of(
+        new Entry(TearsOfInk.id("soul_shield_swing"), Group.SHIELDS, SoundSource.PLAYERS, 0.6800f, "subtitles.tears-of-ink.soul_shield_swing"),
+        new Entry(TearsOfInk.id("soul_shield_block"), Group.SHIELDS, SoundSource.PLAYERS, 0.4400f, "subtitles.tears-of-ink.soul_shield_block"),
+        new Entry(TearsOfInk.id("soul_shield_perfect"), Group.SHIELDS, SoundSource.PLAYERS, 0.5800f, "subtitles.tears-of-ink.soul_shield_perfect"),
+        new Entry(TearsOfInk.id("soul_shield_bastion"), Group.SHIELDS, SoundSource.PLAYERS, 0.4800f, "subtitles.tears-of-ink.soul_shield_bastion"),
+        new Entry(TearsOfInk.id("soul_shield_riposte"), Group.SHIELDS, SoundSource.PLAYERS, 0.5600f, "subtitles.tears-of-ink.soul_shield_riposte"),
+        new Entry(TearsOfInk.id("soul_shield_raise"), Group.SHIELDS, SoundSource.PLAYERS, 0.3000f, "subtitles.tears-of-ink.soul_shield_raise"),
+        new Entry(TearsOfInk.id("soul_shield_break"), Group.SHIELDS, SoundSource.PLAYERS, 0.5500f, "subtitles.tears-of-ink.soul_shield_break"),
+        new Entry(TearsOfInk.id("soul_shield_charge_1"), Group.SHIELDS, SoundSource.PLAYERS, 0.2400f, "mixer.tears-of-ink.event.soul_shield_charge_1"),
+        new Entry(TearsOfInk.id("soul_shield_charge_2"), Group.SHIELDS, SoundSource.PLAYERS, 0.2400f, "mixer.tears-of-ink.event.soul_shield_charge_2"),
+        new Entry(TearsOfInk.id("soul_shield_charge_3"), Group.SHIELDS, SoundSource.PLAYERS, 0.2400f, "mixer.tears-of-ink.event.soul_shield_charge_3"),
+        new Entry(TearsOfInk.id("soul_shield_charge_4"), Group.SHIELDS, SoundSource.PLAYERS, 0.2400f, "mixer.tears-of-ink.event.soul_shield_charge_4"),
+        new Entry(TearsOfInk.id("soul_shield_full_charge"), Group.SHIELDS, SoundSource.PLAYERS, 0.3600f, "subtitles.tears-of-ink.soul_shield_full_charge"),
+        new Entry(TearsOfInk.id("soul_shield_burst_low"), Group.SHIELDS, SoundSource.PLAYERS, 0.4900f, "subtitles.tears-of-ink.soul_shield_burst_low"),
+        new Entry(TearsOfInk.id("soul_shield_burst_full"), Group.SHIELDS, SoundSource.PLAYERS, 0.5950f, "subtitles.tears-of-ink.soul_shield_burst_full"),
+        new Entry(TearsOfInk.id("soul_shield_clap_prepare"), Group.SHIELDS, SoundSource.PLAYERS, 0.3500f, "subtitles.tears-of-ink.soul_shield_clap_prepare"),
+        new Entry(TearsOfInk.id("soul_shield_clap"), Group.SHIELDS, SoundSource.PLAYERS, 0.3400f, "subtitles.tears-of-ink.soul_shield_clap"),
+        new Entry(TearsOfInk.id("soul_shield_ram_start"), Group.SHIELDS, SoundSource.PLAYERS, 0.5200f, "subtitles.tears-of-ink.soul_shield_ram_start"),
+        new Entry(TearsOfInk.id("soul_shield_ram_hit"), Group.SHIELDS, SoundSource.PLAYERS, 0.4900f, "subtitles.tears-of-ink.soul_shield_ram_hit"),
+        new Entry(TearsOfInk.id("soul_shield_radiance"), Group.SHIELDS, SoundSource.PLAYERS, 0.4800f, "subtitles.tears-of-ink.soul_shield_radiance"),
+        new Entry(TearsOfInk.id("soul_shield_mercy"), Group.SHIELDS, SoundSource.PLAYERS, 0.4600f, "subtitles.tears-of-ink.soul_shield_mercy"),
+        new Entry(TearsOfInk.id("soul_shield_repel"), Group.SHIELDS, SoundSource.PLAYERS, 0.5000f, "subtitles.tears-of-ink.soul_shield_repel"),
+        new Entry(TearsOfInk.id("soul_shield_res_advance_impact"), Group.RESONANCES, SoundSource.PLAYERS, 0.5600f, "subtitles.tears-of-ink.soul_shield_res_advance_impact"),
+        new Entry(TearsOfInk.id("soul_shield_res_advance_start"), Group.RESONANCES, SoundSource.PLAYERS, 0.5200f, "subtitles.tears-of-ink.soul_shield_res_advance_start"),
+        new Entry(TearsOfInk.id("soul_shield_res_avalanche"), Group.RESONANCES, SoundSource.PLAYERS, 0.5200f, "subtitles.tears-of-ink.soul_shield_res_avalanche"),
+        new Entry(TearsOfInk.id("soul_shield_res_flash"), Group.RESONANCES, SoundSource.PLAYERS, 0.5200f, "subtitles.tears-of-ink.soul_shield_res_flash"),
+        new Entry(TearsOfInk.id("soul_shield_res_grace"), Group.RESONANCES, SoundSource.PLAYERS, 0.5200f, "subtitles.tears-of-ink.soul_shield_res_grace"),
+        new Entry(TearsOfInk.id("soul_shield_res_halo"), Group.RESONANCES, SoundSource.PLAYERS, 0.5200f, "subtitles.tears-of-ink.soul_shield_res_halo"),
+        new Entry(TearsOfInk.id("soul_shield_res_intercessor"), Group.RESONANCES, SoundSource.PLAYERS, 0.5200f, "subtitles.tears-of-ink.soul_shield_res_intercessor"),
+        new Entry(TearsOfInk.id("soul_shield_res_phalanx"), Group.RESONANCES, SoundSource.PLAYERS, 0.5200f, "subtitles.tears-of-ink.soul_shield_res_phalanx"),
+        new Entry(TearsOfInk.id("soul_shield_res_shockwave"), Group.RESONANCES, SoundSource.PLAYERS, 0.5200f, "subtitles.tears-of-ink.soul_shield_res_shockwave"),
+        new Entry(TearsOfInk.id("soul_shield_res_sun"), Group.RESONANCES, SoundSource.PLAYERS, 0.5200f, "subtitles.tears-of-ink.soul_shield_res_sun"),
+        new Entry(TearsOfInk.id("soul_shield_res_veil"), Group.RESONANCES, SoundSource.PLAYERS, 0.5200f, "subtitles.tears-of-ink.soul_shield_res_veil"),
+        new Entry(TearsOfInk.id("pale_crossbow_ambient"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4000f, "subtitles.tears-of-ink.pale_crossbow_ambient"),
+        new Entry(TearsOfInk.id("pale_crossbow_bolt_impact"), Group.SOLDIERS, SoundSource.HOSTILE, 1.0000f, "subtitles.tears-of-ink.pale_crossbow_bolt_impact"),
+        new Entry(TearsOfInk.id("pale_crossbow_death"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4000f, "subtitles.tears-of-ink.pale_crossbow_death"),
+        new Entry(TearsOfInk.id("pale_crossbow_hurt"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4000f, "subtitles.tears-of-ink.pale_crossbow_hurt"),
+        new Entry(TearsOfInk.id("pale_crossbow_reload_bolt"), Group.SOLDIERS, SoundSource.HOSTILE, 0.3400f, "subtitles.tears-of-ink.pale_crossbow_reload_bolt"),
+        new Entry(TearsOfInk.id("pale_crossbow_reload_draw"), Group.SOLDIERS, SoundSource.HOSTILE, 0.3600f, "subtitles.tears-of-ink.pale_crossbow_reload_draw"),
+        new Entry(TearsOfInk.id("pale_crossbow_reload_latch"), Group.SOLDIERS, SoundSource.HOSTILE, 0.3800f, "subtitles.tears-of-ink.pale_crossbow_reload_latch"),
+        new Entry(TearsOfInk.id("pale_crossbow_shoot"), Group.SOLDIERS, SoundSource.HOSTILE, 0.5200f, "subtitles.tears-of-ink.pale_crossbow_shoot"),
+        new Entry(TearsOfInk.id("pale_crossbow_step"), Group.SOLDIERS, SoundSource.HOSTILE, 0.3200f, "subtitles.tears-of-ink.pale_crossbow_step"),
+        new Entry(TearsOfInk.id("pale_shield_ambient"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4000f, "subtitles.tears-of-ink.pale_shield_ambient"),
+        new Entry(TearsOfInk.id("pale_shield_bash_hit"), Group.SOLDIERS, SoundSource.HOSTILE, 0.5300f, "subtitles.tears-of-ink.pale_shield_bash_hit"),
+        new Entry(TearsOfInk.id("pale_shield_bash_swing"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4300f, "subtitles.tears-of-ink.pale_shield_bash_swing"),
+        new Entry(TearsOfInk.id("pale_shield_block"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4800f, "subtitles.tears-of-ink.pale_shield_block"),
+        new Entry(TearsOfInk.id("pale_shield_charge_break_soft"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4700f, "subtitles.tears-of-ink.pale_shield_charge_break_soft"),
+        new Entry(TearsOfInk.id("pale_shield_charge_hit"), Group.SOLDIERS, SoundSource.HOSTILE, 0.6000f, "subtitles.tears-of-ink.pale_shield_charge_hit"),
+        new Entry(TearsOfInk.id("pale_shield_charge_prepare"), Group.SOLDIERS, SoundSource.HOSTILE, 0.5800f, "subtitles.tears-of-ink.pale_shield_charge_prepare"),
+        new Entry(TearsOfInk.id("pale_shield_charge_start"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4700f, "subtitles.tears-of-ink.pale_shield_charge_start"),
+        new Entry(TearsOfInk.id("pale_shield_charge_step"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4300f, "subtitles.tears-of-ink.pale_shield_charge_step"),
+        new Entry(TearsOfInk.id("pale_shield_charge_wall"), Group.SOLDIERS, SoundSource.HOSTILE, 0.5500f, "subtitles.tears-of-ink.pale_shield_charge_wall"),
+        new Entry(TearsOfInk.id("pale_shield_death"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4000f, "subtitles.tears-of-ink.pale_shield_death"),
+        new Entry(TearsOfInk.id("pale_shield_deflect"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4300f, "subtitles.tears-of-ink.pale_shield_deflect"),
+        new Entry(TearsOfInk.id("pale_shield_disabled"), Group.SOLDIERS, SoundSource.HOSTILE, 0.5300f, "subtitles.tears-of-ink.pale_shield_disabled"),
+        new Entry(TearsOfInk.id("pale_shield_hurt"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4000f, "subtitles.tears-of-ink.pale_shield_hurt"),
+        new Entry(TearsOfInk.id("pale_shield_raise"), Group.SOLDIERS, SoundSource.HOSTILE, 0.3800f, "subtitles.tears-of-ink.pale_shield_raise"),
+        new Entry(TearsOfInk.id("pale_shield_step"), Group.SOLDIERS, SoundSource.HOSTILE, 0.3200f, "subtitles.tears-of-ink.pale_shield_step"),
+        new Entry(TearsOfInk.id("pale_shield_stun"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4000f, "subtitles.tears-of-ink.pale_shield_stun"),
+        new Entry(TearsOfInk.id("pale_soldier_dodge"), Group.SOLDIERS, SoundSource.HOSTILE, 0.3400f, "subtitles.tears-of-ink.pale_soldier_dodge"),
+        new Entry(TearsOfInk.id("pale_spear_ambient"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4000f, "subtitles.tears-of-ink.pale_spear_ambient"),
+        new Entry(TearsOfInk.id("pale_spear_death"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4000f, "subtitles.tears-of-ink.pale_spear_death"),
+        new Entry(TearsOfInk.id("pale_spear_hit"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4800f, "subtitles.tears-of-ink.pale_spear_hit"),
+        new Entry(TearsOfInk.id("pale_spear_hurt"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4000f, "subtitles.tears-of-ink.pale_spear_hurt"),
+        new Entry(TearsOfInk.id("pale_spear_step"), Group.SOLDIERS, SoundSource.HOSTILE, 0.3200f, "subtitles.tears-of-ink.pale_spear_step"),
+        new Entry(TearsOfInk.id("pale_spear_thrust"), Group.SOLDIERS, SoundSource.HOSTILE, 0.4300f, "subtitles.tears-of-ink.pale_spear_thrust"),
+        new Entry(TearsOfInk.id("pale_forest_air"), Group.FOREST, SoundSource.AMBIENT, 0.0750f, "mixer.tears-of-ink.event.pale_forest_air"),
+        new Entry(TearsOfInk.id("pale_forest_bark"), Group.FOREST, SoundSource.AMBIENT, 0.0750f, "subtitles.tears-of-ink.pale_forest_bark"),
+        new Entry(TearsOfInk.id("pale_forest_branch"), Group.FOREST, SoundSource.AMBIENT, 0.0750f, "subtitles.tears-of-ink.pale_forest_branch"),
+        new Entry(TearsOfInk.id("pale_forest_fog_air"), Group.FOREST, SoundSource.AMBIENT, 0.0750f, "mixer.tears-of-ink.event.pale_forest_fog_air"),
+        new Entry(TearsOfInk.id("pale_forest_memory_air"), Group.FOREST, SoundSource.AMBIENT, 0.0750f, "mixer.tears-of-ink.event.pale_forest_memory_air"),
+        new Entry(TearsOfInk.id("pale_forest_rustle"), Group.FOREST, SoundSource.AMBIENT, 0.0375f, "subtitles.tears-of-ink.pale_forest_rustle"),
+        new Entry(TearsOfInk.id("pale_forest_twig"), Group.FOREST, SoundSource.AMBIENT, 0.0750f, "subtitles.tears-of-ink.pale_forest_twig"),
+        new Entry(TearsOfInk.id("pale_forest_fog_phrase_01"), Group.MUSIC, SoundSource.MUSIC, 0.0800f, "mixer.tears-of-ink.event.pale_forest_fog_phrase_01"),
+        new Entry(TearsOfInk.id("pale_forest_fog_phrase_02"), Group.MUSIC, SoundSource.MUSIC, 0.0800f, "mixer.tears-of-ink.event.pale_forest_fog_phrase_02"),
+        new Entry(TearsOfInk.id("pale_forest_fog_phrase_03"), Group.MUSIC, SoundSource.MUSIC, 0.0800f, "mixer.tears-of-ink.event.pale_forest_fog_phrase_03"),
+        new Entry(TearsOfInk.id("pale_forest_memory_01"), Group.MUSIC, SoundSource.MUSIC, 0.0800f, "mixer.tears-of-ink.event.pale_forest_memory_01"),
+        new Entry(TearsOfInk.id("pale_forest_memory_02"), Group.MUSIC, SoundSource.MUSIC, 0.0800f, "mixer.tears-of-ink.event.pale_forest_memory_02"),
+        new Entry(TearsOfInk.id("pale_owl_hoot"), Group.OWLS, SoundSource.NEUTRAL, 0.2400f, "subtitles.tears-of-ink.pale_owl_hoot"),
+        new Entry(TearsOfInk.id("pale_owl_wing"), Group.OWLS, SoundSource.NEUTRAL, 0.3000f, "subtitles.tears-of-ink.pale_owl_wing"),
+        new Entry(TearsOfInk.id("caterpillar_blood_crawl"), Group.CATERPILLARS, SoundSource.NEUTRAL, 0.3500f, "subtitles.tears-of-ink.caterpillar_blood_crawl"),
+        new Entry(TearsOfInk.id("caterpillar_ink_crawl"), Group.CATERPILLARS, SoundSource.NEUTRAL, 0.3000f, "subtitles.tears-of-ink.caterpillar_ink_crawl"),
+        new Entry(TearsOfInk.id("caterpillar_pale_crawl"), Group.CATERPILLARS, SoundSource.NEUTRAL, 0.3500f, "subtitles.tears-of-ink.caterpillar_pale_crawl"),
+        new Entry(TearsOfInk.id("diary_page_turn"), Group.DIARY, SoundSource.PLAYERS, 0.5000f, "subtitles.tears-of-ink.diary_page_turn"),
+        new Entry(TearsOfInk.id("diary_quill_write"), Group.DIARY, SoundSource.PLAYERS, 0.5000f, "subtitles.tears-of-ink.diary_quill_write")
+    );
+    private static final Map<ResourceLocation, Entry> BY_ID =
+            ENTRIES.stream().collect(Collectors.toUnmodifiableMap(Entry::id, e -> e));
+    private static final Map<Group, List<Entry>> BY_GROUP =
+            ENTRIES.stream().collect(Collectors.groupingBy(Entry::group));
+    private static final class Config {
+        Map<String, Integer> groups = new TreeMap<>();
+        Map<String, Integer> events = new TreeMap<>();
+    }
+
+    private static Config config = defaults();
+    private static boolean dirty;
+    private static boolean openRequested;
+    private AudioMixer() {}
+
+    private static Config defaults() {
+        Config c = new Config();
+        for (Group group : Group.values()) c.groups.put(group.key(), 100);
+        for (Entry entry : ENTRIES) c.events.put(entry.key(), 100);
+        return c;
+    }
+
+    private static int clamp(int value) { return Math.max(0, Math.min(MAX_PERCENT, value)); }
+
+    public static List<Entry> entries(Group group) { return BY_GROUP.getOrDefault(group, List.of()); }
+    public static int groupPercent(Group group) { return config.groups.getOrDefault(group.key(), 100); }
+    public static int eventPercent(Entry entry) { return config.events.getOrDefault(entry.key(), 100); }
+    public static void setGroup(Group group, int value) {
+        int v = clamp(value);
+        if (v != groupPercent(group)) { config.groups.put(group.key(), v); dirty = true; }
+    }
+    public static void setEvent(Entry entry, int value) {
+        int v = clamp(value);
+        if (v != eventPercent(entry)) { config.events.put(entry.key(), v); dirty = true; }
+    }
+    public static void resetGroup(Group group) {
+        setGroup(group, 100);
+        for (Entry entry : entries(group)) setEvent(entry, 100);
+    }
+
+    /** Queried before the normal sound engine's volume clamp and category controls. */
+    public static float gain(ResourceLocation id) {
+        // No matching entry for every Strider event, including future song IDs.
+        Entry e = BY_ID.get(id);
+        if (e == null) return 1f;
+        return Math.min(3f, groupPercent(e.group()) * eventPercent(e) / 10000f);
+    }
+
+    public static String exportJson() { return GSON.toJson(config) + "\n"; }
+
+    private static void load() {
+        if (!Files.exists(FILE)) { dirty = true; save(); return; }
+        try {
+            Config old = GSON.fromJson(Files.readString(FILE), Config.class);
+            if (old == null) return;
+            Config clean = defaults();
+            clean.groups.replaceAll((key, value) -> readPercent(old.groups, key));
+            clean.events.replaceAll((key, value) -> readPercent(old.events, key));
+            config = clean;
+            // A new sound added in a later version gets the default 100%.
+        } catch (Exception ex) {
+            TearsOfInk.LOGGER.warn("Cannot read audio mixer config {}; using default mix", FILE, ex);
+        }
+    }
+
+    private static int readPercent(Map<String, Integer> map, String key) {
+        Integer v = map == null ? null : map.get(key);
+        return v == null ? 100 : clamp(v);
+    }
+
+    public static boolean save() {
+        if (!dirty) return true;
+        try {
+            Files.createDirectories(FILE.getParent());
+            Path tmp = FILE.resolveSibling(FILE.getFileName().toString() + ".tmp");
+            Files.writeString(tmp, exportJson());
+            try {
+                Files.move(tmp, FILE, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException ex) {
+                Files.move(tmp, FILE, StandardCopyOption.REPLACE_EXISTING);
+            }
+            dirty = false;
+            return true;
+        } catch (IOException | SecurityException ex) {
+            TearsOfInk.LOGGER.warn("Cannot save audio mixer config {}", FILE, ex);
+            return false;
+        }
+    }
+
+    public static void init() {
+        load();
+        KeyMapping key = KeyBindingHelper.registerKeyBinding(new KeyMapping(
+                "key.tears-of-ink.audio_mixer", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_F8, SkillKeys.CATEGORY));
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
+                dispatcher.register(ClientCommandManager.literal("inksound").executes(ctx -> {
+                    openRequested = true;
+                    return 1;
+                })));
+        ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (key.consumeClick()) {
+                if (client.player != null && client.screen == null) openRequested = true;
+            }
+            if (openRequested) {
+                openRequested = false;
+                if (client.player != null) client.setScreen(new AudioMixerScreen());
+            }
+        });
+    }
+}

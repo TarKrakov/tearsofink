@@ -43,6 +43,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		StriderSongClient.init();
 		PaleForestAmbience.init();
+		com.tarkrakov.tearsofink.client.audio.AudioMixer.init();
 		// /inkfog — выключить/включить туман Чернильных Земель у себя (удобно строить)
 		net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
 				dispatcher.register(net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal("inkfog").executes(ctx -> {
