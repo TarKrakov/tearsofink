@@ -1,15 +1,27 @@
 {
   "variants": {
-    "hanging=false,lit=true": {
+    "hanging=false,lit=true,road=false": {
       "model": "tears-of-ink:block/ink_lantern"
     },
-    "hanging=true,lit=true": {
+    "hanging=false,lit=true,road=true": {
+      "model": "tears-of-ink:block/ink_lantern_road"
+    },
+    "hanging=true,lit=true,road=false": {
       "model": "tears-of-ink:block/ink_lantern_hanging"
     },
-    "hanging=false,lit=false": {
+    "hanging=true,lit=true,road=true": {
+      "model": "tears-of-ink:block/ink_lantern_hanging"
+    },
+    "hanging=false,lit=false,road=false": {
       "model": "tears-of-ink:block/ink_lantern_off"
     },
-    "hanging=true,lit=false": {
+    "hanging=false,lit=false,road=true": {
+      "model": "tears-of-ink:block/ink_lantern_road_off"
+    },
+    "hanging=true,lit=false,road=false": {
+      "model": "tears-of-ink:block/ink_lantern_hanging_off"
+    },
+    "hanging=true,lit=false,road=true": {
       "model": "tears-of-ink:block/ink_lantern_hanging_off"
     }
   }
