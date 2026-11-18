@@ -160,8 +160,10 @@ public class GuideEntity extends PathfinderMob {
 			getLookControl().setLookAt(p, 30f, 30f);
 			if (tickCount < st[0]) continue;
 			if (st[1] == GIFT_LINE && com.tarkrakov.tearsofink.vow.Vows.vow(p) == com.tarkrakov.tearsofink.vow.Vow.NONE) {
-				// сначала обет — потом набор: ждём выбора (окно открывается, напоминаем раз в несколько секунд)
-				if (com.tarkrakov.tearsofink.vow.Vows.prompt(p)) Guide.say(p, "vow.ask");
+				// Сначала обет — потом набор: окно выбора можно повторно открыть,
+				// но фразу Проводника не надо дублировать в чате каждые 3 секунды.
+				com.tarkrakov.tearsofink.vow.Vows.prompt(p);
+				com.tarkrakov.tearsofink.vow.Vows.guidePromptOnce(p, "vow.ask");
 				setAction(ACT_TALK);
 				st[0] = tickCount + 20;
 				continue;
