@@ -246,7 +246,11 @@ public final class PaleGreatswordMoves {
                         if (time >= s.until) s.phase = Phase.IDLE;
                     }
                     case GUARD -> {
-                        if (time >= s.until) {
+                        // Только одиночный ПКМ: отпускание или прерванное использование
+                        // сразу опускает защиту. Парный Shift+R не меняем.
+                        if (!s.paired && !s.left && (!p.isUsingItem() || p.getUseItem() != s.main)) {
+                            lowerGuard(p, s);
+                        } else if (time >= s.until) {
                             play(p, s, s.paired ? "dual_guard_hold" : s.left ? "guard_hold" : "bb_author_guard_hold",
                                     s.paired ? "dual_guard_hold_off" : null, GUARD_REFRESH_TICKS);
                             s.until = time + GUARD_REFRESH_TICKS;
@@ -259,8 +263,24 @@ public final class PaleGreatswordMoves {
         });
     }
 
-    /** Shift+R toggles a frontal block. Lowering always works, even during its entry cooldown. */
+    /** Одиночный ПКМ: поднять защиту без переключения повторным вызовом. */
+    public static void holdGuard(ServerPlayer p) {
+        if (!isWeapon(p.getMainHandItem()) || dual(p)) return;
+        guard(p, false);
+    }
+
+    /** Отпускание одиночного ПКМ: защита отключается без ожидания cooldown. */
+    public static void releaseHeldGuard(ServerPlayer p) {
+        State s = STATES.get(p.getUUID());
+        if (s != null && s.phase == Phase.GUARD && !s.paired && !s.left) lowerGuard(p, s);
+    }
+
+    /** Парный Shift+R остаётся переключаемым. */
     public static void guard(ServerPlayer p) {
+        guard(p, true);
+    }
+
+    private static void guard(ServerPlayer p, boolean toggle) {
         if (!available(p)) return;
         boolean main = isWeapon(p.getMainHandItem());
         boolean off = isWeapon(p.getOffhandItem());
@@ -269,7 +289,10 @@ public final class PaleGreatswordMoves {
         if (!main && com.tarkrakov.tearsofink.weapon.InkGreatswordItem.twoHanded(p.getMainHandItem())) return;
         State s = state(p);
         if (s.phase != Phase.IDLE && !valid(p, s)) cancel(p, s);
-        if (s.phase == Phase.GUARD) { lowerGuard(p, s); return; }
+        if (s.phase == Phase.GUARD) {
+            if (toggle) lowerGuard(p, s);
+            return;
+        }
         if (s.phase != Phase.IDLE || now(p) < s.guardReady) return;
         var tune = PaleGreatswordBalance.get();
         var block = tune.shiftGuard();
@@ -282,9 +305,8 @@ public final class PaleGreatswordMoves {
         s.main = p.getMainHandItem(); s.off = p.getOffhandItem();
         s.left = left; s.paired = pair; s.started = now(p);
         s.phase = Phase.GUARD; s.until = now(p) + GUARD_REFRESH_TICKS;
-        // Defensive Shift+R has its OWN recovery timer. Do not set the item's
-        // global cooldown: doing so would unnecessarily lock regular R/RMB
-        // even after the blocking pose ends.
+        // Собственная перезарядка защиты ограничивает только новое поднятие,
+        // но не отпускание ПКМ и не обычный R.
         s.guardReady = now(p) + Math.round(cooldown * Awakening.cooldownMult(left ? s.off : s.main));
         play(p, s, pair ? "dual_guard" : left ? "guard" : "bb_author_guard_start",
                 pair ? "dual_guard_off" : null, GUARD_REFRESH_TICKS);
@@ -300,7 +322,8 @@ public final class PaleGreatswordMoves {
 
     private static void lowerGuard(ServerPlayer p, State s) {
         s.phase = Phase.IDLE; // protection ends immediately; return pose can blend into another action
-        play(p, s, s.paired || s.left ? "guard_release" : "bb_author_guard_end", s.paired ? "guard_release_off" : null, 10);
+        play(p, s, s.paired || s.left ? "guard_release" : "bb_author_guard_end",
+                s.paired ? "guard_release_off" : null, s.paired || s.left ? 10 : 4);
     }
 
     private static boolean guardFacing(ServerPlayer p, net.minecraft.world.damagesource.DamageSource source) {
