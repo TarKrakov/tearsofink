@@ -28,7 +28,7 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvents;
+import com.tarkrakov.tearsofink.sound.ModSounds;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 
@@ -222,7 +222,7 @@ public final class DiaryEntries {
 		sync(p);
 		if (!(entries.length == 1 && entries[0].equals(INTRO))) {
 			p.sendSystemMessage(Component.translatable("message.tears-of-ink.diary_new").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
-			p.playNotifySound(SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 0.9f, 0.7f);
+			p.playNotifySound(ModSounds.DIARY_QUILL_WRITE, SoundSource.PLAYERS, 0.55f, 1.25f);
 		}
 	}
 

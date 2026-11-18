@@ -35,7 +35,7 @@ public final class AudioMixer {
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("tearsofink-audio.json");
 
     public enum Group {
-        FOREST, MUSIC, CATERPILLARS;
+        FOREST, MUSIC, OWLS, CATERPILLARS, DIARY;
         public String key() { return name().toLowerCase(Locale.ROOT); }
         public Component label() { return Component.translatable("mixer.tears-of-ink.group." + key()); }
     }
@@ -61,7 +61,11 @@ public final class AudioMixer {
         new Entry(TearsOfInk.id("pale_forest_memory_02"), Group.MUSIC, SoundSource.MUSIC, 0.0800f, "mixer.tears-of-ink.event.pale_forest_memory_02"),
         new Entry(TearsOfInk.id("caterpillar_blood_crawl"), Group.CATERPILLARS, SoundSource.NEUTRAL, 0.3500f, "subtitles.tears-of-ink.caterpillar_blood_crawl"),
         new Entry(TearsOfInk.id("caterpillar_ink_crawl"), Group.CATERPILLARS, SoundSource.NEUTRAL, 0.3000f, "subtitles.tears-of-ink.caterpillar_ink_crawl"),
-        new Entry(TearsOfInk.id("caterpillar_pale_crawl"), Group.CATERPILLARS, SoundSource.NEUTRAL, 0.3500f, "subtitles.tears-of-ink.caterpillar_pale_crawl")
+        new Entry(TearsOfInk.id("caterpillar_pale_crawl"), Group.CATERPILLARS, SoundSource.NEUTRAL, 0.3500f, "subtitles.tears-of-ink.caterpillar_pale_crawl"),
+        new Entry(TearsOfInk.id("pale_owl_hoot"), Group.OWLS, SoundSource.NEUTRAL, 0.2400f, "subtitles.tears-of-ink.pale_owl_hoot"),
+        new Entry(TearsOfInk.id("pale_owl_wing"), Group.OWLS, SoundSource.NEUTRAL, 0.3000f, "subtitles.tears-of-ink.pale_owl_wing"),
+        new Entry(TearsOfInk.id("diary_page_turn"), Group.DIARY, SoundSource.PLAYERS, 0.5000f, "subtitles.tears-of-ink.diary_page_turn"),
+        new Entry(TearsOfInk.id("diary_quill_write"), Group.DIARY, SoundSource.PLAYERS, 0.5000f, "subtitles.tears-of-ink.diary_quill_write")
     );
     private static final Map<ResourceLocation, Entry> BY_ID =
             ENTRIES.stream().collect(Collectors.toUnmodifiableMap(Entry::id, e -> e));

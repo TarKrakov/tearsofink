@@ -1,3 +1,3 @@
-# Inactive audio — D-071
+# Inactive audio — D-071 / D-072
 
-Author requested rollback to original sound hooks except Striders, caterpillars and Pale Forest ambience. These 87 OGG are preserved byte-for-byte from the former active set. The archived sounds.json contains the inactive event definitions and is not loaded by Minecraft. Re-enable only on explicit author request. Earlier versions and code remain in Git history. No download or resource-pack installation is required.
+81 OGG remain archived byte-for-byte after reactivation of owl and diary sounds by author request (D-072). The archived sounds.json contains 65 inactive event definitions and is not loaded by Minecraft. Re-enable only on explicit author request. Earlier versions and code remain in Git history.

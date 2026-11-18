@@ -15,4 +15,9 @@ public final class PaleOwlTuning {
     public static final float HUNT_DAMAGE = 3.0f;
     public static final int DIVE_LIMIT = 80;
     public static final int TAKEOFF_TICKS = 26, SWAY_TICKS = 60, LAND_TICKS = 20;
+    // Audio only; no gameplay tuning changes.
+    public static final int HOOT_FIRST_MIN = 240, HOOT_FIRST_SPREAD = 320;
+    public static final int HOOT_MIN = 500, HOOT_SPREAD = 500;
+    public static final float HOOT_VOLUME = 0.24f;
+    public static final float TAKEOFF_WING_VOLUME = 0.34f, FLY_WING_VOLUME = 0.25f, LAND_WING_VOLUME = 0.28f;
 }

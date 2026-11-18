@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.entity;
 
 import com.tarkrakov.tearsofink.block.ModBlocks;
+import com.tarkrakov.tearsofink.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.DifficultyInstance;
@@ -49,6 +50,7 @@ public final class PaleOwlEntity extends PathfinderMob {
     private CaterpillarEntity prey;
     private int swayIn, restIn, flightIn, huntIn, searchIn, retryIn, fleeIn, approachIn;
     private boolean initialized;
+    private int hootIn = -1, wingSoundIn;
 
     public PaleOwlEntity(EntityType<? extends PathfinderMob> type, Level level) { super(type, level); }
 
@@ -149,6 +151,37 @@ public final class PaleOwlEntity extends PathfinderMob {
             case FLY -> tickFlight();
             case DIVE -> tickDive();
             case LAND -> tickLand();
+        }
+        tickOwlSounds();
+    }
+
+    /** Quiet positional audio, timed from the same phase stamp as the model. */
+    private void tickOwlSounds() {
+        if (hootIn < 0) hootIn = duration(HOOT_FIRST_MIN, HOOT_FIRST_SPREAD);
+        if (hootIn > 0) --hootIn;
+        if (wingSoundIn > 0) --wingSoundIn;
+        if (isSilent()) return;
+        Phase current = phase();
+        if (current == Phase.IDLE || current == Phase.SWAY) {
+            if (hootIn == 0 && onGround() && fleeIn == 0) {
+                level().playSound(null, getX(), getY() + getBbHeight() * 0.5, getZ(),
+                        ModSounds.PALE_OWL_HOOT, getSoundSource(), HOOT_VOLUME, 1.0f);
+                hootIn = duration(HOOT_MIN, HOOT_SPREAD);
+            }
+            return;
+        }
+        if (wingSoundIn > 0) return;
+        int age = phaseAge();
+        float volume = switch (current) {
+            case TAKEOFF -> age == 6 ? TAKEOFF_WING_VOLUME : 0f;
+            case FLY -> age % 30 == 20 ? FLY_WING_VOLUME : 0f;
+            case LAND -> age == 8 ? LAND_WING_VOLUME : 0f;
+            default -> 0f;
+        };
+        if (volume > 0f) {
+            level().playSound(null, getX(), getY() + getBbHeight() * 0.5, getZ(),
+                    ModSounds.PALE_OWL_WING, getSoundSource(), volume, 1.0f);
+            wingSoundIn = 8;
         }
     }
 
