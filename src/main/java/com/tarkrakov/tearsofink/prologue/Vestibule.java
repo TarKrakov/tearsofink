@@ -11,6 +11,8 @@ import net.minecraft.nbt.NbtUtils;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.TicketType;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -57,21 +59,43 @@ public final class Vestibule extends SavedData {
 	public BlockPos arrival() { return arrival; }
 	public BlockPos guidePos() { return guide; }
 
-	/** Поставить постройку (один раз на мир). */
-	public void ensurePlaced(ServerLevel level) {
-		if (placed) return;
+
+	private static final TicketType<ChunkPos> ENTRY_TICKET = TicketType.create(
+			"tears_of_ink_vestibule", java.util.Comparator.comparingLong(ChunkPos::toLong), 200);
+
+	/** Wait for the footprint and the neighbors queried by the template markers. */
+	public boolean prepare(ServerLevel level) {
+		if (placed) {
+			boolean arrivalReady = prepareChunk(level, arrival.getX() >> 4, arrival.getZ() >> 4);
+			boolean guideReady = prepareChunk(level, guide.getX() >> 4, guide.getZ() >> 4);
+			return arrivalReady && guideReady;
+		}
 		Optional<StructureTemplate> template = level.getStructureManager().get(TearsOfInk.id("vestibule"));
+		Vec3i size = template.map(StructureTemplate::getSize).orElse(new Vec3i(20, 1, 20));
+		int minX = -size.getX() / 2, minZ = -size.getZ() / 2;
+		boolean ready = true;
+		for (int cx = (minX - 1) >> 4; cx <= (minX + size.getX()) >> 4; cx++) {
+			for (int cz = (minZ - 1) >> 4; cz <= (minZ + size.getZ()) >> 4; cz++) {
+				ready &= prepareChunk(level, cx, cz);
+			}
+		}
+		if (!ready) return false;
 		if (template.isPresent()) placeTemplate(level, template.get());
 		else placePlaceholder(level);
 		placed = true;
 		setDirty();
+		return true;
+	}
+
+	private static boolean prepareChunk(ServerLevel level, int x, int z) {
+		var chunk = new ChunkPos(x, z);
+		level.getChunkSource().addRegionTicket(ENTRY_TICKET, chunk, 0, chunk);
+		return level.getChunkSource().getChunkNow(x, z) != null;
 	}
 
 	private void placeTemplate(ServerLevel level, StructureTemplate t) {
 		Vec3i size = t.getSize();
 		BlockPos origin = new BlockPos(-size.getX() / 2, BASE_Y, -size.getZ() / 2);
-		for (int cx = (origin.getX() >> 4) - 1; cx <= ((origin.getX() + size.getX()) >> 4) + 1; cx++)
-			for (int cz = (origin.getZ() >> 4) - 1; cz <= ((origin.getZ() + size.getZ()) >> 4) + 1; cz++) level.getChunk(cx, cz);
 		t.placeInWorld(level, origin, origin, new StructurePlaceSettings(), level.random, 2);
 		BlockPos gMin = null, gMax = null, arr = null, gd = null;
 		for (BlockPos p : BlockPos.betweenClosed(origin, origin.offset(size.getX() - 1, size.getY() - 1, size.getZ() - 1))) {

@@ -8,6 +8,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -27,15 +28,17 @@ final class FountainLanding {
 				&& InkLandsLayout.edgeDepth(pos.getX() + 0.5, pos.getZ() + 0.5) >= 0;
 	}
 
-	static boolean ready(ServerLevel level, BlockPos fountain) {
-		// Include the blocks beside the standing box queried by the collision scanner.
+
+	static java.util.List<ChunkPos> requiredChunks(BlockPos fountain) {
+		// Include blocks beside the standing box queried by the collision scanner.
 		int margin = RADIUS + 1;
+		var chunks = new java.util.ArrayList<ChunkPos>(4);
 		for (int cx = (fountain.getX() - margin) >> 4; cx <= (fountain.getX() + margin) >> 4; cx++) {
 			for (int cz = (fountain.getZ() - margin) >> 4; cz <= (fountain.getZ() + margin) >> 4; cz++) {
-				if (level.getChunkSource().getChunkNow(cx, cz) == null) return false;
+				chunks.add(new ChunkPos(cx, cz));
 			}
 		}
-		return true;
+		return chunks;
 	}
 
 	static BlockPos find(ServerLevel level, ServerPlayer player, BlockPos fountain) {

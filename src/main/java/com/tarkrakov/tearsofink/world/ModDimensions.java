@@ -1,13 +1,19 @@
 package com.tarkrakov.tearsofink.world;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.block.ModBlocks;
+import com.tarkrakov.tearsofink.world.ruins.RuinPiece;
+import com.tarkrakov.tearsofink.world.ruins.Ruins;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.TicketType;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
@@ -33,57 +39,145 @@ public final class ModDimensions {
 		return server.getLevel(INK_LANDS);
 	}
 
-	/** Точка прибытия: на полу стартового храма, у его фонтана (одна на мир; road больше не важен). */
+
+	private static final int LEGACY_SEARCH = 26;
+	private static final int LANDING_RADIUS = 5;
+	private static final TicketType<ChunkPos> ARRIVAL_TICKET = TicketType.create(
+			"tears_of_ink_arrival", java.util.Comparator.comparingLong(ChunkPos::toLong), 200);
+	private static final java.util.Map<ServerLevel, BlockPos[]> TEMPLE_SPOT = new java.util.WeakHashMap<>();
+
+	public record Arrival(Vec3 pos, float yaw) {}
+
+	/** Diagnostic commands may request the same arrival synchronously. Gameplay uses readyArrival. */
 	public static Vec3 arrival(ServerLevel lands, int road) {
-		InkLandsLayout layout = InkLandsLayout.of(lands);
-		if (layout != null) {
-			BlockPos spot = templeSpot(lands, layout);
-			if (spot != null) return Vec3.atBottomCenterOf(spot);
-		}
-		double[] p = layout != null ? com.tarkrakov.tearsofink.world.ruins.Ruins.start(layout) : new double[]{0, 0, InkLandsLayout.RADIUS * 0.9, 0};
-		return onGround(lands, (int) Math.floor(p[2]), (int) Math.floor(p[3]));
+		return resolveArrival(lands, true).pos();
 	}
 
-	/** {x, z} места прибытия (стартовый храм) — для заблаговременной прогрузки. */
 	public static double[] arrivalXZ(InkLandsLayout layout) {
-		double[] s = com.tarkrakov.tearsofink.world.ruins.Ruins.start(layout);
+		double[] s = Ruins.start(layout);
 		return new double[]{s[0], s[1]};
 	}
 
-	private static final java.util.Map<ServerLevel, BlockPos[]> TEMPLE_SPOT = new java.util.WeakHashMap<>();
+	public static void preloadArrival(ServerLevel lands) {
+		InkLandsLayout layout = InkLandsLayout.of(lands);
+		if (layout == null) {
+			var pos = new ChunkPos(BlockPos.containing(InkLandsLayout.RADIUS * 0.9, 0, 0));
+			lands.getChunkSource().addRegionTicket(ARRIVAL_TICKET, pos, 0, pos);
+			return;
+		}
+		double[] site = Ruins.start(layout);
+		BlockPos center = BlockPos.containing(site[0], 0, site[1]);
+		var chunk = new ChunkPos(center);
+		// Only old or edited temples need the wider search once the generated start is available.
+		BlockPos fountain = startFountain(lands, center);
+		boolean legacy = chunksReady(lands, center, 0) && (fountain == null
+				|| chunksReady(lands, fountain, 0) && !isFountain(lands, fountain));
+		lands.getChunkSource().addRegionTicket(ARRIVAL_TICKET, chunk, legacy ? 2 : 1, chunk);
+	}
 
-	/** Место у фонтана стартового храма: {где стоять, фонтан}; ищется один раз (храм к этому моменту построен). */
-	private static BlockPos[] templeSpotAndFountain(ServerLevel lands, InkLandsLayout layout) {
-		BlockPos[] cached = TEMPLE_SPOT.get(lands);
-		if (cached != null) return cached;
-		double[] s = com.tarkrakov.tearsofink.world.ruins.Ruins.start(layout);
-		int cx = (int) s[0], cz = (int) s[1];
-		for (int dx = -2; dx <= 2; dx++) for (int dz = -2; dz <= 2; dz++) lands.getChunk((cx >> 4) + dx, (cz >> 4) + dz);
-		int top = lands.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cx, cz);
-		BlockPos.MutableBlockPos m = new BlockPos.MutableBlockPos();
-		BlockPos fountain = null;
-		search:
-		for (int dx = -26; dx <= 26; dx++) {
-			for (int dz = -26; dz <= 26; dz++) {
-				for (int y = top + 30; y >= top - 40; y--) {
-					if (lands.getBlockState(m.set(cx + dx, y, cz + dz)).is(com.tarkrakov.tearsofink.block.ModBlocks.INK_FOUNTAIN)) {
-						fountain = m.immutable();
-						break search;
-					}
+	public static void dropArrivalTickets(ServerLevel lands) {
+		InkLandsLayout layout = InkLandsLayout.of(lands);
+		double[] site = layout == null ? new double[]{InkLandsLayout.RADIUS * 0.9, 0} : Ruins.start(layout);
+		var chunk = new ChunkPos(BlockPos.containing(site[0], 0, site[1]));
+		for (int radius = 0; radius <= 2; radius++) lands.getChunkSource().removeRegionTicket(ARRIVAL_TICKET, chunk, radius, chunk);
+	}
+
+	@Nullable
+	public static Arrival readyArrival(ServerLevel lands) {
+		return resolveArrival(lands, false);
+	}
+
+	@Nullable
+	private static Arrival resolveArrival(ServerLevel lands, boolean load) {
+		InkLandsLayout layout = InkLandsLayout.of(lands);
+		double[] site = layout != null ? Ruins.start(layout) : new double[]{0, 0, InkLandsLayout.RADIUS * 0.9, 0};
+		if (layout != null) {
+			BlockPos center = BlockPos.containing(site[0], 0, site[1]);
+			if (!region(lands, center, 0, load)) return null;
+			BlockPos[] cached = TEMPLE_SPOT.get(lands);
+			if (cached != null && region(lands, cached[1], LANDING_RADIUS, load)
+					&& isFountain(lands, cached[1]) && canStand(lands, cached[0])) {
+				Vec3 to = Vec3.atBottomCenterOf(cached[0]);
+				return new Arrival(to, arrivalYaw(lands, to));
+			}
+			BlockPos fountain = startFountain(lands, center);
+			if (fountain != null && !region(lands, fountain, LANDING_RADIUS, load)) return null;
+			if (!isFountain(lands, fountain)) {
+				if (!region(lands, center, LEGACY_SEARCH, load)) return null;
+				fountain = findLegacyFountain(lands, center);
+				if (fountain != null && !region(lands, fountain, LANDING_RADIUS, load)) return null;
+			}
+			BlockPos feet = fountain == null ? null : standByFountain(lands, fountain);
+			if (feet != null) {
+				TEMPLE_SPOT.put(lands, new BlockPos[]{feet, fountain});
+				Vec3 to = Vec3.atBottomCenterOf(feet);
+				return new Arrival(to, arrivalYaw(lands, to));
+			}
+			TEMPLE_SPOT.remove(lands);
+		}
+		BlockPos ground = BlockPos.containing(site[2], 0, site[3]);
+		if (!region(lands, ground, 0, load)) return null;
+		int y = lands.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, ground.getX(), ground.getZ());
+		Vec3 to = Vec3.atBottomCenterOf(ground.atY(y));
+		return new Arrival(to, faceInward(to));
+	}
+
+	private static boolean region(ServerLevel level, BlockPos center, int radius, boolean load) {
+		if (!load) return chunksReady(level, center, radius);
+		for (int x = (center.getX() - radius) >> 4; x <= (center.getX() + radius) >> 4; x++) {
+			for (int z = (center.getZ() - radius) >> 4; z <= (center.getZ() + radius) >> 4; z++) level.getChunk(x, z);
+		}
+		return true;
+	}
+
+	public static boolean chunksReady(ServerLevel level, BlockPos center, int radius) {
+		for (int x = (center.getX() - radius) >> 4; x <= (center.getX() + radius) >> 4; x++) {
+			for (int z = (center.getZ() - radius) >> 4; z <= (center.getZ() + radius) >> 4; z++) {
+				if (level.getChunkSource().getChunkNow(x, z) == null) return false;
+			}
+		}
+		return true;
+	}
+
+	@Nullable
+	private static BlockPos startFountain(ServerLevel level, BlockPos center) {
+		var chunk = level.getChunkSource().getChunkNow(center.getX() >> 4, center.getZ() >> 4);
+		if (chunk == null) return null;
+		var temple = level.registryAccess().registryOrThrow(Registries.STRUCTURE).get(TearsOfInk.id("ruin_temple"));
+		var start = temple == null ? null : chunk.getStartForStructure(temple);
+		if (start != null && start.isValid()) {
+			for (var piece : start.getPieces()) {
+				if (piece instanceof RuinPiece ruin) {
+					BlockPos fountain = ruin.startFountain();
+					if (fountain != null) return fountain;
 				}
 			}
 		}
-		if (fountain == null) return null;
-		for (int dist = 2; dist <= 4; dist++) {
-			for (net.minecraft.core.Direction d : net.minecraft.core.Direction.Plane.HORIZONTAL) {
-				for (int dy = 0; dy >= -1; dy--) {
-					BlockPos at = fountain.relative(d, dist).above(dy);
-					if (lands.getBlockState(at).getCollisionShape(lands, at).isEmpty()
-							&& lands.getBlockState(at.above()).getCollisionShape(lands, at.above()).isEmpty()
-							&& lands.getBlockState(at.below()).isFaceSturdy(lands, at.below(), net.minecraft.core.Direction.UP)) {
-						BlockPos[] found = {at, fountain};
-						TEMPLE_SPOT.put(lands, found);
-						return found;
+		return null;
+	}
+
+	private static boolean isFountain(ServerLevel level, @Nullable BlockPos fountain) {
+		return fountain != null && level.getBlockState(fountain).is(ModBlocks.INK_FOUNTAIN);
+	}
+
+	/** Compatibility with temples built before structure starts were saved or edited by players. */
+	@Nullable
+	private static BlockPos findLegacyFountain(ServerLevel level, BlockPos center) {
+		int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, center.getX(), center.getZ());
+		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+		for (int x = center.getX() - LEGACY_SEARCH; x <= center.getX() + LEGACY_SEARCH; x++) {
+			for (int z = center.getZ() - LEGACY_SEARCH; z <= center.getZ() + LEGACY_SEARCH; z++) {
+				var chunk = level.getChunkSource().getChunkNow(x >> 4, z >> 4);
+				int minY = Math.max(level.getMinBuildHeight(), top - 40);
+				for (int y = Math.min(level.getMaxBuildHeight() - 1, top + 30); y >= minY;) {
+					var section = chunk.getSection(chunk.getSectionIndex(y));
+					int bottom = Math.max(minY, (y >> 4) << 4);
+					if (!section.maybeHas(state -> state.is(ModBlocks.INK_FOUNTAIN))) {
+						y = bottom - 1;
+						continue;
+					}
+					for (; y >= bottom; y--) {
+						if (chunk.getBlockState(pos.set(x, y, z)).is(ModBlocks.INK_FOUNTAIN)) return pos.immutable();
 					}
 				}
 			}
@@ -91,23 +185,36 @@ public final class ModDimensions {
 		return null;
 	}
 
-	private static BlockPos templeSpot(ServerLevel lands, InkLandsLayout layout) {
-		BlockPos[] f = templeSpotAndFountain(lands, layout);
-		return f == null ? null : f[0];
+	@Nullable
+	private static BlockPos standByFountain(ServerLevel lands, BlockPos fountain) {
+		for (int dist = 2; dist <= 4; dist++) {
+			for (Direction d : Direction.Plane.HORIZONTAL) {
+				for (int dy = 0; dy >= -1; dy--) {
+					BlockPos at = fountain.relative(d, dist).above(dy);
+					if (canStand(lands, at)) return at;
+				}
+			}
+		}
+		return null;
 	}
 
-	/** Поворот у места прибытия — лицом к фонтану стартового храма; в остальных местах — спиной к краю. */
+	private static boolean canStand(ServerLevel lands, BlockPos feet) {
+		BlockPos head = feet.above(), floor = feet.below();
+		var body = lands.getBlockState(feet);
+		var above = lands.getBlockState(head);
+		var support = lands.getBlockState(floor);
+		return lands.getWorldBorder().isWithinBounds(feet) && body.getFluidState().isEmpty() && above.getFluidState().isEmpty()
+				&& body.getCollisionShape(lands, feet).isEmpty() && above.getCollisionShape(lands, head).isEmpty()
+				&& support.isFaceSturdy(lands, floor, Direction.UP);
+	}
+
 	public static float arrivalYaw(ServerLevel lands, Vec3 at) {
-		InkLandsLayout layout = InkLandsLayout.of(lands);
-		if (layout != null) {
-			BlockPos[] f = TEMPLE_SPOT.get(lands);
-			if (f != null && at.distanceToSqr(Vec3.atBottomCenterOf(f[0])) < 4) {
-				return (float) Math.toDegrees(Math.atan2(-(f[1].getX() + 0.5 - at.x), f[1].getZ() + 0.5 - at.z));
-			}
+		BlockPos[] cached = TEMPLE_SPOT.get(lands);
+		if (cached != null && at.distanceToSqr(Vec3.atBottomCenterOf(cached[0])) < 4) {
+			return (float) Math.toDegrees(Math.atan2(-(cached[1].getX() + 0.5 - at.x), cached[1].getZ() + 0.5 - at.z));
 		}
 		return faceInward(at);
 	}
-
 	/** Поворот спиной к ближайшему краю (перпендикулярно от него) — чтобы новичок не шёл сразу в стену тумана. */
 	public static float faceInward(Vec3 at) {
 		double s = 6;

@@ -94,9 +94,7 @@ public final class ModCommands {
 						}))
 						.then(Commands.literal("enter").executes(ctx -> {
 							ServerPlayer p = ctx.getSource().getPlayerOrException();
-							var lands = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());
-							var at = com.tarkrakov.tearsofink.world.ModDimensions.arrival(lands, p.getRandom().nextInt(InkLandsLayout.ROADS));
-							p.teleportTo(lands, at.x, at.y, at.z, com.tarkrakov.tearsofink.world.ModDimensions.arrivalYaw(lands, at), 0f);
+							com.tarkrakov.tearsofink.travel.Travel.enterTemple(p);
 							return 1;
 						}))
 						.then(Commands.literal("leave").executes(ctx -> {

@@ -75,6 +75,13 @@ public class RuinPiece extends TemplateStructurePiece {
 		return center.offset(-size.getX() / 2, 0, -size.getZ() / 2);
 	}
 
+	/** Uses the same rotation, pivot and origin as placement, including pieces read from old chunks. */
+	public BlockPos startFountain() {
+		if (!start) return null;
+		var fountains = template.filterBlocks(templatePosition, placeSettings, ModBlocks.INK_FOUNTAIN);
+		return fountains.size() == 1 ? fountains.getFirst().pos() : null;
+	}
+
 	@Override
 	protected void addAdditionalSaveData(StructurePieceSerializationContext context, CompoundTag tag) {
 		super.addAdditionalSaveData(context, tag);

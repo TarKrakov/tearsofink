@@ -47,7 +47,6 @@ public final class FountainTravel {
 	private static final int PVP_TICKS = 100;
 	private static final int LOAD_TIMEOUT_TICKS = 200;
 	private static final int MENU_TICKS = 600;
-	private static final int TICKET_RADIUS = 1;
 	private static final TicketType<UUID> TICKET = TicketType.create(
 			"tears-of-ink:fountain_travel", UUID::compareTo, LOAD_TIMEOUT_TICKS + 20);
 
@@ -86,7 +85,7 @@ public final class FountainTravel {
 		final ItemStack mirror;
 		final int slot;
 		final int start;
-		final ChunkPos chunk;
+		final List<ChunkPos> chunks;
 		Phase phase;
 		int timeout;
 
@@ -98,7 +97,7 @@ public final class FountainTravel {
 			this.mirror = player.getItemInHand(hand);
 			this.slot = player.getInventory().selected;
 			this.start = player.server.getTickCount();
-			this.chunk = new ChunkPos(destination);
+			this.chunks = FountainLanding.requiredChunks(destination);
 			this.phase = source == null ? Phase.HOLDING : Phase.PREPARING;
 		}
 	}
@@ -280,7 +279,8 @@ public final class FountainTravel {
 			}
 			case LOADING -> {
 				if (now >= transfer.timeout) cancel(player, "timeout");
-				else if (FountainLanding.ready(transfer.level, transfer.destination)) arrive(player, transfer);
+				else if (transfer.chunks.stream().allMatch(chunk ->
+						transfer.level.getChunkSource().getChunkNow(chunk.x, chunk.z) != null)) arrive(player, transfer);
 			}
 		}
 	}
@@ -325,7 +325,9 @@ public final class FountainTravel {
 	private static void requestChunk(ServerPlayer player, Transfer transfer, int now) {
 		transfer.phase = Phase.LOADING;
 		transfer.timeout = now + LOAD_TIMEOUT_TICKS;
-		transfer.level.getChunkSource().addRegionTicket(TICKET, transfer.chunk, TICKET_RADIUS, player.getUUID());
+		for (ChunkPos chunk : transfer.chunks) {
+			transfer.level.getChunkSource().addRegionTicket(TICKET, chunk, 0, player.getUUID());
+		}
 		tell(player, "loading");
 	}
 
@@ -382,7 +384,9 @@ public final class FountainTravel {
 		Transfer transfer = TRANSFERS.remove(player);
 		if (transfer == null) return;
 		if (transfer.phase == Phase.LOADING) {
-			transfer.level.getChunkSource().removeRegionTicket(TICKET, transfer.chunk, TICKET_RADIUS, player.getUUID());
+			for (ChunkPos chunk : transfer.chunks) {
+				transfer.level.getChunkSource().removeRegionTicket(TICKET, chunk, 0, player.getUUID());
+			}
 		}
 		if (transfer.phase == Phase.HOLDING && player.isUsingItem() && player.getUsedItemHand() == transfer.hand
 				&& player.getUseItem() == transfer.mirror) player.stopUsingItem();

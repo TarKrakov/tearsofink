@@ -585,9 +585,9 @@ public final class Hunt {
 	/** Настоящая земля: сверху вниз, мимо крон и веток (на дереве цель недосягаема). */
 	@Nullable
 	static BlockPos ground(ServerLevel level, int x, int z) {
-		BlockPos col = new BlockPos(x, 0, z);
-		if (!level.hasChunkAt(col)) return null;
-		int top = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+		var chunk = level.getChunkSource().getChunkNow(x >> 4, z >> 4);
+		if (chunk == null) return null;
+		int top = chunk.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x & 15, z & 15) + 1;
 		for (int y = top; y > top - 48 && y > level.getMinBuildHeight(); y--) {
 			BlockPos at = new BlockPos(x, y, z);
 			var below = level.getBlockState(at.below());

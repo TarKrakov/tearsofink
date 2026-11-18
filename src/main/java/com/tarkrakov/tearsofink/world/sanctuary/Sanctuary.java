@@ -13,6 +13,7 @@ import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.OwnableEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -71,8 +72,9 @@ public final class Sanctuary {
 		if (layout == null) return false;
 		for (int[] p : Ruins.templePoints(layout)) {
 			if (Math.abs(e.getX() - (p[0] + 0.5)) <= RADIUS && Math.abs(e.getZ() - (p[1] + 0.5)) <= RADIUS) {
-				if (!level.hasChunk(p[0] >> 4, p[1] >> 4)) return true;
-				int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, p[0], p[1]);
+				var chunk = level.getChunkSource().getChunkNow(p[0] >> 4, p[1] >> 4);
+				if (chunk == null) return true;
+				int ground = height(chunk, p[0], p[1]);
 				return e.getY() >= ground - DOWN && e.getY() <= ground + UP;
 			}
 		}
@@ -92,8 +94,11 @@ public final class Sanctuary {
 	}
 
 	private static void tickTemple(ServerLevel level, int cx, int cz, boolean push) {
-		if (!level.hasChunk(cx >> 4, cz >> 4)) return;
-		int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, cx, cz);
+		// The holder can exist before FULL is ready. A height lookup through the level
+		// would then run a synchronous chunk request inside the server tick.
+		var chunk = level.getChunkSource().getChunkNow(cx >> 4, cz >> 4);
+		if (chunk == null) return;
+		int ground = height(chunk, cx, cz);
 		double x0 = cx + 0.5 - RADIUS, x1 = cx + 0.5 + RADIUS, z0 = cz + 0.5 - RADIUS, z1 = cz + 0.5 + RADIUS;
 		AABB zone = new AABB(x0, ground - DOWN, z0, x1, ground + UP, z1);
 
@@ -108,12 +113,12 @@ public final class Sanctuary {
 			LivingEntity target = mob.getTarget();
 			if (target != null && zone.contains(target.position())) mob.setTarget(null);
 			if (!zone.contains(mob.position())) continue;
-			pushOut(level, mob, cx + 0.5, cz + 0.5, ground);
+			pushOut(level, mob, cx + 0.5, cz + 0.5);
 		}
 	}
 
 	/** Выталкивает к ближайшему краю: у края — толчком, глубоко внутри — переносом за границу. */
-	private static void pushOut(ServerLevel level, Mob mob, double cx, double cz, int ground) {
+	private static void pushOut(ServerLevel level, Mob mob, double cx, double cz) {
 		double dx = mob.getX() - cx, dz = mob.getZ() - cz;
 		double depth;
 		Vec3 dir;
@@ -137,7 +142,11 @@ public final class Sanctuary {
 			mob.discard();
 			return;
 		}
-		int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, at.getX(), at.getZ());
-		mob.teleportTo(tx, y, tz);
+		var chunk = level.getChunkSource().getChunkNow(at.getX() >> 4, at.getZ() >> 4);
+		if (chunk != null) mob.teleportTo(tx, height(chunk, at.getX(), at.getZ()), tz);
+	}
+
+	private static int height(LevelChunk chunk, int x, int z) {
+		return chunk.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x & 15, z & 15) + 1;
 	}
 }

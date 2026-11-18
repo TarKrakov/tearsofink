@@ -7,8 +7,10 @@ import com.tarkrakov.tearsofink.particle.ModParticles;
 import com.tarkrakov.tearsofink.travel.Guide;
 import com.tarkrakov.tearsofink.travel.LandsTravel;
 import com.tarkrakov.tearsofink.travel.Travel;
-import com.tarkrakov.tearsofink.world.InkLandsLayout;
 import com.tarkrakov.tearsofink.world.ModDimensions;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -26,6 +28,10 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Пролог: письмо при первом входе → распечатать → подписать контракт (окно) → зеркальце ведёт в Преддверие →
@@ -58,21 +64,11 @@ public final class Prologue {
 	/** Сколько длится переход сквозь ворота (тики). */
 	public static final int TRANSIT_TICKS = 60;
 	private static final net.minecraft.resources.ResourceLocation FREEZE = TearsOfInk.id("gate_freeze");
-	/** Кто сейчас проходит ворота: игрок → тиков осталось. */
-	private static final java.util.Map<java.util.UUID, Integer> TRANSIT = new java.util.HashMap<>();
-	/** Куда игрок попадёт из Преддверия (выбрано заранее, чтобы место успело прогрузиться). */
-	private static final java.util.Map<java.util.UUID, Integer> ARRIVAL_ROAD = new java.util.HashMap<>();
-	private static final net.minecraft.server.level.TicketType<net.minecraft.world.level.ChunkPos> ARRIVAL_TICKET =
-			net.minecraft.server.level.TicketType.create("tears_of_ink_arrival", java.util.Comparator.comparingLong(net.minecraft.world.level.ChunkPos::toLong), 20 * 180);
 
-	private static final java.util.Set<net.minecraft.world.level.ChunkPos> TICKETS = java.util.concurrent.ConcurrentHashMap.newKeySet();
-
-	/** Снять наши «держи прогруженным» при выключении сервера. */
-	public static void dropTickets(net.minecraft.server.MinecraftServer server) {
-		ServerLevel lands = ModDimensions.lands(server);
-		if (lands != null) for (var cp : TICKETS) lands.getChunkSource().removeRegionTicket(ARRIVAL_TICKET, cp, 6, cp);
-		TICKETS.clear();
-	}
+	private static final int LOAD_TIMEOUT_TICKS = 1200;
+	private record GateWait(int animationEnds, int deadline) {}
+	private static final Map<ServerPlayer, GateWait> TRANSIT = new HashMap<>();
+	private static final Map<ServerPlayer, Integer> ENTERING = new HashMap<>();
 
 	private Prologue() {}
 
@@ -92,21 +88,58 @@ public final class Prologue {
 			}
 		});
 
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> clearTransit(handler.player));
+		ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, from, to) -> clearTransit(player));
+		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+			if (entity instanceof ServerPlayer player) clearTransit(player);
+		});
+		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+			for (ServerPlayer player : List.copyOf(TRANSIT.keySet())) clearTransit(player);
+			ENTERING.clear();
+		});
+		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			int now = server.getTickCount();
+			if (now % 4 != 0 || ENTERING.isEmpty()) return;
+			var level = Vestibule.level(server);
+			for (ServerPlayer p : List.copyOf(ENTERING.keySet())) {
+				if (level == null || p.isRemoved() || !p.isAlive() || p.hasDisconnected()) {
+					ENTERING.remove(p);
+				} else if (now >= ENTERING.get(p)) {
+					ENTERING.remove(p);
+					p.displayClientMessage(Component.translatable("message.tears-of-ink.destination_timeout"), true);
+				} else if (tryEnterVestibule(p, level)) {
+					ENTERING.remove(p);
+				}
+			}
+		});
+
 		// ворота Преддверия
 		ServerTickEvents.END_WORLD_TICK.register(level -> {
 			if (!Vestibule.is(level) || level.getGameTime() % 4 != 0) return;
 			Vestibule v = Vestibule.get(level);
 			for (ServerPlayer p : java.util.List.copyOf(level.players())) { // копия: игрок уходит в другое измерение прямо в цикле
-				if (p.isSpectator()) continue;
-				Integer left = TRANSIT.get(p.getUUID());
-				if (left != null) {
-					left -= 4;
-					if (left <= 0) {
-						TRANSIT.remove(p.getUUID());
-						unfreeze(p);
-						passGate(p);
-					} else {
-						TRANSIT.put(p.getUUID(), left);
+				if (!p.isAlive() || p.isSpectator()) {
+					clearTransit(p);
+					continue;
+				}
+				GateWait wait = TRANSIT.get(p);
+				if (wait != null) {
+					int now = p.server.getTickCount();
+					ServerLevel lands = ModDimensions.lands(p.server);
+					if (lands == null || now >= wait.deadline()) {
+						clearTransit(p);
+						BlockPos a = v.arrival();
+						p.teleportTo(a.getX() + 0.5, a.getY(), a.getZ() + 0.5);
+						p.displayClientMessage(Component.translatable("message.tears-of-ink.destination_timeout"), true);
+					} else if (now >= wait.animationEnds()) {
+						var arrival = ModDimensions.readyArrival(lands);
+						if (arrival != null) {
+							clearTransit(p);
+							passGate(p, lands, arrival);
+						} else if ((now - wait.animationEnds()) % 20 < 4) {
+							ModDimensions.preloadArrival(lands);
+							p.displayClientMessage(Component.translatable("message.tears-of-ink.destination_loading"), true);
+						}
 					}
 				} else if (p.getBoundingBox().intersects(v.gate().inflate(0.2))) {
 					if (com.tarkrakov.tearsofink.vow.Vows.mayPass(p)) {
@@ -130,7 +163,8 @@ public final class Prologue {
 	}
 
 	private static void startTransit(ServerPlayer p) {
-		TRANSIT.put(p.getUUID(), TRANSIT_TICKS);
+		int now = p.server.getTickCount();
+		TRANSIT.put(p, new GateWait(now + TRANSIT_TICKS, now + LOAD_TIMEOUT_TICKS));
 		preloadArrival(p);
 		var speed = p.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED);
 		var jump = p.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.JUMP_STRENGTH);
@@ -151,17 +185,15 @@ public final class Prologue {
 		if (jump != null) jump.removeModifier(FREEZE);
 	}
 
-	/** Заранее загрузить место прибытия на краю Бледнолесья (в фоне), чтобы переход не подвисал. */
+
+	private static void clearTransit(ServerPlayer p) {
+		if (TRANSIT.remove(p) != null) unfreeze(p);
+		ENTERING.remove(p);
+	}
+
 	private static void preloadArrival(ServerPlayer p) {
 		ServerLevel lands = ModDimensions.lands(p.server);
-		if (lands == null) return;
-		int road = ARRIVAL_ROAD.computeIfAbsent(p.getUUID(), k -> p.getRandom().nextInt(InkLandsLayout.ROADS));
-		InkLandsLayout layout = InkLandsLayout.of(lands);
-		if (layout == null) return;
-		double[] a = ModDimensions.arrivalXZ(layout);
-		var cp = new net.minecraft.world.level.ChunkPos(BlockPos.containing(a[0], 0, a[1]));
-		lands.getChunkSource().addRegionTicket(ARRIVAL_TICKET, cp, 6, cp); // с запасом: чтобы и вид вокруг успел сгенерироваться
-		TICKETS.add(cp);
+		if (lands != null) ModDimensions.preloadArrival(lands);
 	}
 
 	private static void sign(ServerPlayer p) {
@@ -174,6 +206,7 @@ public final class Prologue {
 		inv.getItem(slot).shrink(1);
 		if (!inv.contains(new ItemStack(ModItems.DIM_MIRROR))) PrologueItems.give(p, ModItems.DIM_MIRROR);
 		Travel.set(p, t.withStage(LandsTravel.STAGE_SIGNED));
+		preloadArrival(p);
 		// письмо вылетает и сгорает
 		ServerLevel level = p.serverLevel();
 		Vec3 at = p.getEyePosition().add(p.getLookAngle().scale(0.9));
@@ -187,9 +220,17 @@ public final class Prologue {
 	/** Первый взгляд в зеркальце после подписи — в Преддверие. */
 	public static void enterVestibule(ServerPlayer p) {
 		ServerLevel level = Vestibule.level(p.server);
-		if (level == null) return;
+		if (level == null || ENTERING.containsKey(p)) return;
+		preloadArrival(p);
+		if (!tryEnterVestibule(p, level)) {
+			ENTERING.put(p, p.server.getTickCount() + LOAD_TIMEOUT_TICKS);
+			p.displayClientMessage(Component.translatable("message.tears-of-ink.destination_loading"), true);
+		}
+	}
+
+	private static boolean tryEnterVestibule(ServerPlayer p, ServerLevel level) {
 		Vestibule v = Vestibule.get(level);
-		v.ensurePlaced(level);
+		if (!v.prepare(level)) return false;
 		ensureGuide(level, v);
 		preloadArrival(p);
 		BlockPos a = v.arrival();
@@ -197,11 +238,11 @@ public final class Prologue {
 		float yaw = (float) (Math.atan2(g.getZ() - a.getZ(), g.getX() - a.getX()) * 180 / Math.PI) - 90f;
 		p.teleportTo(level, a.getX() + 0.5, a.getY(), a.getZ() + 0.5, yaw, 0f);
 		level.playSound(null, a, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1f, 0.5f);
+		return true;
 	}
 
 	private static void ensureGuide(ServerLevel level, Vestibule v) {
 		BlockPos g = v.guidePos();
-		level.getChunk(g.getX() >> 4, g.getZ() >> 4);
 		if (!level.getEntitiesOfClass(GuideEntity.class, new net.minecraft.world.phys.AABB(g).inflate(32)).isEmpty()) return;
 		GuideEntity guide = ModMobs.GUIDE.create(level);
 		if (guide == null) return;
@@ -209,15 +250,12 @@ public final class Prologue {
 		level.addFreshEntity(guide);
 	}
 
-	private static void passGate(ServerPlayer p) {
+
+	private static void passGate(ServerPlayer p, ServerLevel lands, ModDimensions.Arrival arrival) {
 		LandsTravel t = Travel.get(p);
 		if (t.stage() < LandsTravel.STAGE_ENTERED) Travel.set(p, t.withStage(LandsTravel.STAGE_ENTERED));
-		ServerLevel lands = ModDimensions.lands(p.server);
-		if (lands == null) return;
-		Integer road = ARRIVAL_ROAD.remove(p.getUUID());
-		Vec3 to = ModDimensions.arrival(lands, road != null ? road : p.getRandom().nextInt(InkLandsLayout.ROADS));
-		p.teleportTo(lands, to.x, to.y, to.z, ModDimensions.arrivalYaw(lands, to), 0f);
+		Vec3 to = arrival.pos();
+		p.teleportTo(lands, to.x, to.y, to.z, arrival.yaw(), 0f);
 		lands.playSound(null, BlockPos.containing(to), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1f, 0.6f);
 	}
-
 }

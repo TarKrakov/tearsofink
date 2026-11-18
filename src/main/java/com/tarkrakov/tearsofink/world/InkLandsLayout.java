@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.world;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.Mth;
@@ -664,18 +665,16 @@ public final class InkLandsLayout {
 
 	/**
 	 * Высота полотна дороги в этом месте.
-	 * @param surface высота поверхности (с водой) (x, z) → y
-	 * @param floor высота дна/твёрдой земли (x, z) → y
-	 * @param seaLevel уровень моря
+	 * @param terrain исходные высоты генератора
 	 */
-	public double roadHeight(int road, double d, IntBinaryOperator surface, IntBinaryOperator floor, int seaLevel) {
+	public double roadHeight(int road, double d, RoadTerrain terrain) {
 		double[][] profiles = roadProfiles;
 		if (profiles == null) {
 			synchronized (this) {
 				profiles = roadProfiles;
 				if (profiles == null) {
 					boolean[][] bridges = new boolean[ROADS][];
-					profiles = buildRoadProfiles(surface, floor, bridges);
+					profiles = buildRoadProfiles(terrain, bridges);
 					roadBridges = bridges;
 					roadProfiles = profiles;
 				}
@@ -707,7 +706,9 @@ public final class InkLandsLayout {
 		return len < 1.0E-6 ? new double[]{1, 0} : new double[]{dx / len, dz / len};
 	}
 
-	private double[][] buildRoadProfiles(IntBinaryOperator surface, IntBinaryOperator floor, boolean[][] bridgesOut) {
+	private double[][] buildRoadProfiles(RoadTerrain terrain, boolean[][] bridgesOut) {
+		var heights = new it.unimi.dsi.fastutil.longs.Long2IntOpenHashMap();
+		IntBinaryOperator surface = (x, z) -> heights.computeIfAbsent(ChunkPos.asLong(x, z), key -> terrain.surface(x, z));
 		int samples = (int) Math.ceil((RADIUS * ROAD_START_FRACTION - ROAD_END_RADIUS) / ROAD_PROFILE_STEP) + 2;
 		double maxStep = ROAD_MAX_GRADE * ROAD_PROFILE_STEP;
 		double[][] result = new double[ROADS][];
@@ -719,9 +720,10 @@ public final class InkLandsLayout {
 				double a = roadAngle(road, d);
 				int px = center.getX() + (int) Math.round(Math.cos(a) * d);
 				int pz = center.getZ() + (int) Math.round(Math.sin(a) * d);
-				int top = surface.applyAsInt(px, pz);
-				int ground = floor.applyAsInt(px, pz);
-				water[i] = top > ground;
+				RoadTerrain.Sample sample = terrain.sample(px, pz);
+				int top = sample.surface();
+				heights.put(ChunkPos.asLong(px, pz), top);
+				water[i] = sample.water();
 				raw[i] = water[i] ? top + BRIDGE_CLEARANCE : valleyHeight(px, pz, top, surface);
 			}
 			// сглаживание

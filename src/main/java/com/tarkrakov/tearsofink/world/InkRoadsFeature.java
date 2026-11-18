@@ -45,12 +45,9 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 		super(codec);
 	}
 
-	private record Ctx(WorldGenLevel level, InkLandsLayout layout, ChunkGenerator generator, RandomState randomState, int seaLevel) {
+	private record Ctx(WorldGenLevel level, InkLandsLayout layout, RoadTerrain terrain) {
 		double height(int road, double along) {
-			return layout.roadHeight(road, along,
-					(bx, bz) -> generator.getBaseHeight(bx, bz, Heightmap.Types.WORLD_SURFACE_WG, level, randomState) - 1,
-					(bx, bz) -> generator.getBaseHeight(bx, bz, Heightmap.Types.OCEAN_FLOOR_WG, level, randomState) - 1,
-					seaLevel);
+			return layout.roadHeight(road, along, terrain);
 		}
 	}
 
@@ -62,7 +59,7 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 		RandomState randomState = level.getLevel().getChunkSource().randomState();
 		InkLandsLayout layout = access.tearsofink$layout(randomState.sampler());
 		if (layout == null) return false;
-		Ctx ctx = new Ctx(level, layout, generator, randomState, generator.getSeaLevel());
+		Ctx ctx = new Ctx(level, layout, new RoadTerrain(generator, level, randomState));
 
 		BlockPos origin = context.origin();
 		int minX = origin.getX() & ~15, minZ = origin.getZ() & ~15;

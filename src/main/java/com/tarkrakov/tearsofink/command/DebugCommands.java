@@ -204,9 +204,7 @@ public final class DebugCommands {
 			int sl = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, lx, lz) - 1, sr = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, rx, rz) - 1;
 			int gl = level.getHeight(Heightmap.Types.OCEAN_FLOOR, lx, lz) - 1, gr = level.getHeight(Heightmap.Types.OCEAN_FLOOR, rx, rz) - 1;
 			int nl = 0, nr = 0; // база шума — дорого, не считаем
-			double prof = layout.roadHeight(road, d,
-					(bx, bz) -> gen.getBaseHeight(bx, bz, Heightmap.Types.WORLD_SURFACE_WG, level, rs) - 1,
-					(bx, bz) -> gen.getBaseHeight(bx, bz, Heightmap.Types.OCEAN_FLOOR_WG, level, rs) - 1, gen.getSeaLevel());
+			double prof = layout.roadHeight(road, d, new com.tarkrakov.tearsofink.world.RoadTerrain(gen, level, rs));
 			boolean br = layout.roadBridge(road, d);
 			if (y == Integer.MIN_VALUE) { // полотна нет — что в столбце у высоты профиля
 				StringBuilder col = new StringBuilder();
