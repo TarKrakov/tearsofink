@@ -41,15 +41,19 @@ public class DimMirrorItem extends Item {
 			refuse(sp, "mirror_busy");
 			return InteractionResultHolder.fail(stack);
 		}
+		startUse(level, player, hand);
+		return InteractionResultHolder.consume(stack);
+	}
+
+	static void startUse(Level level, Player player, InteractionHand hand) {
 		player.startUsingItem(hand);
 		if (!level.isClientSide) level.playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 0.8f, 0.5f);
-		return InteractionResultHolder.consume(stack);
 	}
 
 	@Override
 	public void onUseTick(Level level, LivingEntity entity, ItemStack stack, int remaining) {
 		if (!(level instanceof ServerLevel server) || !(entity instanceof ServerPlayer sp)) return;
-		if (sp.hurtTime > 0 || sp.isPassenger()) { // ударили / сел верхом — зеркало мутнеет
+		if (!FountainTravel.returning(sp) && (sp.hurtTime > 0 || sp.isPassenger())) { // ударили / сел верхом — зеркало мутнеет
 			sp.stopUsingItem();
 			refuse(sp, "mirror_busy");
 			return;
@@ -64,11 +68,16 @@ public class DimMirrorItem extends Item {
 
 	@Override
 	public ItemStack finishUsingItem(ItemStack stack, Level level, LivingEntity entity) {
-		if (entity instanceof ServerPlayer sp) {
+		if (entity instanceof ServerPlayer sp && !FountainTravel.finishMirror(sp)) {
 			sp.getCooldowns().addCooldown(this, COOLDOWN);
 			Travel.mirrorTravel(sp);
 		}
 		return stack;
+	}
+
+	@Override
+	public void releaseUsing(ItemStack stack, Level level, LivingEntity entity, int remaining) {
+		if (entity instanceof ServerPlayer player) FountainTravel.releaseMirror(player);
 	}
 
 	@Override

@@ -71,6 +71,7 @@ public final class Hunt {
 	private static final ResourceLocation PREY_BOOST = TearsOfInk.id("hunt_prey");
 	/** Цель — не выше и не ниже игрока больше чем на столько блоков. */
 	private static final int HEIGHT_GAP = 12;
+	private static final int FOUNTAIN_BLOCK_RADIUS = 32;
 	private static final String C_LINE = "HunterLine", C_TIER = "HunterTier", C_KIND = "HunterKind", C_DIFF = "Difficulty";
 
 	/** Луч Охоты и затемнение цели у клиентов. on=false — Охоты нет. */
@@ -214,6 +215,14 @@ public final class Hunt {
 	/** Идёт ли мировая Охота. */
 	public static boolean running() {
 		return world() != null;
+	}
+
+	public static boolean blocksFountainTravel(ServerPlayer player) {
+		if (contractOf(player.getUUID()) != null || MadOrders.state(player) == 1) return true;
+		Active hunt = world();
+		if (hunt == null || !hunt.spawned) return false;
+		double dx = player.getX() - hunt.x, dz = player.getZ() - hunt.z;
+		return dx * dx + dz * dz <= FOUNTAIN_BLOCK_RADIUS * FOUNTAIN_BLOCK_RADIUS;
 	}
 
 	/** Контракт игрока, если взят: {секунд осталось, появились ли цели}; иначе null. */

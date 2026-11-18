@@ -89,6 +89,7 @@ public final class Travel {
 	}
 
 	public static void init() {
+		FountainTravel.init();
 		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 			dropTickets(server);
 			com.tarkrakov.tearsofink.prologue.Prologue.dropTickets(server);
@@ -348,7 +349,7 @@ public final class Travel {
 		return Vec3.atBottomCenterOf(pos.above());
 	}
 
-	private static void arriveEffects(ServerPlayer p) {
+	static void arriveEffects(ServerPlayer p) {
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.0f, 0.6f);
 		p.serverLevel().sendParticles(com.tarkrakov.tearsofink.particle.ModParticles.INK_SMOKE, p.getX(), p.getY() + 1, p.getZ(), 20, 0.4, 0.6, 0.4, 0.01);
 	}
