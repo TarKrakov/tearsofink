@@ -29,6 +29,8 @@ jobs:
         run: |
           python3 -m venv /tmp/tearsofink-preview-venv
           /tmp/tearsofink-preview-venv/bin/pip install --quiet numpy pillow
+      - name: verify authored Blockbench import against installed FP clips
+        run: /tmp/tearsofink-preview-venv/bin/python tools/blockbench/check_author_import.py
       - name: validate animation positions via Claude preview
         run: /tmp/tearsofink-preview-venv/bin/python tools/preview/check_pale.py
       - name: validate first-person composition and compiled renderer
