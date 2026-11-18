@@ -846,5 +846,13 @@
   "diary.tears-of-ink.entry.draft_soul_deeds.title": "Deeds and Ranks of Soul",
   "diary.tears-of-ink.entry.draft_soul_deeds.text": "Soul grows stronger not simply with the passage of time. Accomplish Deeds: withstand blows with shields, master perfect blocks, defeat enemies with a shield and use fully charged Resonances. Reaching a milestone increases your maximum Soul. At 115 you become Steadfast, at 130 Luminous, at 150 Unbending. Ranks strengthen shield defense and retaliation. If you sell Soul to the Trader, your rank may fall, but the memory of the Deed remains.",
   "diary.tears-of-ink.entry.draft_ink_ranks.title": "Stages of the Curse",
-  "diary.tears-of-ink.entry.draft_ink_ranks.text": "On the Path of Ink, strength depends on how much Ink your body can hold, not on the number of Soul fragments surrendered. At a maximum of 50 you become Marked: dashing costs less. At 100, Tainted: dashes recover faster and a second jump costs less Ink. At 150, Hollow: truly evading an enemy strike with a dash restores some Ink. Past achievements remain remembered. Take care, traveler."
+  "diary.tears-of-ink.entry.draft_ink_ranks.text": "On the Path of Ink, strength depends on how much Ink your body can hold, not on the number of Soul fragments surrendered. At a maximum of 50 you become Marked: dashing costs less. At 100, Tainted: dashes recover faster and a second jump costs less Ink. At 150, Hollow: truly evading an enemy strike with a dash restores some Ink. Past achievements remain remembered. Take care, traveler.",
+  "diary.tears-of-ink.section.chronicles": "Chronicles",
+  "diary.tears-of-ink.section.world": "World",
+  "diary.tears-of-ink.section.bestiary": "Bestiary",
+  "diary.tears-of-ink.section.craft": "Craft",
+  "diary.tears-of-ink.section.trials": "Trials",
+  "diary.tears-of-ink.section.vows": "Vows",
+  "diary.tears-of-ink.section.empty": "There are no entries here yet. Continue your journey.",
+  "diary.tears-of-ink.section.tooltip": "%s — entries: %s"
 }
