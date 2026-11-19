@@ -1,0 +1,24 @@
+name: D-060 respawn fixture compile
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/tests/d060-respawn/**'
+      - '.github/workflows/d060-respawn-fixture.yml'
+permissions:
+  contents: read
+jobs:
+  compile:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: microsoft
+          java-version: '25'
+      - name: Install isolated diagnostic
+        run: python3 tools/tests/d060-respawn/install.py
+      - name: Compile with the real game API
+        run: bash ./gradlew compileJava --console=plain --no-daemon
