@@ -45,13 +45,19 @@ public class RuinPiece extends TemplateStructurePiece {
 	private final boolean start;
 	/** Стоит в Бледнолесье (решается при выборе места — в postProcess соседние чанки могут быть ещё не готовы). */
 	private final boolean pale;
+	private final boolean bloodTemple;
 
 	public RuinPiece(StructureTemplateManager manager, ResourceLocation template, BlockPos center, Rotation rotation, int tier, boolean start, boolean pale) {
+		this(manager,template,center,rotation,tier,start,pale,false);
+	}
+
+	public RuinPiece(StructureTemplateManager manager, ResourceLocation template, BlockPos center, Rotation rotation, int tier, boolean start, boolean pale,boolean bloodTemple) {
 		super(Ruins.PIECE_TYPE, 0, manager, template, template.toString(), settings(rotation, manager, template), corner(manager, template, center, rotation));
 		this.rotation = rotation;
 		this.tier = tier;
 		this.start = start;
 		this.pale = pale;
+		this.bloodTemple=bloodTemple;
 	}
 
 	public RuinPiece(StructureTemplateManager manager, CompoundTag tag) {
@@ -60,6 +66,7 @@ public class RuinPiece extends TemplateStructurePiece {
 		this.tier = tag.getInt("Tier");
 		this.start = tag.getBoolean("Start");
 		this.pale = tag.getBoolean("Pale");
+		this.bloodTemple=tag.getBoolean("BloodTemple");
 	}
 
 	private static StructurePlaceSettings settings(Rotation rotation, StructureTemplateManager manager, ResourceLocation id) {
@@ -93,6 +100,7 @@ public class RuinPiece extends TemplateStructurePiece {
 		tag.putInt("Tier", tier);
 		tag.putBoolean("Start", start);
 		tag.putBoolean("Pale", pale);
+		if (bloodTemple) tag.putBoolean("BloodTemple",true);
 	}
 
 	@Override
@@ -222,7 +230,8 @@ public class RuinPiece extends TemplateStructurePiece {
 
 	/** Почва под руиной: руины бывают только в Бледнолесье и Чернолесье. */
 	private BlockState soilAt(WorldGenLevel level, BlockPos pos) {
-		Block b = pale ? ModBlocks.ASHEN_SOIL : ModBlocks.TAR_SOIL;
+		Block b = bloodTemple ? (level.getBiome(pos).is(ModBiomes.BLOODWOOD)?ModBlocks.BLOOD_SOIL:ModBlocks.ASHEN_SOIL)
+				: pale ? ModBlocks.ASHEN_SOIL : ModBlocks.TAR_SOIL;
 		return b.defaultBlockState();
 	}
 }

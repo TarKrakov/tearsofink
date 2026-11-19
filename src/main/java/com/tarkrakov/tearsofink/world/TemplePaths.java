@@ -92,7 +92,8 @@ public final class TemplePaths {
 				var state=chunk.getBlockState(pos);
 				if (state.isSolid() && state.getFluidState().isEmpty()
 						&& !state.is(net.minecraft.tags.BlockTags.LOGS) && !state.is(net.minecraft.tags.BlockTags.LEAVES)) break;
-				chunk.setBlockState(pos,(y>=top-1?ModBlocks.ASHEN_SOIL:ModBlocks.ASPHODELITE_ROCK).defaultBlockState(),false);
+				var soil=layout.pick(x,z,null)==ModBiomes.BLOODWOOD?ModBlocks.BLOOD_SOIL:ModBlocks.ASHEN_SOIL;
+				chunk.setBlockState(pos,(y>=top-1?soil:ModBlocks.ASPHODELITE_ROCK).defaultBlockState(),false);
 			}
 		}
 	}

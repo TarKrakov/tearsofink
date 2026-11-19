@@ -16,11 +16,15 @@ on:
       - 'tools/tests/TempleFoundationTest.java'
       - 'tools/tests/TempleExitSearchTest.java'
       - 'src/main/java/com/tarkrakov/tearsofink/world/ruins/RuinPiece.java'
+      - 'src/main/java/com/tarkrakov/tearsofink/world/ruins/RuinStructure.java'
+      - 'src/main/java/com/tarkrakov/tearsofink/world/BloodValleyFeature.java'
+      - 'src/main/resources/data/tears-of-ink/tags/worldgen/biome/has_ruin_temple.json'
 permissions:
   contents: read
 concurrency:
   group: d060-temple-validation
-  cancel-in-progress: true
+  # Keep the active comparison run; the newer revision waits for its slot.
+  cancel-in-progress: false
 jobs:
   grade:
     runs-on: ubuntu-24.04
