@@ -149,17 +149,21 @@ public final class TempleNetwork {
 			boolean[] outer = new boolean[InkLandsLayout.ROADS], inner = new boolean[InkLandsLayout.ROADS];
 			outer[startRoad] = true;
 			for (int road = 0; road < InkLandsLayout.ROADS; road++) {
-				if (road != startRoad) outer[road] = roadside(road, false);
+				if (road != startRoad) {
+					outer[road] = roadside(road, false);
+					if (!outer[road] && layout.templeLayoutVersion() == 2) missing("external", road);
+				}
 			}
 			for (int road = 0; road < InkLandsLayout.ROADS; road++) {
 				inner[road] = roadside(road, true);
+				if (!inner[road] && layout.templeLayoutVersion() == 2) missing("deep", road);
 			}
 			// Layout 2 remains reproducible. Only newly opted-in layout 3 gets the extra pass.
-			for (int road = 0; road < InkLandsLayout.ROADS; road++) {
-				if (!outer[road] && !(layout.templeLayoutVersion() == 3 && roadsideFallback(road, false)))
-					missing("external", road);
-				if (!inner[road] && !(layout.templeLayoutVersion() == 3 && roadsideFallback(road, true)))
-					missing("deep", road);
+			if (layout.templeLayoutVersion() == 3) {
+				for (int road = 0; road < InkLandsLayout.ROADS; road++) {
+					if (!outer[road] && !roadsideFallback(road, false)) missing("external", road);
+					if (!inner[road] && !roadsideFallback(road, true)) missing("deep", road);
+				}
 			}
 			Set<Integer> sectors = new HashSet<>();
 			for (int band = 0; band < FOREST_MIN.length; band++) {
@@ -228,7 +232,7 @@ public final class TempleNetwork {
 		 */
 		private boolean roadsideFallback(int road, boolean deep) {
 			failures.clear();
-			slotColumnLimit = samples.size() + 2400;
+			int budgetStart = samples.size();
 			int low = deep ? 850 : 250, high = deep ? 1350 : 500;
 			List<Integer> places = new ArrayList<>();
 			for (int along = 650; along <= 2150; along += 6) {
@@ -239,26 +243,74 @@ public final class TempleNetwork {
 			RandomSource random = RandomSource.create(layout.seed() ^ (0x7265747279L + 31L * road + (deep ? 337 : 0)));
 			shuffle(places, random);
 			int firstSide = random.nextBoolean() ? 1 : -1;
-			for (int along : places) {
-				layout.roadHeight(road, along, terrain);
-				if (layout.roadBridge(road, along - 3) || layout.roadBridge(road, along + 3)) continue;
-				for (int side : new int[]{firstSide, -firstSide}) {
-					for (int skew : new int[]{-12, 12, 0}) {
-						if (samples.size() >= slotColumnLimit) return reject("fallback column budget");
-						Connection connection = findConnection(road, along, side, skew);
-						if (connection == null) continue;
-						int siteAlong = along + skew;
-						if (!outsideOutposts(siteAlong)) continue;
-						double[] axis = layout.roadPoint(road, siteAlong);
-						double[] dir = layout.roadDirection(road, siteAlong);
-						for (int offset : new int[]{64, 76, 56, 68}) {
-							if (samples.size() >= slotColumnLimit) return reject("fallback column budget");
-							if (roadsideAt(road, siteAlong, axis, dir, side * offset, low, high, connection)) return true;
+			// Reserve half the probe budget for a second, skewed search.
+			for (int pass = 0; pass < 2; pass++) {
+				slotColumnLimit = budgetStart + (pass == 0 ? 1200 : 2400);
+				int[] skews = pass == 0 ? new int[]{0} : new int[]{-12, 12};
+				int[] offsets = pass == 0 ? new int[]{64} : new int[]{76, 68, 56};
+				search:
+				for (int along : places) {
+					layout.roadHeight(road, along, terrain);
+					if (layout.roadBridge(road, along - 3) || layout.roadBridge(road, along + 3)) continue;
+					for (int side : new int[]{firstSide, -firstSide}) {
+						for (int skew : skews) {
+							if (samples.size() >= slotColumnLimit) { reject("fallback column budget"); break search; }
+							Connection connection = terrainConnection(road, along, side, skew);
+							if (connection == null) continue;
+							int siteAlong = along + skew;
+							if (!outsideOutposts(siteAlong)) continue;
+							double[] axis = layout.roadPoint(road, siteAlong);
+							double[] dir = layout.roadDirection(road, siteAlong);
+							for (int offset : offsets) {
+								if (samples.size() >= slotColumnLimit) { reject("fallback column budget"); break search; }
+								if (roadsideAt(road, siteAlong, axis, dir, side * offset, low, high, connection)) return true;
+							}
 						}
 					}
 				}
 			}
 			return false;
+		}
+
+		/** V3 fallback only: check the predicted finished shoulder and cut slope. */
+		private Connection terrainConnection(int road, int along, int side, int skew) {
+			for (int delta = -15; delta <= 15; delta++) {
+				if (layout.roadBridge(road, along + delta)) {
+					reject("bridge in fallback exit");
+					return null;
+				}
+			}
+			double[] axis = layout.roadPoint(road, along), dir = layout.roadDirection(road, along);
+			double nx = -dir[1] * side, nz = dir[0] * side;
+			int tx = (int) Math.round(axis[0] + nx * 34 + dir[0] * skew);
+			int tz = (int) Math.round(axis[1] + nz * 34 + dir[1] * skew);
+			Set<Long> lanterns = new HashSet<>();
+			int k = Math.floorDiv(along, InkLandsLayout.ROAD_LANTERN_SPACING);
+			for (int j = k - 1; j <= k + 2; j++) {
+				int[] post = layout.roadLanternPost(road, j);
+				if (post != null) lanterns.add(ChunkPos.asLong(post[0], post[1]));
+			}
+			for (int order = 0; order < 2; order++) {
+				int x = (int) Math.round(axis[0]), z = (int) Math.round(axis[1]);
+				int lastY = (int) Math.round(layout.roadHeight(road, along, terrain));
+				while (x != tx || z != tz) {
+					int ax = Math.abs(x - tx), az = Math.abs(z - tz);
+					if (ax != 0 && (az == 0 || (order == 0 ? ax >= az : ax > az))) x += Integer.signum(tx - x);
+					else z += Integer.signum(tz - z);
+					if (lanterns.contains(ChunkPos.asLong(x, z)) || !pale(x, z)) break;
+					var hit = layout.roadNear(x, z, InkLandsLayout.ROAD_SHOULDER + InkRoadsFeature.ACCESS_CUT_WIDTH);
+					if (hit != null && ((int) hit[0] != road || !outsideOutposts(hit[1]) || layout.roadBridge(road, hit[1]))) break;
+					var natural = sample(x, z);
+					if (!dry(natural)) break;
+					int y = InkRoadsFeature.plannedAccessSurface(layout, terrain, hit, natural.surface());
+					if (Math.abs(y - lastY) > 1) break;
+					if (!protectedRoad(x, z))
+						return new Connection(new BlockPos(x, y, z), Direction.getNearest(-nx, 0, -nz));
+					lastY = y;
+				}
+			}
+			reject("fallback natural slope or obstacle");
+			return null;
 		}
 
 		private static int lanternPriority(int along) {
@@ -513,11 +565,16 @@ public final class TempleNetwork {
 			List<PathBlock> result = new ArrayList<>();
 			Set<Long> occupied = new HashSet<>();
 			int prior = temple.y();
+			int[] grade = null;
+			if (layout.templeLayoutVersion() == 3) {
+				grade = TempleApproachGrade.solve(prior, naturalEdge, walk.stream().mapToInt(BlockPos::getY).toArray());
+				if (grade == null) return rejectPath("graded path");
+			}
 			for (int i = 0; i < walk.size(); i++) {
 				BlockPos pos = walk.get(i);
 				int remaining = walk.size() - i - 1;
 				int desired = Mth.clamp(pos.getY(), naturalEdge - remaining, naturalEdge + remaining);
-				int target = Mth.clamp(desired, prior - 1, prior + 1);
+				int target = grade == null ? Mth.clamp(desired, prior - 1, prior + 1) : grade[i];
 				if (Math.abs(target - naturalEdge) > remaining || Math.abs(target - pos.getY()) > 3) return rejectPath("graded path");
 				Direction up = target > prior ? Direction.getNearest(pos.getX() - (i == 0 ? temple.x() : walk.get(i - 1).getX()),
 						0, pos.getZ() - (i == 0 ? temple.z() : walk.get(i - 1).getZ())) : null;

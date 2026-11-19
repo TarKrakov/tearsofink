@@ -41,6 +41,23 @@ public class InkRoadsFeature extends Feature<NoneFeatureConfiguration> {
 	/** Перила моста — полоса такой ширины сразу за краем полотна. */
 	private static final double RAIL_BAND = 1.0;
 
+	// Used only by D-060 planning; the road generator itself is unchanged.
+	static final double ACCESS_CUT_WIDTH = CUT_SLOPE_WIDTH;
+
+	/** Predict the dry shoulder/cut surface from the existing road formula. */
+	static int plannedAccessSurface(InkLandsLayout layout, RoadTerrain terrain, double[] hit, int surface) {
+		if (hit == null) return surface;
+		int road = (int) hit[0];
+		int y = (int) Math.round(layout.roadHeight(road, hit[1], terrain));
+		double beyond = hit[2] - (InkLandsLayout.ROAD_HALF_WIDTH + InkLandsLayout.ROAD_SHOULDER);
+		if (beyond <= 0) {
+			if (hit[2] <= InkLandsLayout.ROAD_HALF_WIDTH) return y;
+			return Math.max(y - 1, Math.min(surface, y));
+		}
+		int cap = y + HEADROOM + (int) Math.floor(beyond * CUT_SLOPE);
+		return surface > cap && surface - y > CUT_MIN_DEPTH ? cap : surface;
+	}
+
 	public InkRoadsFeature(Codec<NoneFeatureConfiguration> codec) {
 		super(codec);
 	}
