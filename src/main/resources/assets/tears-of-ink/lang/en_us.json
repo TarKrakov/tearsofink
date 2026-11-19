@@ -966,5 +966,14 @@
   "diary.tears-of-ink.section.trials": "Trials",
   "diary.tears-of-ink.section.vows": "Vows",
   "diary.tears-of-ink.section.empty": "There are no entries here yet. Continue your journey.",
-  "diary.tears-of-ink.section.tooltip": "%s — entries: %s"
+  "diary.tears-of-ink.section.tooltip": "%s — entries: %s",
+  "mixer.tears-of-ink.group.deer": "Deer",
+  "subtitles.tears-of-ink.pale_deer_voice": "Deer calls",
+  "subtitles.tears-of-ink.pale_deer_snort": "Deer snorts",
+  "subtitles.tears-of-ink.pale_deer_step": "Deer steps",
+  "subtitles.tears-of-ink.pale_deer_eat": "Deer grazes",
+  "subtitles.tears-of-ink.pale_deer_alert_snort": "Deer snorts in alarm",
+  "subtitles.tears-of-ink.pale_deer_watch_roar": "Sentry deer bellows",
+  "subtitles.tears-of-ink.pale_deer_roar": "Deer bellows",
+  "subtitles.tears-of-ink.pale_deer_run_step": "Deer gallops"
 }

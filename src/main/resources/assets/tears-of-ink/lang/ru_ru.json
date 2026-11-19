@@ -966,5 +966,14 @@
   "diary.tears-of-ink.section.trials": "Испытания",
   "diary.tears-of-ink.section.vows": "Обеты",
   "diary.tears-of-ink.section.empty": "Здесь пока нет записей. Продолжай путешествие.",
-  "diary.tears-of-ink.section.tooltip": "%s — записей: %s"
+  "diary.tears-of-ink.section.tooltip": "%s — записей: %s",
+  "mixer.tears-of-ink.group.deer": "Олени",
+  "subtitles.tears-of-ink.pale_deer_voice": "Олень подаёт голос",
+  "subtitles.tears-of-ink.pale_deer_snort": "Олень фыркает",
+  "subtitles.tears-of-ink.pale_deer_step": "Олень шагает",
+  "subtitles.tears-of-ink.pale_deer_eat": "Олень жуёт",
+  "subtitles.tears-of-ink.pale_deer_alert_snort": "Олень настороженно фыркает",
+  "subtitles.tears-of-ink.pale_deer_watch_roar": "Дозорный олень ревёт",
+  "subtitles.tears-of-ink.pale_deer_roar": "Олень отвечает рёвом",
+  "subtitles.tears-of-ink.pale_deer_run_step": "Олень скачет"
 }

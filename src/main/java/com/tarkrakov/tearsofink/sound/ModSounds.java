@@ -112,6 +112,17 @@ public final class ModSounds {
 
 	public static final SoundEvent SOUL_SHIELD_SWING = register("soul_shield_swing");
 
+
+	/** D-076 — independent deer palette, fixed delivery range. */
+	public static final SoundEvent PALE_DEER_VOICE = Registry.register(BuiltInRegistries.SOUND_EVENT, TearsOfInk.id("pale_deer_voice"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("pale_deer_voice"), 32.0f));
+	public static final SoundEvent PALE_DEER_SNORT = Registry.register(BuiltInRegistries.SOUND_EVENT, TearsOfInk.id("pale_deer_snort"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("pale_deer_snort"), 20.0f));
+	public static final SoundEvent PALE_DEER_STEP = Registry.register(BuiltInRegistries.SOUND_EVENT, TearsOfInk.id("pale_deer_step"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("pale_deer_step"), 18.0f));
+	public static final SoundEvent PALE_DEER_EAT = Registry.register(BuiltInRegistries.SOUND_EVENT, TearsOfInk.id("pale_deer_eat"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("pale_deer_eat"), 10.0f));
+	public static final SoundEvent PALE_DEER_ALERT_SNORT = Registry.register(BuiltInRegistries.SOUND_EVENT, TearsOfInk.id("pale_deer_alert_snort"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("pale_deer_alert_snort"), 24.0f));
+	public static final SoundEvent PALE_DEER_WATCH_ROAR = Registry.register(BuiltInRegistries.SOUND_EVENT, TearsOfInk.id("pale_deer_watch_roar"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("pale_deer_watch_roar"), 50.0f));
+	public static final SoundEvent PALE_DEER_ROAR = Registry.register(BuiltInRegistries.SOUND_EVENT, TearsOfInk.id("pale_deer_roar"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("pale_deer_roar"), 38.0f));
+	public static final SoundEvent PALE_DEER_RUN_STEP = Registry.register(BuiltInRegistries.SOUND_EVENT, TearsOfInk.id("pale_deer_run_step"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("pale_deer_run_step"), 38.0f));
+
 	private ModSounds() {}
 
 	private static SoundEvent register(String name) {

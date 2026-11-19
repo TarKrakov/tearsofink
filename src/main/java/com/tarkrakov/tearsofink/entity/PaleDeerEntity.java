@@ -18,6 +18,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -39,6 +40,7 @@ public final class PaleDeerEntity extends PathfinderMob {
     private BlockPos personalTarget, routeGoal;
     private int lastGuard = -1, lastGuardHeading = Integer.MIN_VALUE, guardAttempts;
     private final Map<UUID, Vec3> samples = new HashMap<>();
+    private final PaleDeerAudio deerAudio=new PaleDeerAudio();
 
     public PaleDeerEntity(EntityType<? extends PathfinderMob> type, Level level) { super(type, level); }
     public static AttributeSupplier.Builder createAttributes() {
@@ -48,6 +50,8 @@ public final class PaleDeerEntity extends PathfinderMob {
     }
     @Override protected void registerGoals() { goalSelector.addGoal(0, new FloatGoal(this)); }
     @Override public boolean removeWhenFarAway(double distance) { return false; }
+    // Own hoof contacts replace generic block step sounds, not other entity sounds.
+    @Override protected void playStepSound(BlockPos pos,BlockState state) {}
     @Override protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(PHASE, 0L); builder.define(PREVIOUS, 0L);
@@ -141,6 +145,7 @@ public final class PaleDeerEntity extends PathfinderMob {
         if (!LoadedFaunaTerrain.canTick(server,this)) { getNavigation().stop(); setDeltaMovement(Vec3.ZERO); return; }
         boolean active=activeNearPlayer(server);
         if (!active || (!getNavigation().isDone() && !pathArea(server))) stopRoute();
+        double oldX=getX(), oldZ=getZ();
         super.tick();
         if (!active || !isAlive() || isNoAi()) return;
         if (restoredPhase!=null) {
@@ -152,6 +157,11 @@ public final class PaleDeerEntity extends PathfinderMob {
         PaleDeerHerd data=PaleDeerHerd.of(server);
         PaleDeerHerd.Group g=group(server);
         data.tick(server,g,this);
+        tickBehavior(server,data,g);
+        double dx=getX()-oldX,dz=getZ()-oldZ;
+        deerAudio.tick(this,g.members.size(),suspect!=null&&suspicion>0,dx*dx+dz*dz);
+    }
+    private void tickBehavior(ServerLevel server,PaleDeerHerd data,PaleDeerHerd.Group g) {
         int guard=g.guards.indexOf(getUUID());
         if (g.mode==PaleDeerHerd.Mode.PANIC) {
             panic(server,g);

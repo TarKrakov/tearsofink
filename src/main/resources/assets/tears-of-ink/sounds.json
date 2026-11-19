@@ -349,5 +349,141 @@
       }
     ],
     "subtitle": "subtitles.tears-of-ink.diary_quill_write"
+  },
+  "pale_deer_voice": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_deer_voice_01",
+        "attenuation_distance": 30
+      },
+      {
+        "name": "tears-of-ink:pale_deer_voice_02",
+        "attenuation_distance": 30
+      },
+      {
+        "name": "tears-of-ink:pale_deer_voice_03",
+        "attenuation_distance": 30
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_deer_voice"
+  },
+  "pale_deer_snort": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_deer_snort_01",
+        "attenuation_distance": 18
+      },
+      {
+        "name": "tears-of-ink:pale_deer_snort_02",
+        "attenuation_distance": 18
+      },
+      {
+        "name": "tears-of-ink:pale_deer_snort_03",
+        "attenuation_distance": 18
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_deer_snort"
+  },
+  "pale_deer_step": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_deer_step_01",
+        "attenuation_distance": 16
+      },
+      {
+        "name": "tears-of-ink:pale_deer_step_02",
+        "attenuation_distance": 16
+      },
+      {
+        "name": "tears-of-ink:pale_deer_step_03",
+        "attenuation_distance": 16
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_deer_step"
+  },
+  "pale_deer_eat": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_deer_eat_01",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:pale_deer_eat_02",
+        "attenuation_distance": 8
+      },
+      {
+        "name": "tears-of-ink:pale_deer_eat_03",
+        "attenuation_distance": 8
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_deer_eat"
+  },
+  "pale_deer_alert_snort": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_deer_alert_snort_01",
+        "attenuation_distance": 22
+      },
+      {
+        "name": "tears-of-ink:pale_deer_alert_snort_02",
+        "attenuation_distance": 22
+      },
+      {
+        "name": "tears-of-ink:pale_deer_alert_snort_03",
+        "attenuation_distance": 22
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_deer_alert_snort"
+  },
+  "pale_deer_watch_roar": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_deer_watch_roar_01",
+        "attenuation_distance": 48
+      },
+      {
+        "name": "tears-of-ink:pale_deer_watch_roar_02",
+        "attenuation_distance": 48
+      },
+      {
+        "name": "tears-of-ink:pale_deer_watch_roar_03",
+        "attenuation_distance": 48
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_deer_watch_roar"
+  },
+  "pale_deer_roar": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_deer_roar_01",
+        "attenuation_distance": 36
+      },
+      {
+        "name": "tears-of-ink:pale_deer_roar_02",
+        "attenuation_distance": 36
+      },
+      {
+        "name": "tears-of-ink:pale_deer_roar_03",
+        "attenuation_distance": 36
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_deer_roar"
+  },
+  "pale_deer_run_step": {
+    "sounds": [
+      {
+        "name": "tears-of-ink:pale_deer_run_step_01",
+        "attenuation_distance": 36
+      },
+      {
+        "name": "tears-of-ink:pale_deer_run_step_02",
+        "attenuation_distance": 36
+      },
+      {
+        "name": "tears-of-ink:pale_deer_run_step_03",
+        "attenuation_distance": 36
+      }
+    ],
+    "subtitle": "subtitles.tears-of-ink.pale_deer_run_step"
   }
 }

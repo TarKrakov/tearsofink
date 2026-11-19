@@ -35,7 +35,7 @@ public final class AudioMixer {
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("tearsofink-audio.json");
 
     public enum Group {
-        FOREST, MUSIC, OWLS, CATERPILLARS, DIARY;
+        FOREST, MUSIC, OWLS, CATERPILLARS, DIARY, DEER;
         public String key() { return name().toLowerCase(Locale.ROOT); }
         public Component label() { return Component.translatable("mixer.tears-of-ink.group." + key()); }
     }
@@ -64,6 +64,14 @@ public final class AudioMixer {
         new Entry(TearsOfInk.id("caterpillar_pale_crawl"), Group.CATERPILLARS, SoundSource.NEUTRAL, 0.3500f, "subtitles.tears-of-ink.caterpillar_pale_crawl"),
         new Entry(TearsOfInk.id("pale_owl_hoot"), Group.OWLS, SoundSource.NEUTRAL, 0.2400f, "subtitles.tears-of-ink.pale_owl_hoot"),
         new Entry(TearsOfInk.id("pale_owl_wing"), Group.OWLS, SoundSource.NEUTRAL, 0.3000f, "subtitles.tears-of-ink.pale_owl_wing"),
+        new Entry(TearsOfInk.id("pale_deer_voice"), Group.DEER, SoundSource.NEUTRAL, 0.5400f, "subtitles.tears-of-ink.pale_deer_voice"),
+        new Entry(TearsOfInk.id("pale_deer_snort"), Group.DEER, SoundSource.NEUTRAL, 0.4200f, "subtitles.tears-of-ink.pale_deer_snort"),
+        new Entry(TearsOfInk.id("pale_deer_step"), Group.DEER, SoundSource.NEUTRAL, 0.3600f, "subtitles.tears-of-ink.pale_deer_step"),
+        new Entry(TearsOfInk.id("pale_deer_eat"), Group.DEER, SoundSource.NEUTRAL, 0.2800f, "subtitles.tears-of-ink.pale_deer_eat"),
+        new Entry(TearsOfInk.id("pale_deer_alert_snort"), Group.DEER, SoundSource.NEUTRAL, 0.5400f, "subtitles.tears-of-ink.pale_deer_alert_snort"),
+        new Entry(TearsOfInk.id("pale_deer_watch_roar"), Group.DEER, SoundSource.NEUTRAL, 0.8200f, "subtitles.tears-of-ink.pale_deer_watch_roar"),
+        new Entry(TearsOfInk.id("pale_deer_roar"), Group.DEER, SoundSource.NEUTRAL, 0.6200f, "subtitles.tears-of-ink.pale_deer_roar"),
+        new Entry(TearsOfInk.id("pale_deer_run_step"), Group.DEER, SoundSource.NEUTRAL, 0.4800f, "subtitles.tears-of-ink.pale_deer_run_step"),
         new Entry(TearsOfInk.id("diary_page_turn"), Group.DIARY, SoundSource.PLAYERS, 0.5000f, "subtitles.tears-of-ink.diary_page_turn"),
         new Entry(TearsOfInk.id("diary_quill_write"), Group.DIARY, SoundSource.PLAYERS, 0.5000f, "subtitles.tears-of-ink.diary_quill_write")
     );
