@@ -86,7 +86,14 @@ public final class D060PhysicalProbe {
                 boolean valid = fountain!=null && level.getBlockState(fountain).is(ModBlocks.INK_FOUNTAIN)
                     && fountains.add(fountain);
                 site.addProperty("built",valid);
-                if (fountain!=null) site.addProperty("fountain",fountain.toShortString());
+                boolean bloodwood=layout.pick(center[0],center[1],null)==ModBiomes.BLOODWOOD;
+                site.addProperty("bloodwood",bloodwood);
+                if (fountain!=null) {
+                    site.addProperty("fountain",fountain.toShortString());
+                    site.addProperty("fountain_bloodwood",level.getBiome(fountain).is(ModBiomes.BLOODWOOD));
+                }
+                if (layout.templeLayoutVersion()==3 && bloodwood && !valid)
+                    failures.add("Missing physical bloodwood temple "+center[0]+","+center[1]);
                 if (valid) built++; else failures.add("Missing or duplicate physical fountain "+center[0]+","+center[1]);
                 if (Ruins.isStartTemple(layout,center[0],center[1]) && valid) {
                     out.addProperty("starter_fountain",fountain.toShortString());

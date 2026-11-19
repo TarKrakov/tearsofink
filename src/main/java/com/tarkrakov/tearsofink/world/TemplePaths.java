@@ -101,7 +101,7 @@ public final class TemplePaths {
 			// Repair every non-supporting cell down to that bed, preserving
 			// existing sound blocks, then meet actual solid ground.
 			int bed=Math.max(chunk.getMinBuildHeight(),Math.min(top,terrain.floor(x,z)));
-			var soil=ModBlocks.ASHEN_SOIL;
+			var soil=layout.pick(x,z,null)==ModBiomes.BLOODWOOD?ModBlocks.BLOOD_SOIL:ModBlocks.ASHEN_SOIL;
 			for (int y=top;y>=chunk.getMinBuildHeight();y--) {
 				var pos=new BlockPos(x,y,z);
 				var state=chunk.getBlockState(pos);

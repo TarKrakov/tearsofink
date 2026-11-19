@@ -270,7 +270,7 @@ public final class InkLandsLayout {
 		return templeLayoutVersion == 2 || templeLayoutVersion == 3;
 	}
 
-	int templeLayoutVersion() { return templeLayoutVersion; }
+	public int templeLayoutVersion() { return templeLayoutVersion; }
 
 	/** Attached to the canonical world layout before generation starts. */
 	void attachTemplePlanFile(java.nio.file.Path file) {
