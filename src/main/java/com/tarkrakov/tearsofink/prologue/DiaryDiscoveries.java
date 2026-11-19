@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.prologue;
 
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.entity.PaleOwlEntity;
+import com.tarkrakov.tearsofink.entity.PaleDeerEntity;
 import com.tarkrakov.tearsofink.entity.PaleStriderEntity;
 import com.tarkrakov.tearsofink.hunt.HarvestKeeperEntity;
 import com.tarkrakov.tearsofink.hunt.HunterEntity;
@@ -20,10 +21,10 @@ import java.util.List;
 /** Temporary author-replaceable pages. Discovery stays server-side and in the existing diary attachment. */
 final class DiaryDiscoveries {
 	private static final List<String> OBSERVATIONS = List.of(
-			"draft_pale_owl", "draft_pale_strider", "draft_soul_bargain", "draft_harvest",
+			"draft_pale_owl", "draft_pale_deer", "draft_pale_strider", "draft_soul_bargain", "draft_harvest",
 			"draft_hunt_field", "draft_hunter_spire", "draft_hunter_blood", "draft_hunter_ink", "draft_mad_order");
 	private static final List<String> ITEMS = List.of("draft_asphoda", "draft_blood_metal",
-			"draft_ink_metal", "draft_armor", "draft_alchemy", "draft_mad_order", "draft_harvest", "draft_blood_collector");
+			"draft_ink_metal", "draft_weaponcraft", "draft_armor", "draft_alchemy", "draft_mad_order", "draft_harvest", "draft_blood_collector");
 
 	private DiaryDiscoveries() {}
 
@@ -67,6 +68,8 @@ final class DiaryDiscoveries {
 				if (s.is(ModItems.RAW_BLOOD_METAL) || s.is(ModItems.BLOOD_INGOT)) add(known, found, "draft_blood_metal");
 				if (s.is(ModItems.RAW_INK_METAL) || s.is(ModItems.INK_INGOT)) add(known, found, "draft_ink_metal");
 				if (s.getItem() instanceof OrdinaryArmorItem) add(known, found, "draft_armor");
+				if (s.getItem() instanceof com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem)
+					add(known, found, "draft_weaponcraft");
 				if (s.is(ModBlocks.ALCHEMY_TABLE.asItem()) || s.is(ModItems.TEARBLOOM_BREW)
 						|| s.is(ModItems.STRONG_TEARBLOOM_BREW)) add(known, found, "draft_alchemy");
 				if (s.is(ModItems.HOPE_ESSENCE)) add(known, found, "draft_mad_order");
@@ -78,7 +81,7 @@ final class DiaryDiscoveries {
 		// Bounded query of nearby loaded entities, once per existing guidance interval.
 		if (OBSERVATIONS.stream().anyMatch(id -> missing(known, found, id))) {
 			for (LivingEntity e : level.getEntitiesOfClass(LivingEntity.class, p.getBoundingBox().inflate(16),
-					mob -> mob.isAlive() && (mob instanceof PaleOwlEntity || mob instanceof PaleStriderEntity
+					mob -> mob.isAlive() && (mob instanceof PaleOwlEntity || mob instanceof PaleDeerEntity || mob instanceof PaleStriderEntity || mob instanceof HarvestKeeperEntity
 							|| mob instanceof HunterEntity || mob instanceof SoulTraderEntity))) {
 				if (p.distanceToSqr(e) <= 256.0 && p.hasLineOfSight(e)) observe(e, known, found);
 			}
@@ -88,6 +91,7 @@ final class DiaryDiscoveries {
 	/** Also catches a creature killed before the next observation tick. */
 	static void observe(LivingEntity e, List<String> known, List<String> found) {
 		if (e instanceof PaleOwlEntity) add(known, found, "draft_pale_owl");
+		else if (e instanceof PaleDeerEntity) add(known, found, "draft_pale_deer");
 		else if (e instanceof PaleStriderEntity) add(known, found, "draft_pale_strider");
 		else if (e instanceof HarvestKeeperEntity) add(known, found, "draft_harvest");
 		else if (e instanceof SoulTraderEntity) add(known, found, "draft_soul_bargain");
