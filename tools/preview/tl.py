@@ -19,7 +19,7 @@ def hand_pose(arch, model, grip, c, t, m, tune, continuing=False, animations=Non
     fx = dict(c.get('third', {}))  # correction belongs to the original clip, not its F5 source
     src = fx.get('source')
     if src or fx.get('wrist_source'):
-        library=animations if animations is not None else json.load(open(f'{REPO}/weapon_anims/{arch}.json'))['animations']
+        library=animations if animations is not None else load(arch)[0]['animations']
         if fx.get('wrist_source'): fx['_wrist_clip']=library[fx['wrist_source']]
         if src: c=library[src]  # третье лицо — по другому движению
     if tune.get('centre'): fx['_keep_face'] = True

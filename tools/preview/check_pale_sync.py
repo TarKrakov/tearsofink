@@ -1,9 +1,9 @@
-"""Actual timeline checks for paired steps 3/4, including captured interruption blends."""
+"""Historical donor timeline; active author clips are checked by check_final_pale.js."""
 from pathlib import Path
 from tl import *
 a,model,fp,tp,grip=load('pale_linear_greatsword');hilt,tip=axis(model,fp,grip)
 combo=json.load(open(COMBO+'/pale_linear_greatsword.json'))
-steps=[(s.get('anim')or None,s.get('off_anim')or None,s['duration']/20)for s in combo['dual_steps']]
+steps=[('axe_dual_chop',None,.4),(None,'axe_dual_chop_off',.4),('axe_dual_slam','axe_dual_slam_off',.4),('axe_dual_slam_repeat','axe_dual_slam_repeat_off',.4),('axe_dual_slam_final','axe_dual_slam_final_off',.9)]
 S=np.diag([-1.,1.,1.]);maxima=np.zeros(3);samples={}
 def inspect(at,first,carried):
     if not .8<=at<1.6:return
@@ -30,7 +30,7 @@ for impact in(1.,1.4):
             ratio=abs(normal@velocity)/np.linalg.norm(velocity);edge_max[view]=max(edge_max[view],ratio)
             assert ratio<.12,('paired slam hits broadside',impact,sign,view,ratio)
             if view==1: assert abs(normal[1])<.06,('F5 blade face points at the ground',impact,sign,normal)
-print('PASS: actual steps 3/4 at120Hz: mirrored FP grip/tip %.8f blocks; F5 axis %.8f; authored grip difference %.5f blocks'%tuple(maxima))
+print('PASS: historical donor steps 3/4 at120Hz: mirrored FP grip/tip %.8f blocks; F5 axis %.8f; authored grip difference %.5f blocks'%tuple(maxima))
 print('PASS: edge-first downward impacts in both hands; normal/velocity FP %.4f / F5 %.4f'%tuple(edge_max))
 # The extra edge turn must not move the existing grip, tip or carrying arm.
 reference=json.load(open(Path(__file__).parent/'references/pale_pair_slam_before_edge.json'))

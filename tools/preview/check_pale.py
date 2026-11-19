@@ -23,14 +23,12 @@ for group in('dual_steps',):
    assert actual.get(field)==expected.get(field),(group,field,actual)
   # Speed is an editable balance value, changed by the author's subsequent audit.
   assert np.isfinite(actual['speed'])and actual['speed']>0
-  for field in('anim','off_anim'):
-   wanted=('axe_'+expected[field])if expected.get(field)else expected.get(field)
-   if group=='dual_steps' and index==3 and wanted:wanted+='_repeat'
-   if field=='off_anim' and wanted:wanted+='_off'
+  for field in ('anim','off_anim'):
+   wanted='bb_author_dual_attack'+str([1,2,2,2,3][index])+('_off' if field=='off_anim' else '')
    assert actual.get(field)==wanted,(group,field)
 assert [s['anim'] for s in c['steps']]==['bb_author_attack1','bb_author_attack2','bb_author_attack3']
 assert [(s['duration'],s['hit']) for s in c['steps']]==[(19,13),(20,13),(32,10)]
-print('PASS: 3 authored solo / 5 unchanged paired steps; donor raw samples and F5 sources preserved; author timing; historical Display retained')
+print('PASS: 3 authored solo / 5 paired steps with 3 author motion clips and unchanged hit timing; donor raw samples and F5 sources preserved; author timing; historical Display retained')
 active={st[field]for group in('steps','dual_steps')for st in c[group]for field in('anim','off_anim')if st.get(field)}
 active.update(n+s for n in('dual_charge','dual_rush','dual_parry','dual_repel','dual_leap','dual_slam')for s in('','_off'))
 vertices=model_points(m)/16;count=0

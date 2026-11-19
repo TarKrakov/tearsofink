@@ -102,8 +102,8 @@ const lib=gameLibrary([gameBase,gameAuthor,gameCombo]),req=defaultGameRequests(l
 const beforeImport=JSON.stringify(template),beforeLib=JSON.stringify(lib);
 const imported=importGame(template,lib,req,30);
 assert.equal(imported.length,8);assert.equal(JSON.stringify(template),beforeImport);assert.equal(JSON.stringify(lib),beforeLib);
-assert.equal(imported[0].name,'game_bb_author_attack1');assert.equal(imported[3].name,'game_axe_dual_chop');
-assert(imported[4].animators[gByName('FP_left_sword').uuid]);assert(!imported[4].animators[gByName('FP_right_sword').uuid]);
+assert.equal(imported[0].name,'game_bb_author_attack1');assert.equal(imported[3].name,'game_bb_author_dual_attack1');
+assert(imported[4].animators[gByName('FP_left_sword').uuid]);assert(imported[4].animators[gByName('FP_right_sword').uuid]);
 assert(imported[5].animators[gByName('F5_right_sword').uuid]);assert(imported[5].animators[gByName('F5_left_sword').uuid]);
 for(const a of imported)for(const track of Object.values(a.animators))for(const k of track.keyframes){assert(k.time>=0&&k.time<=a.length+1e-7);assert(vec(k).every(Number.isFinite));}
 assert.notEqual(JSON.stringify(imported[0].animators[gByName('F5_right_arm').uuid]),JSON.stringify(planF5(template,{...imported[0],animators:Object.fromEntries(Object.entries(imported[0].animators).filter(([id])=>!f5Ids.has(id)))},true).animators[gByName('F5_right_arm').uuid]));
