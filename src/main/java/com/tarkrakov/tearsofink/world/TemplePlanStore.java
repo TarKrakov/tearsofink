@@ -29,19 +29,37 @@ final class TemplePlanStore {
 
     private TemplePlanStore() {}
 
-    static TempleNetwork loadOrCreate(Path file, InkLandsLayout layout, TempleNetwork.Inputs inputs) {
+    /** Returns null only for a genuinely absent file. Never replaces a damaged file. */
+    static TempleNetwork restoreIfPresent(Path file, InkLandsLayout layout, TempleNetwork.Inputs inputs) {
         try {
-            if (!Files.notExists(file)) {
-                TempleNetwork plan = read(file, layout, inputs);
-                TearsOfInk.LOGGER.info("D-060: restored {} temple sites from {}", plan.temples().size(), file);
-                return plan;
-            }
-            TempleNetwork plan = TempleNetwork.plan(layout, inputs);
-            write(file, layout, inputs, plan);
+            if (Files.notExists(file)) return null;
+            long start = System.nanoTime();
+            TempleNetwork plan = read(file, layout, inputs);
+            TearsOfInk.LOGGER.info("D-060: restored {} temple sites from {} in {} ms",
+                    plan.temples().size(), file, (System.nanoTime() - start) / 1_000_000);
             return plan;
         } catch (IOException | RuntimeException e) {
-            // Never silently generate different structures after a damaged or foreign plan.
-            throw new IllegalStateException("Cannot safely load/save temple network " + file, e);
+            throw new IllegalStateException("Cannot safely restore temple network " + file, e);
+        }
+    }
+
+    static TempleNetwork loadOrCreate(Path file, InkLandsLayout layout, TempleNetwork.Inputs inputs) {
+        TempleNetwork restored = restoreIfPresent(file, layout, inputs);
+        if (restored != null) return restored;
+        long start = System.nanoTime();
+        try {
+            TempleNetwork plan = TempleNetwork.plan(layout, inputs);
+            long computed = System.nanoTime();
+            write(file, layout, inputs, plan);
+            TearsOfInk.LOGGER.info("D-060: planned {} temple sites in {} ms; validated and saved in {} ms",
+                    plan.temples().size(), (computed - start) / 1_000_000,
+                    (System.nanoTime() - computed) / 1_000_000);
+            if (plan.temples().size() != 13)
+                TearsOfInk.LOGGER.warn("D-060 experimental layout is incomplete: {}/13; not accepted for default use",
+                        plan.temples().size());
+            return plan;
+        } catch (IOException | RuntimeException e) {
+            throw new IllegalStateException("Cannot safely create temple network " + file, e);
         }
     }
 
@@ -142,6 +160,9 @@ final class TemplePlanStore {
         try {
             Files.write(tmp, bytes.toByteArray());
             try (var channel = FileChannel.open(tmp, StandardOpenOption.WRITE)) { channel.force(true); }
+            // Validate the actual serialized bytes with the same checks as a restart,
+            // before any plan is published or an authoritative file is installed.
+            read(tmp, layout, inputs);
             Files.move(tmp, file, StandardCopyOption.ATOMIC_MOVE);
         } finally {
             Files.deleteIfExists(tmp);

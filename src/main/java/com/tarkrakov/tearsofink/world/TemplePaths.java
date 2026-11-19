@@ -29,6 +29,8 @@ public final class TemplePaths {
 				if (layout != null && layout.hasTempleNetwork()) {
 					layout.attachTemplePlanFile(server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT)
 							.resolve("data").resolve("tearsofink_temple_network_v" + layout.templeLayoutVersion() + ".bin"));
+					// A saved plan is small; restore once here, not during the first arrival.
+					layout.restoreTempleNetworkIfPresent(inputs(level));
 				}
 			}
 		});
@@ -37,9 +39,16 @@ public final class TemplePaths {
 			if (level == null) return;
 			var layout = InkLandsLayout.of(level);
 			if (layout == null || !layout.hasTempleNetwork()) return;
-			// Warm the pure plan also on restarts that only load already generated chunks.
+			if (layout.templeNetwork() != null) return;
+			// First launch or one-time migration of an existing experimental world.
 			var inputs = inputs(level);
-			Util.backgroundExecutor().execute(() -> layout.prepareTempleNetwork(inputs));
+			Util.backgroundExecutor().execute(() -> {
+				try {
+					layout.prepareTempleNetwork(inputs);
+				} catch (RuntimeException failure) {
+					com.tarkrakov.tearsofink.TearsOfInk.LOGGER.error("D-060 experimental temple plan failed", failure);
+				}
+			});
 		});
 	}
 

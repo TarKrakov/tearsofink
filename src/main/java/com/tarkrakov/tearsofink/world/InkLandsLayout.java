@@ -114,6 +114,8 @@ public final class InkLandsLayout {
 	private final int templeLayoutVersion;
 	private final Object templePlanLock = new Object();
 	private java.nio.file.Path templePlanFile;
+	// A failed frozen-plan read/write is not a reason to retry costly planning on every chunk.
+	private RuntimeException templePlanFailure;
 	private volatile TempleNetwork templeNetwork;
 	private final BlockPos center;
 	private final long seed;
@@ -281,6 +283,20 @@ public final class InkLandsLayout {
 		}
 	}
 
+	/** Restore only an existing plan before world generation/gameplay starts. */
+	void restoreTempleNetworkIfPresent(TempleNetwork.Inputs inputs) {
+		synchronized (templePlanLock) {
+			if (templePlanFailure != null) throw templePlanFailure;
+			if (templeNetwork != null || templePlanFile == null) return;
+			try {
+				templeNetwork = TemplePlanStore.restoreIfPresent(templePlanFile, this, inputs);
+			} catch (RuntimeException failure) {
+				templePlanFailure = failure;
+				throw failure;
+			}
+		}
+	}
+
 	public TempleNetwork templeNetwork() {
 		return templeNetwork;
 	}
@@ -298,11 +314,16 @@ public final class InkLandsLayout {
 			synchronized (templePlanLock) {
 				plan = templeNetwork;
 				if (plan == null) {
-					// Diagnostic planning without a world path is still pure. Runtime V2/V3
-					// binds storage in ServerWorldEvents.LOAD, before chunk generation.
-					plan = templePlanFile == null ? TempleNetwork.plan(this, inputs)
-							: TemplePlanStore.loadOrCreate(templePlanFile, this, inputs);
-					templeNetwork = plan;
+					if (templePlanFailure != null) throw templePlanFailure;
+					// Diagnostic planning without a world path remains pure.
+					try {
+						plan = templePlanFile == null ? TempleNetwork.plan(this, inputs)
+								: TemplePlanStore.loadOrCreate(templePlanFile, this, inputs);
+						templeNetwork = plan;
+					} catch (RuntimeException failure) {
+						if (templePlanFile != null) templePlanFailure = failure;
+						throw failure;
+					}
 				}
 			}
 		}

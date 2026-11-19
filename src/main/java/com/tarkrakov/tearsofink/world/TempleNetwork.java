@@ -143,6 +143,8 @@ public final class TempleNetwork {
 			temples.add(new Temple((int) start[0], 0, (int) start[1], startRoad, 0, Rotation.NONE, true));
 			var size = inputs.templates().getOrCreate(Ruins.TEMPLE).getSize();
 			if (size.getX() != TEMPLATE_WIDTH || size.getZ() != TEMPLATE_LENGTH) {
+				if (layout.templeLayoutVersion() == 3)
+					throw new IllegalStateException("Unexpected temple template dimensions: " + size);
 				TearsOfInk.LOGGER.error("D-060 seed {}: unexpected temple template dimensions {}", inputs.seed(), size);
 				return new TempleNetwork(temples, paths);
 			}
