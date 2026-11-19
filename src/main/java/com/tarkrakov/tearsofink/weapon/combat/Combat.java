@@ -287,6 +287,12 @@ public final class Combat {
 	/** Движение приёма у всех, без урона. mainAnim / offAnim — null, если эта рука не двигается. */
 	public static void play(ServerPlayer p, Archetype a, @org.jetbrains.annotations.Nullable String mainAnim,
 							@org.jetbrains.annotations.Nullable String offAnim, int ticks) {
+		play(p, a, mainAnim, offAnim, ticks, 1f);
+	}
+
+	/** Explicit playback tempo; ticks are the already scaled server duration. */
+	public static void play(ServerPlayer p, Archetype a, @org.jetbrains.annotations.Nullable String mainAnim,
+							@org.jetbrains.annotations.Nullable String offAnim, int ticks, float tempo) {
 		State s = state(p);
 		long now = p.serverLevel().getGameTime();
 		s.busyUntil = now + ticks;
@@ -299,8 +305,8 @@ public final class Combat {
 			s.extra.clear();
 			s.firstHit.clear();
 		}
-		if (mainAnim != null) broadcast(p, a, mainAnim, ticks, -1f, 1f);
-		if (offAnim != null) broadcast(p, a, "off:" + offAnim, ticks, -1f, 1f);
+		if (mainAnim != null) broadcast(p, a, mainAnim, ticks, -1f, tempo);
+		if (offAnim != null) broadcast(p, a, "off:" + offAnim, ticks, -1f, tempo);
 	}
 
 	/** Движение парного приёма у всех, без урона (урон даёт сам приём). */

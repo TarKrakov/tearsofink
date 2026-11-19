@@ -1,6 +1,6 @@
 {
-  "_comment": "Авторские связки; 20 тиков = 1 с.",
-  "tempo": 1,
+  "_comment": "Авторские связки: исходные тики 20/с; solo tempo 2, dual tempo 5/3. Серверные hit/duration и заполнение шкалы масштабируются вместе с FP/F5.",
+  "tempo": 1.6666666666666667,
   "min_strength": 0.84,
   "reset_ticks": 24,
   "early_ticks": 6,
@@ -72,5 +72,6 @@
     }
   ],
   "ability_anim": "bb_author_r_ability",
-  "ability_ticks": 25
+  "ability_ticks": 25,
+  "single_tempo": 2
 }

@@ -101,8 +101,8 @@ public final class PaleLongswordMoves {
         Gear.wear(p,stack,Gear.WEAR_ABILITY);
         Awakening.abilityUsed(p);
     }
-    private static void playPair(ServerPlayer p, String name, int ticks) {
-        Combat.play(p,ARCH,name,name+"_off",ticks);
+    private static void playPair(ServerPlayer p, String name, int ticks, float tempo) {
+        Combat.play(p,ARCH,name,name+"_off",ticks,tempo);
     }
     public static boolean useR(ServerPlayer p, boolean left) {
         if (!available(p) || PaleGreatswordMoves.locked(p) || Combat.hitPending(p)) return false;
@@ -124,8 +124,8 @@ public final class PaleLongswordMoves {
         long ready = time+Math.round(tune.cooldown()*Awakening.cooldownMult(sword));
         if (pair) s.dualReady = ready; else s.singleReady = ready;
         String name = pair ? "bb_author_dual_r_ability" : "bb_author_r_ability";
-        if (pair) playPair(p,name,tune.duration());
-        else Combat.play(p,ARCH,left?null:name,left?name:null,tune.duration());
+        if (pair) playPair(p,name,tune.duration(),tune.tempo());
+        else Combat.play(p,ARCH,left?null:name,left?name:null,tune.duration(),tune.tempo());
         wear(p,sword);
         p.serverLevel().playSound(null,p.blockPosition(),SoundEvents.PLAYER_ATTACK_SWEEP,SoundSource.PLAYERS,.8f,.75f);
         return true;
@@ -142,7 +142,7 @@ public final class PaleLongswordMoves {
         capture(p,s); s.left = false; s.paired = true; s.phase = Phase.GUARD;
         s.until = time+PaleLongswordTuning.BLOCK_START;
         s.guardReady = time+Math.round(PaleLongswordTuning.BLOCK_COOLDOWN*Awakening.cooldownMult(s.main));
-        playPair(p,"bb_author_dual_block_start",PaleLongswordTuning.BLOCK_START);
+        playPair(p,"bb_author_dual_block_start",PaleLongswordTuning.BLOCK_START,PaleLongswordTuning.BLOCK_TRANSITION_TEMPO);
         wear(p,s.main);
         return true;
     }
@@ -150,7 +150,7 @@ public final class PaleLongswordMoves {
         State s = STATES.get(p.getUUID());
         if (s == null || s.phase != Phase.GUARD) return;
         s.phase = Phase.IDLE;
-        if (available(p) && valid(p,s)) playPair(p,"bb_author_dual_block_end",PaleLongswordTuning.BLOCK_END);
+        if (available(p) && valid(p,s)) playPair(p,"bb_author_dual_block_end",PaleLongswordTuning.BLOCK_END,PaleLongswordTuning.BLOCK_TRANSITION_TEMPO);
     }
     private static boolean holding(ServerPlayer p, State s) {
         return p.isUsingItem() && p.getUseItem() == s.main;
@@ -225,7 +225,7 @@ public final class PaleLongswordMoves {
                     if (time>=s.until) s.phase=Phase.IDLE;
                 } else if (!holding(p,s)) releaseGuard(p);
                 else if (time>=s.until) {
-                    playPair(p,"bb_author_dual_block_loop",PaleLongswordTuning.BLOCK_LOOP);
+                    playPair(p,"bb_author_dual_block_loop",PaleLongswordTuning.BLOCK_LOOP,1f);
                     s.until=time+PaleLongswordTuning.BLOCK_LOOP;
                 }
             }
