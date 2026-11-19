@@ -12,7 +12,7 @@ import threading
 import time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[3]
 RUN = ROOT / "run-server"
 OUT = ROOT / "out/d060"
 DIM = ROOT / "src/main/resources/data/tears-of-ink/dimension/ink_lands.json"

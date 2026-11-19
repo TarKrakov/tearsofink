@@ -10,7 +10,7 @@ permissions:
   contents: read
 concurrency:
   group: d060-temple-validation
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   grade:
     runs-on: ubuntu-24.04
