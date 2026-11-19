@@ -242,7 +242,8 @@ public class DiaryScreen extends Screen {
 
 	private void addEntry(String id, boolean open) {
 		// Do not reveal names of undiscovered creatures or story topics.
-		Component title = open || DiaryEntries.CATERPILLAR_PAGES.contains(id)
+		Component title = open || (DiaryEntries.CATERPILLAR_PAGES.contains(id)
+				&& builtFrom.stream().anyMatch(DiaryEntries.CATERPILLAR_PAGES::contains))
 				? Component.translatable("diary.tears-of-ink.entry." + id + ".title")
 				: Component.literal("???");
 		Component text = open ? Component.translatable("diary.tears-of-ink.entry." + id + ".text")
