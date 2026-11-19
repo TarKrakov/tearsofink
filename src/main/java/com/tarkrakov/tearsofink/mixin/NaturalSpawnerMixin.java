@@ -36,6 +36,13 @@ public abstract class NaturalSpawnerMixin {
 			cir.setReturnValue(false);return;
 		}
 		if (!"minecraft".equals(BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).getNamespace())) return;
+		// D-090: natural vanilla enemies are absent throughout peaceful Bloodwood.
+		// This does not cancel caterpillars, custom neutral fauna, or explicit Harvest event spawns.
+		if(com.tarkrakov.tearsofink.world.ModDimensions.isLands(level)
+				&& (level.getBiome(mob.blockPosition()).is(com.tarkrakov.tearsofink.world.ModBiomes.BLOODWOOD)
+				||com.tarkrakov.tearsofink.world.herald.BloodSettlements.contains(level,mob.blockPosition()))){
+			cir.setReturnValue(false);return;
+		}
 		if (!(level.getChunkSource().getGenerator().getBiomeSource() instanceof InkLandsAccess access)) return;
 		InkLandsLayout layout = access.tearsofink$layout(level.getChunkSource().randomState().sampler());
 		if (layout != null && layout.nearHerald(mob.getBlockX(), mob.getBlockZ(), BloodHerald.NO_MONSTER_RADIUS)) {

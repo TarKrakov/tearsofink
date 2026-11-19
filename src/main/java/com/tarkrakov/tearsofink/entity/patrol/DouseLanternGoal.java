@@ -84,7 +84,7 @@ public class DouseLanternGoal extends Goal {
 		BlockPos[] best = {null};
 		double[] bestD = {Double.MAX_VALUE};
 		Lanterns.forEachLit(mob.level(), mob.getX(), mob.getZ(), SquadTuning.DOUSE_RADIUS, (pos, state, l) -> {
-			if (BarricadeGates.isGateLantern(mob.level(),pos)||!douseable(state) || Math.abs(pos.getY() - mob.getY()) > 6) return;
+			if (protectedLantern(pos)||!douseable(state) || Math.abs(pos.getY() - mob.getY()) > 6) return;
 			double d = pos.distToCenterSqr(mob.position());
 			if (d <= SquadTuning.DOUSE_RADIUS * SquadTuning.DOUSE_RADIUS && d < bestD[0]) {
 				bestD[0] = d;
@@ -94,17 +94,22 @@ public class DouseLanternGoal extends Goal {
 		return best[0];
 	}
 
+	private boolean protectedLantern(BlockPos pos) {
+		return BarricadeGates.isGateLantern(mob.level(),pos)
+				|| com.tarkrakov.tearsofink.world.herald.BloodSettlements.protectsLamp(mob.level(),pos);
+	}
+
 	private static boolean douseable(BlockState state) {
 		return !state.is(ModBlocks.ETERNAL_LANTERN) && state.hasProperty(FogClearing.LIT) && state.getValue(FogClearing.LIT);
 	}
 
 	private boolean isLit(BlockPos pos) {
-		return !BarricadeGates.isGateLantern(mob.level(),pos)&&douseable(mob.level().getBlockState(pos));
+		return !protectedLantern(pos)&&douseable(mob.level().getBlockState(pos));
 	}
 
 	private void douse(BlockPos pos) {
 		BlockState state = mob.level().getBlockState(pos);
-		if (BarricadeGates.isGateLantern(mob.level(),pos)||!douseable(state)) return;
+		if (protectedLantern(pos)||!douseable(state)) return;
 		mob.level().setBlock(pos, state.setValue(FogClearing.LIT, false), Block.UPDATE_ALL);
 		mob.swing(InteractionHand.MAIN_HAND);
 		mob.level().playSound(null, pos, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.7f, 0.9f);
