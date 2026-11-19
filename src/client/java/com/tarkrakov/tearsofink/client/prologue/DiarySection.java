@@ -31,6 +31,8 @@ enum DiarySection {
 		this.entries = List.of(entries);
 	}
 
+	List<String> entries() { return entries; }
+
 	/** Unknown future entries remain readable. */
 	static DiarySection of(String id) {
 		return INDEX.getOrDefault(id, CHRONICLES);
