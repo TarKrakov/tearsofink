@@ -1,0 +1,74 @@
+name: D-076 deer audio
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/audio-d076.yml'
+permissions:
+  contents: write
+jobs:
+  render:
+    if: contains(github.event.head_commit.message, 'Render D-076 once')
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - name: Prepare offline renderer
+        run: |
+          python3 -m venv /tmp/d076
+          /tmp/d076/bin/pip install numpy scipy soundfile
+      - name: Render and validate 24 deer samples
+        run: /tmp/d076/bin/python tools/audio/render_pale_deer.py
+      - name: Install events, animation hooks and mixer
+        run: /tmp/d076/bin/python tools/audio/install_pale_deer.py
+      - name: Validate change set
+        run: |
+          python3 - <<'PY'
+          import json,subprocess,pathlib
+          a='src/main/resources/assets/tears-of-ink/'
+          j='src/main/java/com/tarkrakov/tearsofink/'
+          c='src/client/java/com/tarkrakov/tearsofink/client/'
+          report=json.loads(pathlib.Path('out/audio-d076.json').read_text())
+          expected={a+'sounds/'+r['file'] for r in report['samples']}
+          assert len(expected)==24
+          expected.update({a+'sounds.json',a+'lang/ru_ru.json',a+'lang/en_us.json',
+            j+'entity/PaleDeerEntity.java',j+'entity/PaleDeerAudio.java',j+'sound/ModSounds.java',
+            c+'audio/AudioMixer.java','docs/PALE_DEER_HERDS.md','docs/DECISIONS.md'})
+          changed=set(subprocess.check_output(['git','diff','--name-only'],text=True).splitlines())
+          changed.update(subprocess.check_output(['git','ls-files','--others','--exclude-standard'],text=True).splitlines())
+          assert changed-{'out/audio-d076.json'}==expected, (changed-expected,expected-changed)
+          PY
+      - uses: gradle/actions/wrapper-validation@v6
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: microsoft
+          cache: gradle
+      - name: Build before publication
+        run: bash ./gradlew build
+      - name: Publish validated assets and hooks atomically
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+          p=Path('docs/PROJECT_STATUS.md')
+          report=json.loads(Path('out/audio-d076.json').read_text())
+          s=p.read_text()
+          import os
+          run=os.environ['GITHUB_RUN_ID']
+          entry=f"\n\n## D-076 — Пробные звуки бледных оленей (19 ноября 2026)\n24 новых моно Vorbis 44,1 кГц (8 событий × 3); проверены декодирование, длина, пики, RMS и SHA всех {report['unchanged_ogg']} существующих OGG, соответствие регистрации/ресурсов и точный список изменённых файлов. Серверные фазы рёва/копыт, отдельный раздел микшера; [детали](PALE_DEER_HERDS.md). Gradle build на JDK25 прошёл до публикации, [CI {run}](https://github.com/TarKrakov/tearsofink/actions/runs/{run}). AI, арт и прежние звуки не менялись. Самостоятельное прослушивание и Minecraft не выполнены."
+          p.write_text(s.replace('# Техническая карта Tears of Ink','# Техническая карта Tears of Ink'+entry,1))
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/main/resources/assets/tears-of-ink/sounds/pale_deer_*.ogg src/main/resources/assets/tears-of-ink/sounds.json src/main/resources/assets/tears-of-ink/lang/ru_ru.json src/main/resources/assets/tears-of-ink/lang/en_us.json src/main/java/com/tarkrakov/tearsofink/entity/PaleDeerAudio.java src/main/java/com/tarkrakov/tearsofink/entity/PaleDeerEntity.java src/main/java/com/tarkrakov/tearsofink/sound/ModSounds.java src/client/java/com/tarkrakov/tearsofink/client/audio/AudioMixer.java docs/PALE_DEER_HERDS.md docs/DECISIONS.md docs/PROJECT_STATUS.md
+          git commit -m "D-076: add original deer sound palette, synchronized hoofbeats and mixer; Gradle verified"
+          git push origin HEAD:main
+      - name: Upload audio and validation
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: D076-deer-audio
+          if-no-files-found: warn
+          path: |
+            out/audio-d076.json
+            src/main/resources/assets/tears-of-ink/sounds/pale_deer_*.ogg
