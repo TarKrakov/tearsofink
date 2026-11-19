@@ -63,7 +63,188 @@
  p.toi_workspace={version:2,archetype:cfg.archetype,euler_order:'ZYX',grip,bindings,display:cp(cfg.display),camera_names:['TOI_FP_70','TOI_F5_front','TOI_F5_back'],fp_mount:mount,fp_idle_offset:idle,source_name:source.name||cfg.archetype,source_resolution:cp(source.resolution),source_cubes:originals.map((e,i)=>({from:e.from,to:e.to,origin:e.origin,rotation:e.rotation||[0,0,0],faces:e.faces,atlas_faces:faces[i]})),calibration:'renderer math only; live Minecraft comparison pending'};
  return p;
 }
-  if(typeof BBPlugin==='undefined'&&typeof module!=='undefined'){module.exports=buildWeaponProject;return;}
+
+  // Default Claude solve4/base4 (tools/preview/third.py), expressed directly in
+  // editor world coordinates. Only the generated F5 tracks are changed.
+  const f5math=(()=>{
+    const rad=Math.PI/180, clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+    const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),mul=(a,s)=>a.map(x=>x*s);
+    const mm=(a,b)=>a.map(r=>b[0].map((_,j)=>r.reduce((s,x,k)=>s+x*b[k][j],0)));
+    const mv=(a,b)=>a.map(r=>r.reduce((s,x,k)=>s+x*b[k],0));
+    const tr=a=>a[0].map((_,i)=>a.map(r=>r[i]));
+    const rx=x=>[[1,0,0],[0,Math.cos(x),-Math.sin(x)],[0,Math.sin(x),Math.cos(x)]];
+    const ry=x=>[[Math.cos(x),0,Math.sin(x)],[0,1,0],[-Math.sin(x),0,Math.cos(x)]];
+    const rz=x=>[[Math.cos(x),-Math.sin(x),0],[Math.sin(x),Math.cos(x),0],[0,0,1]];
+    const rot=([x,y,z])=>mm(mm(rz(z*rad),ry(y*rad)),rx(x*rad));
+    const F=[[-1,0,0],[0,-1,0],[0,0,1]];
+    const err=s=>{throw Error(s)};
+    const number=x=>{if((typeof x!=='number'&&typeof x!=='string')||String(x).trim()===''||!Number.isFinite(Number(x)))err('Только числовые ключи, без Molang / expressions');return Number(x)};
+    const vec=(a,d=0)=>{const v=Array.isArray(a)?a:['x','y','z'].map(k=>a?.[k]??d);if(v.length!==3)err('Неверный вектор рига');return v.map(number)};
+    const norm=a=>{const l=Math.hypot(...a);if(l<1e-9)err('Направление руки не определено');return mul(a,1/l)};
+    const near=(a,b)=>a.every((x,i)=>Math.abs(x-b[i])<1e-5);
+    const unwrap=(a,b)=>a.map((x,i)=>x+360*Math.round((b[i]-x)/360));
+    // Same ZYX convention as Rig.pose; choose the continuous Euler branch,
+    // including the alternate equivalent solution near gimbal lock.
+    function euler(R,prev){
+      const y=Math.asin(clamp(-R[2][0],-1,1));let x,z;
+      if(Math.abs(Math.cos(y))>1e-7){x=Math.atan2(R[2][1],R[2][2]);z=Math.atan2(R[1][0],R[0][0]);}
+      else{z=prev?prev[2]*rad:0;x=y>0?Math.atan2(R[0][1],R[0][2])+z:Math.atan2(-R[0][1],-R[0][2])-z;}
+      let a=[x/rad,y/rad,z/rad];if(!prev)return a;
+      const b=unwrap([a[0]+180,180-a[1],a[2]+180],prev);a=unwrap(a,prev);
+      return Math.hypot(...sub(a,prev))<=Math.hypot(...sub(b,prev))?a:b;
+    }
+    const timeKey=t=>Number(t.toFixed(8));
+    const key=(t,v,interpolation='linear')=>({channel:'rotation',time:timeKey(t),interpolation,data_points:[{x:String(v[0]),y:String(v[1]),z:String(v[2])}]});
+    function channels(a,length){
+      const result={};
+      if(a?.rotation_global||a?.quaternion_interpolation)err('Сначала запеки global/quaternion в локальные Euler-ключи');
+      for(const k of a?.keyframes||[]){
+        if(!['rotation','position','scale'].includes(k.channel))err('Неподдерживаемый канал '+k.channel);
+        const t=number(k.time),kind=k.interpolation||'linear';
+        if(t<0||t>length+1e-8||k.data_points?.length!==1)err('Ключ вне длительности или split-key: сначала запеки split-ключи');
+        if(!['linear','step','catmullrom','bezier'].includes(kind))err('Неподдерживаемая интерполяция '+kind);
+        const v=vec(k.data_points[0],k.channel==='scale'?1:0);
+        if(k.channel==='scale'&&(!near(v,[1,1,1])||kind==='bezier'))err('Анимация масштаба не поддерживается');
+        const entry={...k,time:t,kind,v};
+        if(kind==='bezier'){
+          for(const f of ['bezier_left_time','bezier_right_time','bezier_left_value','bezier_right_value'])
+            entry[f]=vec(k[f]??(f.endsWith('_time')?(f.includes('left')?[-.1,-.1,-.1]:[.1,.1,.1]):[0,0,0]));
+        }
+        (result[k.channel]??=[]).push(entry);
+      }
+      for(const keys of Object.values(result)){keys.sort((a,b)=>a.time-b.time);if(keys.some((k,i)=>i&&Math.abs(k.time-keys[i-1].time)<1e-9))err('Два ключа одного канала в одно время');}
+      return result;
+    }
+    function sample(keys,t,def=0){
+      if(!keys?.length)return [def,def,def];
+      if(t<=keys[0].time)return keys[0].v;if(t>=keys.at(-1).time)return keys.at(-1).v;
+      const i=keys.findIndex(k=>k.time>t)-1,a=keys[i],b=keys[i+1],dt=b.time-a.time,u=(t-a.time)/dt,p=a.v,q=b.v;
+      if(a.kind==='step')return p;
+      if(a.kind==='linear'&&['linear','step'].includes(b.kind))return add(p,mul(sub(q,p),u));
+      if(a.kind==='catmullrom'||b.kind==='catmullrom'){
+        const p0=keys[i-1]?.v||p,p3=keys[i+2]?.v||q;
+        return p.map((x,j)=>.5*(2*x+(-p0[j]+q[j])*u+(2*p0[j]-5*x+4*q[j]-p3[j])*u*u+(-p0[j]+3*x-3*q[j]+p3[j])*u*u*u));
+      }
+      // Same monotonic Bezier-time inversion as import_weapon_animation.py.
+      return p.map((x,j)=>{
+        const r=clamp((a.bezier_right_time?.[j]??.1)/dt,0,1),l=1+clamp((b.bezier_left_time?.[j]??-.1)/dt,-1,0);
+        let lo=0,hi=1;for(let k=0;k<40;k++){const v=(lo+hi)/2,w=1-v;if(3*w*w*v*r+3*w*v*v*l+v*v*v<u)lo=v;else hi=v;}
+        const v=(lo+hi)/2,w=1-v;
+        return w*w*w*x+3*w*w*v*(x+(a.bezier_right_value?.[j]??0))+3*w*v*v*(q[j]+(b.bezier_left_value?.[j]??0))+v*v*v*q[j];
+      });
+    }
+    function rig(project,clip){
+      const meta=project.toi_workspace;
+      if(!meta||![1,2].includes(meta.version)||meta.euler_order!=='ZYX')err('Нет калибровки рига: переоткрой исходную TOI-сцену с плагином');
+      const length=number(clip.length);
+      if(length<=0||length>60||!['once','hold','loop'].includes(clip.loop||'once'))err('Нужна анимация длиной 0–60 секунд');
+      if(clip.anim_time_update||clip.start_delay||clip.loop_delay||clip.blend_weight)err('Сначала убери выражения времени, задержки и blend weight');
+      const groups=new Map(project.groups.map(g=>[g.name,g])),byId=new Map(project.groups.map(g=>[g.uuid,g])),parents=new Map();
+      if(groups.size!==project.groups.length)err('Повторяющиеся имена костей');
+      function walk(list,parent=null){for(const node of list)if(typeof node==='object'){if(!byId.has(node.uuid)||parents.has(node.uuid))err('Некорректная иерархия рига');parents.set(node.uuid,parent);walk(node.children||[],node.uuid)}}
+      walk(project.outliner);if(parents.size!==groups.size)err('Кость отсутствует в Outliner');
+      const get=n=>{const g=groups.get(n);if(!g)err('Отсутствует кость '+n);return g};
+      const valid=new Set(),sides=[];
+      for(const side of ['right','left']){
+        const pair={side,sign:side==='right'?1:-1};
+        for(const view of ['FP','F5']){
+          const b=meta.bindings?.[view+'_'+side];if(!b)err('Нет калибровки '+view+' '+side);
+          const chain=['shoulder','arm','sword'].map(k=>get(b[k]));
+          if(parents.get(chain[1].uuid)!==chain[0].uuid||parents.get(chain[2].uuid)!==chain[1].uuid)err('Изменена иерархия рига');
+          chain.forEach((g,i)=>{valid.add(g.uuid);if(!near(vec(g.origin),vec(i===2?b.grip_position:b.pivot)))err('Изменён pivot '+g.name);if(i<2&&!near(vec(g.rotation),[0,0,0]))err('Восстанови исходную нейтраль '+g.name);});
+          const R=rot(vec(chain[2].rotation));
+          if(b.item_rotation&&!R.every((r,i)=>near(r,b.item_rotation[i])))err('Изменена нейтраль меча '+chain[2].name);
+          pair[view]={b,chain};
+        }
+        sides.push(pair);
+      }
+      const tracks=clip.animators||{},fpChannels=new Map(),times=new Set([0,length]),jumps=new Set();
+      for(const [id,a] of Object.entries(tracks)){
+        if(!a.keyframes?.length)continue;
+        const g=byId.get(id);
+        if(!g||!valid.has(id))err('Анимируй только shoulder/arm/sword; неподдерживаемый трек '+(g?.name||a.name||id));
+        if(!g.name.startsWith('FP_'))continue;
+        const cs=channels(a,length);fpChannels.set(id,cs);
+        for(const ks of Object.values(cs))ks.forEach((k,i)=>{times.add(k.time);if(i&&ks[i-1].kind==='step')jumps.add(k.time)});
+      }
+      function pose(g,t,cache){
+        if(cache.has(g.uuid))return cache.get(g.uuid);
+        const pid=parents.get(g.uuid),p=pid?byId.get(pid):null,cs=fpChannels.get(g.uuid)||{};
+        const o=add(sub(vec(g.origin),p?vec(p.origin):[0,0,0]),sample(cs.position,t)),R=rot(add(vec(g.rotation),sample(cs.rotation,t)));
+        const P=p?pose(p,t,cache):null,poseValue=P?{R:mm(P.R,R),o:add(P.o,mv(P.R,o))}:{R,o};
+        cache.set(g.uuid,poseValue);return poseValue;
+      }
+      function tipLocal(b){
+        // Java cube corners, including their original single-axis rotations.
+        // The editor cubes are already scaled and relative to the weapon grip.
+        let best=null,d=-1;
+        for(const el of project.elements.filter(e=>e.name?.startsWith(b.sword+'_cube_'))){
+          const a=vec(el.from),z=vec(el.to),o=vec(el.origin),R=rot(vec(el.rotation));
+          for(const x of [a[0],z[0]])for(const y of [a[1],z[1]])for(const w of [a[2],z[2]]){
+            const q=sub(add(o,mv(R,sub([x,y,w],o))),vec(b.grip_position)),dist=q.reduce((s,k)=>s+k*k,0);
+            if(dist>d){best=q;d=dist;}
+          }
+        }
+        if(d<1e-8)err('Нет геометрии для определения кончика клинка');return best;
+      }
+      return {meta,length,sides,tracks,fpChannels,times,jumps,pose,tipLocal};
+    }
+    function existingF5(project,clip){const ids=new Set(project.groups.filter(g=>g.name.startsWith('F5_')).map(g=>g.uuid));return Object.entries(clip.animators||{}).some(([id,a])=>ids.has(id)&&a.keyframes?.length)}
+    function planF5(project,clip,replace=false){
+      if(!replace&&existingF5(project,clip))return {status:'protected',animators:{}};
+      const r=rig(project,clip),active=r.sides.filter(s=>s.FP.chain.some(g=>r.fpChannels.has(g.uuid)));
+      if(!active.length)return {status:'empty',animators:{}};
+      const fps=clamp(number(clip.snapping||20),20,60);
+      const times=new Set([...r.times].map(timeKey)),beforeJump=new Set();
+      for(let i=0;i/fps<r.length;i++)times.add(timeKey(i/fps));
+      for(const t of r.jumps){const p=timeKey(Math.max(0,t-0.00001));if(p<t){times.add(p);beforeJump.add(p)}}
+      const sorted=[...times].sort((a,b)=>a-b),patch={};
+      for(const side of active){
+        const sign=side.sign,[shoulder,arm,sword]=side.F5.chain,tip=r.tipLocal(side.FP.b),mount=vec(r.meta.fp_mount),off=[sign*mount[0],mount[1],mount[2]];
+        const armKeys=[],swordKeys=[];let prevArm=vec(arm.rotation),prevSword=vec(sword.rotation);
+        for(const t of sorted){
+          const p=r.pose(side.FP.chain[2],t,new Map());
+          const h=mul(sub(p.o,off),1/16),Q=add(h,mul(mv(p.R,tip),.5/16));
+          const v=norm(sub(Q,[sign*5/16,-.245,0]).map((x,i)=>x*(i===2?1:1.3)));
+          const d=mv(F,v),x=-Math.acos(clamp(d[1],-1,1)),y=Math.abs(Math.sin(x))>1e-3?Math.atan2(-d[0],-d[2]):0;
+          const A=mm(ry(y),rx(x));
+          // Importer's inverse: A = F^T * arm_world * F * Rx(-18°).
+          const armR=mm(mm(mm(F,A),rx(Math.PI/10)),F);
+          // Claude wrist: W = inv(A*C) * F * FP_orientation * inv(TP_Display).
+          // In editor world coordinates the resulting sword orientation is FP_orientation.
+          const swordR=mm(tr(armR),p.R);
+          prevArm=euler(armR,prevArm);prevSword=euler(swordR,prevSword);
+          const kind=beforeJump.has(t)?'step':'linear';
+          armKeys.push(key(t,sub(prevArm,vec(arm.rotation)),kind));
+          swordKeys.push(key(t,sub(prevSword,vec(sword.rotation)),kind));
+        }
+        for(const [g,keys] of [[shoulder,[]],[arm,armKeys],[sword,swordKeys]])
+          patch[g.uuid]={name:g.name,type:'bone',rotation_global:false,quaternion_interpolation:false,keyframes:keys};
+      }
+      return {status:'generated',animators:patch,sides:active.map(s=>s.side),samples:sorted.length};
+    }
+    function planTiming(project,clip){
+      const r=rig(project,clip),patch={},skipped=[];let inserted=0;
+      if(!r.fpChannels.size)return {status:'empty',animators:{},inserted,skipped};
+      for(const side of r.sides)for(const g of side.F5.chain){
+        const a=r.tracks[g.uuid];if(!a?.keyframes?.length)continue;
+        // Never refit a hand-authored curve. Splitting a linear channel at a
+        // sampled value is exact; Bezier/Catmull/split/quaternion are left alone.
+        let ks;try{ks=channels(a,r.length).rotation}catch(e){skipped.push(g.name);continue}
+        if(!ks?.length||ks.some(k=>k.kind!=='linear')){skipped.push(g.name);continue;}
+        const extras=[];
+        for(const t of [...r.times].sort((a,b)=>a-b)){
+          if(ks.some(k=>Math.abs(k.time-t)<1e-7))continue;
+          extras.push(key(t,sample(ks,t)));
+        }
+        if(extras.length){patch[g.uuid]={...a,keyframes:[...a.keyframes,...extras]};inserted+=extras.length;}
+      }
+      return {status:inserted?'synced':'unchanged',animators:patch,inserted,skipped};
+    }
+    return {planF5,planTiming,existingF5,rot,euler};
+  })();
+
+  if(typeof BBPlugin==='undefined'&&typeof module!=='undefined'){module.exports=Object.assign(buildWeaponProject,f5math);return;}
 
   function compiledProject(){const raw=Codecs.project.compile({raw:true});return typeof raw==='string'?JSON.parse(raw):raw;}
   const failDialog=e=>Blockbench.showMessageBox({title:'Tears of Ink',message:String(e.message||e)});
@@ -111,6 +292,75 @@
     }catch(e){failDialog(e);}
   }
   function saveForGame(){if(!isWorkspace())return;try{const model=compiledProject();if(!model.toi_workspace)throw Error('Переоткрой сцену с включённым помощником: нет метаданных рига');saveSeparate(model,model.toi_workspace.archetype+'_animation');}catch(e){failDialog(e);}}
+
+
+  // Blockbench 5.2.2 Animation.extend only replaces supplied animators.
+  // Undo snapshots require the previously empty target containers to exist.
+  function applyF5Plans(plans,label){
+    const effective=plans.filter(p=>Object.keys(p.plan.animators).length);
+    if(!effective.length)return;
+    for(const {animation,plan} of effective)for(const uid of Object.keys(plan.animators)){
+      const group=Group.all.find(g=>g.uuid===uid);
+      if(!group)throw Error('Кость исчезла: '+uid);
+      animation.getBoneAnimator(group);
+    }
+    Undo.initEdit({animations:effective.map(p=>p.animation)});
+    try{
+      for(const {animation,plan} of effective){
+        const animators={};
+        for(const [uid,a] of Object.entries(plan.animators))animators[uid]={...a,keyframes:(a.keyframes||[]).map(k=>({...k,uuid:k.uuid||guid()}))};
+        animation.extend({animators});
+      }
+      Undo.finishEdit(label);
+    }catch(e){Undo.cancelEdit(true);throw e;}
+    if(typeof Timeline!=='undefined'&&Array.isArray(Timeline.selected))Timeline.selected.splice(0);
+    if(Modes.animate){
+      const selected=Animation.selected;
+      if(selected){
+        const p=effective.find(p=>p.animation===selected);
+        const pair=p?.plan.sides?p.plan.sides.includes('left'):both;
+        setup('F5',pair,'front');
+        for(const [uid,a] of Object.entries(selected.animators))if(Group.all.some(g=>g.uuid===uid&&g.name.startsWith('F5_'))&&a.keyframes.length)a.addToTimeline(true);
+      }
+      Animator.preview();
+    }
+  }
+  function generateF5(all=false){
+    try{
+      if(!isWorkspace()||!Modes.animate)throw Error('Открой TOI-сцену и вкладку Animate');
+      const project=compiledProject(),selected=Animation.selected;
+      if(!all&&!selected)throw Error('Выбери анимацию слева');
+      const owner=Project;
+      const run=(force=false)=>{
+        try{
+          if(Project!==owner||(!all&&Animation.selected!==selected))throw Error('Сцена или анимация изменилась — повтори действие');
+          const current=compiledProject(),animations=all?Animator.animations:[selected],plans=[],messages=[];
+          for(const animation of animations){
+            try{
+              const plan=f5math.planF5(current,animation.getUndoCopy(),force);
+              if(plan.status==='generated')plans.push({animation,plan});
+              else messages.push(animation.name+': '+(plan.status==='protected'?'F5 уже есть, пропущено':'нет ключей FP'));
+            }catch(e){if(!all)throw e;messages.push(animation.name+': '+e.message);}
+          }
+          applyF5Plans(plans,all?'TOI: Generate all F5':'TOI: Generate F5');
+          const msg='F5 создано: '+plans.length+(messages.length?'\n\nПропущено: '+messages.length+'\n'+messages.slice(0,16).join('\n')+(messages.length>16?'\n…':''):'');
+          if(all||messages.length)Blockbench.showMessageBox({title:'Tears of Ink — F5',message:msg});
+          else Blockbench.showQuickMessage(msg+' · Ctrl+Z — отмена');
+        }catch(e){failDialog(e);}
+      };
+      if(!all&&f5math.existingF5(project,selected.getUndoCopy())){
+        Blockbench.showMessageBox({title:'Tears of Ink — F5 уже существует',message:'Заменить существующие ключи F5 на рассчитанные для рук с FP-ключами? Авторские FP и остальные анимации останутся без изменений. Действие можно отменить Ctrl+Z.',buttons:['Заменить F5','Отмена'],confirm:0,cancel:1},i=>{if(i===0)run(true);});
+      }else run();
+    }catch(e){failDialog(e);}
+  }
+  function syncF5Timing(){
+    try{
+      if(!isWorkspace()||!Modes.animate||!Animation.selected)throw Error('Выбери анимацию во вкладке Animate');
+      const animation=Animation.selected,plan=f5math.planTiming(compiledProject(),animation.getUndoCopy());
+      applyF5Plans([{animation,plan}],'TOI: Sync F5 timing');
+      Blockbench.showMessageBox({title:'Tears of Ink — Sync timing',message:'Добавлено F5-ключей на временах FP: '+plan.inserted+'. Существующие ключи не перемещены и не изменены.'+(plan.skipped?.length?'\nСложные кривые оставлены без изменений: '+plan.skipped.join(', '):'')});
+    }catch(e){failDialog(e);}
+  }
 
   let mode = 'FP', both = true, angle = 'front';
   const isWorkspace = () => typeof Group !== 'undefined' && Group.all.some(g => g.name === 'FP_RIG') && Group.all.some(g => g.name === 'F5_RIG');
@@ -165,16 +415,16 @@
     clearBar();
     if (!isWorkspace()) return;
     bar = document.createElement('div');
-    bar.style.cssText = 'position:absolute;top:5px;left:5px;z-index:30;display:flex;gap:3px;background:#20232dcc;padding:4px;border-radius:4px';
+    bar.style.cssText = 'position:absolute;top:5px;left:5px;z-index:30;display:flex;flex-wrap:wrap;max-width:calc(100% - 10px);gap:3px;background:#20232dcc;padding:4px;border-radius:4px';
     for (const [label,v,p,f] of [['FP 1','FP',false,'front'],['FP 2','FP',true,'front'],['F5 1 front','F5',false,'front'],['F5 2 front','F5',true,'front'],['F5 back','F5',true,'back']]) {
       let b=document.createElement('button');b.textContent=label;b.style.cssText='font-size:11px;padding:4px;min-width:0;width:auto';b.onclick=()=>setup(v,p,f);bar.append(b);
     }
-    for(const [label,click] of [['New weapon',newWeapon],['Save for game',saveForGame]]){const b=document.createElement('button');b.textContent=label;b.style.cssText='font-size:11px;padding:4px;min-width:0;width:auto';b.onclick=click;bar.append(b);}
+    for(const [label,click] of [['New weapon',newWeapon],['Save for game',saveForGame],['Generate F5',()=>generateF5(false)],['Generate all F5',()=>generateF5(true)],['Sync timing',syncF5Timing]]){const b=document.createElement('button');b.textContent=label;b.style.cssText='font-size:11px;padding:4px;min-width:0;width:auto';b.onclick=click;bar.append(b);}
     Interface.preview.append(bar); setup('FP',true,'front');
   }
   BBPlugin.register('toi_workspace', {
-    title:'Tears of Ink Weapon Workspace',author:'Tears of Ink',icon:'sports_martial_arts',version:'2.0.0',min_version:'5.0.0',variant:'both',
-    description:'Separate FP/F5 rigs; free editor + pinned Cameras preview, with 16:9 frame.',
+    title:'Tears of Ink Weapon Workspace',author:'Tears of Ink',icon:'sports_martial_arts',version:'2.1.0',min_version:'5.0.0',variant:'both',
+    description:'Separate FP/F5 rigs, automatic F5 from FP, safe batch generation and 16:9 preview.',
     onload() {
       let parsed=e=>{if(e.model.toi_workspace&&Project)projectMetadata.set(Project,e.model.toi_workspace);setTimeout(installBar,100);};
       let compiled=e=>{if(isWorkspace()&&Project&&projectMetadata.has(Project))e.model.toi_workspace=projectMetadata.get(Project);};
@@ -183,7 +433,7 @@
       callbacks=[()=>Codecs.project.removeListener('parsed',parsed),()=>Codecs.project.removeListener('compile',compiled),()=>{if(subscription?.delete)subscription.delete();else Blockbench.removeListener?.('select_project',selected);}];
       let action=new Action('toi_workspace_reset',{name:'Tears of Ink: restore split workspace',icon:'view_column',click:installBar});
       MenuBar.addAction(action,'view');actions.push(action);
-      for(const [id,name,click] of [['toi_weapon_new','Tears of Ink: new weapon',newWeapon],['toi_weapon_save','Tears of Ink: save animation project for game',saveForGame]]){const a=new Action(id,{name,icon:'sports_martial_arts',condition:isWorkspace,click});MenuBar.addAction(a,'view');actions.push(a);}
+      for(const [id,name,click] of [['toi_weapon_new','Tears of Ink: new weapon',newWeapon],['toi_weapon_save','Tears of Ink: save animation project for game',saveForGame],['toi_generate_f5','Tears of Ink: Generate F5',()=>generateF5(false)],['toi_generate_all_f5','Tears of Ink: Generate all F5',()=>generateF5(true)],['toi_sync_f5_timing','Tears of Ink: Sync timing',syncF5Timing]]){const a=new Action(id,{name,icon:'sports_martial_arts',condition:isWorkspace,click});MenuBar.addAction(a,'view');actions.push(a);}
       if(isWorkspace()) setTimeout(installBar,100);
     },
     onunload() { callbacks.forEach(f=>f());actions.forEach(a=>a.delete());clearBar(); }

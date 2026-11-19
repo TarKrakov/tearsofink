@@ -24,6 +24,8 @@ jobs:
         run: chmod +x ./gradlew
       - name: validate advancement icon paths
         run: python3 tools/check_advancement_icons.py
+      - name: validate Blockbench workspace and automatic F5
+        run: node tools/blockbench/test_workspace.js
       - name: build
         run: ./gradlew build
       # The original Claude previewer validates the real model/pivot and can render
