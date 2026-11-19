@@ -3,6 +3,7 @@ package com.tarkrakov.tearsofink.client.prologue;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.prologue.DiaryEntries;
 import com.tarkrakov.tearsofink.prologue.FateProgress;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -16,6 +17,9 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.List;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /**
  * Дневник Историка. Авторский atlas gui/diary_base.png 256x256 и подвижное перо:
@@ -43,6 +47,21 @@ public class DiaryScreen extends Screen {
 	/** Управление только на нижнем поле бумаги, в стороне от печати. */
 	private static final int AW = 18, AH = 12, PREV_X = 65, NEXT_X = 174, ARROW_Y = 225, NUMBER_Y = 227;
 	private static final int TEXT = 0x2A1E2C, TITLE = 0x5A1018, FADED = 0x6E5E62, NUMBER = 0x5A4A40;
+	private static final int PAGE_WINDOW = 5, PAGE_CELL = 14, ELLIPSIS_CELL = 8;
+	private static final int NAV_LEFT = PREV_X + AW, NAV_RIGHT = NEXT_X;
+	private static final int READ_TICKS = 10;
+
+	private static final Set<String> readPages = new HashSet<>();
+	private static boolean readReady;
+	public static void receiveRead(List<String> pages) {
+		readPages.clear();
+		readPages.addAll(pages);
+		readReady = true;
+	}
+	public static void resetRead() {
+		readPages.clear();
+		readReady = false;
+	}
 
 	/** Записи, открытые у игрока (присылает сервер). */
 	public static List<String> entries = new ArrayList<>();
@@ -51,15 +70,23 @@ public class DiaryScreen extends Screen {
 	private int builtFate = Integer.MIN_VALUE;
 
 	/** Один физический лист: строки заголовка (только на первом листе записи) и текст. */
-	private record Sheet(List<FormattedCharSequence> heading, List<FormattedCharSequence> lines, int color) {}
+	private record Sheet(List<FormattedCharSequence> heading, List<FormattedCharSequence> lines, int color,
+			String entry, int part, boolean open) {
+		private String readKey() { return entry == null ? null : DiaryEntries.readKey(entry, part); }
+	}
+	private record PageAnchor(String entry, int part) {}
+	private record PageButton(int x, int width, int target, String label, boolean ellipsis, int from, int to) {}
 
-	private final List<Sheet> sheets = new ArrayList<>();
+	private List<Sheet> sheets = new ArrayList<>();
+	private final Map<DiarySection, List<Sheet>> sectionSheets = new EnumMap<>(DiarySection.class);
+	private String readingKey;
+	private int readingTicks;
 	private List<String> builtFrom = null;
 	private int page;
 	private DiarySection section = entries.contains(DiaryEntries.FIRST_STEPS) || (fateMask >= 0 && FateProgress.Goal.ARRIVAL.done(fateMask))
 			? DiarySection.FATE : DiarySection.CHRONICLES;
-	private DiarySection builtSection;
 	private final Map<DiarySection, Integer> remembered = new EnumMap<>(DiarySection.class);
+	private final Map<DiarySection, PageAnchor> anchors = new EnumMap<>(DiarySection.class);
 	private final Map<DiarySection, Integer> counts = new EnumMap<>(DiarySection.class);
 
 	public DiaryScreen() {
@@ -84,30 +111,76 @@ public class DiaryScreen extends Screen {
 		return Math.max(1, (LAST_TEXT_BOTTOM - FONT_H - textStart(headingLines)) / LINE + 1);
 	}
 
-	/** Preserve discovery order inside each section. */
+	private PageAnchor currentAnchor() {
+		if (page < 0 || page >= sheets.size()) return null;
+		Sheet sheet = sheets.get(page);
+		return sheet.entry() == null ? null : new PageAnchor(sheet.entry(), sheet.part());
+	}
+
+	private void restorePage(PageAnchor anchor, int fallback) {
+		page = Math.max(0, Math.min(fallback, sheets.size() - 1));
+		if (anchor == null) return;
+		for (int i = 0; i < sheets.size(); i++) {
+			Sheet sheet = sheets.get(i);
+			if (anchor.entry().equals(sheet.entry())) {
+				page = i;
+				if (sheet.part() == anchor.part()) return;
+			}
+		}
+	}
+
+	/** Stable chapter order includes one opaque placeholder for every undiscovered chapter. */
 	private void build() {
-		if (section == builtSection && entries.equals(builtFrom) && (section != DiarySection.FATE || fateMask == builtFate)) return;
+		if (entries.equals(builtFrom) && fateMask == builtFate) return;
+		PageAnchor anchor = currentAnchor();
+		int fallback = section == DiarySection.FATE && builtFate != fateMask ? 0 : page;
 		builtFrom = List.copyOf(entries);
-		builtSection = section;
+		builtFate = fateMask;
 		counts.clear();
 		for (String id : builtFrom) counts.merge(DiarySection.of(id), 1, Integer::sum);
-		sheets.clear();
-		if (section == DiarySection.FATE) {
-			if (builtFate != fateMask) page = 0;
-			builtFate = fateMask;
-			buildFate();
+		sectionSheets.clear();
+		for (DiarySection tab : DiarySection.values()) {
+			sheets = new ArrayList<>();
+			if (tab == DiarySection.FATE) {
+				buildFate();
+			} else {
+				Set<String> ordered = new LinkedHashSet<>(tab.entries());
+				for (String id : builtFrom) if (DiarySection.of(id) == tab) ordered.add(id);
+				for (String id : ordered) addEntry(id, builtFrom.contains(id));
+			}
+			sectionSheets.put(tab, sheets);
+		}
+		sheets = sectionSheets.get(section);
+		restorePage(anchor, fallback);
+	}
+
+	private boolean unread(Sheet sheet) {
+		return readReady && sheet.open() && sheet.entry() != null && !readPages.contains(sheet.readKey());
+	}
+
+	private boolean sectionUnread(DiarySection tab) {
+		for (Sheet sheet : sectionSheets.getOrDefault(tab, List.of())) if (unread(sheet)) return true;
+		return false;
+	}
+
+	@Override
+	public void tick() {
+		super.tick();
+		build();
+		if (sheets.isEmpty() || !unread(sheets.get(page))) {
+			readingKey = null;
+			readingTicks = 0;
 			return;
 		}
-		boolean caterpillars = false;
-		for (String id : builtFrom) {
-			if (DiarySection.of(id) != section) continue;
-			if (id.equals(DiaryEntries.CATERPILLAR) || id.startsWith(DiaryEntries.CATERPILLAR + "_")) {
-				if (caterpillars) continue;
-				caterpillars = true;
-				for (String part : DiaryEntries.CATERPILLAR_PAGES) addEntry(part, entries.contains(part));
-			} else {
-				addEntry(id, true);
-			}
+		Sheet sheet = sheets.get(page);
+		String key = sheet.readKey();
+		if (!key.equals(readingKey)) {
+			readingKey = key;
+			readingTicks = 0;
+		}
+		if (++readingTicks >= READ_TICKS && ClientPlayNetworking.canSend(DiaryEntries.ReadPage.TYPE)) {
+			ClientPlayNetworking.send(new DiaryEntries.ReadPage(sheet.entry(), sheet.part()));
+			readPages.add(key);
 		}
 	}
 
@@ -118,7 +191,7 @@ public class DiaryScreen extends Screen {
 		List<FormattedCharSequence> body = new ArrayList<>();
 		if (fateMask < 0) {
 			body.addAll(font.split(Component.translatable(prefix + "sync"), TEXT_W));
-			sheets.add(new Sheet(heading, List.copyOf(body), TEXT));
+			sheets.add(new Sheet(heading, List.copyOf(body), TEXT, null, 0, true));
 			return;
 		}
 		List<FateProgress.Goal> done = new ArrayList<>();
@@ -162,23 +235,27 @@ public class DiaryScreen extends Screen {
 		do {
 			var title = offset == 0 ? heading : List.<FormattedCharSequence>of();
 			int end = Math.min(body.size(), offset + rows(title.size()));
-			sheets.add(new Sheet(title, List.copyOf(body.subList(offset, end)), TEXT));
+			sheets.add(new Sheet(title, List.copyOf(body.subList(offset, end)), TEXT, null, 0, true));
 			offset = end;
 		} while (offset < body.size());
 	}
 
 	private void addEntry(String id, boolean open) {
-		Component title = Component.translatable("diary.tears-of-ink.entry." + id + ".title");
+		// Do not reveal names of undiscovered creatures or story topics.
+		Component title = open || DiaryEntries.CATERPILLAR_PAGES.contains(id)
+				? Component.translatable("diary.tears-of-ink.entry." + id + ".title")
+				: Component.literal("???");
 		Component text = open ? Component.translatable("diary.tears-of-ink.entry." + id + ".text")
 				: Component.translatable("diary.tears-of-ink.illegible").withStyle(ChatFormatting.ITALIC);
 		List<FormattedCharSequence> heading = font.split(title, TEXT_W);
 		List<FormattedCharSequence> all = font.split(text, TEXT_W);
 		int i = 0;
 		boolean first = true;
+		int part = 0;
 		do {
 			List<FormattedCharSequence> sheetHeading = first ? heading : List.of();
 			int n = Math.min(rows(sheetHeading.size()), all.size() - i);
-			sheets.add(new Sheet(sheetHeading, all.subList(i, i + n), open ? TEXT : FADED));
+			sheets.add(new Sheet(sheetHeading, all.subList(i, i + n), open ? TEXT : FADED, id, part++, open));
 			i += n;
 			first = false;
 		} while (i < all.size());
@@ -224,8 +301,7 @@ public class DiaryScreen extends Screen {
 			y += LINE;
 		}
 
-		String num = (page + 1) + " / " + sheets.size();
-		g.drawString(font, num, TEXT_X + (TEXT_W - font.width(num)) / 2, NUMBER_Y, NUMBER, false);
+		drawNumbers(g, mx, my);
 		if (page > 0) arrow(g, "diary_prev", PREV_X, mx, my);
 		if (page < sheets.size() - 1) arrow(g, "diary_next", NEXT_X, mx, my);
 		g.pose().popPose();
@@ -253,6 +329,7 @@ public class DiaryScreen extends Screen {
 			if (tab == DiarySection.FATE) g.blit(FATE_TAB, tabX(tab), tabY(tab), state * TAB_W, 0, TAB_W, TAB_H, 72, 24);
 			else g.blit(TABS, tabX(tab), tabY(tab), state * TAB_W, tab.ordinal() * TAB_H,
 					TAB_W, TAB_H, 72, 144);
+			if (sectionUnread(tab)) dot(g, tabX(tab) + TAB_W - 4, tabY(tab) + 3);
 		}
 	}
 
@@ -264,13 +341,60 @@ public class DiaryScreen extends Screen {
 	}
 
 	private void select(DiarySection next) {
+		build();
 		if (next == section) return;
 		remembered.put(section, page);
+		PageAnchor anchor = currentAnchor();
+		if (anchor != null) anchors.put(section, anchor);
 		section = next;
-		page = remembered.getOrDefault(next, 0);
-		build();
-		page = Math.max(0, Math.min(page, sheets.size() - 1));
+		sheets = sectionSheets.getOrDefault(next, List.of());
+		restorePage(anchors.get(next), remembered.getOrDefault(next, 0));
+		resetReading();
 		playTurn();
+	}
+
+	/** Five numbers at most; the ellipses are also usable to jump between windows. */
+	private List<PageButton> pageButtons() {
+		int total = sheets.size(), start = page / PAGE_WINDOW * PAGE_WINDOW;
+		int end = Math.min(total, start + PAGE_WINDOW);
+		int width = (end - start) * PAGE_CELL + (start > 0 ? ELLIPSIS_CELL : 0) + (end < total ? ELLIPSIS_CELL : 0);
+		int x = NAV_LEFT + (NAV_RIGHT - NAV_LEFT - width) / 2;
+		List<PageButton> buttons = new ArrayList<>();
+		if (start > 0) {
+			buttons.add(new PageButton(x, ELLIPSIS_CELL, start - 1, "…", true, 0, start));
+			x += ELLIPSIS_CELL;
+		}
+		for (int i = start; i < end; i++) {
+			buttons.add(new PageButton(x, PAGE_CELL, i, Integer.toString(i + 1), false, i, i + 1));
+			x += PAGE_CELL;
+		}
+		if (end < total) buttons.add(new PageButton(x, ELLIPSIS_CELL, end, "…", true, end, total));
+		return buttons;
+	}
+
+	private static void dot(GuiGraphics g, int x, int y) {
+		// Pixel-circle with a dark outline; temporary art matches the burgundy book accents.
+		g.fill(x - 2, y - 1, x + 3, y + 2, 0xFF54242A);
+		g.fill(x - 1, y - 2, x + 2, y + 3, 0xFF54242A);
+		g.fill(x - 1, y - 1, x + 2, y + 2, 0xFFE3A34B);
+	}
+
+	private void drawNumbers(GuiGraphics g, double mx, double my) {
+		for (PageButton b : pageButtons()) {
+			boolean hover = mx >= b.x() && mx < b.x() + b.width() && my >= ARROW_Y && my < ARROW_Y + AH;
+			boolean locked = !b.ellipsis() && !sheets.get(b.target()).open();
+			boolean current = !b.ellipsis() && b.target() == page;
+			if (!b.ellipsis()) {
+				int background = locked ? (hover ? 0xFF9C9290 : 0xFFB3AAA7) : (hover ? 0xFFE2C5A1 : 0xFFD1B58D);
+				g.fill(b.x() + 1, ARROW_Y, b.x() + b.width() - 1, ARROW_Y + AH, background);
+				if (current) g.hLine(b.x() + 1, b.x() + b.width() - 2, ARROW_Y + AH - 1, 0xFF681C2A);
+			}
+			FitText.drawCentered(g, font, Component.literal(b.label()), b.x() + b.width() / 2,
+					NUMBER_Y, b.width() - 2, hover || current ? TITLE : NUMBER);
+			boolean fresh = false;
+			for (int i = b.from(); i < b.to(); i++) if (unread(sheets.get(i))) { fresh = true; break; }
+			if (fresh) dot(g, b.x() + b.width() - 2, ARROW_Y - 1);
+		}
 	}
 
 	private void arrow(GuiGraphics g, String name, int x, double mx, double my) {
@@ -287,12 +411,17 @@ public class DiaryScreen extends Screen {
 	@Override
 	public boolean mouseClicked(double mx, double my, int button) {
 		if (button == 0) {
+			build();
 			double x = localX(mx), y = localY(my);
 			DiarySection tab = tabAt(x, y);
 			if (tab != null) { select(tab); return true; }
 			if (y >= ARROW_Y && y < ARROW_Y + AH) {
 				if (page > 0 && x >= PREV_X && x < PREV_X + AW) { turn(-1); return true; }
 				if (page < sheets.size() - 1 && x >= NEXT_X && x < NEXT_X + AW) { turn(1); return true; }
+				for (PageButton b : pageButtons()) if (x >= b.x() && x < b.x() + b.width()) {
+					goTo(b.target());
+					return true;
+				}
 			}
 		}
 		return super.mouseClicked(mx, my, button);
@@ -300,6 +429,7 @@ public class DiaryScreen extends Screen {
 
 	@Override
 	public boolean keyPressed(int key, int scan, int mods) {
+		build();
 		if (key == 264 || key == 265) {
 			DiarySection[] tabs = DiarySection.values();
 			int next = Math.max(0, Math.min(tabs.length - 1, tabIndex(section) + (key == 264 ? 1 : -1)));
@@ -311,10 +441,19 @@ public class DiaryScreen extends Screen {
 		return super.keyPressed(key, scan, mods);
 	}
 
-	private void turn(int d) {
-		page += d;
+	private void resetReading() {
+		readingKey = null;
+		readingTicks = 0;
+	}
+
+	private void goTo(int destination) {
+		if (destination == page || destination < 0 || destination >= sheets.size()) return;
+		page = destination;
+		resetReading();
 		playTurn();
 	}
+
+	private void turn(int d) { goTo(page + d); }
 
 	private void playTurn() {
 		minecraft.getSoundManager().play(SimpleSoundInstance.forUI(ModSounds.DIARY_PAGE_TURN, 1.0f));
