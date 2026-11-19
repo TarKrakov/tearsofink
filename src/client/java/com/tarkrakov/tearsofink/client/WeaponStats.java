@@ -114,7 +114,8 @@ public final class WeaponStats {
                     || k.equals("item.durability") || (!extraModifiers && k.startsWith("attribute.modifier."))) lines.remove(i);
             else if (!extraModifiers && k.startsWith("item.modifiers.")) {
                 lines.remove(i);
-                if (i > 1 && lines.get(i - 1).getString().isEmpty()) lines.remove(i - 1);
+                // Two removals in this iteration: advance past the removed spacer as well.
+                if (i > 1 && lines.get(i - 1).getString().isEmpty()) lines.remove(--i);
             }
         }
 
