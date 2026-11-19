@@ -47,6 +47,7 @@ jobs:
         with:
           distribution: microsoft
           java-version: '25'
+          cache: gradle
       - name: Generate and validate seed
         run: python3 -u tools/tests/d060/run.py --seed '${{ matrix.seed }}'
       - name: Upload complete reports

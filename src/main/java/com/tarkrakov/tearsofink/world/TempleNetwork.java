@@ -178,8 +178,10 @@ public final class TempleNetwork {
 				// Search the surviving buildable platforms instead of searching expensive
 				// exits first. Earlier successful placements are never moved.
 				for (int road = 0; road < InkLandsLayout.ROADS; road++) {
-					if (!outer[road] && !roadsideSiteFallback(road, false)) missing("external", road);
-					if (!inner[road] && !roadsideSiteFallback(road, true)) missing("deep", road);
+					if (!outer[road] && !roadsideSiteFallback(road, false, false)
+							&& !roadsideSiteFallback(road, false, true)) missing("external", road);
+					if (!inner[road] && !roadsideSiteFallback(road, true, false)
+							&& !roadsideSiteFallback(road, true, true)) missing("deep", road);
 				}
 			}
 			Set<Integer> sectors = new HashSet<>();
@@ -379,10 +381,14 @@ public final class TempleNetwork {
 		 * spending the entire exit budget beside unsuitable terrain or ruins.
 		 * No relaxation of biome, footprint, slope, water, or road reservations.
 		 */
-		private boolean roadsideSiteFallback(int road, boolean deep) {
-			failures.clear(); // rejection counts always belong to this slot
+		private boolean roadsideSiteFallback(int road, boolean deep, boolean alternateFacing) {
+			if (!alternateFacing) failures.clear(); // rejection counts always belong to this slot
 			int startSamples = samples.size();
-			slotColumnLimit = startSamples + 5000;
+			// Retry only the remaining empty slots and only with a different
+			// road-facing footprint. Do not expand the depth or access limits.
+			slotColumnLimit = startSamples + (alternateFacing ? 2400 : 5000);
+			int viableLimit = alternateFacing ? 18 : 40;
+			int exitLimit = alternateFacing ? 20 : 36;
 			int low = deep ? 850 : OUTER_RECOVERY_MIN;
 			int high = deep ? 1350 : OUTER_RECOVERY_MAX;
 			RandomSource random = RandomSource.create(layout.seed() ^ (0x7369746566697273L + road * 31L + (deep ? 337 : 0)));
@@ -401,13 +407,27 @@ public final class TempleNetwork {
 				for (int side : new int[]{firstSide, -firstSide}) {
 					List<Temple> sites = new ArrayList<>();
 					for (int offset : new int[]{60, 72, 84, 64, 76, 88, 56}) {
-						if (samples.size() >= slotColumnLimit || viable >= 40) break;
+						if (samples.size() >= slotColumnLimit || viable >= viableLimit) break;
 						int x = (int) Math.round(axis[0] - dir[1] * offset * side);
 						int z = (int) Math.round(axis[1] + dir[0] * offset * side);
 						if (!attempted.add(ChunkPos.asLong(x,z))) continue;
 						double depth = layout.depthInside(x,z);
 						if (depth < low || depth > high || !clear(x,z)) { reject("site-first depth/biome/spacing"); continue; }
-						Direction facing = Direction.getNearest(axis[0]-x, 0, axis[1]-z);
+						double towardX = axis[0]-x, towardZ = axis[1]-z;
+						Direction facing = Direction.getNearest(towardX, 0, towardZ);
+						if (alternateFacing) {
+							// At diagonal roads a second quarter-turn can still face
+							// the road; its rotated rectangle may fit dry terrain.
+							// Require <= 60 degrees to the axis point, never a back-facing door.
+							Direction second = facing.getAxis() == Direction.Axis.X
+									? (towardZ < 0 ? Direction.NORTH : Direction.SOUTH)
+									: (towardX < 0 ? Direction.WEST : Direction.EAST);
+							double projection = second.getStepX()*towardX + second.getStepZ()*towardZ;
+							if (projection < 0.5*Math.hypot(towardX,towardZ)) {
+								reject("alternate facing too oblique"); continue;
+							}
+							facing = second;
+						}
 						int hx = facing.getAxis() == Direction.Axis.X ? TEMPLATE_LENGTH / 2 : TEMPLATE_WIDTH / 2;
 						int hz = facing.getAxis() == Direction.Axis.Z ? TEMPLATE_LENGTH / 2 : TEMPLATE_WIDTH / 2;
 						double nearest = offset - Math.abs(dir[1]) * (hx + TERRAIN_ADAPTATION)
@@ -425,7 +445,7 @@ public final class TempleNetwork {
 					// a bridge approach or at a curved cut. Keep the original 104-step
 					// approach cap, but try a different natural exit on the same road.
 					for (int shift : new int[]{0,-24,24,-40,40}) {
-						if (exitProbes >= 36 || samples.size() >= slotColumnLimit) break;
+						if (exitProbes >= exitLimit || samples.size() >= slotColumnLimit) break;
 						int exitAlong = along + shift;
 						if (!outsideOutposts(exitAlong) || exitAlong < 650 || exitAlong > 2250) continue;
 						exitProbes++;
@@ -439,20 +459,27 @@ public final class TempleNetwork {
 									if (path.isEmpty() || overlapsExistingApproach(path) || overlapsScattered(temple,path)) continue;
 									temples.add(temple);
 									paths.addAll(path);
-									TearsOfInk.LOGGER.info("D-060 seed {}: site-first recovered road {} {} slot, {} viable sites, {} exit probes, {} new columns",
-											inputs.seed(),road,deep ? "deep" : "external",viable,exitProbes,samples.size()-startSamples);
+									TearsOfInk.LOGGER.info("D-060 seed {}: site-first recovered road {} {} slot, alternateFacing={}, {} viable sites, {} exit probes, {} new columns",
+											inputs.seed(),road,deep ? "deep" : "external",alternateFacing,viable,exitProbes,samples.size()-startSamples);
 									return true;
 								}
 							}
 						}
 					}
-					if (viable >= 40 || exitProbes >= 36 || samples.size() >= slotColumnLimit) {
-						reject("site-first bounded search limit");
+					if (viable >= viableLimit || exitProbes >= exitLimit || samples.size() >= slotColumnLimit) {
+						reject(alternateFacing ? "alternate facing bounded search limit" : "site-first bounded search limit");
+						reportSiteSearch(road,deep,alternateFacing,viable,exitProbes,startSamples);
 						return false;
 					}
 				}
 			}
+			reportSiteSearch(road,deep,alternateFacing,viable,exitProbes,startSamples);
 			return false;
+		}
+
+		private void reportSiteSearch(int road, boolean deep, boolean alternateFacing, int viable, int exitProbes, int startSamples) {
+			TearsOfInk.LOGGER.info("D-060 seed {}: empty road {} {} slot after site pass, alternateFacing={}, {} viable sites, {} exit probes, {} new columns",
+					inputs.seed(),road,deep ? "deep" : "external",alternateFacing,viable,exitProbes,samples.size()-startSamples);
 		}
 
 		private boolean overlapsExistingApproach(List<PathBlock> candidate) {
