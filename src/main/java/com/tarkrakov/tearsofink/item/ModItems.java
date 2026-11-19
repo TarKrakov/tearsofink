@@ -138,9 +138,9 @@ public final class ModItems {
 	public static final Item CRIMSON_FLOWER = register("crimson_flower", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)));
 	/** Символ Доблести — Шпиль (каждые 5 сложных контрактов). */
 	public static final Item VALOR_SIGIL = register("valor_sigil", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)));
-	/** Эссенция надежды — с обезумевших охотников (особые заказы); Торговка меняет 3 → Частичку Надежды. */
+	/** Эссенция Души — с обезумевших охотников (особые заказы); Торговка меняет 3 → Частичку Души. */
 	public static final Item HOPE_ESSENCE = register("hope_essence", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.UNCOMMON)));
-	/** Частичка Надежды — Чернила (особые заказы Торговки, позже). */
+	/** Частичка Души — Чернила (особые заказы Торговки, позже). */
 	public static final Item HOPE_MOTE = register("hope_mote", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)));
 
 	/** Дар Багряного Вестника — сумка Алой Жатвы (ПКМ — открыть). */
