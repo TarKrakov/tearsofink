@@ -77,7 +77,8 @@ public class InvitationScreen extends Screen {
 
 	/** На небольшом экране уменьшается целый рисунок, а не только текст или кнопка. */
 	private float paperScale() {
-		return Math.min(1f, Math.min((width - 8f) / W, (height - 8f) / H));
+		// Keep roughly the same screen-height fraction at every vanilla GUI scale.
+		return Math.max(0.01f, Math.min((width - 16f) / (W + 24f), (height - 8f) * 0.78f / H));
 	}
 
 	private float left() { return (width - W * paperScale()) / 2f; }
