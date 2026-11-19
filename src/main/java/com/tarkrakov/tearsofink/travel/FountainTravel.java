@@ -153,6 +153,16 @@ public final class FountainTravel {
 	}
 
 	/** Personal unique manual activations, including fountains at the Ink cap. */
+	/** Match the planned temple centre to the personally activated fountain, without loading chunks. */
+	public static boolean hasOpenedNear(ServerPlayer player, int x, int z, int radius) {
+		for (long packed : FountainTravelData.get(player).opened()) {
+			BlockPos pos = BlockPos.of(packed);
+			long dx = (long) pos.getX() - x, dz = (long) pos.getZ() - z;
+			if (dx * dx + dz * dz <= (long) radius * radius) return true;
+		}
+		return false;
+	}
+
 	public static int openedCount(ServerPlayer player) {
 		return FountainTravelData.get(player).opened().size();
 	}

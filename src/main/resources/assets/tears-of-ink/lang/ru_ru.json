@@ -1141,5 +1141,10 @@
   "equipment.tears-of-ink.longsword.primary": "%s: сильный удар · бесплатно",
   "equipment.tears-of-ink.longsword.cooldown": "КД: %s с / парой %s с",
   "equipment.tears-of-ink.longsword.pair": "Парой: %s — мощное рассечение; %s (держать) — блок.",
-  "equipment.tears-of-ink.longsword.guard": "Блок спереди: %s%% урона поглощено · КД %s с"
+  "equipment.tears-of-ink.longsword.guard": "Блок спереди: %s%% урона поглощено · КД %s с",
+  "item.tears-of-ink.ink_tear": "Чернильная слеза",
+  "item.tears-of-ink.shard_of_hope": "Осколок надежды",
+  "message.tears-of-ink.story_key.ink": "Частички чернил манят вас за собой - ваша судьба ждёт вас впереди",
+  "message.tears-of-ink.story_key.soul": "Искры света пляшут перед вами и зовут в путь - эта земля нуждается в вас",
+  "guide.tears-of-ink.gift.unopened": "Г-н Проводник: Вы забыли воспользоваться моим подарком, дорогой Гость"
 }
