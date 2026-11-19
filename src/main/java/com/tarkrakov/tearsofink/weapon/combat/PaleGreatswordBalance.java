@@ -18,8 +18,7 @@ public final class PaleGreatswordBalance {
                           double dashDistance, float dashDamageMultiplier, int dashTicks) {}
     public record Backstep(Sweep sweep, int hitTicks, int durationTicks, int cooldownTicks,
                            double backwardSpeed, double upwardSpeed) {}
-    public record DualR(int parryTicks, int followupWindowTicks, int cooldownTicks,
-                        float repelDamageMultiplier, double repelReach, double repelKnockback,
+    public record DualR(int cooldownTicks, double upwardSpeed, double forwardSpeed,
                         float slamDamageMultiplier, double slamReach, double slamKnockback) {}
     public record DualCharge(int cooldownTicks, double dashDistance, float minDamageMultiplier,
                              float maxDamageMultiplier) {}
@@ -32,7 +31,7 @@ public final class PaleGreatswordBalance {
     private static final Tuning DEFAULT = new Tuning(
             new SingleR(new Sweep(.70f, 3.4, 125, 1.0), 14, 48, 160, 4, 1.10f, 18),
             new Backstep(new Sweep(.35f, 2.8, 110, .45), 3, 12, 70, .42, .12),
-            new DualR(16, 64, 240, .30f, 3.1, 1.1, 1.25f, 3.1, .6),
+            new DualR(240, .92, .30, 1.25f, 3.1, .6),
             new DualCharge(260, 5.5, 1.10f, 1.8f),
             new ShiftGuard(.45f, .60f, 120, 150, 110, 160));
     private static Tuning current = DEFAULT;
@@ -69,12 +68,9 @@ public final class PaleGreatswordBalance {
         Backstep back = new Backstep(sweep(b,k.sweep()), ticks(b,"hit_ticks",k.hitTicks()),
                 ticks(b,"duration_ticks",k.durationTicks()), ticks(b,"cooldown_ticks",k.cooldownTicks()),
                 number(b,"backward_speed",k.backwardSpeed(),0,2), number(b,"upward_speed",k.upwardSpeed(),0,1));
-        DualR dualR = new DualR(ticks(p,"parry_ticks",pd.parryTicks()),
-                ticks(p,"followup_window_ticks",pd.followupWindowTicks()),
-                ticks(p,"cooldown_ticks",pd.cooldownTicks()),
-                (float) number(p,"repel_damage_multiplier",pd.repelDamageMultiplier(),0,100),
-                number(p,"repel_reach",pd.repelReach(),.1,32),
-                number(p,"repel_knockback",pd.repelKnockback(),0,8),
+        DualR dualR = new DualR(ticks(p,"cooldown_ticks",pd.cooldownTicks()),
+                number(p,"upward_speed",pd.upwardSpeed(),.1,2),
+                number(p,"forward_speed",pd.forwardSpeed(),0,2),
                 (float) number(p,"slam_damage_multiplier",pd.slamDamageMultiplier(),0,100),
                 number(p,"slam_reach",pd.slamReach(),.1,32),
                 number(p,"slam_knockback",pd.slamKnockback(),0,8));
@@ -90,7 +86,6 @@ public final class PaleGreatswordBalance {
                 ticks(g,"single_cooldown_ticks",gd.singleCooldownTicks()),
                 ticks(g,"dual_cooldown_ticks",gd.dualCooldownTicks()));
         if (back.hitTicks() >= back.durationTicks()) throw new IllegalArgumentException("backstep hit_ticks must be before duration_ticks");
-        if (dualR.parryTicks() > dualR.followupWindowTicks()) throw new IllegalArgumentException("dual_r parry_ticks must fit followup_window_ticks");
         if (dualCharge.minDamageMultiplier() > dualCharge.maxDamageMultiplier())
             throw new IllegalArgumentException("dual_charge min_damage_multiplier must not exceed max_damage_multiplier");
         return new Tuning(single, back, dualR, dualCharge, guard);

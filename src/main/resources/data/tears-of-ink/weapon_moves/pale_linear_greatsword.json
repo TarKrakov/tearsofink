@@ -24,12 +24,10 @@
     "upward_speed": 0.12
   },
   "dual_r": {
-    "parry_ticks": 16,
-    "followup_window_ticks": 64,
+    "_comment": "Парный R: один запуск, прыжок, разруб после приземления. Скорости импульса в блоках за тик.",
     "cooldown_ticks": 240,
-    "repel_damage_multiplier": 0.3,
-    "repel_reach": 3.1,
-    "repel_knockback": 1.1,
+    "upward_speed": 0.92,
+    "forward_speed": 0.3,
     "slam_damage_multiplier": 1.25,
     "slam_reach": 3.1,
     "slam_knockback": 0.6
