@@ -83,16 +83,8 @@ public class RuinStructure extends Structure {
 		ResourceLocation chosen = site.template();
 		int tier = Ruins.tier(site.layout(), x, z);
 		boolean start = site.temple() && Ruins.isStartTemple(site.layout(), x, z);
-		boolean bloodTemple=site.temple() && !start && site.plannedY()!=null
-				&& site.layout().templeLayoutVersion()==3
-				&& site.layout().pick(x,z,null)==com.tarkrakov.tearsofink.world.ModBiomes.BLOODWOOD;
-		// The shared biome tag now also allows bloodwood. Keep the previous
-		// biome gate for every legacy temple and old pale-only frozen plan.
-		if (site.temple() && !bloodTemple && !context.chunkGenerator().getBiomeSource()
-				.getNoiseBiome(x>>2,y>>2,z>>2,context.randomState().sampler())
-				.is(com.tarkrakov.tearsofink.world.ModBiomes.PALE_FOREST)) return Optional.empty();
 		return Optional.of(new GenerationStub(center, builder ->
-				builder.addPiece(new RuinPiece(context.structureTemplateManager(), chosen, center, site.rotation(), tier, start, site.pale(),bloodTemple))));
+				builder.addPiece(new RuinPiece(context.structureTemplateManager(), chosen, center, site.rotation(), tier, start, site.pale()))));
 	}
 
 	/** Conservatively reserves the original scattered ruin, including its foundation and terrain adaptation. */
@@ -126,8 +118,7 @@ public class RuinStructure extends Structure {
 				if (!plan.starter()) {
 					var size = context.structureTemplateManager().getOrCreate(Ruins.TEMPLE).getSize();
 					int half = Math.max(size.getX(), size.getZ()) / 2 + 1;
-					boolean pale=layout.pick(plan.x(),plan.z(),null)!=com.tarkrakov.tearsofink.world.ModBiomes.BLOODWOOD;
-					return new Site(layout, Ruins.TEMPLE, plan.x(), plan.z(), half, plan.rotation(), true, pale, plan.y());
+					return new Site(layout, Ruins.TEMPLE, plan.x(), plan.z(), half, plan.rotation(), true, true, plan.y());
 				}
 			}
 			int[] at = null;

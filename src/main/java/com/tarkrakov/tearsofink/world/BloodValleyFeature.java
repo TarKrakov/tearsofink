@@ -51,19 +51,9 @@ public class BloodValleyFeature extends Feature<NoneFeatureConfiguration> {
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		boolean changed = false;
 
-		// Surface structures are placed before this feature. Do not carve
-		// through a new bloodwood temple that has already been placed at its
-		// predicted valley elevation. All unreserved ground is sculpted as before.
-		var plan=layout.templeLayoutVersion()==3?layout.templeNetwork():null;
-		var protectedTemples=plan==null?java.util.List.<TempleNetwork.Temple>of():plan.temples().stream()
-				.filter(t -> !t.starter() && layout.pick(t.x(),t.z(),null)==ModBiomes.BLOODWOOD
-						&& Math.abs(t.x()-(minX+8))<=TempleNetwork.TEMPLATE_LENGTH/2+10
-						&& Math.abs(t.z()-(minZ+8))<=TempleNetwork.TEMPLATE_LENGTH/2+10).toList();
-
 		for (int dx = 0; dx < 16; dx++) {
 			for (int dz = 0; dz < 16; dz++) {
 				int x = minX + dx, z = minZ + dz;
-				if (protectedTemples.stream().anyMatch(t -> t.containsFootprint(x,z))) continue;
 				int surface = level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z) - 1;
 				pos.set(x, surface, z);
 				double target = layout.valleyHeight(x, z, surface,
