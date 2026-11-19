@@ -48,6 +48,9 @@ final class AditSites {
 	}
 
 	static Map<Long, Site> plan(InkLandsLayout layout, GenerationContext context) {
+		if (layout.hasTempleNetwork()) {
+			layout.prepareTempleNetwork(context);
+		}
 		Map<Long, Site> sites = new HashMap<>();
 		Map<Long, StructureStart> ruins = new HashMap<>();
 		for (int sector = 0; sector < InkLandsLayout.ROADS; sector++) {
@@ -110,7 +113,9 @@ final class AditSites {
 				if (layout.pick(x, z, null) != ModBiomes.PALE_FOREST) return false;
 			}
 		}
-		return !Ruins.nearTemple(layout, cx, cz) && !layout.nearHerald(cx, cz, 96)
+		var templeNetwork = layout.templeNetwork();
+		return !Ruins.nearTemple(layout, cx, cz)
+				&& (templeNetwork == null || !templeNetwork.overlapsPath(cx, cz, 10)) && !layout.nearHerald(cx, cz, 96)
 				&& layout.arenaCenter().distSqr(chunk.getMiddleBlockPosition(0)) > Mth.square(InkLandsLayout.ARENA_VALLEY_RADIUS + 16);
 	}
 

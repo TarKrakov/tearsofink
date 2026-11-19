@@ -20,5 +20,6 @@ abstract class AditLightingMixin {
 	private static void tearsofink$finishAdit(WorldGenContext context, ChunkStep step, StaticCache2D<GenerationChunkHolder> cache,
 											ChunkAccess chunk, CallbackInfoReturnable<CompletableFuture<ChunkAccess>> ci) {
 		AditStructure.finishDecoration(context.level(), chunk);
+		com.tarkrakov.tearsofink.world.TemplePaths.finishDecoration(context.level(), chunk);
 	}
 }

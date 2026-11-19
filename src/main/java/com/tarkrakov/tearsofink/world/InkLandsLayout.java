@@ -111,6 +111,10 @@ public final class InkLandsLayout {
 	public static final int ROAD_LANTERN_SPACING = 64;
 
 	private final Climate.Sampler sampler;
+	private final int templeLayoutVersion;
+	private final Object templePlanLock = new Object();
+	private java.nio.file.Path templePlanFile;
+	private volatile TempleNetwork templeNetwork;
 	private final BlockPos center;
 	private final long seed;
 	/** Шум рваного края — один для всех миров, чтобы клиент сам знал, где край (туман сгущается). */
@@ -128,8 +132,9 @@ public final class InkLandsLayout {
 	/** Высота дна для каждого пятна Кроволесья (считается один раз на пятно). */
 	private final java.util.concurrent.ConcurrentHashMap<Long, Double> valleyFloors = new java.util.concurrent.ConcurrentHashMap<>();
 
-	private InkLandsLayout(Climate.Sampler sampler, long seed) {
+	private InkLandsLayout(Climate.Sampler sampler, long seed, int templeLayoutVersion) {
 		this.sampler = sampler;
+		this.templeLayoutVersion = templeLayoutVersion;
 		this.center = BlockPos.ZERO;
 		this.seed = seed;
 		RandomSource random = RandomSource.create(seed);
@@ -252,7 +257,56 @@ public final class InkLandsLayout {
 	}
 
 	public static InkLandsLayout create(Climate.Sampler sampler) {
-		return new InkLandsLayout(sampler, seedOf(sampler));
+		return create(sampler, 1);
+	}
+
+	static InkLandsLayout create(Climate.Sampler sampler, int templeLayoutVersion) {
+		return new InkLandsLayout(sampler, seedOf(sampler), templeLayoutVersion);
+	}
+
+	public boolean hasTempleNetwork() {
+		return templeLayoutVersion == 2 || templeLayoutVersion == 3;
+	}
+
+	int templeLayoutVersion() { return templeLayoutVersion; }
+
+	/** Attached to the canonical world layout before generation starts. */
+	void attachTemplePlanFile(java.nio.file.Path file) {
+		synchronized (templePlanLock) {
+			if (templePlanFile != null && templePlanFile.equals(file)) return;
+			if (templeNetwork != null || templePlanFile != null) {
+				throw new IllegalStateException("Temple plan storage bound after planning");
+			}
+			templePlanFile = file;
+		}
+	}
+
+	public TempleNetwork templeNetwork() {
+		return templeNetwork;
+	}
+
+	public TempleNetwork prepareTempleNetwork(net.minecraft.world.level.levelgen.structure.Structure.GenerationContext context) {
+		var plan = templeNetwork;
+		return plan != null ? plan : prepareTempleNetwork(new TempleNetwork.Inputs(
+				new RoadTerrain(context.chunkGenerator(), context.heightAccessor(), context.randomState()),
+				context.registryAccess(), context.structureTemplateManager(), context.seed()));
+	}
+
+	public TempleNetwork prepareTempleNetwork(TempleNetwork.Inputs inputs) {
+		TempleNetwork plan = templeNetwork;
+		if (plan == null) {
+			synchronized (templePlanLock) {
+				plan = templeNetwork;
+				if (plan == null) {
+					// Diagnostic planning without a world path is still pure. Runtime V2/V3
+					// binds storage in ServerWorldEvents.LOAD, before chunk generation.
+					plan = templePlanFile == null ? TempleNetwork.plan(this, inputs)
+							: TemplePlanStore.loadOrCreate(templePlanFile, this, inputs);
+					templeNetwork = plan;
+				}
+			}
+		}
+		return plan;
 	}
 
 	/** Сид раскладки из сида мира: берём климат в нескольких точках (он зависит только от сида). */

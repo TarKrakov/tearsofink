@@ -93,18 +93,21 @@ class Rig:
             raise ImportError('Keep this workspace in native Bedrock Animated Model format')
         self.meta = project.get('toi_workspace')
         if not self.meta:
+            if project.get('model_identifier') == 'toi_weapon_workspace_v2':
+                raise ImportError('Universal rig metadata missing; reopen with updated TOI helper before saving')
             # Blockbench without the helper drops custom root metadata on Save.
             self.meta = json.loads((HERE/'pale_workspace_rig.json').read_text())
-        if self.meta.get('version') != 1 or self.meta.get('euler_order') != 'ZYX':
+        if self.meta.get('version') not in (1,2) or self.meta.get('euler_order') != 'ZYX':
             raise ImportError('Unsupported rig version / rotation order')
-        for path, expected in self.meta['source_sha256'].items():
+        for path, expected in self.meta.get('source_sha256',{}).items():
             if hashlib.sha256((ROOT/path).read_bytes()).hexdigest() != expected:
                 raise ImportError(f'Author source changed: rebuild/calibrate workspace ({path})')
         live_a, live_model, _, _, live_grip = load(self.meta['archetype'])
-        if (live_model['display'] != self.meta.get('display') or
+        hand_names = [v+'_'+s+'hand' for v in ('firstperson','thirdperson') for s in ('right','left')]
+        if (any(live_model['display'].get(k) != self.meta.get('display',{}).get(k) for k in hand_names) or
             live_a.get('firstperson_offset',[0,0,0]) != self.meta['fp_mount'] or
             live_a.get('firstperson_idle_offset',[0,0,0]) != self.meta['fp_idle_offset'] or
-            list(live_grip) != self.meta['grip']):
+            live_grip is None or list(live_grip) != self.meta['grip']):
             raise ImportError('Renderer mounts/Display/grip changed; rebuild and recalibrate the rig')
         self.groups = {g['uuid']:g for g in project.get('groups',[])}
         self.names = {g['name']:g['uuid'] for g in self.groups.values()}
@@ -134,8 +137,12 @@ class Rig:
                 if self.parents[self.names[binding['sword']]] != self.names[binding['arm']]:
                     raise ImportError('Sword must be a child of its arm')
         # Edit-mode changes invalidate calibration; Animate keys remain free.
-        original_path=next(ROOT/p for p in self.meta['source_sha256'] if p.endswith('.bbmodel'))
-        originals=json.loads(original_path.read_text())['elements']
+        if self.meta['version'] == 1:
+            original_path=next(ROOT/p for p in self.meta['source_sha256'] if p.endswith('.bbmodel'))
+            originals=json.loads(original_path.read_text())['elements']
+        else:
+            originals=self.meta['source_cubes']
+            self.check_live_geometry(originals,live_model)
         cubes={e['name']:e for e in project['elements'] if e.get('type','cube')=='cube'}
         for binding in self.meta['bindings'].values():
             for field, expected in (('shoulder',binding['pivot']),('arm',binding['pivot']),('sword',binding['grip_position'])):
@@ -144,7 +151,7 @@ class Rig:
             for i, original in enumerate(originals):
                 cube=cubes.get(binding['sword']+'_cube_'+str(i))
                 if cube is None:raise ImportError('Missing calibrated sword cube')
-                if cube.get('faces') != original['faces']:raise ImportError('Workspace sword UV changed')
+                if cube.get('faces') != original.get('atlas_faces',original['faces']):raise ImportError('Workspace sword UV changed')
                 for field in ('from','to','origin'):
                     expected=np.array(binding['grip_position'])+binding['scale']*(np.array(original[field])-self.meta['grip'])
                     if not np.allclose(cube[field],expected,atol=1e-4,rtol=0):
@@ -204,6 +211,28 @@ class Rig:
         allowed={b[k] for b in self.meta['bindings'].values() for k in ('arm','shoulder','sword')}
         if animated_names-allowed:
             raise ImportError('Animate shoulder, arm or sword bones only: '+', '.join(sorted(animated_names-allowed)))
+
+    def check_live_geometry(self, originals, live_model):
+        resolution=self.meta['source_resolution']
+        def signature(c, editor):
+            def rounded(v):return tuple(round(number(x),5) for x in v)
+            if editor:
+                r=c.get('rotation',[0,0,0]);origin=c['origin']
+            else:
+                rot=c.get('rotation',{})
+                r=[rot.get('angle',0) if axis==rot.get('axis') else 0 for axis in 'xyz']
+                if rot.get('rescale'):raise ImportError('Rescaled Java cube unsupported')
+                origin=rot.get('origin',[0,0,0])
+            faces=[]
+            for name,face in sorted(c.get('faces',{}).items()):
+                if editor and (face.get('texture') is None or face.get('texture') is False):continue
+                uv=face.get('uv')
+                if uv is None:raise ImportError('Java face needs explicit UV')
+                if editor:uv=[v*16/resolution['width' if i%2==0 else 'height'] for i,v in enumerate(uv)]
+                faces.append((name,rounded(uv),face.get('rotation',0)))
+            return (rounded(c['from']),rounded(c['to']),rounded(r),rounded(origin) if any(r) else (0,0,0),tuple(faces))
+        if sorted(signature(c,True) for c in originals) != sorted(signature(c,False) for c in live_model['elements']):
+            raise ImportError('Editor weapon geometry/UV does not match installed Java model; export authored item first')
 
     def pose(self, time):
         result={}

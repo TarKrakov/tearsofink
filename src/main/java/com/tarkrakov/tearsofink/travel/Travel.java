@@ -351,14 +351,22 @@ public final class Travel {
 
 	private static void tickLoading(int now) {
 		for (ServerPlayer p : List.copyOf(RESPAWNING)) {
-			if (p.isRemoved() || p.hasDisconnected() || p.isAlive() || !ModDimensions.isLands(p.level())) {
+			// A dead entity can be removed from its level while the same player is
+			// still waiting on the connection. Only discard a genuinely stale request.
+			if (p.hasDisconnected() || p.server.getPlayerList().getPlayer(p.getUUID()) != p
+					|| p.isAlive() || !ModDimensions.isLands(p.level())) {
 				RESPAWNING.remove(p);
-			} else if (respawnTarget(p, false) != null) {
-				RESPAWNING.remove(p);
+				continue;
+			}
+			// Keep the request until AFTER_RESPAWN acknowledges actual replacement.
+			// A temporarily rejected/redeferred vanilla command is not completion.
+			// Retry at most once per second, refreshing the existing bounded tickets.
+			if (now % 20 != 0) continue;
+			prepareRespawn(p);
+			if (respawnTarget(p, false) != null) {
 				p.connection.handleClientCommand(new ServerboundClientCommandPacket(ServerboundClientCommandPacket.Action.PERFORM_RESPAWN));
-			} else if (now % 20 == 0) {
-				prepareRespawn(p);
-				if (now % 100 == 0) waiting(p, "respawn_loading");
+			} else if (now % 100 == 0) {
+				waiting(p, "respawn_loading");
 			}
 		}
 		for (ServerPlayer p : List.copyOf(MIRROR_ARRIVALS.keySet())) {

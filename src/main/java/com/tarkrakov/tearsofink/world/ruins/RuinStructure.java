@@ -5,6 +5,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import com.tarkrakov.tearsofink.world.InkLandsAccess;
 import com.tarkrakov.tearsofink.world.InkLandsLayout;
+import com.tarkrakov.tearsofink.world.TempleNetwork;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
 import net.minecraft.resources.ResourceLocation;
@@ -13,6 +14,7 @@ import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.level.levelgen.structure.BoundingBox;
 import net.minecraft.world.level.levelgen.structure.Structure;
 import net.minecraft.world.level.levelgen.structure.StructureType;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
@@ -35,7 +37,7 @@ public class RuinStructure extends Structure {
 	}
 
 	private record Site(InkLandsLayout layout, ResourceLocation template, int x, int z, int half,
-						Rotation rotation, boolean temple, boolean pale) {}
+						Rotation rotation, boolean temple, boolean pale, Integer plannedY) {}
 
 	/** Быстрый прогноз горизонтального объёма, включая запас terrain_adaptation и фундамент. */
 	public boolean mayOverlap(GenerationContext context, ChunkPos target) {
@@ -54,6 +56,7 @@ public class RuinStructure extends Structure {
 		InkLandsLayout layout = site.layout();
 		int x = site.x(), z = site.z(), half = site.half();
 		boolean temple = site.temple();
+		if (site.plannedY() != null) return generationStub(context, site, site.plannedY());
 		// высота: «нижняя середина» земли под постройкой (чтобы не висела, но и не тонула)
 		// (с учётом низин Кроволесья — их выкапывает генерация позже, по рельефу их не видно)
 		java.util.function.IntBinaryOperator base = (bx, bz) ->
@@ -71,12 +74,26 @@ public class RuinStructure extends Structure {
 			if (ys[8] - ys[0] > Ruins.MAX_SLOPE) return Optional.empty(); // не на обрыве
 		}
 
+		return generationStub(context, site, y);
+	}
+
+	private Optional<GenerationStub> generationStub(GenerationContext context, Site site, int y) {
+		int x = site.x(), z = site.z();
 		BlockPos center = new BlockPos(x, y, z);
 		ResourceLocation chosen = site.template();
-		int tier = Ruins.tier(layout, x, z);
-		boolean start = temple && Ruins.isStartTemple(layout, x, z);
+		int tier = Ruins.tier(site.layout(), x, z);
+		boolean start = site.temple() && Ruins.isStartTemple(site.layout(), x, z);
 		return Optional.of(new GenerationStub(center, builder ->
 				builder.addPiece(new RuinPiece(context.structureTemplateManager(), chosen, center, site.rotation(), tier, start, site.pale()))));
+	}
+
+	/** Conservatively reserves the original scattered ruin, including its foundation and terrain adaptation. */
+	public BoundingBox scatteredFootprint(GenerationContext context) {
+		if (kind.equals("temple")) throw new IllegalStateException("Expected scattered ruin");
+		Site site = findSite(context);
+		if (site == null) return null;
+		int r = site.half() + 12;
+		return new BoundingBox(site.x() - r, 0, site.z() - r, site.x() + r, 0, site.z() + r);
 	}
 
 	private Site findSite(GenerationContext context) {
@@ -88,10 +105,24 @@ public class RuinStructure extends Structure {
 		RandomSource random = context.random();
 		ResourceLocation template;
 		int x, z;
+		TempleNetwork network = null;
+		if (kind.equals("temple") && layout.hasTempleNetwork()
+				&& layout.depthInside(chunk.getMiddleBlockX(), chunk.getMiddleBlockZ()) >= 170) {
+			network = layout.prepareTempleNetwork(context);
+		}
 
 		if (kind.equals("temple")) {
+			if (network != null) {
+				var plan = network.at(chunk);
+				if (plan == null) return null;
+				if (!plan.starter()) {
+					var size = context.structureTemplateManager().getOrCreate(Ruins.TEMPLE).getSize();
+					int half = Math.max(size.getX(), size.getZ()) / 2 + 1;
+					return new Site(layout, Ruins.TEMPLE, plan.x(), plan.z(), half, plan.rotation(), true, true, plan.y());
+				}
+			}
 			int[] at = null;
-			for (int[] p : Ruins.templePoints(layout)) {
+			for (int[] p : layout.hasTempleNetwork() ? Ruins.startTemplePoints(layout) : Ruins.templePoints(layout)) {
 				if ((p[0] >> 4) == chunk.x && (p[1] >> 4) == chunk.z) { at = p; break; }
 			}
 			if (at == null) return null;
@@ -113,7 +144,7 @@ public class RuinStructure extends Structure {
 			int[] side = besideRoad(layout, x, z, random, half);
 			if (side != null) { x = side[0]; z = side[1]; monumentByRoad = true; }
 		}
-		if (!kind.equals("temple") && Ruins.nearTemple(layout, x, z)) return null;
+		if (!kind.equals("temple") && Ruins.nearLegacyTemple(layout, x, z)) return null;
 		if (!kind.equals("temple") && !monumentByRoad && !Ruins.clear(layout, x, z, half)) return null;
 		if (monumentByRoad && (layout.roadNear(x, z, half - InkLandsLayout.ROAD_HALF_WIDTH + 1) != null
 				|| layout.nearLake(x, z, Ruins.LAKE_GAP) || layout.nearHerald(x, z, Ruins.HERALD_GAP))) return null;
@@ -123,7 +154,7 @@ public class RuinStructure extends Structure {
 		if (!temple && !pale && random.nextFloat() < Ruins.INKWOOD_SKIP) return null; // в Чернолесье реже
 
 		Rotation rotation = Rotation.getRandom(random);
-		return new Site(layout, template, x, z, half, rotation, temple, pale);
+		return new Site(layout, template, x, z, half, rotation, temple, pale, null);
 	}
 
 	private static ResourceLocation pick(RandomSource random) {
