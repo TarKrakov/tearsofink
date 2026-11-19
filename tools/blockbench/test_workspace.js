@@ -69,3 +69,23 @@ for(const a of [[22,35,-80],[0,90,30],[75,-90,20],[179,20,-175]]){
 // Universal v2 constructed from the real source has independently calibrated geometry.
 const universal=clone(result);universal.animations=[single];assert.equal(planF5(universal,single).status,'generated');
 console.log('TOI automatic F5 geometry, both hands, protection, validation and timing checks passed');
+
+
+// Recovery from an existing artist scene after hot reload or metadata loss.
+const {recoverMetadata}=build;
+const missing=clone(template);delete missing.toi_workspace;missing.name='pale_linear_greatsword_animations';
+missing.animations=[{...single,name:'attack1'},{...dual,name:'dual_attack1'}];
+const beforeRecovery=JSON.stringify(missing);
+const recovered=recoverMetadata(missing);
+assert.deepEqual(recovered,template.toi_workspace);
+assert.equal(JSON.stringify(missing),beforeRecovery);
+assert.equal(planF5({...missing,toi_workspace:recovered},missing.animations[0]).status,'generated');
+const v2Missing=clone(result);delete v2Missing.toi_workspace;
+assert.deepEqual(recoverMetadata(v2Missing,result),result.toi_workspace);
+const wrong=clone(missing);wrong.elements.find(e=>e.name==='FP_right_sword_cube_0').from[0]+=1;
+assert.equal(recoverMetadata(wrong),null);
+const wrongPivot=clone(missing);wrongPivot.groups.find(g=>g.name==='FP_right_arm').origin[0]+=1;
+assert.equal(recoverMetadata(wrongPivot),null);
+const wrongDisk=clone(result);wrongDisk.elements.find(e=>e.name==='FP_right_sword_cube_0').to[0]+=1;
+assert.equal(recoverMetadata(wrong,wrongDisk),null);
+console.log('TOI calibration recovery: metadata-free authored clips, disk v2, reject altered geometry and pivots passed');
