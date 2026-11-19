@@ -8,6 +8,7 @@ from pathlib import Path
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE.parent/"d060"))
 import run as d060
+from road_samples import read_snapshot, compare_snapshots
 
 def install():
     java=d060.JAVA
@@ -62,6 +63,21 @@ def session(label):
         server.send("toi-d060-physical-full")
         result=json.loads(server.expect("D060_FULL_PHYSICAL ",720))
         result["arrival"]=arrival
+        road = result.get("road_blocks")
+        if road is not None:
+            # Snapshot names are deliberately removed from the hashed metadata.
+            name = road.pop("snapshot")
+            if Path(name).name != name or not name.startswith("road-samples-") or not name.endswith(".tsv"):
+                raise RuntimeError("Invalid road snapshot filename")
+            snapshot = d060.OUT/name
+            rows = read_snapshot(snapshot)
+            if len(rows) != road["blocks"]:
+                raise RuntimeError("Road snapshot count differs from original hash sample")
+            # Verify exact old-format digest independently in Python.
+            from road_samples import snapshot_digest
+            if snapshot_digest(rows) != road["sha256"]:
+                raise RuntimeError("Road snapshot digest differs from original hash")
+            snapshot.rename(d060.OUT/(label+"-roads.tsv"))
         (d060.OUT/(label+".json")).write_text(json.dumps(result,indent=2))
         normal=True
         return result
@@ -95,7 +111,17 @@ def main():
         "v1_unchanged_adits": bool(v1.get("adits")) and v1.get("adits")==v1restart.get("adits"),
         "timings_ms": {k: x["arrival"].get("elapsed_ms") for k,x in [("v3",v3),("v1",v1),("v1_restart",v1restart)]}
     }
-    result={"comparison":comparison,"v3":v3,"v1":v1,"v1_restart":v1restart}
+    # Locate every changed block while retaining the original strict pass/fail.
+    diagnostics = {}
+    for lhs,rhs in [("physical-v3","physical-v1"),("physical-v1","physical-v1-restart")]:
+        left,right = (d060.OUT/(label+"-roads.tsv") for label in (lhs,rhs))
+        if left.exists() and right.exists():
+            diff = compare_snapshots(read_snapshot(left),read_snapshot(right))
+            name = lhs+"-vs-"+rhs
+            (d060.OUT/(name+".json")).write_text(json.dumps(diff,indent=2))
+            diagnostics[name] = {k:v for k,v in diff.items() if k!="differences"}
+            diagnostics[name]["examples"] = diff["differences"][:8]
+    result={"comparison":comparison,"road_diagnostics":diagnostics,"v3":v3,"v1":v1,"v1_restart":v1restart}
     (d060.OUT/"full-physical-result.json").write_text(json.dumps(result,indent=2))
     print("D060_FULL_SUMMARY "+json.dumps(result),flush=True)
     ok=all(x.get("pass") and x["arrival"].get("ready") and x.get("seed")=="42" for x in [v3,v1,v1restart])

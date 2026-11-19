@@ -20,6 +20,8 @@ import net.minecraft.world.level.LevelHeightAccessor;
 import net.minecraft.world.level.block.StairBlock;
 
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -27,6 +29,8 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.TreeSet;
 
 /** Independent physical test, installed ONLY into a disposable CI checkout. */
 public final class D060PhysicalProbe {
@@ -193,7 +197,7 @@ public final class D060PhysicalProbe {
     private static JsonObject roadSamples(ServerLevel level, InkLandsLayout layout, RoadTerrain terrain) throws Exception {
         var digest = MessageDigest.getInstance("SHA-256");
         JsonArray stations = new JsonArray();
-        var visited = new HashSet<BlockPos>();
+        var samples = new LinkedHashMap<BlockPos, RoadSample>();
         int bridges = 0, land = 0, lights = 0;
         for (int road=0;road<InkLandsLayout.ROADS;road++) {
             layout.roadHeight(road,1000,terrain);
@@ -221,13 +225,19 @@ public final class D060PhysicalProbe {
                     var hit=layout.roadNear(x,z,InkLandsLayout.ROAD_SHOULDER);
                     if (hit==null || (int)hit[0]!=road) continue;
                     int y=(int)Math.round(layout.roadHeight(road,hit[1],terrain));
-                    for (int dy=-1;dy<=3;dy++) sample(level,new BlockPos(x,y+dy,z),visited,digest);
+                    boolean onBridge = layout.roadBridge(road,hit[1]);
+                    String zone = hit[2]<=InkLandsLayout.ROAD_HALF_WIDTH
+                        ? (onBridge?"bridge_deck":"lane")
+                        : (onBridge?(hit[2]<=InkLandsLayout.ROAD_HALF_WIDTH+1.0?"bridge_rail":"bridge_margin"):"shoulder");
+                    for (int dy=-1;dy<=3;dy++)
+                        sample(level,new BlockPos(x,y+dy,z),samples,digest,road+":"+d+"/"+zone+"/"+dy);
                 }
                 int k=Math.round((float)d/InkLandsLayout.ROAD_LANTERN_SPACING);
                 var lamp=layout.roadLanternPost(road,k);
                 if (lamp!=null) {
                     int y=(int)Math.round(layout.roadHeight(road,k*InkLandsLayout.ROAD_LANTERN_SPACING,terrain));
-                    for(int dy=0;dy<=3;dy++) sample(level,new BlockPos(lamp[0],y+dy,lamp[1]),visited,digest);
+                    for(int dy=0;dy<=3;dy++)
+                        sample(level,new BlockPos(lamp[0],y+dy,lamp[1]),samples,digest,road+":"+d+"/lantern/"+dy);
                     lights++;
                 }
             }
@@ -237,12 +247,34 @@ public final class D060PhysicalProbe {
         result.addProperty("land_stations",land);
         result.addProperty("bridge_stations",bridges);
         result.addProperty("lantern_samples",lights);
-        result.addProperty("blocks",visited.size());
+        result.addProperty("blocks",samples.size());
         result.addProperty("sha256",HexFormat.of().formatHex(digest.digest()));
+        // runServer uses run-server/ as cwd. Keep detailed states out of the
+        // single-line JSON log and preserve the original digest/order exactly.
+        Path output = Path.of("..","out","d060").toAbsolutePath().normalize();
+        Path snapshot = Files.createTempFile(output,"road-samples-",".tsv");
+        try (var writer = Files.newBufferedWriter(snapshot,StandardCharsets.UTF_8)) {
+            for (var entry : samples.entrySet()) {
+                BlockPos pos = entry.getKey();
+                RoadSample sample = entry.getValue();
+                writer.write(pos.getX()+","+pos.getY()+","+pos.getZ()+"\t"+sample.state()+"\t"+String.join(";",sample.tags())+"\n");
+            }
+        }
+        result.addProperty("snapshot",snapshot.getFileName().toString());
         return result;
     }
 
-    private static void sample(ServerLevel level,BlockPos pos,HashSet<BlockPos> visited,MessageDigest digest) {
-        if (visited.add(pos)) digest.update((pos.asLong()+":"+level.getBlockState(pos)+"\n").getBytes(StandardCharsets.UTF_8));
+    private record RoadSample(String state, TreeSet<String> tags) {}
+
+    private static void sample(ServerLevel level,BlockPos pos,LinkedHashMap<BlockPos,RoadSample> samples,
+                               MessageDigest digest,String tag) {
+        RoadSample value = samples.get(pos);
+        if (value == null) {
+            String state = level.getBlockState(pos).toString();
+            value = new RoadSample(state,new TreeSet<>());
+            samples.put(pos,value);
+            digest.update((pos.asLong()+":"+state+"\n").getBytes(StandardCharsets.UTF_8));
+        }
+        value.tags().add(tag);
     }
 }

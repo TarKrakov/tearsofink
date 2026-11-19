@@ -24,6 +24,8 @@ jobs:
         with:
           distribution: microsoft
           java-version: '25'
+      - name: Unit-test exact block comparison
+        run: python3 -m unittest discover -s tools/tests/d060-physical -p 'test_*.py'
       - name: Compare real V3 and V1 buildings and roads
         run: python3 -u tools/tests/d060-physical/run.py
       - uses: actions/upload-artifact@v7
