@@ -93,7 +93,7 @@ public class InkFountainBlock extends Block {
 		if (alreadyDrunk || atCap) {
 			// Возрождение не зависит от возможности испить фонтан.
 			// Не отмечаем новый фонтан испитым при потолке: бонус останется доступен,
-			// если игрок позднее снизит максимум, а условия Торговки не изменятся.
+			// если игрок позднее снизит максимум. Доступ к Торговке зависит от личных активаций.
 			if (!alreadyDrunk) {
 				sp.sendSystemMessage(Component.translatable("message.tears-of-ink.veins_full").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
 			}
@@ -105,6 +105,7 @@ public class InkFountainBlock extends Block {
 				server.sendParticles(ParticleTypes.SQUID_INK, pos.getX() + 0.5, pos.getY() + 0.9, pos.getZ() + 0.5, 12, 0.2, 0.3, 0.2, 0.02);
 			}
 			sp.sendSystemMessage(Component.translatable("message.tears-of-ink.fountain_bound").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
+			com.tarkrakov.tearsofink.trader.SoulTrader.onFountainActivated(sp, server, pos);
 			return InteractionResult.SUCCESS;
 		}
 		Set<Long> copy = new HashSet<>(visited);
@@ -119,6 +120,7 @@ public class InkFountainBlock extends Block {
 		level.playSound(null, pos, SoundEvents.SQUID_SQUIRT, SoundSource.BLOCKS, 0.6f, 0.7f);
 		server.sendParticles(ParticleTypes.SQUID_INK, pos.getX() + 0.5, pos.getY() + 0.9, pos.getZ() + 0.5, 30, 0.3, 0.4, 0.3, 0.05);
 		server.sendParticles(ParticleTypes.SQUID_INK, sp.getX(), sp.getY() + 1.0, sp.getZ(), 20, 0.3, 0.5, 0.3, 0.02);
+		com.tarkrakov.tearsofink.trader.SoulTrader.onFountainActivated(sp, server, pos);
 		return InteractionResult.SUCCESS;
 	}
 

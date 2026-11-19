@@ -152,6 +152,15 @@ public final class FountainTravel {
 		return !FountainTravelData.get(player).opened().isEmpty();
 	}
 
+	/** Personal unique manual activations, including fountains at the Ink cap. */
+	public static int openedCount(ServerPlayer player) {
+		return FountainTravelData.get(player).opened().size();
+	}
+
+	public static boolean hasOpenedFountain(ServerPlayer player, BlockPos pos) {
+		return FountainTravelData.get(player).opened().contains(pos.asLong());
+	}
+
 	public static void activate(ServerPlayer player, BlockPos pos) {
 		if (ModDimensions.isLands(player.level()) && !player.isSpectator()) FountainTravelData.get(player).activate(player, pos);
 	}

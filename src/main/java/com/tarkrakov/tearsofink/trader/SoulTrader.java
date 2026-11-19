@@ -2,7 +2,16 @@ package com.tarkrakov.tearsofink.trader;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.block.ModBlocks;
-import com.tarkrakov.tearsofink.block.fountain.InkFountainBlock;
+import com.tarkrakov.tearsofink.travel.FountainTravel;
+import com.tarkrakov.tearsofink.world.ModDimensions;
+import com.mojang.serialization.Codec;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import com.tarkrakov.tearsofink.entity.ModMobs;
 import com.tarkrakov.tearsofink.ink.InkData;
 import com.tarkrakov.tearsofink.ink.InkPowers;
@@ -26,14 +35,16 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.phys.AABB;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Торговка душами (фракция Охотников, служит Чернильному Фонтану). Одна сущность — много воплощений:
- * проступает у малого чернильного фонтана, когда игрок жмёт по нему Shift+ПКМ (фонтан должен быть уже испит).
+ * Персонально проступает при второй активации; после вступления — Shift+ПКМ у лично открытого фонтана.
  * Покупает душу (−SOUL_STEP максимума Души → +INK_PER_SOUL_STEP к запасу Чернил) и принимает Исполненные контракты.
  * Тексты — trader.tears-of-ink.* в ru_ru.json.
  */
@@ -46,6 +57,12 @@ public final class SoulTrader {
 	/** Исчезает, если рядом (RADIUS) никого нет столько тиков; и в любом случае через MAX_LIFE. */
 	public static final int IDLE_TICKS = 20 * 30, MAX_LIFE = 20 * 180;
 	public static final double RADIUS = 8, TRADE_RANGE = 6;
+	public static final int REQUIRED_FOUNTAINS = 2, INTRO_LINES = 4, INTRO_LINE_TICKS = 100;
+	// Persist each delivered line, not a transient entity/session. Survives death and reconnect.
+	private static final AttachmentType<Integer> INTRO = AttachmentRegistry.<Integer>builder()
+			.persistent(Codec.intRange(0, INTRO_LINES)).copyOnDeath().initializer(() -> 0)
+			.buildAndRegister(TearsOfInk.id("trader_intro"));
+	private static final Map<UUID, SoulTraderEntity> PERSONAL = new HashMap<>();
 
 	public static final int ACTION_SELL = 1, ACTION_CONTRACTS = 2, ACTION_LEAVE = 3, ACTION_BOARD = 4, /** Исторический код запретной покупки (сохраняем ID старых клиентов, сервер его игнорирует). */
 			ACTION_EXCHANGE = 5, /** Старый ID смены обета: сервер игнорирует. */ ACTION_VOW = 6, ACTION_ABANDON = 20,
@@ -94,6 +111,16 @@ public final class SoulTrader {
 	private SoulTrader() {}
 
 	public static void init() {
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> dismiss(handler.player));
+		ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, from, to) -> dismiss(player));
+		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, player, alive) -> dismiss(oldPlayer));
+		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
+			if (entity instanceof ServerPlayer p) dismiss(p);
+		});
+		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+			for (SoulTraderEntity trader : List.copyOf(PERSONAL.values())) trader.discard();
+			PERSONAL.clear();
+		});
 		PayloadTypeRegistry.playS2C().register(Open.TYPE, Open.CODEC);
 		PayloadTypeRegistry.playC2S().register(Action.TYPE, Action.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(Action.TYPE, (payload, ctx) -> ctx.player().server.execute(() -> act(ctx.player(), payload)));
@@ -111,19 +138,70 @@ public final class SoulTrader {
 		p.sendSystemMessage(Component.translatable("trader.tears-of-ink." + key, args).withStyle(ChatFormatting.DARK_AQUA, ChatFormatting.ITALIC));
 	}
 
-	/** Позвать Торговку к фонтану (или открыть окно, если она уже здесь). */
+	static boolean eligiblePlayer(ServerPlayer p) {
+		return p.isAlive() && !p.isSpectator() && ModDimensions.isLands(p.level()) && InkPowers.get(p).inside();
+	}
+
+	static boolean introduced(ServerPlayer p) {
+		return p.getAttachedOrCreate(INTRO) >= INTRO_LINES;
+	}
+
+	static boolean unlocked(ServerPlayer p) {
+		return FountainTravel.openedCount(p) >= REQUIRED_FOUNTAINS && introduced(p);
+	}
+
+	public static boolean canTrade(ServerPlayer p, SoulTraderEntity trader) {
+		return eligiblePlayer(p) && trader.getType() == ModMobs.SOUL_TRADER && trader.isAlive()
+				&& trader.level() == p.level() && trader.ownedBy(p) && PERSONAL.get(p.getUUID()) == trader
+				&& p.distanceTo(trader) <= TRADE_RANGE && unlocked(p);
+	}
+
+	static void nextIntroLine(ServerPlayer p) {
+		int delivered = p.getAttachedOrCreate(INTRO);
+		if (delivered >= INTRO_LINES || FountainTravel.openedCount(p) < REQUIRED_FOUNTAINS) return;
+		say(p, "intro." + (delivered + 1));
+		p.setAttached(INTRO, delivered + 1);
+		if (delivered + 1 == INTRO_LINES) say(p, "intro.complete");
+	}
+
+	static void release(SoulTraderEntity trader, UUID owner) {
+		if (owner != null) PERSONAL.remove(owner, trader);
+	}
+
+	private static void dismiss(ServerPlayer p) {
+		SoulTraderEntity trader = PERSONAL.remove(p.getUUID());
+		if (trader != null) trader.discard();
+	}
+
+	/** Called only after successful ordinary fountain activation; retry pending introductions on later touches. */
+	public static void onFountainActivated(ServerPlayer p, ServerLevel level, BlockPos fountain) {
+		if (eligiblePlayer(p) && p.level() == level && !introduced(p)
+				&& FountainTravel.openedCount(p) >= REQUIRED_FOUNTAINS
+				&& FountainTravel.hasOpenedFountain(p, fountain)) manifest(p, level, fountain, true);
+	}
+
+	/** Shift+right click. A locked player cannot open any transaction or another player's embodiment. */
 	public static void summon(ServerPlayer p, ServerLevel level, BlockPos fountain) {
-		if (!InkPowers.get(p).inside()) {
-			p.playNotifySound(SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.25f, 1.8f);
+		if (!eligiblePlayer(p) || p.level() != level) return;
+		if (FountainTravel.openedCount(p) < REQUIRED_FOUNTAINS) {
+			say(p, "need_second_fountain");
 			return;
 		}
-		if (!p.getAttachedOrCreate(InkFountainBlock.VISITED).contains(fountain.asLong())) {
-			say(p, "need_drink");
+		if (!FountainTravel.hasOpenedFountain(p, fountain)) {
+			say(p, "need_activation");
 			return;
 		}
-		List<SoulTraderEntity> here = level.getEntitiesOfClass(SoulTraderEntity.class, new AABB(fountain).inflate(4), SoulTraderEntity::isAlive);
-		if (!here.isEmpty()) {
-			here.get(0).openFor(p, 0);
+		manifest(p, level, fountain, !introduced(p));
+	}
+
+	private static void manifest(ServerPlayer p, ServerLevel level, BlockPos fountain, boolean intro) {
+		if (!level.getBlockState(fountain).is(ModBlocks.INK_FOUNTAIN)
+				|| p.distanceToSqr(fountain.getX()+0.5, fountain.getY()+0.5, fountain.getZ()+0.5) > RADIUS*RADIUS) return;
+		SoulTraderEntity existing = PERSONAL.get(p.getUUID());
+		if (existing != null && existing.isAlive() && existing.level() == level
+				&& existing.fountain().equals(fountain)) {
+			existing.keepAlive();
+			if (!intro) existing.openFor(p, 0);
 			return;
 		}
 		BlockPos at = standingSpot(level, fountain, p);
@@ -133,18 +211,23 @@ public final class SoulTrader {
 		}
 		SoulTraderEntity trader = ModMobs.SOUL_TRADER.create(level);
 		if (trader == null) return;
+		trader.setOwner(p.getUUID());
 		double dx = p.getX() - (at.getX() + 0.5), dz = p.getZ() - (at.getZ() + 0.5);
 		float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
 		trader.moveTo(at.getX() + 0.5, at.getY(), at.getZ() + 0.5, yaw, 0f);
 		trader.setYHeadRot(yaw);
 		trader.setYBodyRot(yaw);
 		trader.setFountain(fountain);
-		level.addFreshEntity(trader);
-		level.sendParticles(ParticleTypes.SQUID_INK, at.getX() + 0.5, at.getY() + 1.0, at.getZ() + 0.5, 40, 0.3, 0.8, 0.3, 0.02);
-		level.playSound(null, at, SoundEvents.BREWING_STAND_BREW, SoundSource.NEUTRAL, 0.8f, 0.5f);
-		level.playSound(null, at, SoundEvents.SOUL_ESCAPE.value(), SoundSource.NEUTRAL, 1.0f, 0.6f);
-		say(p, "greet");
-		trader.openFor(p, OPEN_DELAY);
+		if (!level.addFreshEntity(trader)) return;
+		if (existing != null) existing.discard();
+		PERSONAL.put(p.getUUID(), trader);
+		level.sendParticles(p, ParticleTypes.SQUID_INK, false, at.getX() + 0.5, at.getY() + 1.0, at.getZ() + 0.5, 40, 0.3, 0.8, 0.3, 0.02);
+		p.playNotifySound(SoundEvents.BREWING_STAND_BREW, SoundSource.NEUTRAL, 0.8f, 0.5f);
+		p.playNotifySound(SoundEvents.SOUL_ESCAPE.value(), SoundSource.NEUTRAL, 1.0f, 0.6f);
+		if (!intro) {
+			say(p, "greet");
+			trader.openFor(p, OPEN_DELAY);
+		}
 	}
 
 	/** Где встать: сбоку от фонтана, лучше — за ним (лицом к игроку). Нужны два блока воздуха и пол. */
@@ -173,6 +256,7 @@ public final class SoulTrader {
 	}
 
 	public static void sendOpen(ServerPlayer p, SoulTraderEntity trader) {
+		if (!canTrade(p, trader)) return;
 		com.tarkrakov.tearsofink.prologue.DiaryEntries.discover(p, "draft_soul_bargain");
 		InkData d = InkPowers.get(p);
 		var v = com.tarkrakov.tearsofink.vow.Vows.get(p);
@@ -182,8 +266,7 @@ public final class SoulTrader {
 	}
 
 	private static void act(ServerPlayer p, Action a) {
-		if (!(p.level().getEntity(a.entity()) instanceof SoulTraderEntity trader) || !trader.isAlive()
-				|| p.distanceTo(trader) > TRADE_RANGE || !InkPowers.get(p).inside()) return;
+		if (!(p.level().getEntity(a.entity()) instanceof SoulTraderEntity trader) || !canTrade(p, trader)) return;
 		trader.keepAlive();
 		switch (a.action()) {
 			case ACTION_SELL -> sell(p, trader);
@@ -216,7 +299,7 @@ public final class SoulTrader {
 		if (!d.inside()) return;
 		if (com.tarkrakov.tearsofink.vow.Vows.unexchange(p)) { // Душа выше 100 от обмена — обратный ход с потерей
 			InkData now = InkPowers.get(p);
-			p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.SOUL_ESCAPE.value(), SoundSource.PLAYERS, 1.0f, 0.7f);
+			p.playNotifySound(SoundEvents.SOUL_ESCAPE.value(), SoundSource.PLAYERS, 1.0f, 0.7f);
 			say(p, "unexchanged", now.soulMax(), now.inkMax());
 			sendOpen(p, trader);
 			return;
@@ -235,10 +318,10 @@ public final class SoulTrader {
 		after = after.withSoul(Math.min(after.soul(), after.soulMax())).withInk(after.ink() + InkData.INK_PER_SOUL_STEP);
 		InkPowers.update(p, after); // достижение «Суть Проклятья» выдаёт InkPowers
 		ServerLevel level = p.serverLevel();
-		level.sendParticles(ParticleTypes.SQUID_INK, p.getX(), p.getY() + 1.0, p.getZ(), 30, 0.3, 0.6, 0.3, 0.03);
-		level.sendParticles(ParticleTypes.SOUL, p.getX(), p.getY() + 1.2, p.getZ(), 12, 0.2, 0.4, 0.2, 0.02);
-		level.playSound(null, p.blockPosition(), SoundEvents.SOUL_ESCAPE.value(), SoundSource.PLAYERS, 1.0f, 0.5f);
-		level.playSound(null, p.blockPosition(), SoundEvents.SCULK_SHRIEKER_SHRIEK, SoundSource.PLAYERS, 0.3f, 1.6f);
+		level.sendParticles(p, ParticleTypes.SQUID_INK, false, p.getX(), p.getY() + 1.0, p.getZ(), 30, 0.3, 0.6, 0.3, 0.03);
+		level.sendParticles(p, ParticleTypes.SOUL, false, p.getX(), p.getY() + 1.2, p.getZ(), 12, 0.2, 0.4, 0.2, 0.02);
+		p.playNotifySound(SoundEvents.SOUL_ESCAPE.value(), SoundSource.PLAYERS, 1.0f, 0.5f);
+		p.playNotifySound(SoundEvents.SCULK_SHRIEKER_SHRIEK, SoundSource.PLAYERS, 0.3f, 1.6f);
 		say(p, "sold", after.soulMax(), after.inkMax());
 		sendOpen(p, trader);
 	}
@@ -270,7 +353,7 @@ public final class SoulTrader {
 		}
 		ItemStack reward = new ItemStack(ModItems.PIGMENT, n * PIGMENT_PER_CONTRACT);
 		if (!p.getInventory().add(reward)) p.drop(reward, false);
-		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1.0f, 0.6f);
+		p.playNotifySound(SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1.0f, 0.6f);
 		say(p, "contracts_taken", n, n * PIGMENT_PER_CONTRACT);
 		sendOpen(p, trader);
 	}
