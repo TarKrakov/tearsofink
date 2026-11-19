@@ -388,7 +388,18 @@ public final class TempleNetwork {
 			// road-facing footprint. Do not expand the depth or access limits.
 			slotColumnLimit = startSamples + (alternateFacing ? 2400 : 5000);
 			int viableLimit = alternateFacing ? 18 : 40;
-			int exitLimit = alternateFacing ? 20 : 36;
+			// A search now covers a whole interval, not five overlapping narrow
+			// windows. Keep the total number of expansions bounded per slot.
+			int exitLimit = alternateFacing ? 8 : 14;
+			int remainingExpansions = alternateFacing ? 6000 : 14000;
+			Set<Long> roadLanterns = new HashSet<>();
+			int maxK = (int)(InkLandsLayout.RADIUS * InkLandsLayout.ROAD_START_FRACTION / InkLandsLayout.ROAD_LANTERN_SPACING) + 1;
+			for (int k = 1; k <= maxK; k++) {
+				int[] post = layout.roadLanternPost(road,k);
+				if (post != null) roadLanterns.add(ChunkPos.asLong(post[0],post[1]));
+			}
+			// Share predicted heights between overlapping search intervals.
+			Map<Long,Integer> corridorHeights = new HashMap<>();
 			int low = deep ? 850 : OUTER_RECOVERY_MIN;
 			int high = deep ? 1350 : OUTER_RECOVERY_MAX;
 			RandomSource random = RandomSource.create(layout.seed() ^ (0x7369746566697273L + road * 31L + (deep ? 337 : 0)));
@@ -441,15 +452,19 @@ public final class TempleNetwork {
 						viable++;
 					}
 					if (sites.isEmpty()) continue;
-					// The lane need not be directly opposite the doorway, especially on
-					// a bridge approach or at a curved cut. Keep the original 104-step
-					// approach cap, but try a different natural exit on the same road.
-					for (int shift : new int[]{0,-24,24,-40,40}) {
-						if (exitProbes >= exitLimit || samples.size() >= slotColumnLimit) break;
-						int exitAlong = along + shift;
-						if (!outsideOutposts(exitAlong) || exitAlong < 650 || exitAlong > 2250) continue;
+					// Search the real curved corridor from many dry lane cells
+					// simultaneously; route around a cliff or bridge approach rather
+					// than requiring the exit to stay in a narrow straight window.
+					if (exitProbes < exitLimit && samples.size() < slotColumnLimit && remainingExpansions > 0) {
 						exitProbes++;
-						for (Connection connection : graphConnections(road,exitAlong,side,600)) {
+						var scan = corridorExits(road,along,side,sites,roadLanterns,corridorHeights,Math.min(1800,remainingExpansions));
+						remainingExpansions -= scan.expanded();
+						for (var exit : scan.exits()) {
+							var pos = new BlockPos(exit.x(),exit.y(),exit.z());
+							var hit = layout.roadNear(exit.x(),exit.z(),ROAD_BUFFER+3-InkLandsLayout.ROAD_HALF_WIDTH);
+							if (hit == null || (int)hit[0] != road) continue;
+							double[] toward = layout.roadPoint(road,hit[1]);
+							Connection connection = new Connection(pos,Direction.getNearest(toward[0]-exit.x(),0,toward[1]-exit.z()));
 							for (Temple temple : sites) {
 								if (samples.size() >= slotColumnLimit) break;
 								Direction facing = temple.rotation().rotate(Direction.SOUTH);
@@ -459,14 +474,14 @@ public final class TempleNetwork {
 									if (path.isEmpty() || overlapsExistingApproach(path) || overlapsScattered(temple,path)) continue;
 									temples.add(temple);
 									paths.addAll(path);
-									TearsOfInk.LOGGER.info("D-060 seed {}: site-first recovered road {} {} slot, alternateFacing={}, {} viable sites, {} exit probes, {} new columns",
+									TearsOfInk.LOGGER.info("D-060 seed {}: corridor search recovered road {} {} slot, alternateFacing={}, {} viable sites, {} exit probes, {} new columns",
 											inputs.seed(),road,deep ? "deep" : "external",alternateFacing,viable,exitProbes,samples.size()-startSamples);
 									return true;
 								}
 							}
 						}
 					}
-					if (viable >= viableLimit || exitProbes >= exitLimit || samples.size() >= slotColumnLimit) {
+					if (viable >= viableLimit || exitProbes >= exitLimit || remainingExpansions <= 0 || samples.size() >= slotColumnLimit) {
 						reject(alternateFacing ? "alternate facing bounded search limit" : "site-first bounded search limit");
 						reportSiteSearch(road,deep,alternateFacing,viable,exitProbes,startSamples);
 						return false;
@@ -475,6 +490,53 @@ public final class TempleNetwork {
 			}
 			reportSiteSearch(road,deep,alternateFacing,viable,exitProbes,startSamples);
 			return false;
+		}
+
+		/** Multi-source graph over the curved, untouched road strip. Only existing
+		 * natural walkable cells may be traversed; never excavate this strip.
+		 */
+		private TempleExitSearch.Result corridorExits(int road,int along,int side,List<Temple> sites,
+				Set<Long> lanterns,Map<Long,Integer> heights,int expansionLimit) {
+			var sources = new ArrayList<TempleExitSearch.Point>();
+			for (int d = Math.max(650,along-64); d <= Math.min(2250,along+64); d+=2) {
+				if (!outsideOutposts(d) || layout.roadBridge(road,d)) continue;
+				double[] axis = layout.roadPoint(road,d);
+				int x = (int)Math.round(axis[0]), z = (int)Math.round(axis[1]);
+				var hit = layout.roadAt(x,z);
+				if (hit != null && (int)hit[0] == road) sources.add(new TempleExitSearch.Point(x,z));
+			}
+			// Eligibility follows the actual closest point on the curving road,
+			// not the tangent at one station. Avoid crossing to the other bank.
+			var bounds = new HashMap<Long,double[]>();
+			java.util.function.Function<TempleExitSearch.Point,double[]> corridor = p -> {
+				long key = ChunkPos.asLong(p.x(),p.z());
+				if (!bounds.containsKey(key)) bounds.put(key,layout.roadNear(p.x(),p.z(),ROAD_BUFFER+3-InkLandsLayout.ROAD_HALF_WIDTH));
+				return bounds.get(key);
+			};
+			java.util.function.Predicate<TempleExitSearch.Point> eligible = p -> {
+				var hit = corridor.apply(p);
+				if (hit == null || (int)hit[0]!=road || Math.abs(hit[1]-along)>70 || !outsideOutposts(hit[1])) return false;
+				double[] axis = layout.roadPoint(road,hit[1]), dir = layout.roadDirection(road,hit[1]);
+				return ((p.x()-axis[0])*(-dir[1])+(p.z()-axis[1])*dir[0])*side >= -2.5;
+			};
+			java.util.function.ToIntFunction<TempleExitSearch.Point> distance = p -> {
+				int best = Integer.MAX_VALUE;
+				for (Temple temple : sites) {
+					Direction facing = temple.rotation().rotate(Direction.SOUTH);
+					int x = temple.x()+facing.getStepX()*TEMPLATE_LENGTH/2;
+					int z = temple.z()+facing.getStepZ()*TEMPLATE_LENGTH/2;
+					best = Math.min(best,Math.abs(x-p.x())+Math.abs(z-p.z()));
+				}
+				return best;
+			};
+			var scan = TempleExitSearch.find(sources,
+					p -> !eligible.test(p) ? Integer.MIN_VALUE : heights.computeIfAbsent(
+							ChunkPos.asLong(p.x(),p.z()), k -> graphSurface(road,p.x(),p.z(),lanterns)),
+					p -> { var hit = corridor.apply(p); return hit != null && hit[2] > ROAD_BUFFER && distance.applyAsInt(p)<=104; },
+					distance, () -> samples.size()<slotColumnLimit, expansionLimit,64,8);
+			if (scan.exits().isEmpty()) reject("no connected corridor exit");
+			if (scan.expanded() >= expansionLimit) reject("corridor expansion limit");
+			return scan;
 		}
 
 		private void reportSiteSearch(int road, boolean deep, boolean alternateFacing, int viable, int exitProbes, int startSamples) {

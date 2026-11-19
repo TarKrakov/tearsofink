@@ -7,6 +7,8 @@ on:
       - '.github/workflows/d060-temples.yml'
       - 'tools/tests/d060/**'
       - 'src/main/java/com/tarkrakov/tearsofink/world/TempleNetwork.java'
+      - 'src/main/java/com/tarkrakov/tearsofink/world/TempleExitSearch.java'
+      - 'tools/tests/TempleExitSearchTest.java'
       - 'src/main/java/com/tarkrakov/tearsofink/world/ruins/RuinPiece.java'
 permissions:
   contents: read
@@ -27,6 +29,8 @@ jobs:
         run: |
           javac -d /tmp/toi-grade src/main/java/com/tarkrakov/tearsofink/world/TempleApproachGrade.java tools/tests/TempleApproachGradeTest.java
           java -cp /tmp/toi-grade com.tarkrakov.tearsofink.world.TempleApproachGradeTest
+          javac -d /tmp/toi-grade src/main/java/com/tarkrakov/tearsofink/world/TempleExitSearch.java tools/tests/TempleExitSearchTest.java
+          java -cp /tmp/toi-grade com.tarkrakov.tearsofink.world.TempleExitSearchTest
   worlds:
     runs-on: ubuntu-24.04
     timeout-minutes: 32
