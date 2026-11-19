@@ -141,6 +141,7 @@ public final class D060Probe {
             JsonObject site = new JsonObject();
             site.addProperty("x", t.x()); site.addProperty("y", t.y()); site.addProperty("z", t.z());
             site.addProperty("road", t.road()); site.addProperty("starter", t.starter());
+            site.addProperty("raised",t.raised());
             site.addProperty("rotation", t.rotation().name());
             double depth = layout.depthInside(t.x(), t.z());
             site.addProperty("depth", depth);

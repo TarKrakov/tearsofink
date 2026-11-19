@@ -44,7 +44,10 @@ public final class TempleNetwork {
 
 	public record Inputs(RoadTerrain terrain, RegistryAccess registries, StructureTemplateManager templates, long seed) {}
 
-	public record Temple(int x, int y, int z, int road, double along, Rotation rotation, boolean starter) {
+	public record Temple(int x, int y, int z, int road, double along, Rotation rotation, boolean starter, boolean raised) {
+		public Temple(int x,int y,int z,int road,double along,Rotation rotation,boolean starter) {
+			this(x,y,z,road,along,rotation,starter,false);
+		}
 		long chunk() {
 			return ChunkPos.asLong(x >> 4, z >> 4);
 		}
@@ -116,6 +119,7 @@ public final class TempleNetwork {
 		private final List<Temple> temples = new ArrayList<>();
 		private final List<PathBlock> paths = new ArrayList<>();
 		private final Map<Long, RoadTerrain.Sample> samples = new HashMap<>();
+		private final Map<Long,Integer> beds = new HashMap<>();
 		private final Map<String, Integer> failures = new java.util.TreeMap<>();
 		private int slotColumnLimit;
 
@@ -445,8 +449,13 @@ public final class TempleNetwork {
 								- Math.abs(dir[0]) * (hz + TERRAIN_ADAPTATION);
 						if (nearest < ROAD_BUFFER - 4) { reject("site-first projected corridor"); continue; }
 						int y = platform(x,z,facing,true);
+						boolean raised = false;
+						if (y == Integer.MIN_VALUE) {
+							y = raisedPlatform(x,z,facing);
+							raised = y != Integer.MIN_VALUE;
+						}
 						if (y == Integer.MIN_VALUE) continue;
-						Temple temple = new Temple(x,y,z,road,along,facingRotation(facing),false);
+						Temple temple = new Temple(x,y,z,road,along,facingRotation(facing),false,raised);
 						if (overlapsScattered(temple,List.of())) continue;
 						sites.add(temple);
 						viable++;
@@ -720,8 +729,13 @@ public final class TempleNetwork {
 				if (samples.size() >= slotColumnLimit) return reject("column budget");
 				Rotation rotation = Rotation.getRandom(random);
 				int y = platform(at.getX(), at.getZ(), rotation.rotate(Direction.SOUTH), false);
+				boolean raised = false;
+				if (y == Integer.MIN_VALUE && layout.templeLayoutVersion()==3) {
+					y = raisedPlatform(at.getX(),at.getZ(),rotation.rotate(Direction.SOUTH));
+					raised = y != Integer.MIN_VALUE;
+				}
 				if (y == Integer.MIN_VALUE) continue;
-				Temple temple = new Temple(at.getX(), y, at.getZ(), -1, 0, rotation, false);
+				Temple temple = new Temple(at.getX(), y, at.getZ(), -1, 0, rotation, false,raised);
 				if (overlapsScattered(temple, List.of())) continue;
 				temples.add(temple);
 				usedSectors.add(at.getY());
@@ -830,6 +844,55 @@ public final class TempleNetwork {
 			return roadside ? Mth.clamp(entrance.surface(), ys[4] - 4, ys[4] + 4) : ys[4];
 		}
 
+		/** Grounded shallow-water island with tapered earth apron, inside the
+		 * existing adaptation reservation. Reject deep water/cliffs, not water itself.
+		 */
+		private int raisedPlatform(int x,int z,Direction facing) {
+			if (layout.templeLayoutVersion()!=3) return Integer.MIN_VALUE;
+			int hx=(facing.getAxis()==Direction.Axis.X?TEMPLATE_LENGTH:TEMPLATE_WIDTH)/2+1;
+			int hz=(facing.getAxis()==Direction.Axis.Z?TEMPLATE_LENGTH:TEMPLATE_WIDTH)/2+1;
+			int wetTop=Integer.MIN_VALUE;
+			for (int dx:new int[]{-hx,0,hx}) for (int dz:new int[]{-hz,0,hz}) {
+				long key=ChunkPos.asLong(x+dx,z+dz);
+				if (samples.size()>=slotColumnLimit && !samples.containsKey(key)) return Integer.MIN_VALUE;
+				var column=sample(x+dx,z+dz);
+				if (column.water()) wetTop=Math.max(wetTop,column.surface());
+			}
+			if (wetTop==Integer.MIN_VALUE) return Integer.MIN_VALUE;
+			int y=wetTop+2,rx=hx+TempleFoundation.APRON,rz=hz+TempleFoundation.APRON;
+			int nx=Mth.positiveCeilDiv(rx*2,4),nz=Mth.positiveCeilDiv(rz*2,4);
+			for (int ix=0;ix<=nx;ix++) for (int iz=0;iz<=nz;iz++) {
+				int dx=-rx+ix*2*rx/nx,dz=-rz+iz*2*rz/nz;
+				int px=x+dx,pz=z+dz;
+				if (layout.roadNear(px,pz,ROAD_BUFFER+3-InkLandsLayout.ROAD_HALF_WIDTH)!=null || !pale(px,pz))
+					return rejectedFoundation("foundation reservation or biome");
+				long key=ChunkPos.asLong(px,pz);
+				if (samples.size()>=slotColumnLimit && !samples.containsKey(key))
+					return rejectedFoundation("foundation column budget");
+				var c=sample(px,pz);
+				int dist=TempleFoundation.distance(dx,dz,hx,hz);
+				int bed=c.water()?bed(px,pz):c.surface();
+				if (!TempleFoundation.fits(TempleFoundation.top(y,dist),c.surface(),bed,c.water(),dist==0))
+					return rejectedFoundation("foundation too deep or steep");
+			}
+			return y;
+		}
+
+		private int rejectedFoundation(String reason) {
+			reject(reason);
+			return Integer.MIN_VALUE;
+		}
+
+		private int bed(int x,int z) {
+			return beds.computeIfAbsent(ChunkPos.asLong(x,z),k -> terrain.floor(x,z));
+		}
+
+		private boolean approachGround(Temple temple,int x,int z,int y) {
+			var c=sample(x,z);
+			return dry(c) || temple.raised() && c.water() && y>c.surface()
+					&& y-bed(x,z)<=TempleFoundation.PATH_SUPPORT;
+		}
+
 		/** Walk the unmodified strip from the finished shoulder outward once per side. */
 		private Connection findConnection(int road, int along, int side) {
 			return findConnection(road, along, side, 0);
@@ -907,8 +970,13 @@ public final class TempleNetwork {
 				}
 				if (protectedRoad(x, z) || !pale(x, z)) return rejectPath("approach crosses reservation");
 				var here = sample(x, z);
-				if (!dry(here)) return rejectPath("wet approach");
-				walk.add(new BlockPos(x, here.surface(), z));
+				int natural=here.surface();
+				if (!dry(here)) {
+					if (!temple.raised() || !here.water() || natural+1-bed(x,z)>TempleFoundation.PATH_SUPPORT)
+						return rejectPath("wet approach");
+					natural++;
+				}
+				walk.add(new BlockPos(x,natural,z));
 			}
 			if (walk.size() < 5 || x != targetX || z != targetZ) return rejectPath("no join");
 			List<PathBlock> result = new ArrayList<>();
@@ -916,7 +984,16 @@ public final class TempleNetwork {
 			int prior = temple.y();
 			int[] grade = null;
 			if (layout.templeLayoutVersion() == 3) {
-				grade = TempleApproachGrade.solve(prior, naturalEdge, walk.stream().mapToInt(BlockPos::getY).toArray());
+				int[] ground=walk.stream().mapToInt(BlockPos::getY).toArray();
+				if (temple.raised()) {
+					int[] lower=new int[ground.length],upper=new int[ground.length];
+					for (int i=0;i<ground.length;i++) {
+						var pos=walk.get(i); var c=sample(pos.getX(),pos.getZ());
+						lower[i]=c.water()?c.surface()+1:ground[i]-3;
+						upper[i]=c.water()?Math.min(ground[i]+3,bed(pos.getX(),pos.getZ())+TempleFoundation.PATH_SUPPORT):ground[i]+3;
+					}
+					grade=TempleApproachGrade.solve(prior,naturalEdge,ground,lower,upper);
+				} else grade=TempleApproachGrade.solve(prior,naturalEdge,ground);
 				if (grade == null) return rejectPath("graded path");
 			}
 			for (int i = 0; i < walk.size(); i++) {
@@ -938,7 +1015,7 @@ public final class TempleNetwork {
 				if (!protectedRoad(side.getX(), side.getZ()) && pale(side.getX(), side.getZ())
 						&& !occupied.contains(ChunkPos.asLong(side.getX(), side.getZ()))) {
 					var ground = sample(side.getX(), side.getZ());
-					if (dry(ground) && Math.abs(ground.surface() - side.getY()) <= 3) {
+					if (approachGround(temple,side.getX(),side.getZ(),side.getY()) && Math.abs(ground.surface() - side.getY()) <= 3) {
 						occupied.add(ChunkPos.asLong(side.getX(), side.getZ()));
 						result.add(new PathBlock(side, center.up(), false));
 					}
@@ -948,7 +1025,7 @@ public final class TempleNetwork {
 			for (int i : new int[]{walk.size() - 2, walk.size() - 3, 2}) {
 				BlockPos lamp = result.get(i).floor().relative(edge.getOpposite());
 				if (!protectedRoad(lamp.getX(), lamp.getZ()) && pale(lamp.getX(), lamp.getZ())
-						&& dry(sample(lamp.getX(), lamp.getZ())) && Math.abs(sample(lamp.getX(), lamp.getZ()).surface() - lamp.getY()) <= 3
+						&& approachGround(temple,lamp.getX(),lamp.getZ(),lamp.getY()) && Math.abs(sample(lamp.getX(), lamp.getZ()).surface() - lamp.getY()) <= 3
 						&& occupied.add(ChunkPos.asLong(lamp.getX(), lamp.getZ()))) {
 					result.add(new PathBlock(lamp, null, true));
 					signposted |= i >= walk.size() - 3;

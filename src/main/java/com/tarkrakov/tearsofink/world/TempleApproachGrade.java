@@ -10,6 +10,9 @@ final class TempleApproachGrade {
 
     /** Returns the least total absolute cut/fill, or null if no legal grade exists. */
     static int[] solve(int start, int end, int[] ground) {
+        return solve(start,end,ground,null,null);
+    }
+    static int[] solve(int start,int end,int[] ground,int[] lower,int[] upper) {
         if (ground.length == 0) return start == end ? new int[0] : null;
         int n = ground.length;
         int[][] cost = new int[n][STATES];
@@ -17,6 +20,7 @@ final class TempleApproachGrade {
         for (int i = n - 1; i >= 0; i--) {
             for (int k = 0; k < STATES; k++) {
                 int y = ground[i] + k - CUT;
+                if ((lower!=null && y<lower[i]) || (upper!=null && y>upper[i])) continue;
                 int change = Math.abs(k - CUT);
                 if (i == n - 1) {
                     if (y == end) cost[i][k] = change;

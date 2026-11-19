@@ -8,6 +8,10 @@ on:
       - 'tools/tests/d060/**'
       - 'src/main/java/com/tarkrakov/tearsofink/world/TempleNetwork.java'
       - 'src/main/java/com/tarkrakov/tearsofink/world/TempleExitSearch.java'
+      - 'src/main/java/com/tarkrakov/tearsofink/world/TempleFoundation.java'
+      - 'src/main/java/com/tarkrakov/tearsofink/world/TemplePlanStore.java'
+      - 'src/main/java/com/tarkrakov/tearsofink/world/TemplePaths.java'
+      - 'tools/tests/TempleFoundationTest.java'
       - 'tools/tests/TempleExitSearchTest.java'
       - 'src/main/java/com/tarkrakov/tearsofink/world/ruins/RuinPiece.java'
 permissions:
@@ -31,6 +35,8 @@ jobs:
           java -cp /tmp/toi-grade com.tarkrakov.tearsofink.world.TempleApproachGradeTest
           javac -d /tmp/toi-grade src/main/java/com/tarkrakov/tearsofink/world/TempleExitSearch.java tools/tests/TempleExitSearchTest.java
           java -cp /tmp/toi-grade com.tarkrakov.tearsofink.world.TempleExitSearchTest
+          javac -d /tmp/toi-grade src/main/java/com/tarkrakov/tearsofink/world/TempleFoundation.java src/main/java/com/tarkrakov/tearsofink/world/TempleApproachGrade.java tools/tests/TempleFoundationTest.java
+          java -cp /tmp/toi-grade com.tarkrakov.tearsofink.world.TempleFoundationTest
   worlds:
     runs-on: ubuntu-24.04
     timeout-minutes: 32

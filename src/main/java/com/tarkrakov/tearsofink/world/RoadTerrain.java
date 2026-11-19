@@ -17,6 +17,10 @@ public record RoadTerrain(ChunkGenerator generator, LevelHeightAccessor level, R
 		return generator.getBaseHeight(x, z, SURFACE, level, random) - 1;
 	}
 
+	int floor(int x,int z) {
+		return generator.getBaseHeight(x,z,FLOOR,level,random)-1;
+	}
+
 	Sample sample(int x, int z) {
 		if (!(generator instanceof NoiseBasedChunkGenerator)) {
 			int top = surface(x, z);

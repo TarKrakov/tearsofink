@@ -64,10 +64,35 @@ public final class TemplePaths {
 			// A saved protochunk can resume at LIGHT before the startup worker has finished.
 			plan = layout.prepareTempleNetwork(inputs(level));
 		}
+		for (var temple:plan.temples()) if (temple.raised()) raiseFoundation(chunk,layout,temple);
 		for (var column : plan.path(chunk.getPos())) {
 			BlockPos floor = column.floor();
 			if (layout.roadNear(floor.getX(), floor.getZ(), TempleNetwork.ROAD_BUFFER - InkLandsLayout.ROAD_HALF_WIDTH) != null) continue;
 			place(chunk, column);
+		}
+	}
+
+	/** Chunk-local grounded soil/rock fill, before approach placement. */
+	private static void raiseFoundation(ChunkAccess chunk,InkLandsLayout layout,TempleNetwork.Temple temple) {
+		var facing=temple.rotation().rotate(net.minecraft.core.Direction.SOUTH);
+		int hx=(facing.getAxis()==net.minecraft.core.Direction.Axis.X?TempleNetwork.TEMPLATE_LENGTH:TempleNetwork.TEMPLATE_WIDTH)/2+1;
+		int hz=(facing.getAxis()==net.minecraft.core.Direction.Axis.Z?TempleNetwork.TEMPLATE_LENGTH:TempleNetwork.TEMPLATE_WIDTH)/2+1;
+		var cp=chunk.getPos();
+		int minX=Math.max(cp.getMinBlockX(),temple.x()-hx-TempleFoundation.APRON);
+		int maxX=Math.min(cp.getMaxBlockX(),temple.x()+hx+TempleFoundation.APRON);
+		int minZ=Math.max(cp.getMinBlockZ(),temple.z()-hz-TempleFoundation.APRON);
+		int maxZ=Math.min(cp.getMaxBlockZ(),temple.z()+hz+TempleFoundation.APRON);
+		for (int x=minX;x<=maxX;x++) for (int z=minZ;z<=maxZ;z++) {
+			int dist=TempleFoundation.distance(x-temple.x(),z-temple.z(),hx,hz);
+			if (dist>TempleFoundation.APRON || layout.roadNear(x,z,TempleNetwork.ROAD_BUFFER-InkLandsLayout.ROAD_HALF_WIDTH)!=null) continue;
+			int top=TempleFoundation.top(temple.y(),dist);
+			for (int y=top;y>=chunk.getMinBuildHeight();y--) {
+				var pos=new BlockPos(x,y,z);
+				var state=chunk.getBlockState(pos);
+				if (state.isSolid() && state.getFluidState().isEmpty()
+						&& !state.is(net.minecraft.tags.BlockTags.LOGS) && !state.is(net.minecraft.tags.BlockTags.LEAVES)) break;
+				chunk.setBlockState(pos,(y>=top-1?ModBlocks.ASHEN_SOIL:ModBlocks.ASPHODELITE_ROCK).defaultBlockState(),false);
+			}
 		}
 	}
 

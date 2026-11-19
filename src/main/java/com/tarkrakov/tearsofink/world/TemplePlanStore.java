@@ -24,7 +24,7 @@ import java.util.zip.CRC32;
 
 /** World-owned frozen plan; written before publishing it to generation threads. */
 final class TemplePlanStore {
-    private static final int MAGIC = 0x544F4950, FORMAT = 1;
+    private static final int MAGIC = 0x544F4950, FORMAT = 2;
     private static final int MAX_BYTES = 512 * 1024, MAX_PATHS = 4096;
 
     private TemplePlanStore() {}
@@ -74,7 +74,9 @@ final class TemplePlanStore {
         if (crc.getValue() != ByteBuffer.wrap(bytes, payload, Long.BYTES).getLong())
             throw new IOException("Temple plan checksum mismatch");
         try (var in = new DataInputStream(new ByteArrayInputStream(bytes, 0, payload))) {
-            if (in.readInt() != MAGIC || in.readInt() != FORMAT
+            if (in.readInt()!=MAGIC) throw new IOException("Wrong temple plan magic");
+            int format=in.readInt();
+            if ((format!=1 && format!=FORMAT)
                     || in.readInt() != layout.templeLayoutVersion()
                     || in.readLong() != inputs.seed() || in.readLong() != layout.seed())
                 throw new IOException("Wrong temple plan world or format");
@@ -89,6 +91,8 @@ final class TemplePlanStore {
                 double along = in.readDouble();
                 Rotation rotation = Rotation.valueOf(in.readUTF());
                 boolean starter = in.readBoolean();
+                boolean raised=format>=2 && in.readBoolean();
+                if (raised && (starter || layout.templeLayoutVersion()!=3)) throw new IOException("Invalid raised temple");
                 if (Math.abs((long)x) > 3000 || Math.abs((long)z) > 3000
                         || road < -1 || road >= InkLandsLayout.ROADS || !Double.isFinite(along)
                         || along < 0 || along > 3000
@@ -100,7 +104,7 @@ final class TemplePlanStore {
                     if (x != (int)start[0] || z != (int)start[1] || road != Ruins.startRoad(layout))
                         throw new IOException("Wrong starting temple");
                 }
-                var temple = new TempleNetwork.Temple(x, y, z, road, along, rotation, starter);
+                var temple = new TempleNetwork.Temple(x, y, z, road, along, rotation, starter,raised);
                 if (!chunks.add(temple.chunk())) throw new IOException("Duplicate temple start");
                 temples.add(temple);
             }
@@ -132,7 +136,8 @@ final class TemplePlanStore {
         var bytes = new ByteArrayOutputStream();
         try (var out = new DataOutputStream(bytes)) {
             out.writeInt(MAGIC);
-            out.writeInt(FORMAT);
+            int format=plan.temples().stream().anyMatch(TempleNetwork.Temple::raised)?FORMAT:1;
+            out.writeInt(format);
             out.writeInt(layout.templeLayoutVersion());
             out.writeLong(inputs.seed());
             out.writeLong(layout.seed());
@@ -141,6 +146,7 @@ final class TemplePlanStore {
                 out.writeInt(temple.x()); out.writeInt(temple.y()); out.writeInt(temple.z());
                 out.writeInt(temple.road()); out.writeDouble(temple.along());
                 out.writeUTF(temple.rotation().name()); out.writeBoolean(temple.starter());
+                if (format>=2) out.writeBoolean(temple.raised());
             }
             var paths = plan.allPathBlocks();
             if (paths.size() > MAX_PATHS) throw new IOException("Too many temple approach columns");
