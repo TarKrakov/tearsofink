@@ -253,6 +253,15 @@ public final class WeaponStats {
                         fmt(serverInfo.pale().singleGuard()*100), fmt(serverInfo.pale().dualGuard()*100),
                         cooldown(stack, serverInfo.pale().charge()));
             }
+        } else if (stack.is(ModItems.PALE_LONGSWORD)) {
+            add(out, "longsword.primary", ChatFormatting.AQUA, SkillKeys.weaponKeyLabel());
+            var single = com.tarkrakov.tearsofink.weapon.combat.PaleLongswordTuning.SINGLE;
+            var pair = com.tarkrakov.tearsofink.weapon.combat.PaleLongswordTuning.DUAL;
+            add(out, "longsword.cooldown", ChatFormatting.GRAY, cooldown(stack, single.cooldown()), cooldown(stack, pair.cooldown()));
+            if (detail) {
+                add(out, "longsword.pair", ChatFormatting.AQUA, SkillKeys.weaponKeyLabel(), Minecraft.getInstance().options.keyUse.getTranslatedKeyMessage());
+                add(out, "longsword.guard", ChatFormatting.GRAY, fmt(com.tarkrakov.tearsofink.weapon.combat.PaleLongswordTuning.BLOCK_REDUCTION*100), cooldown(stack, com.tarkrakov.tearsofink.weapon.combat.PaleLongswordTuning.BLOCK_COOLDOWN));
+            }
         } else if (skill != null) {
             Component control = item instanceof SalvationPendantItem ? t("offkey", SkillKeys.weaponKeyLabel()) : SkillKeys.weaponKeyLabel();
             skill(out, stack, skill, control, detail);

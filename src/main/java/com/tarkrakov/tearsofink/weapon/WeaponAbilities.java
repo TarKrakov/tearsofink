@@ -72,7 +72,7 @@ public final class WeaponAbilities {
 	}
 
 	private static void use(ServerPlayer player, SkillPayloads.UseWeapon payload) {
-		if (!player.isAlive() || player.isSpectator()) return;
+		if (!player.isAlive() || player.isSpectator() || com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.locked(player)) return;
 		// два щита Души: R — Хлопок и Резонанс; одиночные абилки щитов молчат; Shift+R — пока свободно
 		if (com.tarkrakov.tearsofink.weapon.shield.ShieldStance.dual(player)) {
 			if (!payload.offhand()) Skills.activate(player, com.tarkrakov.tearsofink.weapon.shield.Resonance.SKILL,
@@ -87,6 +87,10 @@ public final class WeaponAbilities {
 			return;
 		}
 		ItemStack stack = payload.offhand() ? player.getOffhandItem() : player.getMainHandItem();
+		if (com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.isWeapon(stack)) {
+			com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.useR(player, payload.offhand());
+			return;
+		}
 		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(stack)) {
 			if (payload.offhand() && InkGreatswordItem.twoHanded(player.getMainHandItem())) return;
 			POWER.put(player.getUUID(), payload.offhand() ? OFFHAND_TWO_HANDED_POWER : 1f);

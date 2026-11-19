@@ -161,7 +161,7 @@ public final class Gear {
 		Entity attacker = source.getEntity();
 		if (!(attacker instanceof LivingEntity user)) return amount;
 		Entity direct = source.getDirectEntity();
-		ItemStack held = com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.damageWeapon(user);
+		ItemStack held = com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.damageWeapon(user, com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.damageWeapon(user));
 		// своё оружие: удар рукой или снаряд приёма мода (Волна, дуга…) — ступень и пробуждения
 		boolean modProjectile = direct != null && direct != attacker
 				&& TearsOfInk.MOD_ID.equals(BuiltInRegistries.ENTITY_TYPE.getKey(direct.getType()).getNamespace());

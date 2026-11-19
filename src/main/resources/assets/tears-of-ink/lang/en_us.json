@@ -1134,5 +1134,10 @@
   "diary.tears-of-ink.fate.contrast.title": "Contrasted weapon",
   "diary.tears-of-ink.fate.contrast.hint": "Ascend a blade in the Font: 8 Pigment and a line resource.",
   "diary.tears-of-ink.fate.rubrics.title": "Rubric weapon",
-  "diary.tears-of-ink.fate.rubrics.hint": "Next tier: 16 Pigment and two line resources. See the Font."
+  "diary.tears-of-ink.fate.rubrics.hint": "Next tier: 16 Pigment and two line resources. See the Font.",
+  "skill.tears-of-ink.pale_longsword_strike": "Power strike",
+  "equipment.tears-of-ink.longsword.primary": "%s: power strike · free",
+  "equipment.tears-of-ink.longsword.cooldown": "Cooldown: %s s / paired %s s",
+  "equipment.tears-of-ink.longsword.pair": "Paired: %s — powerful cleave; hold %s — block.",
+  "equipment.tears-of-ink.longsword.guard": "Frontal block: %s%% damage reduced · CD %s s"
 }

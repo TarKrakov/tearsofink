@@ -24,6 +24,7 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
 
 	@Override
 	public Skill ability() {
+		if (this == com.tarkrakov.tearsofink.item.ModItems.PALE_LONGSWORD) return com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.SINGLE;
 		return this == com.tarkrakov.tearsofink.item.ModItems.PALE_LINEAR_GREATSWORD
 				? com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.SINGLE : null;
 	}
@@ -31,6 +32,13 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
 	@Override
 	public net.minecraft.world.InteractionResultHolder<net.minecraft.world.item.ItemStack> use(net.minecraft.world.level.Level level,
 			net.minecraft.world.entity.player.Player player, net.minecraft.world.InteractionHand hand) {
+		if (hand == net.minecraft.world.InteractionHand.MAIN_HAND && com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.dual(player)) {
+			var stack = player.getItemInHand(hand);
+			if (player instanceof net.minecraft.server.level.ServerPlayer sp && !com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.beginGuard(sp))
+				return net.minecraft.world.InteractionResultHolder.fail(stack);
+			player.startUsingItem(hand);
+			return net.minecraft.world.InteractionResultHolder.consume(stack);
+		}
 		if (hand == net.minecraft.world.InteractionHand.MAIN_HAND
 				&& com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.dual(player)) {
 			var stack = player.getItemInHand(hand);
@@ -51,12 +59,18 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
             player.startUsingItem(hand);
             return net.minecraft.world.InteractionResultHolder.consume(stack);
         }
+		if (player instanceof net.minecraft.server.level.ServerPlayer sp && com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.locked(sp))
+			return net.minecraft.world.InteractionResultHolder.fail(player.getItemInHand(hand));
 		return super.use(level, player, hand);
 	}
 
 	@Override
 	public void onUseTick(net.minecraft.world.level.Level level, net.minecraft.world.entity.LivingEntity entity,
 			net.minecraft.world.item.ItemStack stack, int remaining) {
+		if (com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.isWeapon(stack)) {
+			if (entity instanceof net.minecraft.server.level.ServerPlayer sp && !com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.dual(sp)) sp.stopUsingItem();
+			return;
+		}
 		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(stack)) {
 			if (entity instanceof net.minecraft.server.level.ServerPlayer sp) {
 				// Одиночная защита удерживается, пока игрок не отпустит ПКМ.
@@ -72,6 +86,10 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
 	@Override
 	public void releaseUsing(net.minecraft.world.item.ItemStack stack, net.minecraft.world.level.Level level,
 			net.minecraft.world.entity.LivingEntity entity, int timeLeft) {
+		if (com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.isWeapon(stack)) {
+			if (entity instanceof net.minecraft.server.level.ServerPlayer sp) com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.releaseGuard(sp);
+			return;
+		}
 		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(stack)) {
 			if (entity instanceof net.minecraft.server.level.ServerPlayer sp) {
 				com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.releaseHeldGuard(sp);

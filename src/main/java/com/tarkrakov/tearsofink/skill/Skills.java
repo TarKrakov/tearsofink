@@ -116,7 +116,7 @@ public final class Skills {
 	 * @return сработал ли
 	 */
 	public static boolean activate(ServerPlayer player, Skill skill, SkillInput input) {
-		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.locked(player)) return false;
+		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.locked(player) || com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.locked(player)) return false;
 		InkData data = InkPowers.get(player);
 		if (!data.inside()) {
 			// снаружи силы спят — тихий «пшик»

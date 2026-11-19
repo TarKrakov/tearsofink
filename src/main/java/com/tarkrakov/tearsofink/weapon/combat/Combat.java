@@ -164,7 +164,7 @@ public final class Combat {
 	private static void swing(ServerPlayer p) {
 		if (!p.isAlive() || p.isSpectator()) return;
 		if (com.tarkrakov.tearsofink.weapon.blood.Parry.active(p)) return; // в стойке парирования бить нельзя
-		if (PaleGreatswordMoves.locked(p)) return;
+		if (PaleGreatswordMoves.locked(p) || PaleLongswordMoves.locked(p)) return;
 		ItemStack weapon = p.getMainHandItem();
 		Archetype a = Archetype.of(weapon);
 		if (a == null) return;
@@ -220,7 +220,7 @@ public final class Combat {
 		s.hitStep = step;
 		s.hitScale = scale;
 		s.firstHit.clear();
-		if (a == Archetype.PALE_LINEAR_GREATSWORD) {
+		if (a == Archetype.PALE_LINEAR_GREATSWORD || a == Archetype.PALE_LONGSWORD) {
 			s.paleMain = p.getMainHandItem();
 			s.paleOff = p.getOffhandItem();
 		} else s.paleMain = s.paleOff = null;
@@ -293,7 +293,7 @@ public final class Combat {
 		s.lastEnd = s.busyUntil;
 		s.next = 0;
 		s.queued = false;
-		if (a == Archetype.PALE_LINEAR_GREATSWORD) {
+		if (a == Archetype.PALE_LINEAR_GREATSWORD || a == Archetype.PALE_LONGSWORD) {
 			s.paleMain = s.paleOff = null;
 			s.hitAt = -1;
 			s.extra.clear();
@@ -366,7 +366,7 @@ public final class Combat {
 			}
 			if (s.queued) {
 				Archetype a = Archetype.of(p.getMainHandItem());
-				if (a == null || !p.isAlive() || now - s.queuedAt > 20) {
+				if (a == null || !p.isAlive() || PaleLongswordMoves.locked(p) || now - s.queuedAt > 20) {
 					s.queued = false;
 				} else if (now >= s.busyUntil && p.getAttackStrengthScale(0.5f) >= Combos.get(a).minStrength()) {
 					start(p, s, a, Combos.get(a), p.getAttackStrengthScale(0.5f), now);
@@ -382,13 +382,14 @@ public final class Combat {
 
 	private static void strike(ServerPlayer p, Combos.Step step, float scale, boolean second) {
 		ServerLevel level = p.serverLevel();
-		ItemStack weapon = p.getMainHandItem();
+		boolean paleLeft = "bb_author_dual_attack2".equals(step.anim()) && PaleLongswordMoves.dual(p);
+		ItemStack weapon = paleLeft ? p.getOffhandItem() : p.getMainHandItem();
 		Vec3 eye = p.getEyePosition();
 		Vec3 look = p.getLookAngle();
 		Vec3 flat = new Vec3(look.x, 0, look.z);
 		flat = flat.lengthSqr() < 1e-4 ? new Vec3(0, 0, 1) : flat.normalize();
 		double half = Math.toRadians(step.arc() / 2);
-		double base = p.getAttributeValue(Attributes.ATTACK_DAMAGE) * step.damage() * scale;
+		double base = (paleLeft ? PaleLongswordMoves.attackDamage(p, weapon) : p.getAttributeValue(Attributes.ATTACK_DAMAGE)) * step.damage() * scale;
 		boolean hitAny = false;
 		// Бастион — превозмогание: ответ после своевременного блока (×2 и сбивает), сильнее против сильных
 		boolean bastion = Archetype.of(weapon) == Archetype.BASTION;
@@ -417,7 +418,7 @@ public final class Combat {
 			if (second && s.firstHit.contains(t.getUUID())) t.invulnerableTime = 0;
 			boolean hurt;
 			try {
-				hurt = t.hurt(src, dmg);
+				hurt = paleLeft ? PaleLongswordMoves.hurtAs(p, weapon, t, src, dmg) : t.hurt(src, dmg);
 			} finally {
 				com.tarkrakov.tearsofink.weapon.forge.Awakening.comboHit = false;
 			}
@@ -433,7 +434,7 @@ public final class Combat {
 		}
 		if (hitAny) {
 			com.tarkrakov.tearsofink.weapon.forge.Gear.onSuccessfulCombo(p, weapon); // +Чернила только обычным оружием, один раз за взмах
-			weapon.hurtAndBreak(1, p, EquipmentSlot.MAINHAND);
+			weapon.hurtAndBreak(1, p, paleLeft ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND);
 			level.sendParticles(ParticleTypes.SWEEP_ATTACK, eye.x + flat.x * 1.6, eye.y - 0.4, eye.z + flat.z * 1.6, 1, 0, 0, 0, 0);
 			level.playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 0.8f, 0.8f);
 		}

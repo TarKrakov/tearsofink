@@ -1134,5 +1134,10 @@
   "diary.tears-of-ink.fate.contrast.title": "Контрастное оружие",
   "diary.tears-of-ink.fate.contrast.hint": "Возвысь клинок в Купели: 8 Пигмента и ресурс линии.",
   "diary.tears-of-ink.fate.rubrics.title": "Оружие Рубрики",
-  "diary.tears-of-ink.fate.rubrics.hint": "Следующая ступень: 16 Пигмента и два ресурса линии. См. Купель."
+  "diary.tears-of-ink.fate.rubrics.hint": "Следующая ступень: 16 Пигмента и два ресурса линии. См. Купель.",
+  "skill.tears-of-ink.pale_longsword_strike": "Сильный удар",
+  "equipment.tears-of-ink.longsword.primary": "%s: сильный удар · бесплатно",
+  "equipment.tears-of-ink.longsword.cooldown": "КД: %s с / парой %s с",
+  "equipment.tears-of-ink.longsword.pair": "Парой: %s — мощное рассечение; %s (держать) — блок.",
+  "equipment.tears-of-ink.longsword.guard": "Блок спереди: %s%% урона поглощено · КД %s с"
 }
