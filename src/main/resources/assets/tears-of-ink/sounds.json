@@ -300,15 +300,15 @@
     "sounds": [
       {
         "name": "tears-of-ink:pale_owl_hoot_01",
-        "attenuation_distance": 24
+        "attenuation_distance": 48
       },
       {
         "name": "tears-of-ink:pale_owl_hoot_02",
-        "attenuation_distance": 24
+        "attenuation_distance": 48
       },
       {
         "name": "tears-of-ink:pale_owl_hoot_03",
-        "attenuation_distance": 24
+        "attenuation_distance": 48
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_owl_hoot"

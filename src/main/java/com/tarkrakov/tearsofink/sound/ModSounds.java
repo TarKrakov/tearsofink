@@ -25,7 +25,7 @@ public final class ModSounds {
 
 	/** Quiet positional owl sounds. */
 	public static final SoundEvent PALE_OWL_HOOT = Registry.register(BuiltInRegistries.SOUND_EVENT,
-			TearsOfInk.id("pale_owl_hoot"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("pale_owl_hoot"), 26.0f));
+			TearsOfInk.id("pale_owl_hoot"), SoundEvent.createFixedRangeEvent(TearsOfInk.id("pale_owl_hoot"), 50.0f));
 	public static final SoundEvent PALE_OWL_WING = register("pale_owl_wing");
 
 	/** Original pale soldier combat audio. */
