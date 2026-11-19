@@ -1,5 +1,6 @@
 {
   "entity.tears-of-ink.pale_owl": "Pale Owl",
+  "entity.tears-of-ink.pale_deer": "Pale Deer",
   "entity.tears-of-ink.pale_strider": "Pale Strider",
   "item.tears-of-ink.pale_headband": "Pale Headband",
   "item.tears-of-ink.pale_quilted_jacket": "Pale Quilted Jacket",
@@ -219,6 +220,7 @@
   "entity.tears-of-ink.caterpillar": "Caterpillar",
   "item.tears-of-ink.caterpillar_spawn_egg": "Caterpillar Spawn Egg",
   "item.tears-of-ink.pale_owl_spawn_egg": "Pale Owl Spawn Egg",
+  "item.tears-of-ink.pale_deer_spawn_egg": "Pale Deer Spawn Egg",
   "item.tears-of-ink.pale_strider_spawn_egg": "Pale Strider Spawn Egg",
   "item.tears-of-ink.silk_thread": "Silk Thread",
   "item.tears-of-ink.blood_clot": "Blood Clot",

@@ -213,6 +213,8 @@ public final class ModItems {
 
 	public static final Item PALE_OWL_SPAWN_EGG = register("pale_owl_spawn_egg",
 			new SpawnEggItem(com.tarkrakov.tearsofink.entity.ModMobs.PALE_OWL, 0xD9D8D0, 0x68666C, new Item.Properties()));
+	public static final Item PALE_DEER_SPAWN_EGG = register("pale_deer_spawn_egg",
+			new SpawnEggItem(com.tarkrakov.tearsofink.entity.ModMobs.PALE_DEER, 0xD7D6CA, 0x555660, new Item.Properties()));
 	public static final Item PALE_STRIDER_SPAWN_EGG = register("pale_strider_spawn_egg",
 			new SpawnEggItem(com.tarkrakov.tearsofink.entity.ModMobs.PALE_STRIDER, 0xA9A6A8, 0x362F39, new Item.Properties()));
 

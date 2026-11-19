@@ -1,5 +1,6 @@
 {
   "entity.tears-of-ink.pale_owl": "Бледная сова",
+  "entity.tears-of-ink.pale_deer": "Бледный олень",
   "entity.tears-of-ink.pale_strider": "Скиталец",
   "item.tears-of-ink.pale_headband": "Бледное оголовье",
   "item.tears-of-ink.pale_quilted_jacket": "Бледная стёганая куртка",
@@ -237,6 +238,7 @@
   "entity.tears-of-ink.caterpillar": "Гусеница",
   "item.tears-of-ink.caterpillar_spawn_egg": "Яйцо призыва гусеницы",
   "item.tears-of-ink.pale_owl_spawn_egg": "Яйцо призыва бледной совы",
+  "item.tears-of-ink.pale_deer_spawn_egg": "Яйцо призыва бледного оленя",
   "item.tears-of-ink.pale_strider_spawn_egg": "Яйцо призыва Скитальца",
   "item.tears-of-ink.silk_thread": "Шёлковая нить",
   "item.tears-of-ink.blood_clot": "Сгусток крови",

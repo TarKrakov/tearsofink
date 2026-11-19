@@ -27,6 +27,12 @@ public final class ModMobs {
 			EntityType.Builder.of(PaleOwlEntity::new, MobCategory.CREATURE)
 					.sized(0.75f, 0.85f).clientTrackingRange(10).updateInterval(2).build("pale_owl"));
 
+	/** Бледный олень — собственные территориальные стада, вне общего CREATURE-лимита. */
+	public static final EntityType<PaleDeerEntity> PALE_DEER = Registry.register(BuiltInRegistries.ENTITY_TYPE,
+			TearsOfInk.id("pale_deer"),
+			EntityType.Builder.of(PaleDeerEntity::new, MobCategory.MISC)
+					.sized((float) PaleDeerTuning.WIDTH, (float) PaleDeerTuning.HEIGHT).clientTrackingRange(12).updateInterval(2).build("pale_deer"));
+
 	/** Скиталец — атмосферные встречи и хор вне безопасной зоны храмов. */
 	public static final EntityType<PaleStriderEntity> PALE_STRIDER = Registry.register(BuiltInRegistries.ENTITY_TYPE,
 			TearsOfInk.id("pale_strider"),
@@ -83,6 +89,8 @@ public final class ModMobs {
 		FabricDefaultAttributeRegistry.register(PALE_STRIDER, PaleStriderEntity.createAttributes());
 		PaleStriderEncounters.init();
 		PaleOwlEncounters.init();
+		FabricDefaultAttributeRegistry.register(PALE_DEER, PaleDeerEntity.createAttributes());
+		PaleDeerEncounters.init();
 		FabricDefaultAttributeRegistry.register(PALE_SPEARMAN, com.tarkrakov.tearsofink.entity.spearman.PaleSpearmanEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_SHIELDBEARER, com.tarkrakov.tearsofink.entity.patrol.PaleShieldbearerEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_CROSSBOWMAN, com.tarkrakov.tearsofink.entity.patrol.PaleCrossbowmanEntity.createAttributes());
