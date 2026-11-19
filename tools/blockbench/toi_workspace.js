@@ -241,7 +241,140 @@
       }
       return {status:inserted?'synced':'unchanged',animators:patch,inserted,skipped};
     }
-    return {planF5,planTiming,existingF5,rot,euler};
+
+    // Game -> editor: standalone renderer channels in calibrated rig. No server tempo/transition.
+    const I=()=>[[1,0,0],[0,1,0],[0,0,1]],xyz=([x,y,z])=>mm(mm(rx(x*rad),ry(y*rad)),rz(z*rad)),C=mm(rx(-Math.PI/2),ry(Math.PI)),SX=[[-1,0,0],[0,1,0],[0,0,1]];
+    const mix=(a,b,u)=>add(a,mul(sub(b,a),u));
+    function ease(k,u){u=clamp(u,0,1);switch(String(k||'ease_in_out').toLowerCase()){case'linear':return u;case'ease_in':return u**3;case'ease_out':return 1-(1-u)**3;case'heavy':return u**4;case'back_out':return 1+2.70158*(u-1)**3+1.70158*(u-1)**2;default:return u<.5?4*u**3:1-(-2*u+2)**3/2;}}
+    function axisR(a,t){const[x,y,z]=norm(a),c=Math.cos(t),s=Math.sin(t),v=1-c;return [[c+x*x*v,x*y*v-z*s,x*z*v+y*s],[y*x*v+z*s,c+y*y*v,y*z*v-x*s],[z*x*v-y*s,z*y*v+x*s,c+z*z*v]];}
+    function fraction(R,u){if(u<=0)return I();if(u>=1)return R;const a=Math.acos(clamp((R[0][0]+R[1][1]+R[2][2]-1)/2,-1,1));if(a<1e-7)return I();let v=[R[2][1]-R[1][2],R[0][2]-R[2][0],R[1][0]-R[0][1]];if(Math.abs(Math.PI-a)<1e-5){const i=[0,1,2].reduce((b,k)=>R[k][k]>R[b][b]?k:b,0);v=[0,1,2].map(k=>R[k][i]+(k===i?1:0));}return axisR(v,a*u);}
+    const mixR=(a,b,u)=>mm(a,fraction(mm(tr(a),b),u));
+    const xyzAngles=R=>Math.abs(R[0][2])<.99999999?[Math.atan2(-R[1][2],R[2][2])/rad,Math.asin(clamp(R[0][2],-1,1))/rad,Math.atan2(-R[0][1],R[0][0])/rad]:[Math.atan2(R[2][1],R[1][1])/rad,Math.sign(R[0][2])*90,0];
+    const gameEnd=c=>c.hold>0&&c.keyframes.length?c.keyframes.at(-1).t+c.hold+(c.return??.3):c.length;
+    function checkedClip(c,n){
+      if(!c||!c.keyframes?.length||!Number.isFinite(c.length)||c.length<=0||c.length>60)err('Некорректный игровой клип '+n);
+      if(c.absolute||c.keyframes.some(k=>k.scale&&!near(vec(k.scale,1),[1,1,1])))err('Absolute/scale не поддерживаются: '+n);
+      const keys=c.keyframes.map(k=>({...k,t:number(k.t),rotation:vec(k.rotation),translation:vec(k.translation),ease:k.ease||'ease_in_out'})).sort((a,b)=>a.t-b.t);
+      if(keys.some((k,i)=>k.t<0||k.t>60||i&&k.t<=keys[i-1].t))err('Неверные времена '+n);
+      return {...c,keyframes:keys};
+    }
+    function gameSample(c,t){
+      const rest={t:0,rotation:[0,0,0],translation:[0,0,0],ease:'ease_in_out'},ks=c.keyframes,last=ks.at(-1);
+      const rm=(a,b,u)=>c.rotation_mode==='slerp'?xyzAngles(mixR(xyz(a),xyz(b),u)):mix(a,b,u);
+      if(c.third?.baked&&t>=last.t)return last;
+      if(c.hold>0&&t>=last.t){const u=ease('ease_in_out',(t-last.t-c.hold)/Math.max(.01,c.return??.3));return {rotation:rm(last.rotation,rest.rotation,u),translation:mix(last.translation,rest.translation,u)};}
+      const pts=[...(ks[0].t>0?[rest]:[]),...ks,...(c.hold>0?[]:[{...rest,t:c.length}])];
+      if(pts.length===1)return pts[0];
+      let i=0;while(i<pts.length-2&&pts[i+1].t<=t)i++;
+      const a=pts[i],b=pts[Math.min(i+1,pts.length-1)],raw=b.t>a.t?clamp((t-a.t)/(b.t-a.t),0,1):1,u=ease(a.ease,raw);
+      function curve(f){
+        if(!c.smooth)return mix(a[f],b[f],u);
+        const p0=pts[Math.max(0,i-1)][f],p1=a[f],p2=b[f],p3=pts[Math.min(i+2,pts.length-1)][f];
+        if(c.smooth!=='tight')return p1.map((x,j)=>.5*(2*x+(-p0[j]+p2[j])*u+(2*p0[j]-5*x+4*p2[j]-p3[j])*u*u+(-p0[j]+3*x-3*p2[j]+p3[j])*u*u*u));
+        const h=a.ease==='ease_in_out'?raw:u,slope=(a,b)=>a*b<=0?0:Math.sign(a+b)*Math.min(Math.abs((a+b)/2),3*Math.min(Math.abs(a),Math.abs(b)));
+        return p1.map((x,j)=>{const y=p2[j],s=slope(x-p0[j],y-x),z=slope(y-x,p3[j]-y);return s===0&&z===0?x+(y-x)*u:(2*h**3-3*h*h+1)*x+(h**3-2*h*h+h)*s+(-2*h**3+3*h*h)*y+(h**3-h*h)*z;});
+      }
+      let rotation=curve('rotation');
+      if(c.rotation_mode==='slerp'){let a=rest,b={...rest,t:c.length};for(const k of ks){if(k.t>t){b=k;break}a=k;}rotation=rm(a.rotation,b.rotation,ease(a.ease,b.t>a.t?(t-a.t)/(b.t-a.t):1));}
+      return {rotation,translation:curve('translation')};
+    }
+    const signed=(v,m)=>[m*v[0],v[1],v[2]],rel=(v,m)=>xyz([v[0],m*v[1],m*v[2]]);
+    function importGame(project,library,requests,fps=30){
+      const meta=project.toi_workspace,base=library.base;
+      if(!meta||!base?.grip||!near(vec(meta.grip),vec(base.grip))||!near(vec(meta.fp_mount),vec(base.firstperson_offset))||!near(vec(meta.fp_idle_offset),vec(base.firstperson_idle_offset)))err('Игровой grip/offset не совпадает с оружием. Выбери его собственный основной JSON.');
+      if(base.third?.centre)err('Импорт щитов пока не поддерживается');
+      if(!Number.isFinite(fps)||fps<20||fps>60)err('Частота 20–60');
+      const cache=new Map(),get=n=>{if(!cache.has(n))cache.set(n,checkedClip(library.animations[n],n));return cache.get(n)};
+      const tune=base.third||{},out=[];
+      for(const spec of requests){
+        const names=[spec.right||'',spec.left||''];if(!names.some(Boolean))continue;
+        const clips=names.map(n=>n?get(n):null),length=Math.max(...clips.filter(Boolean).map(c=>Math.max(c.length,c.keyframes.at(-1).t)));
+        const r=rig(project,{length,animators:{},loop:'once'}),animators={},times=new Set([0,timeKey(length)]);
+        const tips=r.sides.map(s=>r.tipLocal(s.FP.b));
+        for(let i=0;i/fps<length;i++)times.add(timeKey(i/fps));
+        clips.forEach((c,i)=>{if(!c)return;for(const k of c.keyframes)if(k.t<=length)times.add(timeKey(k.t));
+          const src=c.third?.source?get(c.third.source):c,scale=names[i].startsWith('bb_author_')&&src!==c?c.length/src.length:1;
+          for(const k of src.keyframes)if(k.t*scale<=length)times.add(timeKey(k.t*scale));
+          if(c.third?.wrist_source)for(const k of get(c.third.wrist_source).keyframes)if(k.t<=length)times.add(timeKey(k.t));
+        });
+        for(let i=0;i<2;i++){
+          const c=clips[i];if(!c)continue;
+          const pair=r.sides[i],m=pair.sign,fix=c.third||{},src=fix.source?get(fix.source):c,auth=names[i].startsWith('bb_author_');
+          if(!fix.arm_space&&(tune.push||fix.push||fix.push_right||fix.push_left))err('F5 push не поддерживается: '+names[i]);
+          const fs=pair.FP.chain[2],ta=pair.F5.chain[1],ts=pair.F5.chain[2],fpB=pair.FP.b,idle=signed(vec(meta.fp_idle_offset),m);
+          function basePose(index,clip,t){
+            const s=r.sides[index].sign,b=r.sides[index].FP.b,k=gameSample(clip,t),D=b.item_rotation,R=mm(rel(k.rotation,s),D),tip=tips[index];
+            const restH=mul(sub(vec(b.grip_position),signed(add(vec(meta.fp_mount),vec(meta.fp_idle_offset)),s)),1/16);
+            const h=add(restH,mul(signed(k.translation,s),1/16));
+            let Q=add(h,mul(mv(R,tip),(tune.lead??.5)/16));
+            if((fix.lateral??1)!==1){const restX=restH[0]+mv(D,tip)[0]*(tune.lead??.5)/16;Q[0]=restX+fix.lateral*(Q[0]-restX);}
+            Q[0]*=fix.center??1;if(fix.no_cross)Q[0]=s*Math.max(s*Q[0],.08);
+            let d=mv(F,norm(sub(Q,[s*5/16,-.245,0]).map((v,j)=>v*(j===2?1:tune.reach??1.3))));
+            const item=mm(F,R);if(fix.follow_blade)d=norm(add(mul(d,.25),mul(norm(mv(item,tip)),.75)));
+            return {d,item};
+          }
+          const angle=d=>{const x=-Math.acos(clamp(d[1],-1,1));return [x,Math.abs(Math.sin(x))>1e-3?Math.atan2(-d[0],-d[2]):0]};
+          const Tp=meta.display['thirdperson_'+pair.side+'hand'],Dtp=rel(vec(Tp.rotation),m);
+          function third(t){
+            const ptime=auth&&src!==c?Math.min(t,c.length)*src.length/Math.max(.01,c.length):t;
+            let x,y,z=0,W=I();
+            if(fix.arm_space){
+              const k=gameSample(src,ptime);[x,y,z]=[-Math.PI/10+k.rotation[0]*rad,m*k.rotation[1]*rad,m*k.rotation[2]*rad];
+              if(fix.wrist_source){const v=gameSample(get(fix.wrist_source),t).rotation;W=fix.wrist_xyz?xyz(v):axisR(mv(Dtp,tips[i]),v[0]*rad);}
+            }else{
+              const ci=fix.mirror&&m===-1?0:i;
+              let b=basePose(ci,src,ptime),bw=(fix.wrist_hold??-1)>=0?basePose(ci,src,fix.wrist_hold):b;
+              if(ci!==i){const mirror=v=>({d:mv(SX,v.d),item:mm(mm(mm(SX,v.item),SX),ry(Math.PI))});b=mirror(b);bw=mirror(bw);}
+              [x,y]=angle(b.d);const [xw,yw]=angle(bw.d);
+              W=mm(mm(mm(tr(mm(mm(ry(yw),rx(xw)),C)),ry(-m*(fix.turn??0)*rad)),bw.item),tr(Dtp));
+            }
+            const w=fix.baked?1:ease('ease_in_out',Math.min(t/(auth ? .09 : meta.archetype==='pale_linear_greatsword' ? .18 : .1), Math.max(0,(gameEnd(c)-t)/(c.hold>0?Math.max(.05,c.return??.3):.15))));
+            const A=mm(mm(rz(z*w),ry(y*w)),rx(-Math.PI/10+(x+Math.PI/10)*w));
+            return {arm:mm(mm(mm(F,A),rx(Math.PI/10)),F),sword:mm(mm(mm(mm(F,rx(-Math.PI/10)),C),fraction(W,w)),Dtp)};
+          }
+          const tracks=[[],[],[]],prev=[vec(fs.rotation),vec(ta.rotation),vec(ts.rotation)];
+          for(const t of [...times].sort((a,b)=>a-b)){
+            const k=gameSample(c,Math.min(t,gameEnd(c))),R=mm(rel(k.rotation,m),fpB.item_rotation);
+            const idleStart=c.keyframes.at(-1).t+Math.max(0,c.hold||0),iw=ease('ease_in_out',(t-idleStart)/Math.max(.01,gameEnd(c)-idleStart));
+            const delta=add(signed(k.translation,m),mul(idle,iw-1));
+            prev[0]=euler(R,prev[0]);tracks[0].push({...key(t,delta),channel:'position'},key(t,sub(prev[0],vec(fs.rotation))));
+            const p=third(Math.min(t,gameEnd(c)));prev[1]=euler(p.arm,prev[1]);prev[2]=euler(p.sword,prev[2]);
+            tracks[1].push(key(t,sub(prev[1],vec(ta.rotation))));tracks[2].push(key(t,sub(prev[2],vec(ts.rotation))));
+          }
+          for(const [g,keys] of [[fs,tracks[0]],[ta,tracks[1]],[ts,tracks[2]]])animators[g.uuid]={name:g.name,type:'bone',rotation_global:false,quaternion_interpolation:false,keyframes:keys};
+        }
+        out.push({name:'game_'+(spec.label||names.find(Boolean)),length:timeKey(length),snapping:fps,loop:'once',animators});
+      }
+      return out;
+    }
+    function copyClip(source,clip,target){
+      const allowed=/^(FP|F5)_(right|left)_(shoulder|arm|sword)$/,src=new Map(source.groups.map(g=>[g.uuid,g.name])),dst=new Map(target.groups.map(g=>[g.name,g.uuid])),animators={};
+      for(const [id,a] of Object.entries(clip.animators||{})){
+        if(!a.keyframes?.length)continue;const name=src.get(id);
+        if(!name||!allowed.test(name)||!dst.has(name))err('Нельзя перенести трек '+(name||a.name||id));
+        const cp=JSON.parse(JSON.stringify(a));cp.name=name;for(const k of cp.keyframes)delete k.uuid;animators[dst.get(name)]=cp;
+      }
+      if(!Object.keys(animators).length)err('Нет ключей для копирования');
+      const c=JSON.parse(JSON.stringify(clip));for(const k of ['uuid','path','scope','selected','saved'])delete c[k];c.animators=animators;return c;
+    }
+    function gameLibrary(files){
+      let base=null,combo=null;const animations=Object.create(null);
+      for(const f of files){
+        if(f.steps||f.dual_steps){if(combo)err('Выбери один weapon_combos JSON');combo=f;continue;}
+        if(!f.animations||Array.isArray(f.animations))err('Нужен JSON из weapon_anims, не Bedrock animation.json');
+        if(f.grip){if(base)err('Выбери один основной JSON оружия');base=f;}
+        for(const [n,c] of Object.entries(f.animations)){if(Object.hasOwn(animations,n))err('Повторяющийся игровой клип '+n);animations[n]=c;}
+      }
+      if(!base)err('Выбери основной JSON оружия из weapon_anims (с grip)');
+      return {base,animations,combo};
+    }
+    function defaultGameRequests(lib){
+      if(lib.combo)return [...(lib.combo.steps||[]).map(s=>({right:s.anim})),...(lib.combo.dual_steps||[]).map(s=>({right:s.anim||'',left:s.off_anim||''}))].filter(s=>[s.right,s.left].some(Boolean));
+      if(lib.animations.axe_dual_chop&&lib.animations.axe_dual_chop_off)return [...(lib.animations.bb_author_attack1?[{right:'bb_author_attack1'},{right:'bb_author_attack2'},{right:'bb_author_attack3'}]:[]),{right:'axe_dual_chop'},{left:'axe_dual_chop_off'},{right:'axe_dual_slam',left:'axe_dual_slam_off'},{right:'axe_dual_slam_repeat',left:'axe_dual_slam_repeat_off'},{right:'axe_dual_slam_final',left:'axe_dual_slam_final_off'}];
+      return Object.keys(lib.animations).filter(n=>!/(?:_third|_shoulder|_wrist|_edge|_raw|_off)$/.test(n)).map(n=>({right:n,left:lib.animations[n+'_off']?n+'_off':''}));
+    }
+
+    return {planF5,planTiming,existingF5,rot,euler,importGame,gameLibrary,defaultGameRequests,copyClip,gameSample};
   })();
 
 
@@ -420,6 +553,55 @@
     }catch(e){failDialog(e);}
   }
 
+
+  let clipClipboard=null;
+  function addClips(blueprints,label){
+    if(!blueprints.length)throw Error('Нет анимаций для импорта');
+    const used=new Set(Animator.animations.map(a=>a.name));
+    const prepared=blueprints.map(c=>{
+      let name=c.name||'animation',n=2;while(used.has(name))name=(c.name||'animation')+'_copy'+n++;
+      used.add(name);const animators={};for(const [id,a] of Object.entries(c.animators))animators[id]={...a,keyframes:(a.keyframes||[]).map(k=>({...k,uuid:guid()}))};
+      const data={...c,name,animators};delete data.uuid;delete data.selected;return data;
+    });
+    const added=[];Undo.initEdit({animations:[]});
+    try{for(const data of prepared){const animation=new Animation(data).add(false);added.push(animation);}
+      added[0].select();Undo.finishEdit(label,{animations:added});
+    }catch(e){for(const a of added)a.remove(false);Undo.cancelEdit(true);throw e;}
+    Animator.preview();Blockbench.showQuickMessage('Добавлено анимаций: '+added.length+' · Ctrl+Z — отмена');
+  }
+  function requireAnimate(){if(!isWorkspace()||!Modes.animate)throw Error('Открой TOI-сцену во вкладке Animate');}
+  function copyTOIClip(){
+    try{requireAnimate();if(!Animation.selected)throw Error('Выбери анимацию слева');
+      const p=compiledProject();clipClipboard={groups:JSON.parse(JSON.stringify(p.groups)),meta:p.toi_workspace,clip:Animation.selected.getUndoCopy()};
+      Blockbench.showQuickMessage('Скопировано: '+Animation.selected.name+' · открой другую сцену и Paste clip');
+    }catch(e){failDialog(e);}
+  }
+  function pasteTOIClip(){
+    try{requireAnimate();if(!clipClipboard)throw Error('Сначала Copy clip в исходной сцене');
+      const p=compiledProject();if(!p.toi_workspace||!clipClipboard.meta)throw Error('Нужна калиброванная TOI-сцена');
+      addClips([f5math.copyClip(clipClipboard,clipClipboard.clip,p)],'TOI: Paste clip');
+      if(clipClipboard.meta.archetype!==p.toi_workspace.archetype)Blockbench.showQuickMessage('Перенесены локальные ключи; проверь посадку на новом оружии.');
+    }catch(e){failDialog(e);}
+  }
+  function importFromGame(){
+    try{requireAnimate();const owner=Project;
+      Blockbench.import({extensions:['json'],type:'TOI weapon_anims / weapon_combos JSON',multiple:true,readtype:'text'},files=>{
+        try{if(!files?.length)return;if(Project!==owner)throw Error('Сцена изменилась — повтори импорт');
+          const lib=f5math.gameLibrary(files.map(f=>JSON.parse(f.content))),preset=f5math.defaultGameRequests(lib);
+          const dlg=new Dialog('toi_import_game',{title:'Tears of Ink — Import from game',form:{
+            clips:{label:'Клипы: один на строку; правый + левый (пустой правый допустим)',type:'textarea',value:preset.map(s=>(s.right||'')+(s.left?' + '+s.left:'')).join('\n')},
+            fps:{label:'Ключей в секунду (20–60)',type:'number',value:30,min:20,max:60}
+          },onConfirm(form){dlg.hide();try{
+            if(Project!==owner)throw Error('Сцена изменилась — повтори импорт');
+            const requests=String(form.clips).split(/\n|,/).map(s=>s.trim()).filter(Boolean).map(s=>{const parts=s.split('+').map(x=>x.trim());if(parts.length>2)throw Error('Две руки максимум');return {right:parts[0],left:parts[1]||''}});
+            const fps=Math.max(20,Math.min(60,Math.round(Number(form.fps)||30)));
+            addClips(f5math.importGame(compiledProject(),lib,requests,fps),'TOI: Import game clips');
+          }catch(e){failDialog(e);}}});dlg.show();
+        }catch(e){failDialog(e);}
+      });
+    }catch(e){failDialog(e);}
+  }
+
   let mode = 'FP', both = true, angle = 'front';
   const isWorkspace = () => typeof Group !== 'undefined' && Group.all.some(g => g.name === 'FP_RIG') && Group.all.some(g => g.name === 'F5_RIG');
   function setup(view = mode, pair = both, facing = angle) {
@@ -477,11 +659,11 @@
     for (const [label,v,p,f] of [['FP 1','FP',false,'front'],['FP 2','FP',true,'front'],['F5 1 front','F5',false,'front'],['F5 2 front','F5',true,'front'],['F5 back','F5',true,'back']]) {
       let b=document.createElement('button');b.textContent=label;b.style.cssText='font-size:11px;padding:4px;min-width:0;width:auto';b.onclick=()=>setup(v,p,f);bar.append(b);
     }
-    for(const [label,click] of [['New weapon',newWeapon],['Save for game',saveForGame],['Generate F5',()=>generateF5(false)],['Generate all F5',()=>generateF5(true)],['Sync timing',syncF5Timing]]){const b=document.createElement('button');b.textContent=label;b.style.cssText='font-size:11px;padding:4px;min-width:0;width:auto';b.onclick=click;bar.append(b);}
+    for(const [label,click] of [['New weapon',newWeapon],['Save for game',saveForGame],['Generate F5',()=>generateF5(false)],['Generate all F5',()=>generateF5(true)],['Sync timing',syncF5Timing],['Import from game',importFromGame],['Copy clip',copyTOIClip],['Paste clip',pasteTOIClip]]){const b=document.createElement('button');b.textContent=label;b.style.cssText='font-size:11px;padding:4px;min-width:0;width:auto';b.onclick=click;bar.append(b);}
     Interface.preview.append(bar); setup('FP',true,'front');
   }
   BBPlugin.register('toi_workspace', {
-    title:'Tears of Ink Weapon Workspace',author:'Tears of Ink',icon:'sports_martial_arts',version:'2.1.1',min_version:'5.0.0',variant:'both',
+    title:'Tears of Ink Weapon Workspace',author:'Tears of Ink',icon:'sports_martial_arts',version:'2.2.0',min_version:'5.0.0',variant:'both',
     description:'Separate FP/F5 rigs, automatic F5 from FP, safe batch generation and 16:9 preview.',
     onload() {
       let parsed=e=>{if(e.model.toi_workspace&&Project){const meta=copyMeta(e.model.toi_workspace);Project.toiWorkspaceCalibration=meta;projectMetadata.set(Project,meta);}setTimeout(installBar,100);};
@@ -491,7 +673,7 @@
       callbacks=[()=>Codecs.project.removeListener('parsed',parsed),()=>Codecs.project.removeListener('compile',compiled),()=>{if(subscription?.delete)subscription.delete();else Blockbench.removeListener?.('select_project',selected);}];
       let action=new Action('toi_workspace_reset',{name:'Tears of Ink: restore split workspace',icon:'view_column',click:installBar});
       MenuBar.addAction(action,'view');actions.push(action);
-      for(const [id,name,click] of [['toi_weapon_new','Tears of Ink: new weapon',newWeapon],['toi_weapon_save','Tears of Ink: save animation project for game',saveForGame],['toi_generate_f5','Tears of Ink: Generate F5',()=>generateF5(false)],['toi_generate_all_f5','Tears of Ink: Generate all F5',()=>generateF5(true)],['toi_sync_f5_timing','Tears of Ink: Sync timing',syncF5Timing]]){const a=new Action(id,{name,icon:'sports_martial_arts',condition:isWorkspace,click});MenuBar.addAction(a,'view');actions.push(a);}
+      for(const [id,name,click] of [['toi_weapon_new','Tears of Ink: new weapon',newWeapon],['toi_weapon_save','Tears of Ink: save animation project for game',saveForGame],['toi_generate_f5','Tears of Ink: Generate F5',()=>generateF5(false)],['toi_generate_all_f5','Tears of Ink: Generate all F5',()=>generateF5(true)],['toi_sync_f5_timing','Tears of Ink: Sync timing',syncF5Timing],['toi_import_game','Tears of Ink: Import from game',importFromGame],['toi_copy_clip','Tears of Ink: Copy clip',copyTOIClip],['toi_paste_clip','Tears of Ink: Paste clip',pasteTOIClip]]){const a=new Action(id,{name,icon:'sports_martial_arts',condition:isWorkspace,click});MenuBar.addAction(a,'view');actions.push(a);}
       if(isWorkspace()) setTimeout(installBar,100);
     },
     onunload() { callbacks.forEach(f=>f());actions.forEach(a=>a.delete());clearBar(); }
