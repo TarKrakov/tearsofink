@@ -88,8 +88,15 @@ public class InkFountainBlock extends Block {
 		FountainTravel.activate(sp, pos);
 		Set<Long> visited = sp.getAttachedOrCreate(VISITED);
 		long key = pos.asLong();
-		if (visited.contains(key)) {
-			// уже испит — теперь привязывает возрождение
+		boolean alreadyDrunk = visited.contains(key);
+		boolean atCap = data.inkMax() >= InkData.INK_CAP;
+		if (alreadyDrunk || atCap) {
+			// Возрождение не зависит от возможности испить фонтан.
+			// Не отмечаем новый фонтан испитым при потолке: бонус останется доступен,
+			// если игрок позднее снизит максимум, а условия Торговки не изменятся.
+			if (!alreadyDrunk) {
+				sp.sendSystemMessage(Component.translatable("message.tears-of-ink.veins_full").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+			}
 			var travel = com.tarkrakov.tearsofink.travel.Travel.get(sp);
 			if (!(travel.respawn().isPresent() && travel.respawn().get().equals(pos) && !travel.respawnBed())) {
 				com.tarkrakov.tearsofink.travel.Travel.set(sp, travel.withRespawn(pos.immutable(), false));
@@ -99,10 +106,6 @@ public class InkFountainBlock extends Block {
 			}
 			sp.sendSystemMessage(Component.translatable("message.tears-of-ink.fountain_bound").withStyle(ChatFormatting.DARK_PURPLE, ChatFormatting.ITALIC));
 			return InteractionResult.SUCCESS;
-		}
-		if (data.inkMax() >= InkData.INK_CAP) {
-			sp.sendSystemMessage(Component.translatable("message.tears-of-ink.veins_full").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
-			return InteractionResult.CONSUME;
 		}
 		Set<Long> copy = new HashSet<>(visited);
 		copy.add(key);
