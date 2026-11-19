@@ -35,12 +35,19 @@ def launch(name, config):
     args += ["--username",name,"--accessToken","0","--userType","legacy",
              "--gameDir",str(home),"--quickPlayMultiplayer","127.0.0.1:25565",
              "--width","640","--height","360"]
-    jvm = [v for v in config["jvm"] if not v.startswith(("-Xmx","-Xms"))]
+    # Loom's AbstractRunTask injects @.../argFiles/runClient before writing it
+    # in exec(). We deliberately stop before exec(); getClasspath() nevertheless
+    # returns the real, filtered runtime classpath, so supply it directly.
+    jvm = [v for v in config["jvm"] if not v.startswith(("-Xmx","-Xms"))
+           and not (v.startswith("@") and Path(v[1:]).name=="runClient"
+                    and Path(v[1:]).parent.name=="argFiles")]
+    if not config["classpath"] or not config["main"]:
+        raise RuntimeError("Incomplete Loom client launch configuration")
     cmd = ["xvfb-run","-a",config["java"],"-Xmx1200m","-Xms256m"] + jvm + \
         ["-cp",config["classpath"],config["main"]] + args
-    log = (d060.OUT / (name+".log")).open("w")
-    return subprocess.Popen(cmd,cwd=config["cwd"],stdout=log,stderr=subprocess.STDOUT,
-                            start_new_session=True,env={**os.environ,"LIBGL_ALWAYS_SOFTWARE":"1"})
+    with (d060.OUT / (name+".log")).open("w") as log:
+        return subprocess.Popen(cmd,cwd=home,stdout=log,stderr=subprocess.STDOUT,
+                                start_new_session=True,env={**os.environ,"LIBGL_ALWAYS_SOFTWARE":"1"})
 
 def main():
     d060.setup("42")
@@ -108,6 +115,9 @@ tasks.matching { it.name == 'runClient' }.configureEach {
     finally:
         for p in clients:
             stop_client(p)
+        for file in sorted(d060.OUT.glob("TOIRespawn*.log")):
+            print("===== "+file.name+" =====",flush=True)
+            print("\n".join(file.read_text(errors="replace").splitlines()[-100:]),flush=True)
         server.close(normal)
 
 if __name__ == "__main__":

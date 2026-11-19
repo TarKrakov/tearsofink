@@ -2,8 +2,7 @@
 
 This is a test fixture, not part of the shipped mod. It requires a disposable checkout,
 a dedicated server, two real connected survival accounts and two distinct generated
-fountains in Ink Lands. The installer is restricted to Actions. The separate workflow
-only compiles the fixture against the game API; it does not yet start clients.
+fountains in Ink Lands. The installer is restricted to Actions. The separate workflow compiles the fixture and launches two isolated actual Minecraft clients.
 
 Test conditions:
 - use the experimental seed 42 (currently known to have a full 13-site plan);
