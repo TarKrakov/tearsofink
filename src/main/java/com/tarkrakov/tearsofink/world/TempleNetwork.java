@@ -173,8 +173,13 @@ public final class TempleNetwork {
 					if (!inner[road]) inner[road] = roadsideGraphFallback(road, true, false);
 				}
 				for (int road = 0; road < InkLandsLayout.ROADS; road++) {
-					if (!outer[road] && !roadsideGraphFallback(road, false, true)) missing("external", road);
-					if (!inner[road]) missing("deep", road);
+					if (!outer[road]) outer[road] = roadsideGraphFallback(road, false, true);
+				}
+				// Search the surviving buildable platforms instead of searching expensive
+				// exits first. Earlier successful placements are never moved.
+				for (int road = 0; road < InkLandsLayout.ROADS; road++) {
+					if (!outer[road] && !roadsideSiteFallback(road, false)) missing("external", road);
+					if (!inner[road] && !roadsideSiteFallback(road, true)) missing("deep", road);
 				}
 			}
 			Set<Integer> sectors = new HashSet<>();
@@ -368,9 +373,114 @@ public final class TempleNetwork {
 			return false;
 		}
 
+		/**
+		 * Last resort for still-empty V3 slots: evaluate a finite, distributed grid
+		 * of actual temple sites BEFORE computing a natural road exit. This avoids
+		 * spending the entire exit budget beside unsuitable terrain or ruins.
+		 * No relaxation of biome, footprint, slope, water, or road reservations.
+		 */
+		private boolean roadsideSiteFallback(int road, boolean deep) {
+			failures.clear(); // rejection counts always belong to this slot
+			int startSamples = samples.size();
+			slotColumnLimit = startSamples + 5000;
+			int low = deep ? 850 : OUTER_RECOVERY_MIN;
+			int high = deep ? 1350 : OUTER_RECOVERY_MAX;
+			RandomSource random = RandomSource.create(layout.seed() ^ (0x7369746566697273L + road * 31L + (deep ? 337 : 0)));
+			List<Integer> stations = new ArrayList<>();
+			for (int along = 650 + random.nextInt(12); along <= 2250; along += 12) {
+				if (outsideOutposts(along)) stations.add(along);
+			}
+			shuffle(stations, random);
+			stations.sort(java.util.Comparator.comparingInt(Planner::lanternPriority));
+			int firstSide = random.nextBoolean() ? 1 : -1;
+			int viable = 0, exitProbes = 0;
+			Set<Long> attempted = new HashSet<>();
+			for (int along : stations) {
+				layout.roadHeight(road, along, terrain);
+				double[] axis = layout.roadPoint(road, along), dir = layout.roadDirection(road, along);
+				for (int side : new int[]{firstSide, -firstSide}) {
+					List<Temple> sites = new ArrayList<>();
+					for (int offset : new int[]{60, 72, 84, 64, 76, 88, 56}) {
+						if (samples.size() >= slotColumnLimit || viable >= 40) break;
+						int x = (int) Math.round(axis[0] - dir[1] * offset * side);
+						int z = (int) Math.round(axis[1] + dir[0] * offset * side);
+						if (!attempted.add(ChunkPos.asLong(x,z))) continue;
+						double depth = layout.depthInside(x,z);
+						if (depth < low || depth > high || !clear(x,z)) { reject("site-first depth/biome/spacing"); continue; }
+						Direction facing = Direction.getNearest(axis[0]-x, 0, axis[1]-z);
+						int hx = facing.getAxis() == Direction.Axis.X ? TEMPLATE_LENGTH / 2 : TEMPLATE_WIDTH / 2;
+						int hz = facing.getAxis() == Direction.Axis.Z ? TEMPLATE_LENGTH / 2 : TEMPLATE_WIDTH / 2;
+						double nearest = offset - Math.abs(dir[1]) * (hx + TERRAIN_ADAPTATION)
+								- Math.abs(dir[0]) * (hz + TERRAIN_ADAPTATION);
+						if (nearest < ROAD_BUFFER - 4) { reject("site-first projected corridor"); continue; }
+						int y = platform(x,z,facing,true);
+						if (y == Integer.MIN_VALUE) continue;
+						Temple temple = new Temple(x,y,z,road,along,facingRotation(facing),false);
+						if (overlapsScattered(temple,List.of())) continue;
+						sites.add(temple);
+						viable++;
+					}
+					if (sites.isEmpty()) continue;
+					// The lane need not be directly opposite the doorway, especially on
+					// a bridge approach or at a curved cut. Keep the original 104-step
+					// approach cap, but try a different natural exit on the same road.
+					for (int shift : new int[]{0,-24,24,-40,40}) {
+						if (exitProbes >= 36 || samples.size() >= slotColumnLimit) break;
+						int exitAlong = along + shift;
+						if (!outsideOutposts(exitAlong) || exitAlong < 650 || exitAlong > 2250) continue;
+						exitProbes++;
+						for (Connection connection : graphConnections(road,exitAlong,side,600)) {
+							for (Temple temple : sites) {
+								if (samples.size() >= slotColumnLimit) break;
+								Direction facing = temple.rotation().rotate(Direction.SOUTH);
+								for (int route = 0; route < 3; route++) {
+									if (samples.size() >= slotColumnLimit) break;
+									List<PathBlock> path = approach(temple,facing,connection,route);
+									if (path.isEmpty() || overlapsExistingApproach(path) || overlapsScattered(temple,path)) continue;
+									temples.add(temple);
+									paths.addAll(path);
+									TearsOfInk.LOGGER.info("D-060 seed {}: site-first recovered road {} {} slot, {} viable sites, {} exit probes, {} new columns",
+											inputs.seed(),road,deep ? "deep" : "external",viable,exitProbes,samples.size()-startSamples);
+									return true;
+								}
+							}
+						}
+					}
+					if (viable >= 40 || exitProbes >= 36 || samples.size() >= slotColumnLimit) {
+						reject("site-first bounded search limit");
+						return false;
+					}
+				}
+			}
+			return false;
+		}
+
+		private boolean overlapsExistingApproach(List<PathBlock> candidate) {
+			Set<Long> occupied = new HashSet<>();
+			for (PathBlock p : paths) occupied.add(ChunkPos.asLong(p.floor().getX(),p.floor().getZ()));
+			for (PathBlock p : candidate) {
+				BlockPos floor = p.floor();
+				if (occupied.contains(ChunkPos.asLong(floor.getX(),floor.getZ()))) return rejectOverlap();
+				for (Temple t : temples) {
+					if (Math.abs(floor.getX()-t.x()) <= TEMPLATE_LENGTH/2 + TERRAIN_ADAPTATION
+							&& Math.abs(floor.getZ()-t.z()) <= TEMPLATE_LENGTH/2 + TERRAIN_ADAPTATION) return rejectOverlap();
+				}
+			}
+			return false;
+		}
+
+		private boolean rejectOverlap() {
+			reject("site-first existing temple/approach");
+			return true;
+		}
+
 		private record ExitNode(int x, int z, int y, int steps, double priority) {}
 
 		private List<Connection> graphConnections(int road, int along, int side) {
+			return graphConnections(road,along,side,300);
+		}
+
+		private List<Connection> graphConnections(int road, int along, int side, int expansionLimit) {
 			double[] axis = layout.roadPoint(road, along), dir = layout.roadDirection(road, along);
 			double nx = -dir[1] * side, nz = dir[0] * side;
 			Direction towardRoad = Direction.getNearest(-nx, 0, -nz);
@@ -397,7 +507,7 @@ public final class TempleNetwork {
 			}
 			List<Connection> result = new ArrayList<>();
 			int expanded = 0;
-			while (!open.isEmpty() && expanded < 300 && samples.size() < slotColumnLimit && result.size() < 3) {
+			while (!open.isEmpty() && expanded < expansionLimit && samples.size() < slotColumnLimit && result.size() < 3) {
 				ExitNode at = open.remove();
 				long atKey = ChunkPos.asLong(at.x(), at.z());
 				if (best.getOrDefault(atKey, Integer.MAX_VALUE) != at.steps()) continue;
@@ -424,7 +534,7 @@ public final class TempleNetwork {
 				}
 			}
 			if (result.isEmpty()) reject("no walkable winding exit");
-			if (expanded >= 300) reject("winding exit expansion limit");
+			if (expanded >= expansionLimit) reject("winding exit expansion limit");
 			return result;
 		}
 
@@ -686,6 +796,10 @@ public final class TempleNetwork {
 		}
 
 		private List<PathBlock> approach(Temple temple, Direction facing, Connection connection) {
+			return approach(temple,facing,connection,0);
+		}
+
+		private List<PathBlock> approach(Temple temple, Direction facing, Connection connection, int route) {
 			int x = temple.x() + facing.getStepX() * (TEMPLATE_LENGTH / 2),
 					z = temple.z() + facing.getStepZ() * (TEMPLATE_LENGTH / 2);
 			Direction edge = connection.towardRoad().getClockWise();
@@ -696,7 +810,8 @@ public final class TempleNetwork {
 				if (steps < 3) {
 					x += facing.getStepX();
 					z += facing.getStepZ();
-				} else if (Math.abs(x - targetX) >= Math.abs(z - targetZ) && x != targetX) {
+				} else if (x != targetX && (z == targetZ || route == 1
+						|| route == 0 && Math.abs(x - targetX) >= Math.abs(z - targetZ))) {
 					x += Integer.signum(targetX - x);
 				} else {
 					z += Integer.signum(targetZ - z);
