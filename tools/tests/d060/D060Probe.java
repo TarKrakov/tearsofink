@@ -181,15 +181,19 @@ public final class D060Probe {
         check(starter == 1 && forest == 3 && Arrays.stream(outer).allMatch(x -> x == 1)
                 && Arrays.stream(deep).allMatch(x -> x == 1), failures, "Wrong 10+3 slot distribution");
         var pathColumns = new HashSet<Long>();
-        int duplicatePaths = 0, roadIntrusions = 0, markers = 0;
+        int duplicatePaths = 0, roadIntrusions = 0, markers = 0, engineered=0;
         for (var block : plan.allPathBlocks()) {
             BlockPos p = block.floor();
             if (!pathColumns.add(ChunkPos.asLong(p.getX(), p.getZ()))) duplicatePaths++;
-            if (layout.roadNear(p.getX(), p.getZ(), TempleNetwork.ROAD_BUFFER - InkLandsLayout.ROAD_HALF_WIDTH) != null) roadIntrusions++;
+            if (block.engineered()) {
+                engineered++;
+                if (!TempleRoadAccess.canBuild(layout,p.getX(),p.getZ())) roadIntrusions++;
+            } else if (layout.roadNear(p.getX(), p.getZ(), TempleNetwork.ROAD_BUFFER - InkLandsLayout.ROAD_HALF_WIDTH) != null) roadIntrusions++;
             if (block.lantern()) markers++;
         }
         result.addProperty("path_columns", plan.allPathBlocks().size());
         result.addProperty("markers", markers);
+        result.addProperty("engineered_path_columns",engineered);
         result.addProperty("duplicate_path_columns", duplicatePaths);
         result.addProperty("road_intrusions", roadIntrusions);
         check(duplicatePaths == 0 && roadIntrusions == 0, failures, "Approach columns overlap or invade reserved road");

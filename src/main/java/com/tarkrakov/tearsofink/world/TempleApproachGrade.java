@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 /** Exact bounded grading: at most one block per step, at most three blocks of cut/fill. */
 final class TempleApproachGrade {
-    private static final int CUT = 3, STATES = 2 * CUT + 1, INF = 1_000_000;
+    private static final int CUT = 3, INF = 1_000_000;
 
     private TempleApproachGrade() {}
 
@@ -13,6 +13,11 @@ final class TempleApproachGrade {
         return solve(start,end,ground,null,null);
     }
     static int[] solve(int start,int end,int[] ground,int[] lower,int[] upper) {
+        return solve(start,end,ground,lower,upper,CUT);
+    }
+    static int[] solve(int start,int end,int[] ground,int[] lower,int[] upper,int radius) {
+        int STATES=2*radius+1;
+        int CUT=radius;
         if (ground.length == 0) return start == end ? new int[0] : null;
         int n = ground.length;
         int[][] cost = new int[n][STATES];

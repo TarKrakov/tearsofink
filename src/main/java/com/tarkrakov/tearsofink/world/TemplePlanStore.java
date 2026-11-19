@@ -24,7 +24,7 @@ import java.util.zip.CRC32;
 
 /** World-owned frozen plan; written before publishing it to generation threads. */
 final class TemplePlanStore {
-    private static final int MAGIC = 0x544F4950, FORMAT = 2;
+    private static final int MAGIC = 0x544F4950, FORMAT = 3;
     private static final int MAX_BYTES = 512 * 1024, MAX_PATHS = 4096;
 
     private TemplePlanStore() {}
@@ -76,7 +76,7 @@ final class TemplePlanStore {
         try (var in = new DataInputStream(new ByteArrayInputStream(bytes, 0, payload))) {
             if (in.readInt()!=MAGIC) throw new IOException("Wrong temple plan magic");
             int format=in.readInt();
-            if ((format!=1 && format!=FORMAT)
+            if ((format<1 || format>FORMAT)
                     || in.readInt() != layout.templeLayoutVersion()
                     || in.readLong() != inputs.seed() || in.readLong() != layout.seed())
                 throw new IOException("Wrong temple plan world or format");
@@ -117,14 +117,17 @@ final class TemplePlanStore {
                 String direction = in.readUTF();
                 Direction up = direction.isEmpty() ? null : Direction.valueOf(direction);
                 boolean lantern = in.readBoolean();
+                boolean engineered=format>=3 && in.readBoolean();
+                if (engineered && layout.templeLayoutVersion()!=3) throw new IOException("Invalid engineered path");
                 if (Math.abs((long)floor.getX()) > 3000 || Math.abs((long)floor.getZ()) > 3000
                         || floor.getY() < inputs.terrain().level().getMinBuildHeight()
                         || floor.getY() + 3 >= inputs.terrain().level().getMaxBuildHeight()
                         || (up != null && up.getAxis() == Direction.Axis.Y)
-                        || layout.roadNear(floor.getX(), floor.getZ(),
-                        TempleNetwork.ROAD_BUFFER - InkLandsLayout.ROAD_HALF_WIDTH) != null)
+                        || (engineered ? !TempleRoadAccess.canBuild(layout,floor.getX(),floor.getZ())
+                        : layout.roadNear(floor.getX(), floor.getZ(),
+                        TempleNetwork.ROAD_BUFFER - InkLandsLayout.ROAD_HALF_WIDTH) != null))
                     throw new IOException("Invalid approach column");
-                paths.add(new TempleNetwork.PathBlock(floor, up, lantern));
+                paths.add(new TempleNetwork.PathBlock(floor, up, lantern,engineered));
             }
             if (in.read() != -1) throw new IOException("Trailing temple plan data");
             return new TempleNetwork(temples, paths);
@@ -136,7 +139,8 @@ final class TemplePlanStore {
         var bytes = new ByteArrayOutputStream();
         try (var out = new DataOutputStream(bytes)) {
             out.writeInt(MAGIC);
-            int format=plan.temples().stream().anyMatch(TempleNetwork.Temple::raised)?FORMAT:1;
+            int format=plan.allPathBlocks().stream().anyMatch(TempleNetwork.PathBlock::engineered)?FORMAT:
+                    plan.temples().stream().anyMatch(TempleNetwork.Temple::raised)?2:1;
             out.writeInt(format);
             out.writeInt(layout.templeLayoutVersion());
             out.writeLong(inputs.seed());
@@ -155,6 +159,7 @@ final class TemplePlanStore {
                 out.writeLong(path.floor().asLong());
                 out.writeUTF(path.up() == null ? "" : path.up().name());
                 out.writeBoolean(path.lantern());
+                if (format>=3) out.writeBoolean(path.engineered());
             }
             out.flush();
             CRC32 crc = new CRC32();

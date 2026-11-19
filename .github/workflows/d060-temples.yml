@@ -7,6 +7,8 @@ on:
       - '.github/workflows/d060-temples.yml'
       - 'tools/tests/d060/**'
       - 'src/main/java/com/tarkrakov/tearsofink/world/TempleNetwork.java'
+      - 'src/main/java/com/tarkrakov/tearsofink/world/TempleRoadAccess.java'
+      - 'src/main/java/com/tarkrakov/tearsofink/world/TempleApproachGrade.java'
       - 'src/main/java/com/tarkrakov/tearsofink/world/TempleExitSearch.java'
       - 'src/main/java/com/tarkrakov/tearsofink/world/TempleFoundation.java'
       - 'src/main/java/com/tarkrakov/tearsofink/world/TemplePlanStore.java'

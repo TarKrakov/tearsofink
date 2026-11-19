@@ -67,7 +67,8 @@ public final class TemplePaths {
 		for (var temple:plan.temples()) if (temple.raised()) raiseFoundation(chunk,layout,temple);
 		for (var column : plan.path(chunk.getPos())) {
 			BlockPos floor = column.floor();
-			if (layout.roadNear(floor.getX(), floor.getZ(), TempleNetwork.ROAD_BUFFER - InkLandsLayout.ROAD_HALF_WIDTH) != null) continue;
+			if (column.engineered() ? !TempleRoadAccess.canBuild(layout,floor.getX(),floor.getZ())
+					: layout.roadNear(floor.getX(), floor.getZ(), TempleNetwork.ROAD_BUFFER - InkLandsLayout.ROAD_HALF_WIDTH) != null) continue;
 			place(chunk, column);
 		}
 	}
@@ -113,10 +114,13 @@ public final class TemplePaths {
 		chunk.setBlockState(floor, material, false);
 		for (int dy = 1; dy <= 7; dy++) {
 			BlockPos below = floor.below(dy);
-			if (chunk.getBlockState(below).isSolid()) break;
+			var state=chunk.getBlockState(below);
+			if (state.isSolid() && (!column.engineered() || state.getFluidState().isEmpty()
+					&& !state.is(net.minecraft.tags.BlockTags.LOGS) && !state.is(net.minecraft.tags.BlockTags.LEAVES))) break;
 			chunk.setBlockState(below, ModBlocks.ASPHODELITE_ROCK.defaultBlockState(), false);
 		}
-		for (int dy = 1; dy <= 3; dy++) {
+		int clearance=column.engineered()?TempleRoadAccess.CUT+3:3;
+		for (int dy = 1; dy <= clearance && floor.getY()+dy<chunk.getMaxBuildHeight(); dy++) {
 			chunk.setBlockState(floor.above(dy), Blocks.AIR.defaultBlockState(), false);
 		}
 		if (column.lantern()) {

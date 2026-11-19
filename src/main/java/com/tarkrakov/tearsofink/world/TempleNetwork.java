@@ -53,7 +53,9 @@ public final class TempleNetwork {
 		}
 	}
 
-	public record PathBlock(BlockPos floor, Direction up, boolean lantern) {}
+	public record PathBlock(BlockPos floor, Direction up, boolean lantern, boolean engineered) {
+		public PathBlock(BlockPos floor,Direction up,boolean lantern) { this(floor,up,lantern,false); }
+	}
 
 	private record Connection(BlockPos edge, Direction towardRoad) {}
 
@@ -461,6 +463,24 @@ public final class TempleNetwork {
 						viable++;
 					}
 					if (sites.isEmpty()) continue;
+					// Author-approved approach: adapt ground up to, but never on,
+					// the original shoulder. Prefer a direct graded branch here.
+					for (Temple temple:sites) {
+						for (int shift:new int[]{0,-12,12,-24,24,-36,36}) {
+							if (samples.size()>=slotColumnLimit) break;
+							int joinAlong=along+shift;
+							if (!outsideOutposts(joinAlong) || joinAlong<650 || joinAlong>2250
+									|| layout.roadBridge(road,joinAlong-3) || layout.roadBridge(road,joinAlong+3)) continue;
+							double[] target=layout.roadPoint(road,joinAlong);
+							for (int route=0;route<3;route++) {
+								List<PathBlock> branch=engineeredApproach(temple,target,route,roadLanterns);
+								if (branch.isEmpty() || overlapsExistingApproach(branch) || overlapsScattered(temple,branch)) continue;
+								temples.add(temple); paths.addAll(branch);
+								TearsOfInk.LOGGER.info("D-060 seed {}: graded shoulder branch recovered road {} {} slot",inputs.seed(),road,deep?"deep":"external");
+								return true;
+							}
+						}
+					}
 					// Search the real curved corridor from many dry lane cells
 					// simultaneously; route around a cliff or bridge approach rather
 					// than requiring the exit to stay in a narrow straight window.
@@ -498,6 +518,108 @@ public final class TempleNetwork {
 				}
 			}
 			reportSiteSearch(road,deep,alternateFacing,viable,exitProbes,startSamples);
+			return false;
+		}
+
+		/** An artificial short branch may change soil outside the road's actual
+		 * shoulder. The final untouched shoulder cell must itself join the lane.
+		 * Every planned cut/fill column has integer grade and a firm bed.
+		 */
+		private List<PathBlock> engineeredApproach(Temple temple,double[] target,int route,Set<Long> lanterns) {
+			Direction facing=temple.rotation().rotate(Direction.SOUTH);
+			int x=temple.x()+facing.getStepX()*TEMPLATE_LENGTH/2,z=temple.z()+facing.getStepZ()*TEMPLATE_LENGTH/2;
+			int tx=(int)Math.round(target[0]),tz=(int)Math.round(target[1]),road=temple.road();
+			var walk=new ArrayList<BlockPos>();
+			var lower=new ArrayList<Integer>(); var upper=new ArrayList<Integer>();
+			var seen=new HashSet<Long>();
+			int joinY=Integer.MIN_VALUE;
+			for (int step=0;step<104 && (x!=tx || z!=tz);step++) {
+				if (samples.size()>=slotColumnLimit) return List.of();
+				if (step<3) { x+=facing.getStepX(); z+=facing.getStepZ(); }
+				else if (x!=tx && (z==tz || route==1 || route==0 && Math.abs(x-tx)>=Math.abs(z-tz))) x+=Integer.signum(tx-x);
+				else z+=Integer.signum(tz-z);
+				long key=ChunkPos.asLong(x,z);
+				if (!seen.add(key)) return List.of();
+				if (!TempleRoadAccess.canBuild(layout,x,z)) {
+					var hit=layout.roadNear(x,z,InkLandsLayout.ROAD_SHOULDER);
+					if (hit==null || (int)hit[0]!=road || layout.roadBridge(road,hit[1])
+							|| !outsideOutposts(hit[1]) || lanterns.contains(key)) return List.of();
+					joinY=graphSurface(road,x,z,lanterns);
+					if (joinY==Integer.MIN_VALUE || !shoulderReachesLane(road,x,z,joinY,lanterns)) return List.of();
+					break; // do not include or modify the existing shoulder
+				}
+				if (!pale(x,z)) return List.of();
+				var nearby=layout.roadNear(x,z,ROAD_BUFFER-InkLandsLayout.ROAD_HALF_WIDTH);
+				if (nearby!=null && ((int)nearby[0]!=road || !outsideOutposts(nearby[1])
+						|| layout.roadBridge(road,nearby[1]))) return List.of();
+				var column=sample(x,z);
+				int bed=column.water()?bed(x,z):column.surface();
+				int natural=column.water()?column.surface()+1:column.surface();
+				var cutHit=layout.roadNear(x,z,InkLandsLayout.ROAD_SHOULDER+InkRoadsFeature.ACCESS_CUT_WIDTH);
+				if (!column.water() && cutHit!=null)
+					natural=InkRoadsFeature.plannedAccessSurface(layout,terrain,cutHit,natural);
+				int low=column.water()?column.surface()+1:natural-TempleRoadAccess.CUT;
+				int high=Math.min(natural+TempleRoadAccess.CUT,bed+TempleRoadAccess.CUT);
+				if (low>high) return List.of();
+				walk.add(new BlockPos(x,natural,z)); lower.add(low); upper.add(high);
+			}
+			if (joinY==Integer.MIN_VALUE || walk.size()<5) return List.of();
+			int[] natural=walk.stream().mapToInt(BlockPos::getY).toArray();
+			int[] lo=lower.stream().mapToInt(Integer::intValue).toArray(),hi=upper.stream().mapToInt(Integer::intValue).toArray();
+			int[] grade=TempleApproachGrade.solve(temple.y(),joinY,natural,lo,hi,TempleRoadAccess.CUT);
+			if (grade==null) grade=TempleApproachGrade.solve(temple.y(),joinY-1,natural,lo,hi,TempleRoadAccess.CUT);
+			if (grade==null) grade=TempleApproachGrade.solve(temple.y(),joinY+1,natural,lo,hi,TempleRoadAccess.CUT);
+			if (grade==null) return List.of();
+			var result=new ArrayList<PathBlock>();
+			int previous=temple.y();
+			for (int i=0;i<walk.size();i++) {
+				var pos=walk.get(i);
+				var prev=i==0?new BlockPos(temple.x(),temple.y(),temple.z()):walk.get(i-1);
+				Direction up=grade[i]>previous?Direction.getNearest(pos.getX()-prev.getX(),0,pos.getZ()-prev.getZ()):null;
+				result.add(new PathBlock(pos.atY(grade[i]),up,false,true)); previous=grade[i];
+			}
+			// At least one visible marker beside the final metres of the branch.
+			// Never put a new lamp on the old shoulder or in a reserved post column.
+			Direction sideways=facing.getClockWise();
+			boolean marked=false;
+			for (int i=walk.size()-2;i>=Math.max(1,walk.size()-8) && !marked;i--) {
+				for (Direction side:new Direction[]{sideways,sideways.getOpposite()}) {
+					var lamp=result.get(i).floor().relative(side);
+					int lx=lamp.getX(),lz=lamp.getZ();
+					long key=ChunkPos.asLong(lx,lz);
+					if (seen.contains(key) || !TempleRoadAccess.canBuild(layout,lx,lz) || !pale(lx,lz)
+							|| samples.size()>=slotColumnLimit) continue;
+					var c=sample(lx,lz);
+					int bed=c.water()?bed(lx,lz):c.surface();
+					if (c.water() && lamp.getY()<=c.surface() || lamp.getY()-bed>TempleRoadAccess.CUT
+							|| c.surface()-lamp.getY()>TempleRoadAccess.CUT) continue;
+					result.add(new PathBlock(lamp,null,true,true)); marked=true; break;
+				}
+			}
+			return marked?result:List.of();
+		}
+
+		private boolean shoulderReachesLane(int road,int x,int z,int y,Set<Long> lanterns) {
+			record Cell(int x,int z,int y,int steps) {}
+			var queue=new java.util.ArrayDeque<Cell>();
+			var visited=new HashSet<Long>();
+			queue.add(new Cell(x,z,y,0)); visited.add(ChunkPos.asLong(x,z));
+			while (!queue.isEmpty()) {
+				var at=queue.removeFirst();
+				var lane=layout.roadAt(at.x(),at.z());
+				if (lane!=null && (int)lane[0]==road) return true;
+				if (at.steps()>=5) continue;
+				for (Direction dir:Direction.Plane.HORIZONTAL) {
+					int nx=at.x()+dir.getStepX(),nz=at.z()+dir.getStepZ();
+					long key=ChunkPos.asLong(nx,nz);
+					var hit=layout.roadNear(nx,nz,InkLandsLayout.ROAD_SHOULDER);
+					if (hit==null || (int)hit[0]!=road || layout.roadBridge(road,hit[1]) || !outsideOutposts(hit[1])) continue;
+					if (visited.contains(key)) continue;
+					int ny=graphSurface(road,nx,nz,lanterns);
+					if (ny==Integer.MIN_VALUE || Math.abs(ny-at.y())>1) continue;
+					visited.add(key); queue.add(new Cell(nx,nz,ny,at.steps()+1));
+				}
+			}
 			return false;
 		}
 
