@@ -54,7 +54,7 @@ import java.util.*;
 public final class BarricadeGates extends SavedData {
     public static final int FLAME_TICKS = 5 * 60 * 20;
     public static final int SAFE_RADIUS = 24, PATROL_BUFFER = 40, GUARD_LEASH = 36;
-    private static final int MAX_FILL = 12, MAX_CUT = 8, MAX_TREE_CLEAR = 24;
+    private static final int CLEARANCE = 8;
     private static final int INSTALL_RETRY = 20 * 10;
     private static final Factory<BarricadeGates> FACTORY = new Factory<>(BarricadeGates::new, BarricadeGates::load, null);
     private static final String[][] SIDES = {{"TS","SC"},{"TSC","SC"},{"TSC","TSC"}};
@@ -63,6 +63,7 @@ public final class BarricadeGates extends SavedData {
     private final Map<Long,Gate> lamps = new HashMap<>();
     // Retry clock is transient; absence of a gate is never persisted as a successful conversion.
     private final Map<Integer,Long> retryAt = new HashMap<>();
+    private final Set<Integer> loggedInstallFailure = new HashSet<>();
 
     static BarricadeGates of(ServerLevel level) {
         return level.getDataStorage().computeIfAbsent(FACTORY,"toi_barricade_gates");
@@ -207,8 +208,8 @@ public final class BarricadeGates extends SavedData {
         var chunk=level.getChunkSource().getChunkNow(x>>4,z>>4);
         if(chunk==null)return Integer.MIN_VALUE;
         int top=chunk.getHeight(Heightmap.Types.WORLD_SURFACE,x&15,z&15);
-        for(int y=top;y>=Math.max(top-64,level.getMinBuildHeight());y--) {
-            if(chunk.getBlockState(new BlockPos(x,y,z)).is(ModBlocks.ASHEN_PATH))return y;
+        for(int y=Math.min(top,level.getMaxBuildHeight()-1);y>=level.getMinBuildHeight();y--) {
+            if(chunk.getBlockState(new BlockPos(x,y,z)).is(ModBlocks.ASHEN_PATH)||chunk.getBlockState(new BlockPos(x,y,z)).is(ModBlocks.PALE_PLANKS))return y;
         }
         return Integer.MIN_VALUE;
     }
@@ -221,15 +222,18 @@ public final class BarricadeGates extends SavedData {
         return s.is(ModBlocks.ASHEN_SOIL)||s.is(ModBlocks.BLOOD_SOIL)||s.is(ModBlocks.TAR_SOIL)
                 ||s.is(ModBlocks.ASH)||s.is(ModBlocks.ASPHODELITE_ROCK)||s.is(ModBlocks.ASHEN_PATH)
                 ||s.is(Blocks.STONE)||s.is(Blocks.DEEPSLATE)||s.is(Blocks.TUFF)||s.is(Blocks.DIRT)
-                ||s.is(Blocks.GRASS_BLOCK)||s.is(Blocks.GRAVEL)||s.is(Blocks.SAND);
+                ||s.is(Blocks.GRASS_BLOCK)||s.is(Blocks.GRAVEL)||s.is(Blocks.SAND)
+                ||s.is(BlockTags.BASE_STONE_OVERWORLD)||s.is(BlockTags.DIRT)||s.is(BlockTags.SAND)
+                ||(BuiltInRegistries.BLOCK.getKey(s.getBlock()).getNamespace().equals("tears-of-ink")
+                    && BuiltInRegistries.BLOCK.getKey(s.getBlock()).getPath().endsWith("_ore"));
     }
     private static boolean naturalTree(BlockState s) {
         if(s.is(BlockTags.LEAVES))return true;
         var id=BuiltInRegistries.BLOCK.getKey(s.getBlock());
-        return id.getNamespace().equals("tears-of-ink")&&id.getPath().endsWith("_log")&&!id.getPath().startsWith("stripped_");
+        return id.getNamespace().equals("tears-of-ink")&&(id.getPath().endsWith("_log")||id.getPath().endsWith("_wood"))&&!id.getPath().startsWith("stripped_");
     }
     private static boolean replaceable(BlockState s) {
-        return !s.hasBlockEntity()&&s.getFluidState().isEmpty()&&(s.isAir()||s.canBeReplaced()||terrain(s)||naturalTree(s));
+        return !s.hasBlockEntity()&&(s.isAir()||s.canBeReplaced()||terrain(s)||naturalTree(s)||s.is(Blocks.WATER)||s.is(Blocks.LAVA));
     }
     private static List<Block> palette() {
         return List.of(Blocks.LAPIS_BLOCK,ModBlocks.STRIPPED_PALE_WOOD,ModBlocks.STRIPPED_PALE_LOG,
@@ -249,25 +253,31 @@ public final class BarricadeGates extends SavedData {
         BlockPos column=BlockPos.containing(p[0],0,p[1]);
         if(!ModDimensions.chunksReady(level,column,16))return null;
         retryAt.put(id,now+INSTALL_RETRY);
-        // There was no old barricade on bridge decks. Never build across a bridge or temple.
-        if(layout.roadBridge(road,d)||Sanctuary.near(layout,column.getX(),column.getZ(),12))return null;
-        // A gate can shift a maximum three blocks along the same barricade site to
-        // avoid an existing roadside pole, but may not leave any legacy spike behind.
-        for(double delta:new double[]{0,1.5,-1.5,3,-3}) {
+        // Keep the same road/slot; terrain is adapted rather than rejected.
+        // Nearby offsets are reserved for a genuine conflict with another structure.
+        for(double delta:new double[]{0,1.5,-1.5,3,-3,6,-6,9,-9,12,-12}) {
             double[] candidate=layout.roadPoint(road,d+delta);
             BlockPos base=BlockPos.containing(candidate[0],0,candidate[1]);
-            if(!ModDimensions.chunksReady(level,base,16))continue;
+            if(!ModDimensions.chunksReady(level,base,20)||Sanctuary.near(layout,base.getX(),base.getZ(),10))continue;
             Gate installed=installAt(level,layout,road,d,id,base,column);
-            if(installed!=null)return installed;
+            if(installed!=null){loggedInstallFailure.remove(id);return installed;}
         }
+        if(loggedInstallFailure.add(id))TearsOfInk.LOGGER.warn("Gate {} still pending near {} (site occupied, unavailable chunks or foreign construction); will retry",id,column);
         return null;
     }
     private Gate installAt(ServerLevel level,InkLandsLayout layout,int road,double d,int id,BlockPos column,BlockPos oldCenter) {
         double[] p=layout.roadPoint(road,d);
         int roadY=roadY(level,column.getX(),column.getZ());
-        if(roadY==Integer.MIN_VALUE)return null;
+        if(roadY==Integer.MIN_VALUE) {
+            // Old road may be cut or buried; use its immutable planned height, not the
+            // surface of a nearby tree, ruin or hillside.
+            var source=level.getChunkSource();
+            var terrain=new com.tarkrakov.tearsofink.world.RoadTerrain(source.getGenerator(),level,source.randomState());
+            var hit=layout.roadNear(column.getX(),column.getZ(),12);
+            roadY=(int)Math.round(layout.roadHeight(road,hit!=null&&(int)hit[0]==road?hit[1]:d,terrain));
+        }
         BlockPos center=column.atY(roadY+1);
-        if(center.getY()-MAX_FILL<level.getMinBuildHeight()||center.getY()+MAX_TREE_CLEAR>=level.getMaxBuildHeight())return null;
+        if(center.getY()-1<=level.getMinBuildHeight()||center.getY()+CLEARANCE>=level.getMaxBuildHeight())return null;
         Rotation rot=rotation(layout.roadDirection(road,d));
         BlockPos origin=center.subtract(PIVOT);
         Optional<StructureTemplate> asset=level.getStructureManager().get(TearsOfInk.id("barricade_gate"));
@@ -282,92 +292,106 @@ public final class BarricadeGates extends SavedData {
         List<BlockPos> light=template.filterBlocks(origin,settings,ModBlocks.INK_LANTERN).stream().map(StructureTemplate.StructureBlockInfo::pos).toList();
         if(authored.size()!=246||markers.size()!=4||light.size()!=4||light.stream().anyMatch(pos->authored.get(pos).getValue(FogClearing.LIT)))return null;
 
-        // Keep pre-existing road lamps untouched. A collision with actual art aborts conversion.
-        Set<Long> reservedColumns=new HashSet<>();
+        Map<BlockPos,BlockState> changes=new LinkedHashMap<>();
+        Set<Long> protection=new HashSet<>();
+        // Recognize only the original road's own posts, never arbitrary player lanterns.
+        Set<BlockPos> oldPosts=new HashSet<>();
+        Map<BlockPos,BlockState> oldPostLanterns=new HashMap<>();
         int k=(int)Math.floor(d/InkLandsLayout.ROAD_LANTERN_SPACING);
         for(int n=k-1;n<=k+1;n++) {
             int[] post=layout.roadLanternPost(road,n);
-            if(post==null)continue;
-            boolean conflicts=authored.keySet().stream().anyMatch(pos->pos.getX()==post[0]&&pos.getZ()==post[1]);
-            if(conflicts)return null;
-            reservedColumns.add(BlockPos.asLong(post[0],0,post[1]));
-        }
-
-        Map<BlockPos,BlockState> changes=new LinkedHashMap<>();
-        Set<Long> protection=new HashSet<>();
-        boolean hasOldBarrier=false;
-        for(int x=0;x<9;x++)for(int z=1;z<15;z++) {
-            BlockPos floor=transform(origin,rot,x,-1,z);
-            if(!level.getWorldBorder().isWithinBounds(floor))return null;
-            if(reservedColumns.contains(BlockPos.asLong(floor.getX(),0,floor.getZ())))continue;
-            double[] hit=layout.roadNear(floor.getX(),floor.getZ(),0);
-            boolean lane=hit!=null&&(int)hit[0]==road;
-            int previousRoad=lane?roadY(level,floor.getX(),floor.getZ()):Integer.MIN_VALUE;
-            if(lane&&previousRoad==Integer.MIN_VALUE)return null;
-            // The empty entry/exit row can absorb one block of the old road's grade.
-            if((x==0||x==8)&&lane) {
-                if(Math.abs(previousRoad-floor.getY())>2)return null;
-                floor=floor.atY(Math.max(floor.getY()-1,Math.min(floor.getY()+1,previousRoad)));
-            }
-            BlockState existing=level.getBlockState(floor);
-            boolean oldFloor=previousRoad!=Integer.MIN_VALUE&&oldBarrier(layout,road,d,floor,existing,previousRoad);
-            hasOldBarrier|=oldFloor;
-            if(!oldFloor&&!replaceable(existing))return null;
-            if(existing.hasBlockEntity())return null;
-            BlockState wanted=(lane||z==7||z==8)?ModBlocks.ASHEN_PATH.defaultBlockState():ModBlocks.ASHEN_SOIL.defaultBlockState();
-            // Always keep a dry solid pad; fill a modest unsupported column, not a bridge.
-            changes.put(floor,wanted);
-            protection.add(floor.asLong());
-            boolean supported=false;
-            for(int i=1;i<=MAX_FILL;i++) {
-                BlockPos below=floor.below(i);
-                BlockState old=level.getBlockState(below);
-                if(old.hasBlockEntity()||!old.getFluidState().isEmpty())return null;
-                if(terrain(old)&&old.isFaceSturdy(level,below,Direction.UP)){protection.add(below.asLong());supported=true;break;}
-                boolean oldSupport=previousRoad!=Integer.MIN_VALUE&&oldBarrier(layout,road,d,below,old,previousRoad);
-                hasOldBarrier|=oldSupport;
-                if(!oldSupport&&!replaceable(old))return null;
-                changes.put(below,ModBlocks.ASPHODELITE_ROCK.defaultBlockState());protection.add(below.asLong());
-            }
-            if(!supported)return null;
-            // Clear only the compact site and any tree column crossing its roof.
-            int top=level.getChunkSource().getChunkNow(floor.getX()>>4,floor.getZ()>>4)
-                    .getHeight(Heightmap.Types.WORLD_SURFACE,floor.getX()&15,floor.getZ()&15);
-            int clearTo=Math.max(center.getY()+7,top);
-            if(clearTo>center.getY()+MAX_TREE_CLEAR)return null;
-            for(int y=floor.getY()+1;y<=clearTo;y++) {
-                BlockPos at=floor.atY(y);
-                BlockState old=level.getBlockState(at);
-                boolean placeholder=previousRoad!=Integer.MIN_VALUE&&oldBarrier(layout,road,d,at,old,previousRoad);
-                hasOldBarrier|=placeholder;
-                if(old.isAir())continue;
-                if(!placeholder&&!replaceable(old))return null;
-                if(terrain(old)&&y>center.getY()+MAX_CUT)return null;
-                changes.put(at,Blocks.AIR.defaultBlockState());
+            if(post==null||Math.abs(post[0]-center.getX())>10||Math.abs(post[1]-center.getZ())>10)continue;
+            for(int y=center.getY()-5;y<=center.getY()+8;y++) {
+                BlockPos at=new BlockPos(post[0],y,post[1]);
+                BlockState lamp=level.getBlockState(at);
+                if(!lamp.is(ModBlocks.INK_LANTERN)||lamp.getValue(FogClearing.PLAYER_MADE)
+                        ||!level.getBlockState(at.below()).is(ModBlocks.PALE_FENCE)
+                        ||!level.getBlockState(at.below(2)).is(ModBlocks.PALE_FENCE))continue;
+                oldPosts.add(at);oldPosts.add(at.below());oldPosts.add(at.below(2));
+                oldPostLanterns.put(at,lamp);
+                break;
             }
         }
-        // Do not overwrite a modified/missing old site, or place a floating partial gate.
-        if(!hasOldBarrier)return null;
-        for(int dx=-5;dx<=5;dx++)for(int dz=-5;dz<=5;dz++) {
+        // Collect the old barrier even if it is floating, outside the rotated template,
+        // or has already been partly broken. Its presence is not an installation requirement.
+        Set<BlockPos> oldSpikes=new HashSet<>();
+        for(int dx=-6;dx<=6;dx++)for(int dz=-6;dz<=6;dz++) {
             int xx=oldCenter.getX()+dx,zz=oldCenter.getZ()+dz;
             double[] hit=layout.roadNear(xx,zz,0);
             if(hit==null||(int)hit[0]!=road||Math.abs(hit[1]-d)>=.75)continue;
             int floor=roadY(level,xx,zz);
-            if(floor==Integer.MIN_VALUE)continue;
+            if(floor==Integer.MIN_VALUE)floor=roadY;
             for(int dy=1;dy<=2;dy++) {
                 BlockPos at=new BlockPos(xx,floor+dy,zz);
-                if(oldBarrier(layout,road,d,at,level.getBlockState(at),floor)&&!changes.containsKey(at))return null;
+                if(oldBarrier(layout,road,d,at,level.getBlockState(at),floor))oldSpikes.add(at);
+            }
+        }
+        for(BlockPos at:oldSpikes)changes.put(at,Blocks.AIR.defaultBlockState());
+
+        // Compact complete footprint: excavate the eight-block envelope even into a hill,
+        // but do not cut the whole mountain to sky. Preserve rock above and beside the gate.
+        // Foundation extends through holes/water until a genuine supporting block is reached.
+        for(int x=0;x<9;x++)for(int z=0;z<16;z++) {
+            BlockPos floor=transform(origin,rot,x,-1,z);
+            if(!level.getWorldBorder().isWithinBounds(floor))return null;
+            double[] hit=layout.roadNear(floor.getX(),floor.getZ(),0);
+            boolean lane=hit!=null&&(int)hit[0]==road;
+            boolean aisle=z==7||z==8;
+            boolean bridge=hit!=null&&(int)hit[0]==road&&layout.roadBridge(road,hit[1]);
+            int previousRoad=lane?roadY(level,floor.getX(),floor.getZ()):Integer.MIN_VALUE;
+            if((x==0||x==8)&&lane&&previousRoad!=Integer.MIN_VALUE)
+                floor=floor.atY(Math.max(floor.getY()-1,Math.min(floor.getY()+1,previousRoad)));
+            BlockState existing=level.getBlockState(floor);
+            if(!replaceable(existing)&&!oldSpikes.contains(floor)&&!oldPosts.contains(floor)&&!existing.is(ModBlocks.PALE_PLANKS))return null;
+            BlockState wanted=(lane||aisle)?ModBlocks.ASHEN_PATH.defaultBlockState()
+                    :(level.getBiome(floor).is(com.tarkrakov.tearsofink.world.ModBiomes.BLOODWOOD)?ModBlocks.BLOOD_SOIL:ModBlocks.ASHEN_SOIL).defaultBlockState();
+            changes.put(floor,wanted);protection.add(floor.asLong());
+            for(int y=floor.getY()-1;y>level.getMinBuildHeight();y--) {
+                BlockPos below=floor.atY(y);
+                BlockState old=level.getBlockState(below);
+                if(old.getFluidState().isEmpty()&&!naturalTree(old)&&!oldSpikes.contains(below)
+                        &&old.isFaceSturdy(level,below,Direction.UP)){protection.add(below.asLong());break;}
+                if(!replaceable(old)&&!oldSpikes.contains(below)&&!oldPosts.contains(below))return null;
+                changes.put(below,ModBlocks.ASPHODELITE_ROCK.defaultBlockState());protection.add(below.asLong());
+            }
+            // A higher entry row must not cut into the original template's lowest cells.
+            int firstY=Math.min(floor.getY()+1,center.getY());
+            for(int y=firstY;y<=center.getY()+CLEARANCE-1;y++) {
+                BlockPos at=floor.atY(y);
+                if(at.equals(floor))continue;
+                BlockState old=level.getBlockState(at);
+                if(old.isAir())continue;
+                if(!replaceable(old)&&!oldSpikes.contains(at)&&!oldPosts.contains(at)
+                        &&!(bridge&&(old.is(ModBlocks.PALE_FENCE)||old.is(ModBlocks.PALE_PLANKS)||old.is(ModBlocks.PALE_LOG))))return null;
+                changes.put(at,Blocks.AIR.defaultBlockState());
+            }
+            // Cut branches in the first few cells above the roof, not the hillside.
+            for(int y=center.getY()+CLEARANCE;y<center.getY()+CLEARANCE+3&&y<level.getMaxBuildHeight();y++) {
+                BlockPos at=floor.atY(y);
+                if(naturalTree(level.getBlockState(at)))changes.put(at,Blocks.AIR.defaultBlockState());
+            }
+        }
+        // A road post intersecting this pad is superseded by the four gate lamps.
+        // Remove its remaining cells as a unit, never leave a floating lantern.
+        for(var entry:oldPostLanterns.entrySet()) {
+            BlockPos at=entry.getKey();
+            if(changes.containsKey(at)||changes.containsKey(at.below())||changes.containsKey(at.below(2))
+                    ||authored.containsKey(at)||authored.containsKey(at.below())||authored.containsKey(at.below(2))) {
+                for(int i=0;i<=2;i++)changes.putIfAbsent(at.below(i),Blocks.AIR.defaultBlockState());
             }
         }
         for(BlockPos p0:authored.keySet()) {
             BlockState old=level.getBlockState(p0);
-            if(old.hasBlockEntity()||(!old.isAir()&&!changes.containsKey(p0)))return null;
+            if(!old.isAir()&&!changes.containsKey(p0)&&!replaceable(old)&&!oldSpikes.contains(p0)&&!oldPosts.contains(p0))return null;
             protection.add(p0.asLong());
         }
         AABB zone=new AABB(center.getX()-9,center.getY()-2,center.getZ()-9,center.getX()+10,center.getY()+9,center.getZ()+10);
-        if(!level.getEntitiesOfClass(Player.class,zone,e->e.isAlive()&&!e.isSpectator()).isEmpty())return null;
-        for(LivingEntity e:level.getEntitiesOfClass(LivingEntity.class,zone,LivingEntity::isAlive)) {
-            if(authored.keySet().stream().anyMatch(at->e.getBoundingBox().intersects(new AABB(at))))return null;
+        // Only actual occupied cells delay installation, not a spectator or a
+        // player already watching from the road in front. Never entomb an entity.
+        Set<BlockPos> occupied=new HashSet<>(authored.keySet());
+        for(var edit:changes.entrySet())if(!edit.getValue().isAir())occupied.add(edit.getKey());
+        for(LivingEntity e:level.getEntitiesOfClass(LivingEntity.class,zone,e->e.isAlive()&&!e.isSpectator())) {
+            if(occupied.stream().anyMatch(at->e.getBoundingBox().intersects(new AABB(at))))return null;
         }
 
         // Snapshot all touched states. There were no foreign block entities in the edit set.
@@ -411,6 +435,7 @@ public final class BarricadeGates extends SavedData {
             List<Map.Entry<BlockPos,BlockState>> rollback=new ArrayList<>(before.entrySet());
             Collections.reverse(rollback);
             for(var edit:rollback)level.setBlock(edit.getKey(),edit.getValue(),Block.UPDATE_CLIENTS);
+            // Removed roadside lamps are stateless beacon block entities; setBlock restores them.
             TearsOfInk.LOGGER.warn("Gate {} conversion rolled back",id,ex);
             return null;
         }
