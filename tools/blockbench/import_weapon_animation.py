@@ -20,6 +20,28 @@ from hilt import euler_xyz
 class ImportError(ValueError):
     pass
 
+# Exact, reviewed migration of the old V1 source: author's 856d3ff save contains
+# the original 31 cubes followed by an identical copy using the second,
+# byte-identical texture. Display, UV, pivots and exported Java model are unchanged.
+# Pin BOTH the original calibrated digest and the replacement Git blob. No
+# arbitrary changes to an author's model bypass the calibration checks.
+V1_SOURCE_MIGRATIONS = {
+    ('src/main/resources/assets/tears-of-ink/models/item/pale_linear_great.bbmodel',
+     'a336122c49a19367ba7ad0a30f97b8afbb13fae65695190facc3048eada51593'):
+        ('69b513c44dbf980542be42b6f13186b2e60538fc', 31),
+}
+
+def calibrated_source(path, expected, version):
+    data = (ROOT/path).read_bytes()
+    if hashlib.sha256(data).hexdigest() == expected:
+        return None
+    migration = V1_SOURCE_MIGRATIONS.get((path, expected)) if version == 1 else None
+    if migration:
+        blob = hashlib.sha1(b'blob ' + str(len(data)).encode('ascii') + b'\0' + data).hexdigest()
+        if blob == migration[0]:
+            return migration[1]
+    raise ImportError(f'Author source changed: rebuild/calibrate workspace ({path})')
+
 def number(value):
     try:
         n = float(value)
@@ -99,9 +121,11 @@ class Rig:
             self.meta = json.loads((HERE/'pale_workspace_rig.json').read_text())
         if self.meta.get('version') not in (1,2) or self.meta.get('euler_order') != 'ZYX':
             raise ImportError('Unsupported rig version / rotation order')
+        migrated_counts = {}
         for path, expected in self.meta.get('source_sha256',{}).items():
-            if hashlib.sha256((ROOT/path).read_bytes()).hexdigest() != expected:
-                raise ImportError(f'Author source changed: rebuild/calibrate workspace ({path})')
+            count = calibrated_source(path, expected, self.meta['version'])
+            if count is not None:
+                migrated_counts[path] = count
         live_a, live_model, _, _, live_grip = load(self.meta['archetype'])
         hand_names = [v+'_'+s+'hand' for v in ('firstperson','thirdperson') for s in ('right','left')]
         if (any(live_model['display'].get(k) != self.meta.get('display',{}).get(k) for k in hand_names) or
@@ -138,8 +162,10 @@ class Rig:
                     raise ImportError('Sword must be a child of its arm')
         # Edit-mode changes invalidate calibration; Animate keys remain free.
         if self.meta['version'] == 1:
-            original_path=next(ROOT/p for p in self.meta['source_sha256'] if p.endswith('.bbmodel'))
-            originals=json.loads(original_path.read_text())['elements']
+            original_path=next(p for p in self.meta['source_sha256'] if p.endswith('.bbmodel'))
+            originals=json.loads((ROOT/original_path).read_text())['elements']
+            if original_path in migrated_counts:
+                originals=originals[:migrated_counts[original_path]]
         else:
             originals=self.meta['source_cubes']
             self.check_live_geometry(originals,live_model)
