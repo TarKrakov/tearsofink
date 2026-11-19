@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Physical probe independent of the ten-seed matrix. Fresh V3 and V1 seed 42."""
+import argparse
 import json
 import shutil
 import sys
@@ -85,8 +86,29 @@ def session(label):
         server.close(normal)
 
 def main():
-    original=d060.setup("42")
+    parser=argparse.ArgumentParser()
+    parser.add_argument("--island-seed",help="Separate physical raised-foundation regression; requires at least one raised temple")
+    args=parser.parse_args()
+    seed=str(int(args.island_seed)) if args.island_seed is not None else "42"
+    original=d060.setup(seed)
     install()
+    if args.island_seed is not None:
+        first=session("island-v3")
+        plan_file=d060.WORLD/"data/tearsofink_temple_network_v3.bin"
+        before=d060.digest(plan_file)
+        d060.DIM.write_bytes(original)
+        restart=session("island-v3-restart")
+        after=d060.digest(plan_file)
+        # Be explicit if the requested seed doesn't exercise a raised temple.
+        # A successful ordinary temple regression is not evidence for the island.
+        ok=bool(first.get("raised_foundations")) and first["raised_foundations"]==restart.get("raised_foundations")
+        ok=ok and before==after and all(x.get("layout")==3 and x.get("pass") and x["arrival"].get("ready")
+                                         for x in (first,restart))
+        result={"seed":seed,"pass":ok,"plan_unchanged":before==after,"first":first,"restart":restart}
+        (d060.OUT/"island-physical-result.json").write_text(json.dumps(result,indent=2))
+        print("D060_ISLAND_SUMMARY "+json.dumps(result),flush=True)
+        if not ok: raise SystemExit("D060 raised-foundation physical acceptance failed")
+        return
     # First V3, then a separate unvisited V1 save. No reuse of V3 chunks.
     v3=session("physical-v3")
     d060.DIM.write_bytes(original)

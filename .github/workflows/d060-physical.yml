@@ -1,6 +1,12 @@
 name: D-060 physical and legacy validation
 on:
   workflow_dispatch:
+    inputs:
+      island_seed:
+        description: "Optional seed known to have a raised temple; isolated V3 + restart check"
+        required: false
+        type: string
+        default: ''
   push:
     branches: [main]
     paths:
@@ -24,10 +30,18 @@ jobs:
         with:
           distribution: microsoft
           java-version: '25'
+          cache: gradle
       - name: Unit-test exact block comparison
         run: python3 -m unittest discover -s tools/tests/d060-physical -p 'test_*.py'
       - name: Compare real V3 and V1 buildings and roads
-        run: python3 -u tools/tests/d060-physical/run.py
+        env:
+          ISLAND_SEED: ${{ inputs.island_seed }}
+        run: |
+          if [ -n "$ISLAND_SEED" ]; then
+            python3 -u tools/tests/d060-physical/run.py --island-seed "$ISLAND_SEED"
+          else
+            python3 -u tools/tests/d060-physical/run.py
+          fi
       - uses: actions/upload-artifact@v7
         if: always()
         with:

@@ -97,6 +97,16 @@ public final class D060PhysicalProbe {
             out.addProperty("physical_temples",built);
             out.add("temples",temples);
             if (plan!=null) {
+                JsonArray foundations = new JsonArray();
+                for (var t:plan.temples()) {
+                    if (!t.raised()) continue;
+                    var foundation=foundationProbe(level,terrain,layout,t);
+                    foundations.add(foundation);
+                    if (!foundation.get("supported").getAsBoolean())
+                        failures.add("Raised temple lacks dry continuous support "+t.x()+","+t.z());
+                }
+                out.add("raised_foundations",foundations);
+                out.addProperty("raised_temple_count",foundations.size());
                 JsonArray exits = new JsonArray();
                 int connected = 0, expected = 0;
                 for (var t : plan.temples()) {
@@ -122,6 +132,52 @@ public final class D060PhysicalProbe {
         out.addProperty("pass",failures.isEmpty());
         TearsOfInk.LOGGER.info("D060_FULL_PHYSICAL {}",out);
         return failures.isEmpty()?1:0;
+    }
+
+    /** Check every originally submerged column of the raised platform, not
+     * just the nine planning samples. Load the real chunks and check the full
+     * vertical column between the platform and the predicted raw solid bed.
+     * Dry ground outside the platform is intentionally not required to flatten.
+     */
+    private static JsonObject foundationProbe(ServerLevel level,RoadTerrain terrain,
+            InkLandsLayout layout,TempleNetwork.Temple t) {
+        var facing=t.rotation().rotate(Direction.SOUTH);
+        int hx=(facing.getAxis()==Direction.Axis.X?TempleNetwork.TEMPLATE_LENGTH:TempleNetwork.TEMPLATE_WIDTH)/2+1;
+        int hz=(facing.getAxis()==Direction.Axis.Z?TempleNetwork.TEMPLATE_LENGTH:TempleNetwork.TEMPLATE_WIDTH)/2+1;
+        JsonObject out=new JsonObject();
+        JsonArray examples=new JsonArray();
+        int wet=0,unsupported=0,reservationViolations=0,checked=0;
+        for (int x=t.x()-hx;x<=t.x()+hx;x++) for (int z=t.z()-hz;z<=t.z()+hz;z++) {
+            var raw=terrain.sample(x,z);
+            if (!raw.water()) continue;
+            wet++;
+            int top=t.y()-1, bed=terrain.floor(x,z);
+            if (layout.roadNear(x,z,TempleNetwork.ROAD_BUFFER-InkLandsLayout.ROAD_HALF_WIDTH)!=null)
+                reservationViolations++;
+            level.getChunk(x>>4,z>>4);
+            boolean ok=top>raw.surface() && bed>=level.getMinBuildHeight() && bed<=top;
+            for (int y=top;y>=Math.max(bed,level.getMinBuildHeight()) && ok;y--) {
+                var pos=new BlockPos(x,y,z);
+                var state=level.getBlockState(pos);
+                checked++;
+                // Stairs/partial blocks are legal on an approach crossing the
+                // apron, but not as the solid mass under the temple platform.
+                ok=state.getFluidState().isEmpty() && !state.is(BlockTags.LOGS)
+                        && !state.is(BlockTags.LEAVES)
+                        && (state.isFaceSturdy(level,pos,Direction.UP) || state.getBlock() instanceof StairBlock);
+                if (!ok && examples.size()<12)
+                    examples.add(pos.toShortString()+" "+state);
+            }
+            if (!ok) unsupported++;
+        }
+        out.addProperty("center",t.x()+","+t.y()+","+t.z());
+        out.addProperty("original_wet_columns",wet);
+        out.addProperty("checked_blocks",checked);
+        out.addProperty("unsupported_columns",unsupported);
+        out.addProperty("road_intrusions",reservationViolations);
+        out.addProperty("supported",wet>0 && unsupported==0 && reservationViolations==0);
+        out.add("examples",examples);
+        return out;
     }
 
     private static boolean open(ServerLevel level, BlockPos pos) {
