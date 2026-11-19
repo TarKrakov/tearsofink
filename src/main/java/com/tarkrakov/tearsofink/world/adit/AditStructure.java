@@ -34,7 +34,7 @@ public final class AditStructure extends Structure {
 		super(settings);
 	}
 
-	public static void init() {}
+	public static void init() { AditLandmarks.init(); }
 
 	@Override
 	protected Optional<GenerationStub> findGenerationPoint(GenerationContext context) {

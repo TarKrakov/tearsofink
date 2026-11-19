@@ -440,7 +440,7 @@ public final class BloodSettlements extends SavedData {
             }
         }
         List<BlockPos> ordered=new ArrayList<>(edits.keySet());
-        ordered.sort(Comparator.comparingInt(BlockPos::getY).thenComparingInt(BlockPos::getX).thenComparingInt(BlockPos::getZ));
+        ordered.sort(Comparator.comparingInt((BlockPos pos)->pos.getY()).thenComparingInt(pos->pos.getX()).thenComparingInt(pos->pos.getZ()));
         Map<BlockPos,BlockState> before=new LinkedHashMap<>();
         try{
             for(BlockPos q:ordered){

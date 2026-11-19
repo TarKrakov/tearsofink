@@ -108,6 +108,18 @@ final class AditPiece extends StructurePiece {
 		skip(seed, chunk, failure);
 	}
 
+	BlockPos builtEntrance() { return entrance; }
+
+	/** Local -X is the open approach, after the saved rotation. Reflection only flips Z. */
+	net.minecraft.core.Direction outward() {
+		return switch (variant % 4) {
+			case 1 -> net.minecraft.core.Direction.NORTH;
+			case 2 -> net.minecraft.core.Direction.EAST;
+			case 3 -> net.minecraft.core.Direction.SOUTH;
+			default -> net.minecraft.core.Direction.WEST;
+		};
+	}
+
 	boolean nearPassage(BlockPos pos) {
 		return entrance != null && (entrance.distSqr(pos) <= 64.0
 				|| (landing != null && landing.distSqr(pos) <= 64.0));
