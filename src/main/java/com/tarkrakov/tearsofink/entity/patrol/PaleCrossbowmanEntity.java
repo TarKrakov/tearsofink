@@ -207,7 +207,7 @@ public class PaleCrossbowmanEntity extends PaleSoldier implements com.tarkrakov.
 			boolean sees = hasLineOfSight(t);
 
 			// игрок вплотную — одна отпрыжка за цикл (в т.ч. посреди перезарядки)
-			if (dist < SquadTuning.ARCHER_DODGE_CLOSE && !dodgedThisCycle && dodgeCooldown <= 0 && onGround()) {
+			if (!isCampElevated() && dist < SquadTuning.ARCHER_DODGE_CLOSE && !dodgedThisCycle && dodgeCooldown <= 0 && onGround()) {
 				startDodge(t);
 				return;
 			}
@@ -241,6 +241,8 @@ public class PaleCrossbowmanEntity extends PaleSoldier implements com.tarkrakov.
 				}
 			}
 
+			// Elevated camp archers fight from the platform instead of chasing targets below.
+			if(isCampElevated()){getNavigation().stop();return;}
 			// движение: держать дистанцию; при прицеле и выстреле стоит
 			boolean standing = phase != PHASE_RELOAD && sees && dist >= SquadTuning.KEEP_MIN && dist <= SquadTuning.KEEP_MAX;
 			if (standing) {

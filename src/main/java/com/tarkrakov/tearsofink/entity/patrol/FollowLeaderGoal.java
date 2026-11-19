@@ -20,7 +20,7 @@ public class FollowLeaderGoal extends Goal {
 
 	@Override
 	public boolean canUse() {
-		if (mob.getTarget() != null || mob.isLeader()) return false;
+		if (mob.isCampGuard() || mob.getTarget() != null || mob.isLeader()) return false;
 		PaleSoldier leader = mob.leaderEntity();
 		return leader != null && leader.getTarget() == null && mob.distanceToSqr(spot(leader)) > 4;
 	}

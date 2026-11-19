@@ -34,6 +34,8 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 	public double patrolFrom, patrolTo;
 	private int alertCooldown;
 	@Nullable private net.minecraft.core.BlockPos gateHome;
+	@Nullable private net.minecraft.core.BlockPos campCenter, campHome, campRest;
+	private boolean campElevated;
 
 	protected PaleSoldier(EntityType<? extends Monster> type, Level level) {
 		super(type, level);
@@ -65,6 +67,39 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 	}
 	private boolean farFromGate(LivingEntity target) {
 		return gateHome!=null&&gateHome.distToCenterSqr(target.position())>BarricadeGates.GUARD_LEASH*BarricadeGates.GUARD_LEASH;
+	}
+
+	// D-089: independent camp station; ordinary patrols and gate soldiers keep their old AI.
+	public void setCampHome(net.minecraft.core.BlockPos center, net.minecraft.core.BlockPos home,
+	                        net.minecraft.core.BlockPos rest, boolean elevated) {
+		campCenter=center.immutable();campHome=home.immutable();campRest=rest.immutable();campElevated=elevated;
+		setPersistenceRequired();
+	}
+	public boolean isCampGuard(){return campHome!=null;}
+	public boolean isCampElevated(){return campHome!=null&&campElevated;}
+	net.minecraft.core.BlockPos campHome(){return campHome;}
+	net.minecraft.core.BlockPos campRest(){return campRest;}
+	boolean campAllows(net.minecraft.core.BlockPos p){
+		if(campHome==null)return true;
+		if(campElevated)return p.getY()==campHome.getY()&&horizontalTo(campHome,p)<=4;
+		return horizontalTo(campCenter,p)<=ForestCamps.LEASH*ForestCamps.LEASH
+				&&Math.abs(p.getY()-campCenter.getY())<=8;
+	}
+	private static double horizontalTo(net.minecraft.core.BlockPos a,net.minecraft.core.BlockPos b){
+		double x=a.getX()-b.getX(),z=a.getZ()-b.getZ();return x*x+z*z;
+	}
+	private boolean farFromCamp(LivingEntity target){
+		if(campHome==null)return false;
+		return horizontalTo(campCenter,target.blockPosition())>ForestCamps.LEASH*ForestCamps.LEASH
+				|| !campAllows(blockPosition());
+	}
+	boolean campPathAllowed(net.minecraft.world.level.pathfinder.Path path){
+		if(!isCampGuard())return true;
+		for(int n=0;n<path.getNodeCount();n++){
+			var node=path.getNode(n);
+			if(!campAllows(new net.minecraft.core.BlockPos(node.x,node.y,node.z)))return false;
+		}
+		return true;
 	}
 
 	// ===== Отряд =====
@@ -130,6 +165,7 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 
 	/** Цели: кто ударил → игроки → враги по таблице фракций (ванильные монстры, другие фракции). */
 	protected void addFactionTargets() {
+		this.goalSelector.addGoal(6,new CampPatrolGoal(this));
 		this.targetSelector.addGoal(1, new net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal(this));
 		this.targetSelector.addGoal(2, new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(this,
 				net.minecraft.world.entity.player.Player.class, true));
@@ -167,6 +203,11 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 					&&com.tarkrakov.tearsofink.world.ModDimensions.chunksReady(server,gateHome,2))
 				getNavigation().moveTo(gateHome.getX()+.5,gateHome.getY(),gateHome.getZ()+.5,.9);
 		}
+		if(isCampGuard()){
+			if(getTarget()!=null&&farFromCamp(getTarget()))setTarget(null);
+			var path=getNavigation().getPath();
+			if(path!=null&&campAllows(blockPosition())&&!campPathAllowed(path))getNavigation().stop();
+		}
 		if (guardsArchers()) guardArchers();
 		LivingEntity target = this.getTarget();
 		this.entityData.set(AGGRESSIVE, target != null && target.isAlive());
@@ -182,7 +223,7 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 
 	@Override
 	public void setTarget(@Nullable LivingEntity target) {
-		if (target != null && (isAlly(target)||farFromGate(target))) return; // свои и дальние цели гарнизона
+		if (target != null && (isAlly(target)||farFromGate(target)||farFromCamp(target))) return; // свои и дальние цели гарнизона
 		super.setTarget(target);
 	}
 
@@ -218,6 +259,10 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 		super.addAdditionalSaveData(tag);
 		tag.putFloat("Power", power);
 		if(gateHome!=null)tag.putLong("GateHome",gateHome.asLong());
+		if(campHome!=null){
+			tag.putLong("CampCenter",campCenter.asLong());tag.putLong("CampHome",campHome.asLong());
+			tag.putLong("CampRest",campRest.asLong());tag.putBoolean("CampElevated",campElevated);
+		}
 		if (squad != null) tag.putUUID("Squad", squad);
 		if (leader != null) tag.putUUID("SquadLeader", leader);
 		if (patrolRoad >= 0) {
@@ -232,6 +277,9 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 		super.readAdditionalSaveData(tag);
 		gateHome=tag.contains("GateHome")?net.minecraft.core.BlockPos.of(tag.getLong("GateHome")):null;
 		if(gateHome!=null)setPersistenceRequired();
+		if(tag.contains("CampHome")&&tag.contains("CampCenter")&&tag.contains("CampRest"))
+			setCampHome(net.minecraft.core.BlockPos.of(tag.getLong("CampCenter")),net.minecraft.core.BlockPos.of(tag.getLong("CampHome")),
+					net.minecraft.core.BlockPos.of(tag.getLong("CampRest")),tag.getBoolean("CampElevated"));
 		if (tag.contains("Power")) power = tag.getFloat("Power"); // здоровье/урон уже сохранены в атрибутах
 		if (tag.hasUUID("Squad")) squad = tag.getUUID("Squad");
 		if (tag.hasUUID("SquadLeader")) leader = tag.getUUID("SquadLeader");

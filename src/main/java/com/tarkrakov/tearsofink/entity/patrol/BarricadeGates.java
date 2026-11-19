@@ -76,14 +76,15 @@ public final class BarricadeGates extends SavedData {
         return ModDimensions.isLands(level) && level.getServer().isSameThread();
     }
     public static boolean protectedAt(Level level, BlockPos pos) {
-        return level instanceof ServerLevel server && serverThread(server) && of(server).protectedBlocks.contains(pos.asLong());
+        return level instanceof ServerLevel server && serverThread(server) && (of(server).protectedBlocks.contains(pos.asLong())||ForestCamps.lamp(level,pos));
     }
     public static boolean isGateLantern(Level level, BlockPos pos) {
-        return level instanceof ServerLevel server && serverThread(server) && of(server).lamps.containsKey(pos.asLong());
+        return level instanceof ServerLevel server && serverThread(server) && (of(server).lamps.containsKey(pos.asLong())||ForestCamps.lamp(level,pos));
     }
     /** Only the normal successful player ignition starts a fresh timed flame. */
     public static void ignited(ServerLevel level, BlockPos pos) {
         if (!serverThread(level)) return;
+        ForestCamps.ignited(level,pos);
         BarricadeGates data=of(level);
         Gate g=data.lamps.get(pos.asLong());
         if (g!=null) {
@@ -99,6 +100,7 @@ public final class BarricadeGates extends SavedData {
     }
     public static boolean suppressesSpawns(ServerLevel level, BlockPos pos) {
         if (!ModDimensions.isLands(level)) return false;
+        if(ForestCamps.safe(level,pos))return true;
         for (Gate g:of(level).gates.values()) {
             if (Math.abs(g.center.getY()-pos.getY())>12 || horizontalSq(g.center,pos)>SAFE_RADIUS*SAFE_RADIUS) continue;
             if (g.isLit(level.getGameTime())) return true;

@@ -33,7 +33,7 @@ public class DouseLanternGoal extends Goal {
 
 	@Override
 	public boolean canUse() {
-		if (!mob.isLeader() || mob.getTarget() != null) return false;
+		if (mob.isCampGuard() || !mob.isLeader() || mob.getTarget() != null) return false;
 		if (++scan < SquadTuning.DOUSE_SCAN) return false;
 		scan = mob.getRandom().nextInt(10);
 		lantern = findLit();

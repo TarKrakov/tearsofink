@@ -21,7 +21,7 @@ public class RoadPatrolGoal extends Goal {
 
 	@Override
 	public boolean canUse() {
-		if (mob.getTarget() != null || mob.patrolRoad < 0 || !mob.isLeader()) return false;
+		if (mob.isCampGuard() || mob.getTarget() != null || mob.patrolRoad < 0 || !mob.isLeader()) return false;
 		if (pause > 0) {
 			pause--;
 			return false;
