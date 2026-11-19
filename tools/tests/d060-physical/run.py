@@ -123,8 +123,18 @@ def main():
     dim["generator"]["biome_source"]["temple_layout"]=3
     d060.DIM.write_text(json.dumps(dim))
     v1restart=session("physical-v1-restart")
+    d060.DIM.write_bytes(original)
+    props.write_text(props.read_text().replace("level-name=toi-d060-legacy","level-name=toi-d060-legacy-control"))
+    control=d060.RUN/"toi-d060-legacy-control"
+    if control.exists(): raise RuntimeError("Unexpected existing V1 control world")
+    v1control=session("physical-v1-control")
     comparison={
         "layouts": [v3.get("layout"),v1.get("layout"),v1restart.get("layout")],
+        "control_layout": v1control.get("layout"),
+        "v1_control_same_temples": v1.get("temples")==v1control.get("temples"),
+        "v1_control_same_adits": v1.get("adits")==v1control.get("adits"),
+        "v1_control_same_arrival": v1["arrival"].get("position")==v1control["arrival"].get("position"),
+        "v1_control_exact_road_match": v1.get("road_blocks")==v1control.get("road_blocks"),
         "same_starter": bool(v3.get("starter_fountain")) and v3.get("starter_fountain")==v1.get("starter_fountain")==v1restart.get("starter_fountain"),
         "same_starter_bbox": bool(v3.get("starter_bbox")) and v3.get("starter_bbox")==v1.get("starter_bbox")==v1restart.get("starter_bbox"),
         "same_arrival": bool(v3["arrival"].get("position")) and v3["arrival"].get("position")==v1["arrival"].get("position")==v1restart["arrival"].get("position"),
@@ -138,9 +148,9 @@ def main():
     # Locate every changed block while retaining the original strict pass/fail.
     diagnostics = {}
     late = [(a+"-roads",b+"-roads",a+"-vs-"+b) for a,b in
-            [("physical-v3","physical-v1"),("physical-v1","physical-v1-restart")]]
+            [("physical-v3","physical-v1"),("physical-v1","physical-v1-restart"),("physical-v1","physical-v1-control")]]
     early = [(a+"-roads-before",b+"-roads-before",a+"-vs-"+b+"-before-structures") for a,b in
-             [("physical-v3","physical-v1"),("physical-v1","physical-v1-restart")]]
+             [("physical-v3","physical-v1"),("physical-v1","physical-v1-restart"),("physical-v1","physical-v1-control")]]
     within = [(a+"-roads-before",a+"-roads",a+"-before-vs-after-structures") for a in
               ["physical-v3","physical-v1","physical-v1-restart"]]
     for lhs,rhs,name in late+early+within:
@@ -150,11 +160,12 @@ def main():
             (d060.OUT/(name+".json")).write_text(json.dumps(diff,indent=2))
             diagnostics[name] = {k:v for k,v in diff.items() if k!="differences"}
             diagnostics[name]["examples"] = diff["differences"][:8]
-    result={"comparison":comparison,"road_diagnostics":diagnostics,"v3":v3,"v1":v1,"v1_restart":v1restart}
+    result={"comparison":comparison,"road_diagnostics":diagnostics,"v3":v3,"v1":v1,"v1_restart":v1restart,"v1_control":v1control}
     (d060.OUT/"full-physical-result.json").write_text(json.dumps(result,indent=2))
     print("D060_FULL_SUMMARY "+json.dumps(result),flush=True)
     ok=all(x.get("pass") and x["arrival"].get("ready") and x.get("seed")=="42" for x in [v3,v1,v1restart])
     ok=ok and comparison["layouts"]==[3,1,1]
+    ok=ok and comparison["control_layout"]==1 and v1control["arrival"].get("ready") and v1control.get("seed")=="42"
     ok=ok and all(comparison[k] for k in ["same_starter","same_starter_bbox","same_arrival","same_sampled_road_blocks","v1_unchanged_temples","v1_unchanged_adits"])
     if not ok: raise SystemExit("D060 physical/baseline acceptance failed")
 if __name__=="__main__": main()

@@ -130,6 +130,31 @@ public final class TempleNetwork {
 		private final List<PathBlock> paths = new ArrayList<>();
 		private final Map<Long, RoadTerrain.Sample> samples = new HashMap<>();
 		private final Map<Long,Integer> beds = new HashMap<>();
+		// Planner-local exact query caches. Nulls are valid answers; never
+		// infer a narrow-road answer from a different search radius.
+		private static final int QUERY_CACHE_LIMIT=131072;
+		private record RoadQuery(long column,double extra) {}
+		private final Map<RoadQuery,double[]> roadQueries=new HashMap<>();
+		private final Map<Long,net.minecraft.resources.ResourceKey<net.minecraft.world.level.biome.Biome>> biomeQueries=new HashMap<>();
+		private long roadHits,roadMisses,biomeHits,biomeMisses;
+
+		private double[] roadNear(int x,int z,double extra) {
+			var key=new RoadQuery(ChunkPos.asLong(x,z),extra);
+			if (roadQueries.containsKey(key)) { roadHits++; return roadQueries.get(key); }
+			roadMisses++;
+			var hit=layout.roadNear(x,z,extra);
+			if (roadQueries.size()<QUERY_CACHE_LIMIT) roadQueries.put(key,hit);
+			return hit;
+		}
+		private double[] roadAt(int x,int z) { return roadNear(x,z,0); }
+		private net.minecraft.resources.ResourceKey<net.minecraft.world.level.biome.Biome> biomeAt(int x,int z) {
+			long key=ChunkPos.asLong(x,z);
+			if (biomeQueries.containsKey(key)) { biomeHits++; return biomeQueries.get(key); }
+			biomeMisses++;
+			var biome=layout.pick(x,z,null);
+			if (biomeQueries.size()<QUERY_CACHE_LIMIT) biomeQueries.put(key,biome);
+			return biome;
+		}
 		private final Map<String, Integer> failures = new java.util.TreeMap<>();
 		private int slotColumnLimit;
 
@@ -202,6 +227,7 @@ public final class TempleNetwork {
 			for (int band = 0; band < FOREST_MIN.length; band++) {
 				if (!forest(band, sectors)) missing("forest", band);
 			}
+			TearsOfInk.LOGGER.info("D-060 seed {}: exact planner cache road hits/misses {}/{}, biome hits/misses {}/{}",inputs.seed(),roadHits,roadMisses,biomeHits,biomeMisses);
 			return new TempleNetwork(temples, paths);
 		}
 
@@ -331,7 +357,7 @@ public final class TempleNetwork {
 					if (ax != 0 && (az == 0 || (order == 0 ? ax >= az : ax > az))) x += Integer.signum(tx - x);
 					else z += Integer.signum(tz - z);
 					if (lanterns.contains(ChunkPos.asLong(x, z)) || !forestGround(x, z)) break;
-					var hit = layout.roadNear(x, z, InkLandsLayout.ROAD_SHOULDER + InkRoadsFeature.ACCESS_CUT_WIDTH);
+					var hit = roadNear(x, z, InkLandsLayout.ROAD_SHOULDER + InkRoadsFeature.ACCESS_CUT_WIDTH);
 					if (hit != null && ((int) hit[0] != road || !outsideOutposts(hit[1]) || layout.roadBridge(road, hit[1]))) break;
 					var natural = sample(x, z);
 					if (!dry(natural)) break;
@@ -368,7 +394,7 @@ public final class TempleNetwork {
 				for (int side : new int[]{firstSide, -firstSide}) {
 					if (samples.size() >= slotColumnLimit) return reject("graph column budget");
 					for (Connection connection : graphConnections(road, along, side)) {
-						var near = layout.roadNear(connection.edge().getX(), connection.edge().getZ(), 40 - InkLandsLayout.ROAD_HALF_WIDTH);
+						var near = roadNear(connection.edge().getX(), connection.edge().getZ(), 40 - InkLandsLayout.ROAD_HALF_WIDTH);
 						int exitAlong = near != null && (int) near[0] == road ? (int) Math.round(near[1]) : along;
 						for (int shift : new int[]{0, -12, 12, -24, 24}) {
 							int siteAlong = exitAlong + shift;
@@ -498,7 +524,7 @@ public final class TempleNetwork {
 						remainingExpansions -= scan.expanded();
 						for (var exit : scan.exits()) {
 							var pos = new BlockPos(exit.x(),exit.y(),exit.z());
-							var hit = layout.roadNear(exit.x(),exit.z(),ROAD_BUFFER+3-InkLandsLayout.ROAD_HALF_WIDTH);
+							var hit = roadNear(exit.x(),exit.z(),ROAD_BUFFER+3-InkLandsLayout.ROAD_HALF_WIDTH);
 							if (hit == null || (int)hit[0] != road) continue;
 							double[] toward = layout.roadPoint(road,hit[1]);
 							Connection connection = new Connection(pos,Direction.getNearest(toward[0]-exit.x(),0,toward[1]-exit.z()));
@@ -549,7 +575,7 @@ public final class TempleNetwork {
 				long key=ChunkPos.asLong(x,z);
 				if (!seen.add(key)) return List.of();
 				if (!TempleRoadAccess.canBuild(layout,x,z)) {
-					var hit=layout.roadNear(x,z,InkLandsLayout.ROAD_SHOULDER);
+					var hit=roadNear(x,z,InkLandsLayout.ROAD_SHOULDER);
 					if (hit==null || (int)hit[0]!=road || layout.roadBridge(road,hit[1])
 							|| !outsideOutposts(hit[1]) || lanterns.contains(key)) return List.of();
 					joinY=graphSurface(road,x,z,lanterns);
@@ -557,13 +583,13 @@ public final class TempleNetwork {
 					break; // do not include or modify the existing shoulder
 				}
 				if (!forestGround(x,z)) return List.of();
-				var nearby=layout.roadNear(x,z,ROAD_BUFFER-InkLandsLayout.ROAD_HALF_WIDTH);
+				var nearby=roadNear(x,z,ROAD_BUFFER-InkLandsLayout.ROAD_HALF_WIDTH);
 				if (nearby!=null && ((int)nearby[0]!=road || !outsideOutposts(nearby[1])
 						|| layout.roadBridge(road,nearby[1]))) return List.of();
 				var column=sample(x,z);
 				int bed=column.water()?bed(x,z):column.surface();
 				int natural=column.water()?column.surface()+1:column.surface();
-				var cutHit=layout.roadNear(x,z,InkLandsLayout.ROAD_SHOULDER+InkRoadsFeature.ACCESS_CUT_WIDTH);
+				var cutHit=roadNear(x,z,InkLandsLayout.ROAD_SHOULDER+InkRoadsFeature.ACCESS_CUT_WIDTH);
 				if (!column.water() && cutHit!=null)
 					natural=InkRoadsFeature.plannedAccessSurface(layout,terrain,cutHit,natural);
 				int low=column.water()?column.surface()+1:natural-TempleRoadAccess.CUT;
@@ -614,13 +640,13 @@ public final class TempleNetwork {
 			queue.add(new Cell(x,z,y,0)); visited.add(ChunkPos.asLong(x,z));
 			while (!queue.isEmpty()) {
 				var at=queue.removeFirst();
-				var lane=layout.roadAt(at.x(),at.z());
+				var lane=roadAt(at.x(),at.z());
 				if (lane!=null && (int)lane[0]==road) return true;
 				if (at.steps()>=5) continue;
 				for (Direction dir:Direction.Plane.HORIZONTAL) {
 					int nx=at.x()+dir.getStepX(),nz=at.z()+dir.getStepZ();
 					long key=ChunkPos.asLong(nx,nz);
-					var hit=layout.roadNear(nx,nz,InkLandsLayout.ROAD_SHOULDER);
+					var hit=roadNear(nx,nz,InkLandsLayout.ROAD_SHOULDER);
 					if (hit==null || (int)hit[0]!=road || layout.roadBridge(road,hit[1]) || !outsideOutposts(hit[1])) continue;
 					if (visited.contains(key)) continue;
 					int ny=graphSurface(road,nx,nz,lanterns);
@@ -641,7 +667,7 @@ public final class TempleNetwork {
 				if (!outsideOutposts(d) || layout.roadBridge(road,d)) continue;
 				double[] axis = layout.roadPoint(road,d);
 				int x = (int)Math.round(axis[0]), z = (int)Math.round(axis[1]);
-				var hit = layout.roadAt(x,z);
+				var hit = roadAt(x,z);
 				if (hit != null && (int)hit[0] == road) sources.add(new TempleExitSearch.Point(x,z));
 			}
 			// Eligibility follows the actual closest point on the curving road,
@@ -649,7 +675,7 @@ public final class TempleNetwork {
 			var bounds = new HashMap<Long,double[]>();
 			java.util.function.Function<TempleExitSearch.Point,double[]> corridor = p -> {
 				long key = ChunkPos.asLong(p.x(),p.z());
-				if (!bounds.containsKey(key)) bounds.put(key,layout.roadNear(p.x(),p.z(),ROAD_BUFFER+3-InkLandsLayout.ROAD_HALF_WIDTH));
+				if (!bounds.containsKey(key)) bounds.put(key,roadNear(p.x(),p.z(),ROAD_BUFFER+3-InkLandsLayout.ROAD_HALF_WIDTH));
 				return bounds.get(key);
 			};
 			java.util.function.Predicate<TempleExitSearch.Point> eligible = p -> {
@@ -725,7 +751,7 @@ public final class TempleNetwork {
 			for (int shift : new int[]{0, -6, 6, -12, 12}) {
 				double[] p = layout.roadPoint(road, along + shift);
 				int x = (int) Math.round(p[0]), z = (int) Math.round(p[1]);
-				var hit = layout.roadAt(x, z);
+				var hit = roadAt(x, z);
 				if (hit == null || (int) hit[0] != road) continue;
 				int y = graphSurface(road, x, z, lanterns);
 				long key = ChunkPos.asLong(x, z);
@@ -768,9 +794,9 @@ public final class TempleNetwork {
 
 		private int graphSurface(int road, int x, int z, Set<Long> lanterns) {
 			if (lanterns.contains(ChunkPos.asLong(x, z)) || !forestGround(x, z)) return Integer.MIN_VALUE;
-			var zone = layout.roadNear(x, z, ROAD_BUFFER - InkLandsLayout.ROAD_HALF_WIDTH);
+			var zone = roadNear(x, z, ROAD_BUFFER - InkLandsLayout.ROAD_HALF_WIDTH);
 			if (zone != null && ((int) zone[0] != road || !outsideOutposts(zone[1]))) return Integer.MIN_VALUE;
-			var hit = layout.roadNear(x, z, InkLandsLayout.ROAD_SHOULDER + InkRoadsFeature.ACCESS_CUT_WIDTH);
+			var hit = roadNear(x, z, InkLandsLayout.ROAD_SHOULDER + InkRoadsFeature.ACCESS_CUT_WIDTH);
 			if (hit != null && ((int) hit[0] != road || !outsideOutposts(hit[1]))) return Integer.MIN_VALUE;
 			boolean bridge = hit != null && layout.roadBridge(road, hit[1]);
 			if (bridge && hit[2] <= InkLandsLayout.ROAD_HALF_WIDTH + InkLandsLayout.ROAD_SHOULDER)
@@ -849,7 +875,7 @@ public final class TempleNetwork {
 					int x = Mth.floor(Math.cos(a) * r), z = Mth.floor(Math.sin(a) * r);
 					double depth = layout.depthInside(x, z);
 					if (depth >= FOREST_MIN[band] && depth <= FOREST_MAX[band]
-							&& layout.roadNear(x, z, 135) == null && clear(x, z)) {
+							&& roadNear(x, z, 135) == null && clear(x, z)) {
 						candidates.add(new BlockPos(x, sector, z));
 					}
 				}
@@ -927,10 +953,10 @@ public final class TempleNetwork {
 		}
 
 		private boolean clear(int x, int z) {
-			boolean blood=layout.templeLayoutVersion()==3 && layout.pick(x,z,null)==ModBiomes.BLOODWOOD;
-			if ((!blood && layout.pick(x,z,null)!=ModBiomes.PALE_FOREST)
+			boolean blood=layout.templeLayoutVersion()==3 && biomeAt(x,z)==ModBiomes.BLOODWOOD;
+			if ((!blood && biomeAt(x,z)!=ModBiomes.PALE_FOREST)
 					|| layout.templeLayoutVersion()==3 && (!forestGround(x,z)
-					|| !blood && layout.pick(x&~3,z&~3,null)!=ModBiomes.PALE_FOREST)
+					|| !blood && biomeAt(x&~3,z&~3)!=ModBiomes.PALE_FOREST)
 					|| layout.nearLake(x, z, InkLandsLayout.LAKE_ZONE_RADIUS + InkLandsLayout.LAKE_SLOPE + 30)
 					|| layout.nearHerald(x, z, blood ? 82 : 100)
 					|| layout.arenaCenter().distToLowCornerSqr(x, 0, z) < Mth.square(InkLandsLayout.ARENA_VALLEY_RADIUS + 40)) return false;
@@ -948,7 +974,7 @@ public final class TempleNetwork {
 			int nx = Mth.positiveCeilDiv(rx * 2, 4), nz = Mth.positiveCeilDiv(rz * 2, 4);
 			for (int ix = 0; ix <= nx; ix++) for (int iz = 0; iz <= nz; iz++) {
 				int px = x - rx + ix * 2 * rx / nx, pz = z - rz + iz * 2 * rz / nz;
-				if (layout.roadNear(px, pz, ROAD_BUFFER + 3 - InkLandsLayout.ROAD_HALF_WIDTH) != null) {
+				if (roadNear(px, pz, ROAD_BUFFER + 3 - InkLandsLayout.ROAD_HALF_WIDTH) != null) {
 					reject("expanded footprint near road");
 					return Integer.MIN_VALUE;
 				}
@@ -997,7 +1023,7 @@ public final class TempleNetwork {
 			for (int ix=0;ix<=nx;ix++) for (int iz=0;iz<=nz;iz++) {
 				int dx=-rx+ix*2*rx/nx,dz=-rz+iz*2*rz/nz;
 				int px=x+dx,pz=z+dz;
-				if (layout.roadNear(px,pz,ROAD_BUFFER+3-InkLandsLayout.ROAD_HALF_WIDTH)!=null || !footprintForest(x,z,px,pz))
+				if (roadNear(px,pz,ROAD_BUFFER+3-InkLandsLayout.ROAD_HALF_WIDTH)!=null || !footprintForest(x,z,px,pz))
 					return rejectedFoundation("foundation reservation or biome");
 				long key=ChunkPos.asLong(px,pz);
 				if (samples.size()>=slotColumnLimit && !samples.containsKey(key))
@@ -1055,7 +1081,7 @@ public final class TempleNetwork {
 				if (Math.abs(x - targetX) >= Math.abs(z - targetZ) && x != targetX) x += Integer.signum(targetX - x);
 				else z += Integer.signum(targetZ - z);
 				if (!offShoulder) {
-					if (layout.roadNear(x, z, InkLandsLayout.ROAD_SHOULDER) != null) continue;
+					if (roadNear(x, z, InkLandsLayout.ROAD_SHOULDER) != null) continue;
 					offShoulder = true;
 				}
 				var here = sample(x, z);
@@ -1193,8 +1219,8 @@ public final class TempleNetwork {
 		}
 
 		private boolean forestGround(int x,int z) {
-			var biome=layout.pick(x,z,null);
-			var quart=layout.pick(x&~3,z&~3,null);
+			var biome=biomeAt(x,z);
+			var quart=biomeAt(x&~3,z&~3);
 			return biome==ModBiomes.PALE_FOREST && quart==ModBiomes.PALE_FOREST
 					|| layout.templeLayoutVersion()==3
 					&& (biome==ModBiomes.PALE_FOREST || biome==ModBiomes.BLOODWOOD)
@@ -1206,14 +1232,14 @@ public final class TempleNetwork {
 		/** A bloodwood temple may cross the forest boundary, but preserve the
 		 * previous pale-only footprint rule for pale sites and old V2 plans. */
 		private boolean footprintForest(int cx,int cz,int x,int z) {
-			if (layout.templeLayoutVersion()==3 && layout.pick(cx,cz,null)==ModBiomes.BLOODWOOD)
+			if (layout.templeLayoutVersion()==3 && biomeAt(cx,cz)==ModBiomes.BLOODWOOD)
 				return forestGround(x,z) && !layout.nearHerald(x,z,60);
-			return layout.pick(x,z,null)==ModBiomes.PALE_FOREST
-					&& layout.pick(x&~3,z&~3,null)==ModBiomes.PALE_FOREST;
+			return biomeAt(x,z)==ModBiomes.PALE_FOREST
+					&& biomeAt(x&~3,z&~3)==ModBiomes.PALE_FOREST;
 		}
 
 		private boolean protectedRoad(int x, int z) {
-			return layout.roadNear(x, z, ROAD_BUFFER - InkLandsLayout.ROAD_HALF_WIDTH) != null;
+			return roadNear(x, z, ROAD_BUFFER - InkLandsLayout.ROAD_HALF_WIDTH) != null;
 		}
 	}
 
