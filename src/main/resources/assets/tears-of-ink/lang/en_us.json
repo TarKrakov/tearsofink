@@ -1141,5 +1141,10 @@
   "equipment.tears-of-ink.longsword.primary": "%s: power strike · free",
   "equipment.tears-of-ink.longsword.cooldown": "Cooldown: %s s / paired %s s",
   "equipment.tears-of-ink.longsword.pair": "Paired: %s — powerful cleave; hold %s — block.",
-  "equipment.tears-of-ink.longsword.guard": "Frontal block: %s%% damage reduced · CD %s s"
+  "equipment.tears-of-ink.longsword.guard": "Frontal block: %s%% damage reduced · CD %s s",
+  "item.tears-of-ink.ink_tear": "Ink Tear",
+  "item.tears-of-ink.shard_of_hope": "Shard of Hope",
+  "message.tears-of-ink.story_key.ink": "Particles of ink beckon you onward - your destiny awaits ahead",
+  "message.tears-of-ink.story_key.soul": "Sparks of light dance before you and call you onward - this land needs you",
+  "guide.tears-of-ink.gift.unopened": "Mr. Guide: You have forgotten to use my gift, dear Guest"
 }

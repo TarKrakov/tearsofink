@@ -74,6 +74,7 @@ public final class Prologue {
 
 	public static void init() {
 		DiaryEntries.init();
+		StoryKeyItem.init();
 		PayloadTypeRegistry.playC2S().register(SignContract.TYPE, SignContract.CODEC);
 		PayloadTypeRegistry.playS2C().register(GateTransit.TYPE, GateTransit.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(SignContract.TYPE, (payload, ctx) -> ctx.player().server.execute(() -> sign(ctx.player())));
@@ -86,6 +87,8 @@ public final class Prologue {
 				PrologueItems.give(p, ModItems.SEALED_LETTER);
 				Travel.set(p, t.withStage(LandsTravel.STAGE_LETTER));
 			}
+			// Older characters already opened their gift before the storyline keys existed.
+			if (PrologueItems.giftOpened(p)) StoryKeyItem.grant(p, com.tarkrakov.tearsofink.vow.Vows.vow(p));
 		});
 
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> clearTransit(handler.player));
@@ -143,8 +146,15 @@ public final class Prologue {
 					}
 				} else if (p.getBoundingBox().intersects(v.gate().inflate(0.2))) {
 					if (com.tarkrakov.tearsofink.vow.Vows.mayPass(p)) {
-						PrologueItems.giveKit(p); // не дождался подарка Проводника — набор всё равно
-						startTransit(p);
+						if (PrologueItems.giftOpened(p)) {
+							StoryKeyItem.grant(p, com.tarkrakov.tearsofink.vow.Vows.vow(p));
+							startTransit(p);
+						} else {
+							PrologueItems.ensureUnopenedGift(p);
+							BlockPos a = v.arrival();
+							p.teleportTo(a.getX() + 0.5, a.getY(), a.getZ() + 0.5);
+							Guide.say(p, "gift.unopened");
+						}
 					}
 					else { // без обета дальше не пройти — назад от ворот и окно выбора
 						BlockPos a = v.arrival();

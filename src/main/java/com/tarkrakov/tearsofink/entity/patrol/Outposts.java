@@ -23,8 +23,10 @@ public final class Outposts {
         BarricadeGates.initProtection();
         ServerTickEvents.END_SERVER_TICK.register(Outposts::tick);
         ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
-            if(entity instanceof PaleSoldier && entity.level() instanceof ServerLevel level && ModDimensions.isLands(level))
+            if(entity instanceof PaleSoldier && entity.level() instanceof ServerLevel level && ModDimensions.isLands(level)){
                 BarricadeGates.of(level).died(level,entity.getUUID());
+                ForestCamps.died(level,entity.getUUID());
+            }
         });
     }
     private static void tick(MinecraftServer server) {
@@ -36,6 +38,7 @@ public final class Outposts {
         InkLandsLayout layout=InkLandsLayout.of(level);
         if(layout==null)return;
         boolean canSpawn=level.getDifficulty()!=Difficulty.PEACEFUL&&level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING);
+        ForestCamps.tick(level,layout,canSpawn);
         for(int road=0;road<InkLandsLayout.ROADS;road++)for(int n=0;n<InkLandsLayout.OUTPOSTS.length;n++) {
             double d=layout.outpostDistance(n);
             double[] at=layout.roadPoint(road,d);

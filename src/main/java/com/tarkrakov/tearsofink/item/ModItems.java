@@ -266,6 +266,10 @@ public final class ModItems {
 	/** Котомка паломника — стартовый набор Пути Души. */
 	public static final Item PILGRIM_BUNDLE = register("pilgrim_bundle",
 			new com.tarkrakov.tearsofink.prologue.PrologueItems.PilgrimBundle(new Item.Properties().stacksTo(1)));
+	public static final Item INK_TEAR = register("ink_tear",
+			new com.tarkrakov.tearsofink.prologue.StoryKeyItem(com.tarkrakov.tearsofink.vow.Vow.INK, new Item.Properties().stacksTo(1).fireResistant()));
+	public static final Item SHARD_OF_HOPE = register("shard_of_hope",
+			new com.tarkrakov.tearsofink.prologue.StoryKeyItem(com.tarkrakov.tearsofink.vow.Vow.SOUL, new Item.Properties().stacksTo(1).fireResistant()));
 	/** Тусклый скимитар — стартовое оружие Пути Чернил: удары Скимитаров, урон 4, тусклая Волна (R). */
 	public static final Item DIM_SCIMITAR = register("dim_scimitar",
 			new com.tarkrakov.tearsofink.weapon.InkGreatswordItem(() -> com.tarkrakov.tearsofink.weapon.WeaponAbilities.DIM_WAVE,

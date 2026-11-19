@@ -114,7 +114,7 @@ public final class SquadPatrols {
 			BlockPos at = groundOnRoad(level, layout, bestRoad, t);
 			if (at == null || Math.hypot(at.getX() - px, at.getZ() - pz) < SpearmanTuning.PATROL_SPAWN_MIN - 4) continue;
 			if (!level.getBiome(at).is(ModBiomes.PALE_FOREST) || Lanterns.isSafe(level, at)
-					|| BarricadeGates.nearGate(level,at,BarricadeGates.PATROL_BUFFER)) continue;
+					|| BarricadeGates.nearGate(level,at,BarricadeGates.PATROL_BUFFER) || ForestCamps.near(level,at,ForestCamps.PATROL_BUFFER)) continue;
 			if (com.tarkrakov.tearsofink.world.ruins.Ruins.nearStart(layout, at.getX(), at.getZ())) continue; // у места прибытия тихо
 			if (com.tarkrakov.tearsofink.world.sanctuary.Sanctuary.near(layout, at.getX(), at.getZ(), 16)) continue; // у храмов тихо
 

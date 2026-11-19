@@ -73,6 +73,7 @@ public final class PrologueItems {
 				give(sp, ModItems.DIM_SCIMITAR); // 15 ноя: стартовое оружие Пути Чернил (раньше — нож)
 				give(sp, ModItems.SALVATION_PENDANT);
 				give(sp, ModItems.DIM_HAND_LANTERN);
+				StoryKeyItem.grant(sp, com.tarkrakov.tearsofink.vow.Vow.INK);
 				level.playSound(null, sp.blockPosition(), SoundEvents.ARMOR_EQUIP_LEATHER.value(), SoundSource.PLAYERS, 1f, 0.8f);
 				level.playSound(null, sp.blockPosition(), SoundEvents.BUNDLE_DROP_CONTENTS, SoundSource.PLAYERS, 0.8f, 0.8f);
 			}
@@ -93,6 +94,7 @@ public final class PrologueItems {
 				DiaryEntries.unlock(sp, DiaryEntries.INTRO);
 				give(sp, ModItems.WORN_RAM_SHIELD);
 				give(sp, ModItems.WORN_MERCY_SHIELD);
+				StoryKeyItem.grant(sp, com.tarkrakov.tearsofink.vow.Vow.SOUL);
 				ItemStack berries = new ItemStack(ModItems.ROASTED_FLESHBERRY, 6), meat = new ItemStack(ModItems.COOKED_CATERPILLAR_MEAT, 4);
 				if (!sp.getInventory().add(berries)) sp.drop(berries, false);
 				if (!sp.getInventory().add(meat)) sp.drop(meat, false);
@@ -113,6 +115,23 @@ public final class PrologueItems {
 		give(p, vow == com.tarkrakov.tearsofink.vow.Vow.SOUL ? ModItems.PILGRIM_BUNDLE : ModItems.WORN_SATCHEL);
 		p.playNotifySound(SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.8f, 0.8f);
 		return true;
+	}
+
+	/** INTRO is recorded when a starter gift is actually opened, including pre-update saves. */
+	static boolean giftOpened(ServerPlayer p) {
+		return Travel.get(p).stage() >= com.tarkrakov.tearsofink.travel.LandsTravel.STAGE_ENTERED
+				|| p.getAttachedOrCreate(DiaryEntries.DATA).contains(DiaryEntries.INTRO);
+	}
+
+	/** Recover a missing unopened gift so nobody can get stuck in the Vestibule. */
+	static void ensureUnopenedGift(ServerPlayer p) {
+		if (giftOpened(p)) return;
+		var vow = com.tarkrakov.tearsofink.vow.Vows.vow(p);
+		if (vow == com.tarkrakov.tearsofink.vow.Vow.NONE) return;
+		Item gift = vow == com.tarkrakov.tearsofink.vow.Vow.SOUL ? ModItems.PILGRIM_BUNDLE : ModItems.WORN_SATCHEL;
+		if (!p.getInventory().contains(new ItemStack(gift))) {
+			if (!giveKit(p)) give(p, gift);
+		}
 	}
 
 	/** Дневник: ПКМ — окно-книга (записи открываются по событиям). */

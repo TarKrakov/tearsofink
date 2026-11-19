@@ -27,6 +27,8 @@ public final class ModCreativeTab {
 						output.accept(ModItems.WORN_SATCHEL);
 						output.accept(ModItems.PILGRIM_BUNDLE);
 						output.accept(ModItems.DIARY);
+						output.accept(ModItems.INK_TEAR);
+						output.accept(ModItems.SHARD_OF_HOPE);
 						output.accept(ModItems.INK_LONGKNIFE);
 						output.accept(ModItems.SALVATION_PENDANT);
 						output.accept(ModItems.DIM_HAND_LANTERN);

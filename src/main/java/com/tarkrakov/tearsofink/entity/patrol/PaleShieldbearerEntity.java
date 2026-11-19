@@ -217,6 +217,7 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 			return;
 		}
 		if (t != null && t.isAlive()) steerToward(t);
+		if(isCampGuard()&&!campAllows(net.minecraft.core.BlockPos.containing(position().add(chargeDir.scale(2))))){endCharge(true);return;}
 		this.setDeltaMovement(chargeDir.x * SquadTuning.CHARGE_SPEED, this.getDeltaMovement().y, chargeDir.z * SquadTuning.CHARGE_SPEED);
 		this.hasImpulse = true;
 
@@ -319,7 +320,7 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 	}
 
 	private boolean isSoft(BlockState state, BlockPos pos) {
-		if (BarricadeGates.protectedAt(level(),pos)) return false;
+		if (BarricadeGates.protectedAt(level(),pos)||ForestCamps.authored(level(),pos)) return false;
 		if (state.isAir() || !state.getFluidState().isEmpty()) return false;
 		float hardness = state.getDestroySpeed(this.level(), pos);
 		if (hardness < 0 || hardness > SquadTuning.CHARGE_BREAK_HARDNESS) return false;
