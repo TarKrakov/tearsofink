@@ -25,6 +25,11 @@ public final class TemplePaths {
 			var source = level.getChunkSource();
 			if (source.getGenerator().getBiomeSource() instanceof InkLandsBiomeSource biomes) {
 				biomes.pinTempleLayout(source.randomState().sampler());
+				var layout = InkLandsLayout.of(level);
+				if (layout != null && layout.hasTempleNetwork()) {
+					layout.attachTemplePlanFile(server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT)
+							.resolve("data").resolve("tearsofink_temple_network_v" + layout.templeLayoutVersion() + ".bin"));
+				}
 			}
 		});
 		ServerLifecycleEvents.SERVER_STARTED.register(server -> {

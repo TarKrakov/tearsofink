@@ -56,7 +56,7 @@ public final class TempleNetwork {
 	private final Map<Long, Temple> origins;
 	private final Map<Long, List<PathBlock>> paths;
 
-	private TempleNetwork(List<Temple> temples, List<PathBlock> walks) {
+	TempleNetwork(List<Temple> temples, List<PathBlock> walks) {
 		this.temples = List.copyOf(temples);
 		Map<Long, Temple> origins = new HashMap<>();
 		for (Temple temple : temples) origins.put(temple.chunk(), temple);
@@ -68,6 +68,11 @@ public final class TempleNetwork {
 		}
 		paths.replaceAll((key, blocks) -> List.copyOf(blocks));
 		this.paths = Map.copyOf(paths);
+	}
+
+	List<PathBlock> allPathBlocks() {
+		return paths.entrySet().stream().sorted(Map.Entry.comparingByKey())
+				.flatMap(entry -> entry.getValue().stream()).toList();
 	}
 
 	public List<Temple> temples() {
@@ -141,11 +146,20 @@ public final class TempleNetwork {
 				TearsOfInk.LOGGER.error("D-060 seed {}: unexpected temple template dimensions {}", inputs.seed(), size);
 				return new TempleNetwork(temples, paths);
 			}
+			boolean[] outer = new boolean[InkLandsLayout.ROADS], inner = new boolean[InkLandsLayout.ROADS];
+			outer[startRoad] = true;
 			for (int road = 0; road < InkLandsLayout.ROADS; road++) {
-				if (road != startRoad && !roadside(road, false)) missing("external", road);
+				if (road != startRoad) outer[road] = roadside(road, false);
 			}
 			for (int road = 0; road < InkLandsLayout.ROADS; road++) {
-				if (!roadside(road, true)) missing("deep", road);
+				inner[road] = roadside(road, true);
+			}
+			// Layout 2 remains reproducible. Only newly opted-in layout 3 gets the extra pass.
+			for (int road = 0; road < InkLandsLayout.ROADS; road++) {
+				if (!outer[road] && !(layout.templeLayoutVersion() == 3 && roadsideFallback(road, false)))
+					missing("external", road);
+				if (!inner[road] && !(layout.templeLayoutVersion() == 3 && roadsideFallback(road, true)))
+					missing("deep", road);
 			}
 			Set<Integer> sectors = new HashSet<>();
 			for (int band = 0; band < FOREST_MIN.length; band++) {
@@ -202,6 +216,44 @@ public final class TempleNetwork {
 								if (samples.size() >= slotColumnLimit) return reject("column budget");
 								if (roadsideAt(road, siteAlong, axis, dir, sideSign * offset, low, maxDepth, connection)) return true;
 							}
+						}
+					}
+				}
+			}
+			return false;
+		}
+
+		/** Bounded second pass: spread terrain probes over the road, then try skewed natural exits.
+		 * The footprint, depth bands and protected corridor checks are identical to the first pass.
+		 */
+		private boolean roadsideFallback(int road, boolean deep) {
+			failures.clear();
+			slotColumnLimit = samples.size() + 2400;
+			int low = deep ? 850 : 250, high = deep ? 1350 : 500;
+			List<Integer> places = new ArrayList<>();
+			for (int along = 650; along <= 2150; along += 6) {
+				double[] axis = layout.roadPoint(road, along);
+				double depth = layout.depthInside(Mth.floor(axis[0]), Mth.floor(axis[1]));
+				if (outsideOutposts(along) && depth >= low - 90 && depth <= high + 90) places.add(along);
+			}
+			RandomSource random = RandomSource.create(layout.seed() ^ (0x7265747279L + 31L * road + (deep ? 337 : 0)));
+			shuffle(places, random);
+			int firstSide = random.nextBoolean() ? 1 : -1;
+			for (int along : places) {
+				layout.roadHeight(road, along, terrain);
+				if (layout.roadBridge(road, along - 3) || layout.roadBridge(road, along + 3)) continue;
+				for (int side : new int[]{firstSide, -firstSide}) {
+					for (int skew : new int[]{-12, 12, 0}) {
+						if (samples.size() >= slotColumnLimit) return reject("fallback column budget");
+						Connection connection = findConnection(road, along, side, skew);
+						if (connection == null) continue;
+						int siteAlong = along + skew;
+						if (!outsideOutposts(siteAlong)) continue;
+						double[] axis = layout.roadPoint(road, siteAlong);
+						double[] dir = layout.roadDirection(road, siteAlong);
+						for (int offset : new int[]{64, 76, 56, 68}) {
+							if (samples.size() >= slotColumnLimit) return reject("fallback column budget");
+							if (roadsideAt(road, siteAlong, axis, dir, side * offset, low, high, connection)) return true;
 						}
 					}
 				}
@@ -384,11 +436,16 @@ public final class TempleNetwork {
 
 		/** Walk the unmodified strip from the finished shoulder outward once per side. */
 		private Connection findConnection(int road, int along, int side) {
+			return findConnection(road, along, side, 0);
+		}
+
+		private Connection findConnection(int road, int along, int side, int skew) {
 			double[] axis = layout.roadPoint(road, along);
 			double[] dir = layout.roadDirection(road, along);
 			double nx = -dir[1] * side, nz = dir[0] * side;
 			int x = (int) Math.round(axis[0]), z = (int) Math.round(axis[1]);
-			int targetX = (int) Math.round(axis[0] + nx * 34), targetZ = (int) Math.round(axis[1] + nz * 34);
+			int targetX = (int) Math.round(axis[0] + nx * 34 + dir[0] * skew),
+					targetZ = (int) Math.round(axis[1] + nz * 34 + dir[1] * skew);
 			int lastY = (int) Math.round(layout.roadHeight(road, along, terrain));
 			boolean offShoulder = false;
 			boolean firstGround = true;
@@ -396,6 +453,13 @@ public final class TempleNetwork {
 				if (Math.abs(x - targetX) >= Math.abs(z - targetZ) && x != targetX) x += Integer.signum(targetX - x);
 				else z += Integer.signum(targetZ - z);
 				if (!offShoulder) {
+					if (skew != 0) {
+						var near = layout.roadNear(x, z, InkLandsLayout.ROAD_SHOULDER);
+						if (near != null && (layout.roadBridge(road, along - 15) || layout.roadBridge(road, along + 15))) {
+							reject("bridge near skewed connection");
+							return null;
+						}
+					}
 					if (layout.roadNear(x, z, InkLandsLayout.ROAD_SHOULDER) != null) continue;
 					offShoulder = true;
 				}

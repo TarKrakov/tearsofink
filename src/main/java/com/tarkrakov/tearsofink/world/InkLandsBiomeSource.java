@@ -37,7 +37,7 @@ public class InkLandsBiomeSource extends BiomeSource implements InkLandsAccess {
 	private boolean boundTempleLayout;
 
 	public InkLandsBiomeSource(Holder<Biome> pale, Holder<Biome> blood, Holder<Biome> ink, Holder<Biome> lake, Holder<Biome> edge, int templeLayoutVersion) {
-		this.templeLayoutVersion = templeLayoutVersion == 2 ? 2 : 1;
+		this.templeLayoutVersion = normalizeTempleVersion(templeLayoutVersion);
 		this.edge = edge;
 		this.biomes = Map.of(ModBiomes.PALE_FOREST, pale, ModBiomes.BLOODWOOD, blood, ModBiomes.INKWOOD, ink, ModBiomes.TAR_LAKE, lake,
 				ModBiomes.EDGE, edge);
@@ -58,13 +58,15 @@ public class InkLandsBiomeSource extends BiomeSource implements InkLandsAccess {
 		if (layout != null || boundTempleLayout) {
 			throw new IllegalStateException("Temple layout selected after biome generation");
 		}
-		templeLayoutVersion = effective == 2 ? 2 : 1;
+		templeLayoutVersion = normalizeTempleVersion(effective);
 		boundTempleLayout = true;
 	}
 
+	private static int normalizeTempleVersion(int version) { return version == 2 || version == 3 ? version : 1; }
+
 	/** Keep the worldgen plan attached to RandomState, apart from a chunk's cached sampler. */
 	synchronized void pinTempleLayout(Climate.Sampler sampler) {
-		if (templeLayoutVersion == 2) worldLayout = tearsofink$layout(sampler);
+		if (templeLayoutVersion != 1) worldLayout = tearsofink$layout(sampler);
 	}
 
 	@Override

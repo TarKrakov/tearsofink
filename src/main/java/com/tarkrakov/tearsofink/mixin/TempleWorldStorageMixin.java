@@ -47,8 +47,9 @@ abstract class TempleWorldStorageMixin implements TempleWorldAccess {
 						.getCompound("Data").getCompound("WorldGenSettings").getCompound("dimensions")
 						.getCompound(ModDimensions.INK_LANDS.location().toString())
 						.getCompound("generator").getCompound("biome_source");
-				if (biomeSource.contains("temple_layout", Tag.TAG_INT) && biomeSource.getInt("temple_layout") == 2) {
-					tearsofink$storedLayout = 2;
+				if (biomeSource.contains("temple_layout", Tag.TAG_INT)) {
+					int version = biomeSource.getInt("temple_layout");
+					if (version == 2 || version == 3) tearsofink$storedLayout = version;
 				}
 				return;
 			} catch (IOException ignored) {

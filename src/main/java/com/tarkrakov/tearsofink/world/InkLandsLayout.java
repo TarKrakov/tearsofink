@@ -113,6 +113,7 @@ public final class InkLandsLayout {
 	private final Climate.Sampler sampler;
 	private final int templeLayoutVersion;
 	private final Object templePlanLock = new Object();
+	private java.nio.file.Path templePlanFile;
 	private volatile TempleNetwork templeNetwork;
 	private final BlockPos center;
 	private final long seed;
@@ -264,7 +265,20 @@ public final class InkLandsLayout {
 	}
 
 	public boolean hasTempleNetwork() {
-		return templeLayoutVersion == 2;
+		return templeLayoutVersion == 2 || templeLayoutVersion == 3;
+	}
+
+	int templeLayoutVersion() { return templeLayoutVersion; }
+
+	/** Attached to the canonical world layout before generation starts. */
+	void attachTemplePlanFile(java.nio.file.Path file) {
+		synchronized (templePlanLock) {
+			if (templePlanFile != null && templePlanFile.equals(file)) return;
+			if (templeNetwork != null || templePlanFile != null) {
+				throw new IllegalStateException("Temple plan storage bound after planning");
+			}
+			templePlanFile = file;
+		}
 	}
 
 	public TempleNetwork templeNetwork() {
@@ -283,7 +297,13 @@ public final class InkLandsLayout {
 		if (plan == null) {
 			synchronized (templePlanLock) {
 				plan = templeNetwork;
-				if (plan == null) templeNetwork = plan = TempleNetwork.plan(this, inputs);
+				if (plan == null) {
+					// Diagnostic planning without a world path is still pure. Runtime V2/V3
+					// binds storage in ServerWorldEvents.LOAD, before chunk generation.
+					plan = templePlanFile == null ? TempleNetwork.plan(this, inputs)
+							: TemplePlanStore.loadOrCreate(templePlanFile, this, inputs);
+					templeNetwork = plan;
+				}
 			}
 		}
 		return plan;
