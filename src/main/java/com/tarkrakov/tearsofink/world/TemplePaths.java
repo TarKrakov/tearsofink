@@ -64,7 +64,16 @@ public final class TemplePaths {
 			// A saved protochunk can resume at LIGHT before the startup worker has finished.
 			plan = layout.prepareTempleNetwork(inputs(level));
 		}
-		for (var temple:plan.temples()) if (temple.raised()) raiseFoundation(chunk,layout,temple);
+		RoadTerrain terrain=null;
+		for (var temple:plan.temples()) {
+			if (!temple.raised()) continue;
+			var pos=chunk.getPos();
+			int radius=TempleNetwork.TEMPLATE_LENGTH/2+1+TempleFoundation.APRON;
+			if (pos.getMinBlockX()>temple.x()+radius || pos.getMaxBlockX()<temple.x()-radius
+					|| pos.getMinBlockZ()>temple.z()+radius || pos.getMaxBlockZ()<temple.z()-radius) continue;
+			if (terrain==null) terrain=inputs(level).terrain();
+			raiseFoundation(chunk,layout,terrain,temple);
+		}
 		for (var column : plan.path(chunk.getPos())) {
 			BlockPos floor = column.floor();
 			if (column.engineered() ? !TempleRoadAccess.canBuild(layout,floor.getX(),floor.getZ())
@@ -74,7 +83,7 @@ public final class TemplePaths {
 	}
 
 	/** Chunk-local grounded soil/rock fill, before approach placement. */
-	private static void raiseFoundation(ChunkAccess chunk,InkLandsLayout layout,TempleNetwork.Temple temple) {
+	private static void raiseFoundation(ChunkAccess chunk,InkLandsLayout layout,RoadTerrain terrain,TempleNetwork.Temple temple) {
 		var facing=temple.rotation().rotate(net.minecraft.core.Direction.SOUTH);
 		int hx=(facing.getAxis()==net.minecraft.core.Direction.Axis.X?TempleNetwork.TEMPLATE_LENGTH:TempleNetwork.TEMPLATE_WIDTH)/2+1;
 		int hz=(facing.getAxis()==net.minecraft.core.Direction.Axis.Z?TempleNetwork.TEMPLATE_LENGTH:TempleNetwork.TEMPLATE_WIDTH)/2+1;
@@ -87,13 +96,19 @@ public final class TemplePaths {
 			int dist=TempleFoundation.distance(x-temple.x(),z-temple.z(),hx,hz);
 			if (dist>TempleFoundation.APRON || layout.roadNear(x,z,TempleNetwork.ROAD_BUFFER-InkLandsLayout.ROAD_HALF_WIDTH)!=null) continue;
 			int top=TempleFoundation.top(temple.y(),dist);
+			// Terrain adaptation and the original ruin foundation can leave a
+			// solid cap above a submerged pocket. It is not the original bed.
+			// Repair every non-supporting cell down to that bed, preserving
+			// existing sound blocks, then meet actual solid ground.
+			int bed=Math.max(chunk.getMinBuildHeight(),Math.min(top,terrain.floor(x,z)));
+			var soil=layout.pick(x,z,null)==ModBiomes.BLOODWOOD?ModBlocks.BLOOD_SOIL:ModBlocks.ASHEN_SOIL;
 			for (int y=top;y>=chunk.getMinBuildHeight();y--) {
 				var pos=new BlockPos(x,y,z);
 				var state=chunk.getBlockState(pos);
-				if (state.isSolid() && state.getFluidState().isEmpty()
-						&& !state.is(net.minecraft.tags.BlockTags.LOGS) && !state.is(net.minecraft.tags.BlockTags.LEAVES)) break;
-				var soil=layout.pick(x,z,null)==ModBiomes.BLOODWOOD?ModBlocks.BLOOD_SOIL:ModBlocks.ASHEN_SOIL;
-				chunk.setBlockState(pos,(y>=top-1?soil:ModBlocks.ASPHODELITE_ROCK).defaultBlockState(),false);
+				boolean solid=state.isSolid() && state.getFluidState().isEmpty()
+						&& !state.is(net.minecraft.tags.BlockTags.LOGS) && !state.is(net.minecraft.tags.BlockTags.LEAVES);
+				if (TempleFoundation.stopAtBed(y,bed,solid)) break;
+				if (!solid) chunk.setBlockState(pos,(y>=top-1?soil:ModBlocks.ASPHODELITE_ROCK).defaultBlockState(),false);
 			}
 		}
 	}
