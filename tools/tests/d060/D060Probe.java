@@ -80,7 +80,7 @@ public final class D060Probe {
             result.addProperty("yaw", target.yaw());
         }
         arrivalStart = 0;
-        ModDimensions.dropArrivalTickets(level);
+        // Keep the arrival ticket until the physical check has finished.
         emit("ARRIVAL", result);
     }
 
@@ -97,6 +97,11 @@ public final class D060Probe {
         } catch (Exception | LinkageError failure) {
             failure.printStackTrace();
             failures.add(failure.toString());
+        } finally {
+            if (physical) {
+                var level = ModDimensions.lands(server);
+                if (level != null) ModDimensions.dropArrivalTickets(level);
+            }
         }
         result.addProperty("pass", failures.isEmpty());
         emit("RESULT", result);
@@ -207,6 +212,8 @@ public final class D060Probe {
             // Check one selected roadside temple, its nearby planned columns and the real
             // starter. This is a sample, not the full physical-generation acceptance.
             var first = plan.temples().stream().filter(TempleNetwork.Temple::starter).findFirst().orElseThrow();
+            for (int dx = -2; dx <= 2; dx++) for (int dz = -2; dz <= 2; dz++)
+                level.getChunk((first.x() >> 4) + dx, (first.z() >> 4) + dz);
             var starterChunk = level.getChunk(first.x() >> 4, first.z() >> 4);
             var built = starterChunk.getStartForStructure(structure);
             BlockPos fountain = null;
@@ -219,7 +226,16 @@ public final class D060Probe {
             check(fountain != null && level.getBlockState(fountain).is(ModBlocks.INK_FOUNTAIN), failures, "Missing real starter fountain");
             if (fountain != null) result.addProperty("starter_fountain", fountain.toShortString());
             if (selected == null) failures.add("No roadside temple available for physical test");
-            else physicalTemple(level, structure, plan, selected, result, failures);
+            else {
+                JsonArray physicalSites = new JsonArray();
+                for (var t : plan.temples()) {
+                    if (t.starter() || t.road() < 0) continue;
+                    JsonObject detail = new JsonObject();
+                    physicalTemple(level, structure, plan, t, detail, failures);
+                    physicalSites.add(detail);
+                }
+                result.add("physical_sites", physicalSites);
+            }
         }
     }
 

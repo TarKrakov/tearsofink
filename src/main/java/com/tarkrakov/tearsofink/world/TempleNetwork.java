@@ -163,8 +163,12 @@ public final class TempleNetwork {
 			// Layout 2 remains reproducible. Only newly opted-in layout 3 gets the extra pass.
 			if (layout.templeLayoutVersion() == 3) {
 				for (int road = 0; road < InkLandsLayout.ROADS; road++) {
-					if (!outer[road] && !roadsideFallback(road, false)) missing("external", road);
-					if (!inner[road] && !roadsideFallback(road, true)) missing("deep", road);
+					if (!outer[road]) outer[road] = roadsideFallback(road, false);
+					if (!inner[road]) inner[road] = roadsideFallback(road, true);
+				}
+				for (int road = 0; road < InkLandsLayout.ROADS; road++) {
+					if (!outer[road] && !roadsideGraphFallback(road, false)) missing("external", road);
+					if (!inner[road] && !roadsideGraphFallback(road, true)) missing("deep", road);
 				}
 			}
 			Set<Integer> sectors = new HashSet<>();
@@ -313,6 +317,124 @@ public final class TempleNetwork {
 			}
 			reject("fallback natural slope or obstacle");
 			return null;
+		}
+
+		/** Last bounded pass: follow the actual natural contour without editing the reserved strip. */
+		private boolean roadsideGraphFallback(int road, boolean deep) {
+			failures.clear();
+			slotColumnLimit = samples.size() + 6000;
+			int low = deep ? 850 : 250, high = deep ? 1350 : 500;
+			List<Integer> places = new ArrayList<>();
+			for (int along = 650; along <= 2150; along += 16) {
+				double[] axis = layout.roadPoint(road, along);
+				double depth = layout.depthInside(Mth.floor(axis[0]), Mth.floor(axis[1]));
+				if (outsideOutposts(along) && depth >= low - 90 && depth <= high + 90) places.add(along);
+			}
+			RandomSource random = RandomSource.create(layout.seed() ^ (0x6772617068L + road * 31L + (deep ? 337 : 0)));
+			shuffle(places, random);
+			places.sort(java.util.Comparator.comparingInt(Planner::lanternPriority));
+			int firstSide = random.nextBoolean() ? 1 : -1;
+			for (int along : places) {
+				layout.roadHeight(road, along, terrain);
+				for (int side : new int[]{firstSide, -firstSide}) {
+					if (samples.size() >= slotColumnLimit) return reject("graph column budget");
+					for (Connection connection : graphConnections(road, along, side)) {
+						var near = layout.roadNear(connection.edge().getX(), connection.edge().getZ(), 40 - InkLandsLayout.ROAD_HALF_WIDTH);
+						int exitAlong = near != null && (int) near[0] == road ? (int) Math.round(near[1]) : along;
+						for (int shift : new int[]{0, -12, 12, -24, 24}) {
+							int siteAlong = exitAlong + shift;
+							if (!outsideOutposts(siteAlong)) continue;
+							double[] axis = layout.roadPoint(road, siteAlong), dir = layout.roadDirection(road, siteAlong);
+							for (int offset : new int[]{64, 76, 56, 68, 72, 60, 52, 48}) {
+								if (samples.size() >= slotColumnLimit) return reject("graph column budget");
+								if (roadsideAt(road, siteAlong, axis, dir, offset * side, low, high, connection)) {
+									TearsOfInk.LOGGER.info("D-060 seed {}: winding exit recovered road {} {} slot",
+											inputs.seed(), road, deep ? "deep" : "external");
+									return true;
+								}
+							}
+						}
+					}
+				}
+			}
+			return false;
+		}
+
+		private record ExitNode(int x, int z, int y, int steps, double priority) {}
+
+		private List<Connection> graphConnections(int road, int along, int side) {
+			double[] axis = layout.roadPoint(road, along), dir = layout.roadDirection(road, along);
+			double nx = -dir[1] * side, nz = dir[0] * side;
+			Direction towardRoad = Direction.getNearest(-nx, 0, -nz);
+			Set<Long> lanterns = new HashSet<>();
+			int k = Math.floorDiv(along, InkLandsLayout.ROAD_LANTERN_SPACING);
+			for (int j = k - 2; j <= k + 2; j++) {
+				int[] post = layout.roadLanternPost(road, j);
+				if (post != null) lanterns.add(ChunkPos.asLong(post[0], post[1]));
+			}
+			var heights = new HashMap<Long, Integer>();
+			var best = new HashMap<Long, Integer>();
+			var open = new java.util.PriorityQueue<ExitNode>(java.util.Comparator
+					.comparingDouble(ExitNode::priority).thenComparingInt(ExitNode::x).thenComparingInt(ExitNode::z));
+			for (int shift : new int[]{0, -6, 6, -12, 12}) {
+				double[] p = layout.roadPoint(road, along + shift);
+				int x = (int) Math.round(p[0]), z = (int) Math.round(p[1]);
+				var hit = layout.roadAt(x, z);
+				if (hit == null || (int) hit[0] != road) continue;
+				int y = graphSurface(road, x, z, lanterns);
+				long key = ChunkPos.asLong(x, z);
+				heights.put(key, y);
+				if (y == Integer.MIN_VALUE || best.putIfAbsent(key, 0) != null) continue;
+				open.add(new ExitNode(x, z, y, 0, 48));
+			}
+			List<Connection> result = new ArrayList<>();
+			int expanded = 0;
+			while (!open.isEmpty() && expanded < 300 && samples.size() < slotColumnLimit && result.size() < 3) {
+				ExitNode at = open.remove();
+				long atKey = ChunkPos.asLong(at.x(), at.z());
+				if (best.getOrDefault(atKey, Integer.MAX_VALUE) != at.steps()) continue;
+				expanded++;
+				if (!protectedRoad(at.x(), at.z())) {
+					BlockPos pos = new BlockPos(at.x(), at.y(), at.z());
+					if (result.stream().noneMatch(c -> c.edge().distSqr(pos) < 36))
+						result.add(new Connection(pos, towardRoad));
+					continue;
+				}
+				if (at.steps() >= 64) continue;
+				for (Direction step : Direction.Plane.HORIZONTAL) {
+					int x = at.x() + step.getStepX(), z = at.z() + step.getStepZ();
+					double dx = x - axis[0], dz = z - axis[1];
+					double outward = dx * nx + dz * nz;
+					if (outward < -3 || outward > 36 || Math.abs(dx * dir[0] + dz * dir[1]) > 22) continue;
+					long key = ChunkPos.asLong(x, z);
+					int steps = at.steps()+1;
+					if (best.getOrDefault(key, Integer.MAX_VALUE) <= steps) continue;
+					int y = heights.computeIfAbsent(key, ignored -> graphSurface(road, x, z, lanterns));
+					if (y == Integer.MIN_VALUE || Math.abs(y - at.y()) > 1) continue;
+					best.put(key, steps);
+					open.add(new ExitNode(x, z, y, steps, steps + 2 * Math.max(0, ROAD_BUFFER - outward)));
+				}
+			}
+			if (result.isEmpty()) reject("no walkable winding exit");
+			return result;
+		}
+
+		private int graphSurface(int road, int x, int z, Set<Long> lanterns) {
+			if (lanterns.contains(ChunkPos.asLong(x, z)) || !pale(x, z)) return Integer.MIN_VALUE;
+			var zone = layout.roadNear(x, z, ROAD_BUFFER - InkLandsLayout.ROAD_HALF_WIDTH);
+			if (zone != null && ((int) zone[0] != road || !outsideOutposts(zone[1])
+					|| layout.roadBridge(road, zone[1]))) return Integer.MIN_VALUE;
+			var hit = layout.roadNear(x, z, InkLandsLayout.ROAD_SHOULDER + InkRoadsFeature.ACCESS_CUT_WIDTH);
+			if (hit != null && ((int) hit[0] != road || !outsideOutposts(hit[1]) || layout.roadBridge(road, hit[1])))
+				return Integer.MIN_VALUE;
+			// A paved lane is cleared by the road feature even over wet raw noise.
+			// Beyond it, remain conservative and require dry natural ground.
+			if (hit != null && hit[2] <= InkLandsLayout.ROAD_HALF_WIDTH)
+				return (int) Math.round(layout.roadHeight(road, hit[1], terrain));
+			if (samples.size() >= slotColumnLimit && !samples.containsKey(ChunkPos.asLong(x,z))) return Integer.MIN_VALUE;
+			var natural = sample(x, z);
+			if (!dry(natural)) return Integer.MIN_VALUE;
+			return InkRoadsFeature.plannedAccessSurface(layout, terrain, hit, natural.surface());
 		}
 
 		private static int lanternPriority(int along) {
