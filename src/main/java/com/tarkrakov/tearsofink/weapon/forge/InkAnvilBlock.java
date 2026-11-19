@@ -37,8 +37,10 @@ public class InkAnvilBlock extends Block {
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
 		if (!level.isClientSide) {
 			player.openMenu(state.getMenuProvider(level, pos));
-			if (player instanceof ServerPlayer sp && ModDimensions.isLands(level))
+			if (player instanceof ServerPlayer sp && ModDimensions.isLands(level)) {
 				DiaryEntries.unlock(sp, DiaryEntries.INK_ANVIL);
+				com.tarkrakov.tearsofink.prologue.FateProgress.mark(sp, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.ANVIL);
+			}
 		}
 		return InteractionResult.sidedSuccess(level.isClientSide);
 	}

@@ -27,7 +27,7 @@ import java.util.List;
 /** Personal, monotone milestones: guidance only, never a gameplay gate or reward. */
 public final class FateProgress {
     public enum Goal {
-        ARRIVAL("arrival", 0), FIRST_FOUNTAIN("first_fountain", 1), GEAR("gear", 2),
+        ARRIVAL("arrival", 0), FIRST_FOUNTAIN("first_fountain", 1), ANVIL("anvil", 10), GEAR("gear", 2),
         SECOND_FOUNTAIN("second_fountain", 3), TRADER("trader", 4),
         CONTRACT("contract", 5), REDEEM("redeem", 6), FONT("font", 7),
         CONTRAST("contrast", 8), RUBRICS("rubrics", 9);
@@ -81,12 +81,12 @@ public final class FateProgress {
                 if (p.getAttachedOrCreate(AscensionFont.HARD_CONTRACTS) > 0
                         || Vows.get(p).awakenings().stream().anyMatch(id -> id.matches("(heart:)?contract_[012]")))
                     mask |= Goal.CONTRACT.bit;
-                if (history.contains("draft_weaponcraft") || history.contains("draft_armor")) mask |= Goal.GEAR.bit;
-                if (inside && !(Goal.GEAR.done(mask) && Goal.CONTRAST.done(mask) && Goal.RUBRICS.done(mask))) {
+                if (inside && !(Goal.ANVIL.done(mask) && Goal.GEAR.done(mask) && Goal.CONTRAST.done(mask) && Goal.RUBRICS.done(mask))) {
                     var inv = p.getInventory();
                     for (int i = 0; i < inv.getContainerSize(); i++) {
                         var stack = inv.getItem(i);
                         if (stack.isEmpty()) continue;
+                        if (stack.is(com.tarkrakov.tearsofink.block.ModBlocks.INK_ANVIL.asItem())) mask |= Goal.ANVIL.bit;
                         if ((Gear.ours(stack) && !stack.is(ModItems.DIM_SCIMITAR))
                                 || stack.getItem() instanceof OrdinaryArmorItem
                                 || (stack.getItem() instanceof SoulShieldItem shield && shield.power() >= 1f))
@@ -111,7 +111,8 @@ public final class FateProgress {
         else if (!Goal.TRADER.done(mask)) out.add(Goal.TRADER);
         else if (!Goal.CONTRACT.done(mask)) out.add(Goal.CONTRACT);
         else if (!Goal.REDEEM.done(mask)) out.add(Goal.REDEEM);
-        if (!Goal.GEAR.done(mask)) out.add(Goal.GEAR);
+        if (!Goal.ANVIL.done(mask)) out.add(Goal.ANVIL);
+        else if (!Goal.GEAR.done(mask)) out.add(Goal.GEAR);
         if (Goal.TRADER.done(mask) && Goal.CONTRACT.done(mask) && out.size() < 2) {
             if (!Goal.FONT.done(mask)) out.add(Goal.FONT);
             else if (!Goal.CONTRAST.done(mask)) out.add(Goal.CONTRAST);

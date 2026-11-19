@@ -70,7 +70,8 @@ final class DiaryDiscoveries {
 				if (s.getItem() instanceof OrdinaryArmorItem) add(known, found, "draft_armor");
 				if (s.getItem() instanceof com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem)
 					add(known, found, "draft_weaponcraft");
-				if (s.is(ModBlocks.ALCHEMY_TABLE.asItem()) || s.is(ModItems.TEARBLOOM_BREW)
+				if (s.is(ModBlocks.ALCHEMY_TABLE.asItem()) || s.is(ModBlocks.TEARBLOOM.asItem())
+						|| s.is(ModItems.EMPTY_FLASK) || s.is(ModItems.TEARBLOOM_BREW)
 						|| s.is(ModItems.STRONG_TEARBLOOM_BREW)) add(known, found, "draft_alchemy");
 				if (s.is(ModItems.HOPE_ESSENCE)) add(known, found, "draft_mad_order");
 				if (s.is(ModItems.CRIMSON_GIFT)) add(known, found, "draft_harvest");

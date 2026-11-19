@@ -6,12 +6,12 @@ import java.util.Map;
 
 /** Client-only index; never changes server diary IDs or unlock rules. */
 enum DiarySection {
-	CHRONICLES("chronicles", "intro", "draft_memory", "draft_ruins"),
-	WORLD("world", "first_steps", "draft_fog", "fountain_hunt", "draft_fountain_travel", "draft_region_pale", "draft_region_blood", "draft_region_ink", "draft_region_lake", "draft_region_edge", "draft_adit"),
-	BESTIARY("bestiary", "caterpillar", "caterpillar_pale", "caterpillar_blood", "caterpillar_ink", "pale_spearman", "pale_shieldbearer", "pale_crossbowman", "zombie", "skeleton", "spider", "draft_pale_owl", "draft_pale_deer", "draft_pale_strider", "draft_hunter_spire", "draft_hunter_blood", "draft_hunter_ink"),
-	CRAFT("craft", "pale_metal", "ink_anvil", "cursed_altar", "ascension_font", "draft_asphoda", "draft_blood_metal", "draft_ink_metal", "draft_armor", "draft_weaponcraft", "draft_alchemy", "draft_blood_collector"),
+	CHRONICLES("chronicles", "intro", "draft_ruins", "draft_memory"),
+	WORLD("world", "first_steps", "draft_fog", "draft_region_pale", "fountain_hunt", "draft_fountain_travel", "draft_adit", "draft_region_blood", "draft_region_ink", "draft_region_lake", "draft_region_edge"),
+	BESTIARY("bestiary", "caterpillar", "caterpillar_pale", "draft_pale_owl", "draft_pale_deer", "draft_pale_strider", "zombie", "skeleton", "spider", "pale_spearman", "pale_shieldbearer", "pale_crossbowman", "draft_hunter_spire", "draft_hunter_blood", "draft_hunter_ink", "caterpillar_blood", "caterpillar_ink"),
+	CRAFT("craft", "pale_metal", "draft_asphoda", "ink_anvil", "draft_weaponcraft", "draft_armor", "draft_alchemy", "draft_blood_metal", "draft_blood_collector", "draft_ink_metal", "cursed_altar", "ascension_font"),
 	TRIALS("trials", "draft_hunt_field", "draft_mad_order", "draft_harvest"),
-	VOWS("vows", "draft_soul", "draft_ink", "draft_soul_bargain", "draft_soul_deeds", "draft_ink_ranks"),
+	VOWS("vows", "draft_soul", "draft_soul_deeds", "draft_ink", "draft_ink_ranks", "draft_soul_bargain"),
 	FATE("fate");
 
 	private static final Map<String, DiarySection> INDEX = new HashMap<>();

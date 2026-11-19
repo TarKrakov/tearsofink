@@ -205,7 +205,8 @@ public final class DiaryEntries {
 		if (needRuins && nearRuinMasonry(p)) discovered.add(DRAFT_RUINS);
 		// Первое испитие фонтана открывает справку о дальнейшем знакомстве. Проверка
 		// сохранённого VISITED открывает запись и для персонажей из старых миров.
-		if (needHunt && !p.getAttachedOrCreate(InkFountainBlock.VISITED).isEmpty()) {
+		if (needHunt && (com.tarkrakov.tearsofink.travel.FountainTravel.hasOpenedFountain(p)
+				|| !p.getAttachedOrCreate(InkFountainBlock.VISITED).isEmpty())) {
 			discovered.add(FOUNTAIN_HUNT);
 			needHunt = false;
 		}
@@ -221,7 +222,8 @@ public final class DiaryEntries {
 				discovered.add(INK_ANVIL);
 				needAnvil = false;
 			}
-			if (needAltar && stack.is(ModBlocks.CURSED_ALTAR.asItem())) {
+			if (needAltar && (stack.is(ModBlocks.CURSED_ALTAR.asItem()) || stack.is(ModItems.MADNESS_SHARD)
+					|| stack.is(ModItems.BLOOD_CLOT) || stack.is(ModItems.BLOOD_CRYSTAL) || stack.is(ModItems.INK_ECHO))) {
 				discovered.add(CURSED_ALTAR);
 				needAltar = false;
 			}
@@ -231,7 +233,7 @@ public final class DiaryEntries {
 				discovered.add(FOUNTAIN_HUNT);
 				needHunt = false;
 			}
-			if (needFont && (stack.is(ModItems.PIGMENT) || stack.is(ModItems.VALOR_SIGIL)
+			if (needFont && (stack.is(ModItems.PIGMENT) || stack.is(ModItems.FULFILLED_CONTRACT) || stack.is(ModItems.VALOR_SIGIL)
 					|| stack.is(ModItems.CRIMSON_FLOWER) || stack.is(ModItems.HOPE_MOTE))) {
 				discovered.add(ASCENSION_FONT);
 				needFont = false;
@@ -239,10 +241,38 @@ public final class DiaryEntries {
 			if (!needMetal && !needAnvil && !needAltar && !needHunt && !needFont) break;
 		}
 		DiaryDiscoveries.collect(p, have, discovered);
+		// Guidance is predictive: unlock the instructions when the relevant resource or
+		// prerequisite becomes known, not only after the player makes the result.
+		if (knows(have, discovered, PALE_METAL) || knows(have, discovered, INK_ANVIL)
+				|| knows(have, discovered, "draft_armor") || knows(have, discovered, "draft_weaponcraft")
+				|| knows(have, discovered, "draft_blood_metal") || knows(have, discovered, "draft_ink_metal")) {
+			for (String id : List.of(PALE_METAL, "draft_asphoda", INK_ANVIL, "draft_weaponcraft", "draft_armor"))
+				guide(have, discovered, id);
+		}
+		if (com.tarkrakov.tearsofink.trader.SoulTrader.introduced(p)) {
+			for (String id : List.of(FOUNTAIN_HUNT, "draft_hunt_field", "draft_soul_bargain", "draft_mad_order"))
+				guide(have, discovered, id);
+		}
+		if (knows(have, discovered, "draft_region_blood")) {
+			guide(have, discovered, "draft_blood_metal");
+			guide(have, discovered, "draft_blood_collector");
+			guide(have, discovered, "draft_harvest");
+		}
+		if (knows(have, discovered, "draft_region_ink")) guide(have, discovered, "draft_ink_metal");
+		if (knows(have, discovered, "draft_asphoda")) guide(have, discovered, "draft_alchemy");
+		if (knows(have, discovered, "draft_blood_collector")) guide(have, discovered, CURSED_ALTAR);
 		// За один цикл — один Sync и одно уведомление даже для нескольких страниц.
 		if (!discovered.isEmpty()) unlock(p, discovered.toArray(String[]::new));
 	}
 
+
+	private static boolean knows(List<String> known, List<String> found, String id) {
+		return known.contains(id) || found.contains(id);
+	}
+
+	private static void guide(List<String> known, List<String> found, String id) {
+		if (!knows(known, found, id)) found.add(id);
+	}
 
 	/** Дешёвая однократная проверка ближайшей кладки; не требует искать структуры/загружать чанки. */
 	private static boolean nearRuinMasonry(ServerPlayer p) {

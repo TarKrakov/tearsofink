@@ -111,6 +111,14 @@ public class DiaryScreen extends Screen {
 		return Math.max(1, (LAST_TEXT_BOTTOM - FONT_H - textStart(headingLines)) / LINE + 1);
 	}
 
+	/** Avoid a continuation leaf containing only one or two wrapped lines. */
+	private static int pageRows(int capacity, int remaining) {
+		int count = Math.min(capacity, remaining);
+		int tail = remaining - count;
+		if (tail > 0 && tail <= 2 && count >= 7) count -= 4 - tail;
+		return count;
+	}
+
 	private PageAnchor currentAnchor() {
 		if (page < 0 || page >= sheets.size()) return null;
 		Sheet sheet = sheets.get(page);
@@ -234,7 +242,7 @@ public class DiaryScreen extends Screen {
 		int offset = 0;
 		do {
 			var title = offset == 0 ? heading : List.<FormattedCharSequence>of();
-			int end = Math.min(body.size(), offset + rows(title.size()));
+			int end = offset + pageRows(rows(title.size()), body.size() - offset);
 			sheets.add(new Sheet(title, List.copyOf(body.subList(offset, end)), TEXT, null, 0, true));
 			offset = end;
 		} while (offset < body.size());
@@ -255,7 +263,7 @@ public class DiaryScreen extends Screen {
 		int part = 0;
 		do {
 			List<FormattedCharSequence> sheetHeading = first ? heading : List.of();
-			int n = Math.min(rows(sheetHeading.size()), all.size() - i);
+			int n = pageRows(rows(sheetHeading.size()), all.size() - i);
 			sheets.add(new Sheet(sheetHeading, all.subList(i, i + n), open ? TEXT : FADED, id, part++, open));
 			i += n;
 			first = false;
