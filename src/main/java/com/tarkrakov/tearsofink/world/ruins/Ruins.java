@@ -49,9 +49,13 @@ public final class Ruins {
 	public static final int START_SIDE = 26;
 	/** Насколько место прибытия сдвинуто с дороги в сторону храма (храм — в START_SIDE − это блоков от игрока). */
 	public static final int START_ARRIVAL_SHIFT = 10;
-	/** Шанс, что лазурит стартового храма станет сундуком (лут — как в середине леса). */
+	/** Шанс, что лазурит стартового храма станет сундуком (отдельный стартовый лут). */
 	public static final float START_CHEST_CHANCE = 0.7f;
-	public static final int START_LOOT_TIER = 1;
+	public static final ResourceLocation START_LOOT = TearsOfInk.id("chests/ruins_start");
+	public static final ResourceLocation INKWOOD_LOOT = TearsOfInk.id("chests/ruins_inkwood");
+	public static final ResourceLocation BLOOD_TEMPLE_LOOT = TearsOfInk.id("chests/temple_blood_supply");
+	public static final ResourceLocation PALE_TEMPLE_REWARD = TearsOfInk.id("chests/temple_pale_reward");
+	public static final ResourceLocation BLOOD_TEMPLE_REWARD = TearsOfInk.id("chests/temple_blood_reward");
 	/** Радиус вокруг места прибытия, где не появляются патрули. */
 	public static final int START_CALM_RADIUS = 64;
 
@@ -67,6 +71,8 @@ public final class Ruins {
 	public static final float[] CHEST_CHANCE = {0.25f, 0.45f, 0.65f};
 	public static final ResourceLocation[] CHEST_LOOT = {
 			TearsOfInk.id("chests/ruins_poor"), TearsOfInk.id("chests/ruins_common"), TearsOfInk.id("chests/ruins_rich")};
+	public static final ResourceLocation[] GATE_LOOT = {
+			TearsOfInk.id("chests/gate_poor"), TearsOfInk.id("chests/gate_common"), TearsOfInk.id("chests/gate_rich")};
 
 	// ===== Ряска (только в Бледнолесье) =====
 	/** Шанс, что у открытой стены руины повиснет ряска; и сколько ещё блоков она свисает вниз. */

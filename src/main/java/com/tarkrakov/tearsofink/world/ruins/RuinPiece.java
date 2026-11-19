@@ -112,7 +112,17 @@ public class RuinPiece extends TemplateStructurePiece {
 							BoundingBox box, ChunkPos chunkPos, BlockPos pivot) {
 		super.postProcess(level, structures, generator, random, box, chunkPos, pivot);
 		RandomSource fixed = RandomSource.create(templatePosition.asLong() * 31 + 0x5EED);
-		ResourceKey<LootTable> loot = ResourceKey.create(Registries.LOOT_TABLE, Ruins.CHEST_LOOT[start ? Math.max(tier, Ruins.START_LOOT_TIER) : tier]);
+		ResourceKey<LootTable> loot = ResourceKey.create(Registries.LOOT_TABLE,
+				start ? Ruins.START_LOOT : bloodTemple ? Ruins.BLOOD_TEMPLE_LOOT
+						: !pale ? Ruins.INKWOOD_LOOT : Ruins.CHEST_LOOT[tier]);
+		// One existing authored chest per non-start temple receives the relic table.
+		// Obtain the complete template rather than selecting independently in each chunk.
+		List<StructureTemplate.StructureBlockInfo> allAuthorChests = template.filterBlocks(
+				templatePosition, placeSettings.copy().setBoundingBox(null), Blocks.CHEST);
+		BlockPos rewardChest = !start && (pale || bloodTemple) && !allAuthorChests.isEmpty()
+				? allAuthorChests.getFirst().pos() : null;
+		ResourceKey<LootTable> rewardLoot = ResourceKey.create(Registries.LOOT_TABLE,
+				bloodTemple ? Ruins.BLOOD_TEMPLE_REWARD : Ruins.PALE_TEMPLE_REWARD);
 
 		// --- сундуки: метки-лазуриты (решение одинаковое для всех чанков руины)
 		List<StructureTemplate.StructureBlockInfo> marks = template.filterBlocks(templatePosition, placeSettings, Blocks.LAPIS_BLOCK);
@@ -135,9 +145,10 @@ public class RuinPiece extends TemplateStructurePiece {
 				level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
 			}
 		}
-		// сундуки автора — с тем же лутом
+		// Сундуки автора: один реликварий в обычном храме, остальные — стандартный лут.
 		for (StructureTemplate.StructureBlockInfo info : authorChests) {
-			if (box.isInside(info.pos())) net.minecraft.world.RandomizableContainer.setBlockEntityLootTable(level, fixed, info.pos(), loot);
+			if (box.isInside(info.pos())) net.minecraft.world.RandomizableContainer.setBlockEntityLootTable(level, fixed, info.pos(),
+					info.pos().equals(rewardChest) ? rewardLoot : loot);
 		}
 
 		// --- почва вместо ванильной земли + фундамент на склонах

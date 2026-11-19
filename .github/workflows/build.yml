@@ -24,6 +24,8 @@ jobs:
         run: chmod +x ./gradlew
       - name: validate advancement icon paths
         run: python3 tools/check_advancement_icons.py
+      - name: validate chest loot progression
+        run: python3 tools/check_chest_loot.py
       - name: validate Blockbench workspace and automatic F5
         run: node tools/blockbench/test_workspace.js
       - name: validate final author scene and active Pale clip mapping

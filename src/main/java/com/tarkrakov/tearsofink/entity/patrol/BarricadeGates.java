@@ -409,7 +409,7 @@ public final class BarricadeGates extends SavedData {
             List<BlockPos> selected=new ArrayList<>(markers);
             for(int i=selected.size()-1;i>0;i--)Collections.swap(selected,i,fixed.nextInt(i+1));
             int count=1+fixed.nextInt(3);
-            ResourceKey<LootTable> loot=ResourceKey.create(Registries.LOOT_TABLE,Ruins.CHEST_LOOT[SquadPatrols.tier(layout,p[0],p[1])]);
+            ResourceKey<LootTable> loot=ResourceKey.create(Registries.LOOT_TABLE,Ruins.GATE_LOOT[SquadPatrols.tier(layout,p[0],p[1])]);
             for(int i=0;i<selected.size();i++) {
                 BlockPos at=selected.get(i);
                 if(i<count) {
