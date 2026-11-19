@@ -1,5 +1,5 @@
 {
-  "_comment": "Одиночные авторские ЛКМ: ускорение только single_tempo; игровой hit/duration и FP/F5 масштабируются вместе. Парный хват использует прежний tempo=1. Значения урона, дистанции и сектора не изменены.",
+  "_comment": "Авторские FP/F5 клипы. Одиночная и парная длительность, попадания и баланс сохранены; 5 парных шагов используют 3 новые постановки (повтор второго).",
   "tempo": 1,
   "single_tempo": 1.5,
   "min_strength": 0.9,
@@ -42,18 +42,19 @@
   ],
   "dual_steps": [
     {
-      "anim": "axe_dual_chop",
+      "anim": "bb_author_dual_attack1",
       "duration": 8,
       "hit": 4,
       "damage": 1.05,
       "reach": 3.4,
       "arc": 90,
       "knockback": 0.45,
-      "speed": 1.65
+      "speed": 1.65,
+      "off_anim": "bb_author_dual_attack1_off"
     },
     {
-      "anim": "",
-      "off_anim": "axe_dual_chop_off",
+      "anim": "bb_author_dual_attack2",
+      "off_anim": "bb_author_dual_attack2_off",
       "duration": 8,
       "hit": 4,
       "damage": 1.05,
@@ -64,8 +65,8 @@
       "late": 16
     },
     {
-      "anim": "axe_dual_slam",
-      "off_anim": "axe_dual_slam_off",
+      "anim": "bb_author_dual_attack2",
+      "off_anim": "bb_author_dual_attack2_off",
       "duration": 8,
       "hit": 4,
       "damage": 0.85,
@@ -76,8 +77,8 @@
       "late": 14
     },
     {
-      "anim": "axe_dual_slam_repeat",
-      "off_anim": "axe_dual_slam_repeat_off",
+      "anim": "bb_author_dual_attack2",
+      "off_anim": "bb_author_dual_attack2_off",
       "duration": 8,
       "hit": 4,
       "damage": 0.85,
@@ -88,8 +89,8 @@
       "late": 18
     },
     {
-      "anim": "axe_dual_slam_final",
-      "off_anim": "axe_dual_slam_final_off",
+      "anim": "bb_author_dual_attack3",
+      "off_anim": "bb_author_dual_attack3_off",
       "duration": 18,
       "hit": 9,
       "damage": 1.65,

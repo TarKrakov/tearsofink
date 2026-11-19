@@ -133,7 +133,7 @@
         return w*w*w*x+3*w*w*v*(x+(a.bezier_right_value?.[j]??0))+3*w*v*v*(q[j]+(b.bezier_left_value?.[j]??0))+v*v*v*q[j];
       });
     }
-    function rig(project,clip){
+    function rig(project,clip,allTracks=false){
       const meta=project.toi_workspace;
       if(!meta||![1,2].includes(meta.version)||meta.euler_order!=='ZYX')err('Не удалось подтвердить калибровку этой сцены. Не удаляй анимации: сохрани копию .bbmodel и передай её для восстановления');
       const length=number(clip.length);
@@ -163,7 +163,7 @@
         if(!a.keyframes?.length)continue;
         const g=byId.get(id);
         if(!g||!valid.has(id))err('Анимируй только shoulder/arm/sword; неподдерживаемый трек '+(g?.name||a.name||id));
-        if(!g.name.startsWith('FP_'))continue;
+        if(!allTracks&&!g.name.startsWith('FP_'))continue;
         const cs=channels(a,length);fpChannels.set(id,cs);
         for(const ks of Object.values(cs))ks.forEach((k,i)=>{times.add(k.time);if(i&&ks[i-1].kind==='step')jumps.add(k.time)});
       }
@@ -374,7 +374,53 @@
       return Object.keys(lib.animations).filter(n=>!/(?:_third|_shoulder|_wrist|_edge|_raw|_off)$/.test(n)).map(n=>({right:n,left:lib.animations[n+'_off']?n+'_off':''}));
     }
 
-    return {planF5,planTiming,existingF5,rot,euler,importGame,gameLibrary,defaultGameRequests,copyClip,gameSample};
+
+    // Offline, calibrated Blockbench -> renderer library (numeric local keys).
+    // This does not mutate the user's project. Missing F5 is calculated on a
+    // temporary copy, using the same solver used by Generate F5.
+    function bakeGame(project,original,name,fps=60){
+      if(!/^bb_[a-z0-9_]+$/.test(name)||!Number.isInteger(fps)||fps<20||fps>240)err('Неверное имя или частота экспорта');
+      let clip=JSON.parse(JSON.stringify(original));clip.loop='once';
+      const auto=!existingF5(project,clip);
+      if(auto){const plan=planF5(project,clip);if(plan.status!=='generated')err('Нет FP-ключей '+original.name);clip.animators={...clip.animators,...plan.animators};}
+      const rr=rig(project,clip,true),out={},times=new Set([...rr.times].map(timeKey));
+      for(let i=0;i/fps<rr.length;i++)times.add(timeKey(i/fps));
+      for(const t of rr.jumps){if(t>0)times.add(timeKey(Math.max(0,t-.000001)));}
+      const sorted=[...times].sort((a,b)=>a-b),active=rr.sides.filter(s=>s.FP.chain.some(g=>clip.animators[g.uuid]?.keyframes?.length));
+      const round=x=>Number(x.toFixed(7)),gameKey=(t,r,p=[0,0,0])=>({t:timeKey(t),rotation:r.map(round),translation:p.map(round),ease:'linear'});
+      const empty=()=>({length:rr.length,hold:0,return:0,smooth:false,rotation_mode:'slerp',third:{baked:true},keyframes:[]});
+      let maxGripError=0,maxRotationError=0;
+      for(const side of active){
+        const m=side.sign,n=name+(m===1?'':'_off'),f=side.FP.b,t=side.F5.b,fpS=side.FP.chain[2],f5A=side.F5.chain[1],f5S=side.F5.chain[2];
+        if(!side.F5.chain.some(g=>clip.animators[g.uuid]?.keyframes?.length))err('Нет F5 для '+side.side+' '+original.name);
+        out[n]=empty();out[n+'_shoulder']=empty();out[n+'_wrist']=empty();
+        out[n].third={source:n+'_shoulder',arm_space:true,wrist_source:n+'_wrist',wrist_xyz:true};
+        const display=rr.meta.display['thirdperson_'+side.side+'hand'],dtp=rel(vec(display.rotation),m);
+        const mount=signed(add(vec(rr.meta.fp_idle_offset),[0,0,0]),m);
+        for(const time of sorted){
+          const cache=new Map(),ps=rr.pose(fpS,time,cache),a=rr.pose(f5A,time,cache),s=rr.pose(f5S,time,cache);
+          if(!near(a.o,vec(t.pivot)))err('F5 shoulder translation '+original.name);
+          const local=mv(tr(a.R),sub(s.o,a.o)),expected=sub(vec(t.grip_position),vec(t.pivot));
+          maxGripError=Math.max(maxGripError,Math.hypot(...sub(local,expected)));
+          if(!near(local,expected))err('F5 hilt detached '+original.name);
+          const relative=mm(ps.R,tr(f.item_rotation)),rotFP=xyzAngles(relative),pos=signed(add(sub(ps.o,vec(f.grip_position)),mount),m);
+          const A=mm(mm(mm(F,a.R),F),rx(-Math.PI/10)),e=euler(A),angles=[e[0]+18,m*e[1],m*e[2]];
+          const W=mm(mm(tr(mm(mm(F,A),C)),s.R),tr(dtp)),w=xyzAngles(W);
+          const reconstructedFP=mm(rel([rotFP[0],m*rotFP[1],m*rotFP[2]],m),f.item_rotation);
+          const reconstructedA=rot([angles[0]-18,m*angles[1],m*angles[2]]);
+          const reconstructedS=mm(mm(mm(mm(F,reconstructedA),C),xyz(w)),dtp);
+          const errM=(a,b)=>Math.max(...a.flatMap((row,i)=>row.map((v,j)=>Math.abs(v-b[i][j]))));
+          maxRotationError=Math.max(maxRotationError,errM(reconstructedFP,ps.R),errM(reconstructedS,s.R));
+          out[n].keyframes.push(gameKey(time,[rotFP[0],m*rotFP[1],m*rotFP[2]],pos));
+          out[n+'_shoulder'].keyframes.push(gameKey(time,angles));
+          out[n+'_wrist'].keyframes.push(gameKey(time,w));
+        }
+      }
+      if(!active.length||maxRotationError>1e-5)err('Не прошёл обратный пересчёт '+original.name+' '+maxRotationError);
+      return {animations:out,autoF5:auto,samples:sorted.length,maxGripError,maxRotationError};
+    }
+
+    return {planF5,planTiming,existingF5,rot,euler,importGame,gameLibrary,defaultGameRequests,copyClip,gameSample,bakeGame};
   })();
 
 

@@ -251,8 +251,8 @@ public final class PaleGreatswordMoves {
                         if (!s.paired && !s.left && (!p.isUsingItem() || p.getUseItem() != s.main)) {
                             lowerGuard(p, s);
                         } else if (time >= s.until) {
-                            play(p, s, s.paired ? "dual_guard_hold" : s.left ? "guard_hold" : "bb_author_guard_hold",
-                                    s.paired ? "dual_guard_hold_off" : null, GUARD_REFRESH_TICKS);
+                            play(p, s, s.paired ? "bb_author_dual_guard_hold" : s.left ? "guard_hold" : "bb_author_guard_hold",
+                                    s.paired ? "bb_author_dual_guard_hold_off" : null, GUARD_REFRESH_TICKS);
                             s.until = time + GUARD_REFRESH_TICKS;
                         }
                     }
@@ -308,8 +308,8 @@ public final class PaleGreatswordMoves {
         // Собственная перезарядка защиты ограничивает только новое поднятие,
         // но не отпускание ПКМ и не обычный R.
         s.guardReady = now(p) + Math.round(cooldown * Awakening.cooldownMult(left ? s.off : s.main));
-        play(p, s, pair ? "dual_guard" : left ? "guard" : "bb_author_guard_start",
-                pair ? "dual_guard_off" : null, GUARD_REFRESH_TICKS);
+        play(p, s, pair ? "bb_author_dual_guard_start" : left ? "guard" : "bb_author_guard_start",
+                pair ? "bb_author_dual_guard_start_off" : null, GUARD_REFRESH_TICKS);
         // Free ordinary technique; the existing weapon-wear economy still applies.
         ItemStack sword = left ? s.off : s.main;
         com.tarkrakov.tearsofink.weapon.forge.Gear.wear(p, sword,
@@ -322,8 +322,8 @@ public final class PaleGreatswordMoves {
 
     private static void lowerGuard(ServerPlayer p, State s) {
         s.phase = Phase.IDLE; // protection ends immediately; return pose can blend into another action
-        play(p, s, s.paired || s.left ? "guard_release" : "bb_author_guard_end",
-                s.paired ? "guard_release_off" : null, s.paired || s.left ? 10 : 4);
+        play(p, s, s.paired ? "bb_author_dual_guard_end" : s.left ? "guard_release" : "bb_author_guard_end",
+                s.paired ? "bb_author_dual_guard_end_off" : null, s.paired || s.left ? 10 : 4);
     }
 
     private static boolean guardFacing(ServerPlayer p, net.minecraft.world.damagesource.DamageSource source) {
