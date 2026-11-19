@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:smoking",
+  "category": "food",
+  "ingredient": {
+    "item": "tears-of-ink:pale_deer_meat_raw"
+  },
+  "result": {
+    "id": "tears-of-ink:pale_deer_meat_fried"
+  },
+  "experience": 0.35,
+  "cookingtime": 100
+}

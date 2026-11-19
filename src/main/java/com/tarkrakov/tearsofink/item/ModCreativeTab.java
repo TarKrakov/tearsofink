@@ -190,6 +190,8 @@ public final class ModCreativeTab {
 						output.accept(ModItems.INK);
 						output.accept(ModItems.RAW_CATERPILLAR_MEAT);
 						output.accept(ModItems.COOKED_CATERPILLAR_MEAT);
+						output.accept(ModItems.PALE_DEER_MEAT_RAW);
+						output.accept(ModItems.PALE_DEER_MEAT_FRIED);
 						output.accept(ModBlocks.ALCHEMY_TABLE);
 						output.accept(ModItems.EMPTY_FLASK);
 						output.accept(ModItems.TEARBLOOM_BREW);

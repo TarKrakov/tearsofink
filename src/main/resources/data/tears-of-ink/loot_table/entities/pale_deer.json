@@ -6,7 +6,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "minecraft:beef",
+          "name": "tears-of-ink:pale_deer_meat_raw",
           "functions": [
             {
               "function": "minecraft:set_count",

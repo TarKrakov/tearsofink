@@ -207,6 +207,11 @@ public final class ModItems {
 			.food(new FoodProperties.Builder().nutrition(2).saturationModifier(0.15f).build())));
 	public static final Item COOKED_CATERPILLAR_MEAT = register("cooked_caterpillar_meat", new Item(new Item.Properties()
 			.food(new FoodProperties.Builder().nutrition(6).saturationModifier(0.6f).build())));
+	/** Мясо бледного оленя: прежние пищевые значения говядины. */
+	public static final Item PALE_DEER_MEAT_RAW = register("pale_deer_meat_raw", new Item(new Item.Properties()
+			.food(new FoodProperties.Builder().nutrition(3).saturationModifier(0.3f).build())));
+	public static final Item PALE_DEER_MEAT_FRIED = register("pale_deer_meat_fried", new Item(new Item.Properties()
+			.food(new FoodProperties.Builder().nutrition(8).saturationModifier(0.8f).build())));
 	/** Яйцо призыва гусеницы (для креатива; вариант — по зоне, где выпустили). */
 	public static final Item CATERPILLAR_SPAWN_EGG = register("caterpillar_spawn_egg",
 			new SpawnEggItem(com.tarkrakov.tearsofink.entity.ModMobs.CATERPILLAR, 0x7FD8C9, 0x2E4B52, new Item.Properties()));
