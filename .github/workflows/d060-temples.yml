@@ -1,0 +1,56 @@
+name: D-060 temple validation
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/d060-temples.yml'
+      - 'tools/tests/d060/**'
+permissions:
+  contents: read
+concurrency:
+  group: d060-temple-validation
+  cancel-in-progress: false
+jobs:
+  grade:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - name: Pure approach grading regression
+        run: |
+          javac -d /tmp/toi-grade src/main/java/com/tarkrakov/tearsofink/world/TempleApproachGrade.java tools/tests/TempleApproachGradeTest.java
+          java -cp /tmp/toi-grade com.tarkrakov.tearsofink.world.TempleApproachGradeTest
+  worlds:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 32
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        seed: ['777', '42', '20261118', '0', '1', '2', '-1', '123456789', '8675309', '9223372036854775807']
+    env:
+      JAVA_TOOL_OPTIONS: -XX:ActiveProcessorCount=2
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-java@v5
+        with:
+          distribution: microsoft
+          java-version: '25'
+      - name: Generate and validate seed
+        run: python3 -u tools/tests/d060/run.py --seed '${{ matrix.seed }}'
+      - name: Upload complete reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: d060-${{ matrix.seed }}
+          if-no-files-found: warn
+          path: out/d060/
