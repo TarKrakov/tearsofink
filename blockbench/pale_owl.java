@@ -34,7 +34,7 @@ public class pale_owl<T extends Entity> extends EntityModel<T> {
 
 		PartDefinition Owl_wing_l = Owl_main.addOrReplaceChild("Owl_wing_l", CubeListBuilder.create(), PartPose.offset(-4.0F, -2.0F, -0.5F));
 
-		PartDefinition cube_r1 = Owl_wing_l.addOrReplaceChild("cube_r1", CubeListBuilder.create().texOffs(16, 21).addBox(1.0F, -2.0F, -3.5F, 1.0F, 9.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 0.0F, 0.0F, -3.1416F, 0.0F, 3.1416F));
+		PartDefinition cube_r1 = Owl_wing_l.addOrReplaceChild("cube_r1", CubeListBuilder.create().texOffs(16, 21).addBox(-0.5F, -4.5F, -3.5F, 1.0F, 9.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(-1.5F, 2.5F, 0.0F, 0.0F, 0.0F, 0.0F));
 
 		PartDefinition Owl_wing_r = Owl_main.addOrReplaceChild("Owl_wing_r", CubeListBuilder.create().texOffs(0, 21).addBox(1.0F, -2.0F, -3.5F, 1.0F, 9.0F, 7.0F, new CubeDeformation(0.0F)), PartPose.offset(5.0F, -2.0F, -0.5F));
 
