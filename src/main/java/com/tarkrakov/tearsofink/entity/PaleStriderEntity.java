@@ -46,7 +46,23 @@ public final class PaleStriderEntity extends PathfinderMob {
     private static final int[] TURN_OFFSETS = {0, 30, -30, 60, -60, 100, -100};
     private static final int[] FLOOR_OFFSETS = {0, 1, -1};
     private static final int START_TICKS = 40, LOOP_TICKS = 80, END_TICKS = 40, LOOPS = 3;
+    // D-085: temple choirs remain frequent; roaming voices are occasional.
+    private static final int ROAM_FIRST_MIN = 90*20, ROAM_FIRST_SPREAD = 90*20;
+    private static final int ROAM_REPEAT_MIN = 180*20, ROAM_REPEAT_SPREAD = 120*20;
+    private static final int ROAM_QUIET_RADIUS = 112;
     private int songIn = -1, stillTicks, movingTicks;
+
+    private int firstSongDelay() {
+        return mode == Mode.TEMPLE ? 100 + random.nextInt(120)
+                : ROAM_FIRST_MIN + random.nextInt(ROAM_FIRST_SPREAD+1);
+    }
+    private int repeatSongDelay() {
+        return mode == Mode.TEMPLE ? 500 + random.nextInt(501)
+                : ROAM_REPEAT_MIN + random.nextInt(ROAM_REPEAT_SPREAD+1);
+    }
+    private int interruptedSongDelay() {
+        return mode == Mode.TEMPLE ? 200 : repeatSongDelay();
+    }
     private boolean encounterSpawn;
     private UUID songEpisode;
     private long songStart;
@@ -107,7 +123,7 @@ public final class PaleStriderEntity extends PathfinderMob {
         choirAnchor = temple ? blockPosition() : null;
         this.group = group;
         this.heading = heading;
-        songIn = temple ? 100 + random.nextInt(120) : 360 + random.nextInt(240);
+        songIn = firstSongDelay();
     }
 
     @Override public boolean removeWhenFarAway(double distance) { return encounterSpawn; }
@@ -129,7 +145,8 @@ public final class PaleStriderEntity extends PathfinderMob {
         if (group != null) tag.putUUID("StriderGroup", group);
         if (destination != null) tag.putLong("StriderDestination", destination.asLong());
         if (choirAnchor != null) tag.putLong("StriderChoirAnchor", choirAnchor.asLong());
-        tag.putInt("StriderSongIn", Math.max(0, songIn));
+        tag.putInt("StriderSongIn", songIn);
+        tag.putBoolean("StriderRareSongSchedule", true);
         if (lastComposition != null) tag.putInt("StriderLastComposition", lastComposition.ordinal());
     }
     @Override public void readAdditionalSaveData(CompoundTag tag) {
@@ -148,7 +165,12 @@ public final class PaleStriderEntity extends PathfinderMob {
                 ? BlockPos.of(tag.getLong("StriderChoirAnchor")) : null;
         lastComposition = tag.contains("StriderLastComposition")
                 ? StriderRepertoire.fromIndex(tag.getInt("StriderLastComposition")) : null;
-        songIn = tag.contains("StriderSongIn") ? Math.max(60 + random.nextInt(120), tag.getInt("StriderSongIn")) : -1;
+        if (mode == Mode.ROAMING && !tag.getBoolean("StriderRareSongSchedule")) {
+            songIn = firstSongDelay(); // Migrate the old short outdoor timer once.
+        } else {
+            songIn = tag.contains("StriderSongIn") && tag.getInt("StriderSongIn") >= 0
+                    ? Math.max(60 + random.nextInt(120), tag.getInt("StriderSongIn")) : -1;
+        }
     }
 
     @Override public void tick() {
@@ -157,7 +179,7 @@ public final class PaleStriderEntity extends PathfinderMob {
             if (singing()) {
                 stopSong(level);
                 phase(Phase.IDLE);
-                songIn = 200;
+                songIn = interruptedSongDelay();
             }
             return;
         }
@@ -171,7 +193,7 @@ public final class PaleStriderEntity extends PathfinderMob {
         }
         if (phaseStamp() == 0L) phase(Phase.IDLE);
         if (mode == Mode.TEMPLE && choirAnchor == null) choirAnchor = blockPosition();
-        if (songIn < 0) songIn = 140 + random.nextInt(180);
+        if (songIn < 0) songIn = mode == Mode.TEMPLE ? 140 + random.nextInt(180) : firstSongDelay();
 
         if (singing()) {
             getNavigation().stop();
@@ -179,14 +201,15 @@ public final class PaleStriderEntity extends PathfinderMob {
             if (!onGround() || isInWater()) {
                 stopSong(server);
                 phase(Phase.IDLE);
-                songIn = 200;
+                songIn = interruptedSongDelay();
                 return;
             }
             long elapsed = server.getGameTime() - songStart;
             if (elapsed >= START_TICKS + LOOP_TICKS * LOOPS + END_TICKS) {
                 songEpisode = null; // Natural end: let the audio tail finish in real time.
                 phase(Phase.IDLE);
-                songIn = 500 + random.nextInt(501);
+                if (mode == Mode.TEMPLE) songIn = repeatSongDelay();
+                else songIn = Math.max(songIn, ROAM_REPEAT_MIN);
             } else if (elapsed >= START_TICKS + LOOP_TICKS * LOOPS) phase(Phase.SING_END);
             else if (elapsed >= START_TICKS) phase(Phase.SING_LOOP);
             return;
@@ -201,9 +224,21 @@ public final class PaleStriderEntity extends PathfinderMob {
 
         if (songIn > 0) --songIn;
         if (songIn <= 0 && canSing(server)) {
+            // Nearby outdoor groups share a quiet window, without affecting the temple choir.
+            var roamingNearby = mode == Mode.ROAMING
+                    ? server.getEntitiesOfClass(PaleStriderEntity.class,
+                            getBoundingBox().inflate(ROAM_QUIET_RADIUS),
+                            e -> e != this && e.isAlive() && e.mode == Mode.ROAMING
+                                    && distanceToSqr(e) <= ROAM_QUIET_RADIUS*ROAM_QUIET_RADIUS)
+                    : java.util.List.<PaleStriderEntity>of();
+            if (roamingNearby.stream().anyMatch(PaleStriderEntity::singing)) {
+                songIn = repeatSongDelay();
+                walk(server);
+                return;
+            }
             var neighbours = server.getEntitiesOfClass(PaleStriderEntity.class,
                     getBoundingBox().inflate(mode == Mode.TEMPLE ? 24 : 12, 8, mode == Mode.TEMPLE ? 24 : 12),
-                    e -> e != this && e.canSing(server) && (mode == Mode.TEMPLE && e.mode == Mode.TEMPLE
+                    e -> e != this && e.mode == mode && e.canSing(server) && (mode == Mode.TEMPLE
                             || group != null && group.equals(e.group)));
             neighbours.sort(Comparator.comparingDouble(this::distanceToSqr));
             var singers = new ArrayList<>(neighbours.subList(0, Math.min(2, neighbours.size())));
@@ -216,6 +251,12 @@ public final class PaleStriderEntity extends PathfinderMob {
             var composition = StriderRepertoire.choose(random, lastComposition, recent);
             boolean together = singers.size() > 1;
             int firstPart = together ? 0 : random.nextInt(StriderRepertoire.PARTS);
+            if (mode == Mode.ROAMING) {
+                int quiet = repeatSongDelay();
+                // Set the delay before starting so saving during a song cannot replay it.
+                for (var other : roamingNearby) other.songIn = Math.max(other.songIn, quiet);
+                for (var singer : singers) singer.songIn = Math.max(singer.songIn, quiet);
+            }
             for (int i = 0; i < singers.size(); i++) {
                 singers.get(i).startSong(server, composition, firstPart + i, together);
             }
