@@ -17,7 +17,7 @@ import java.util.List;
 
 /** D-043. Масштабирует временные модификаторы каждой надетой ванильной части. */
 public final class VanillaArmorPenalty {
-	private static final double LAND_MULTIPLIER = 0.60;
+	public static final double LAND_MULTIPLIER = 0.60;
 	private static final List<EquipmentSlot> SLOTS =
 			List.of(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET);
 

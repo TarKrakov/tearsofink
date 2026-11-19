@@ -27,6 +27,10 @@ public final class SkillKeys {
 
 	private SkillKeys() {}
 
+	public static net.minecraft.network.chat.Component weaponKeyLabel() {
+		return WEAPON_KEY == null ? net.minecraft.network.chat.Component.literal("R") : WEAPON_KEY.getTranslatedKeyMessage();
+	}
+
 	public static void init() {
 		bind(ModSkills.DASH, "key.tears-of-ink.dash", GLFW.GLFW_KEY_LEFT_ALT);
 		WEAPON_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tears-of-ink.weapon_ability", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, CATEGORY));

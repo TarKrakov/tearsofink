@@ -8,7 +8,6 @@
 		"PaleForestMusicMixin",
 		"AudioMixerSoundMixin",
 		"LevelRendererMixin",
-		"WeaponStatsMixin",
 		"ItemRendererMixin",
 		"MinecraftAttackMixin",
 		"ItemInHandRendererInvoker",

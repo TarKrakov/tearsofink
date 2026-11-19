@@ -75,14 +75,18 @@ public final class OrdinaryArmorItem extends ArmorItem {
 	public static final int AWAKENING_SLOTS = 1;
 
 	private final Piece piece;
+	private final Weight weight;
 	private final ItemAttributeModifiers defaultModifiers;
 
 	OrdinaryArmorItem(Holder<ArmorMaterial> material, Type type, Weight weight) {
 		super(material, type, new Properties().durability(weight.pieces.get(type).durability())
 				.component(ModArmor.TIER, Tier.DIM.ordinal()));
+		this.weight = weight;
 		this.piece = weight.pieces.get(type);
 		this.defaultModifiers = modifiers(Tier.DIM);
 	}
+
+	public String weightId() { return weight.id(); }
 
 	public Tier tier(ItemStack stack) {
 		return Tier.BY_ID[Mth.clamp(stack.getOrDefault(ModArmor.TIER, 0), 0, Tier.BY_ID.length - 1)];
