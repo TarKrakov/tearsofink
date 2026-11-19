@@ -125,13 +125,51 @@ final class PaleDeerEncounters {
                 d.configureHerd(g.id);
                 if (level.addFreshEntity(d)) data.join(g,d.getUUID());
             }
-            if (!g.members.isEmpty()) return;
+            if (!g.members.isEmpty()) {
+                data.finishInitialSpawn(g);
+                return;
+            }
             // No entity was inserted (e.g. a spawn hook cancelled it): retry on a later encounter.
             g.replenishAt=level.getGameTime()+SPAWN_INTERVAL;
             data.setDirty();
             return;
         }
     }
+    /** One new member joins an existing natural herd near an active survivor. */
+    static boolean replenishMember(ServerLevel level, PaleDeerHerd data, PaleDeerHerd.Group g, PaleDeerEntity survivor) {
+        if (!g.natural || g.members.isEmpty() || g.members.size() >= g.targetSize
+                || !survivor.isAlive() || survivor.isNoAi() || !g.members.contains(survivor.getUUID())
+                || !level.isPositionEntityTicking(survivor.blockPosition())
+                || !LoadedFaunaTerrain.search(level)) return false;
+        InkLandsLayout layout = InkLandsLayout.of(level);
+        if (layout == null) return false;
+        for (int i = 0; i < PARTIAL_COLUMNS; i++) {
+            double angle = level.random.nextDouble() * Math.PI * 2;
+            double radius = 7 + level.random.nextDouble() * 9;
+            int x = Mth.floor(survivor.getX() + Math.cos(angle) * radius);
+            int z = Mth.floor(survivor.getZ() + Math.sin(angle) * radius);
+            double dx = x - g.home.getX(), dz = z - g.home.getZ();
+            if (dx * dx + dz * dz > HOME_RADIUS * HOME_RADIUS) continue;
+            BlockPos at = site(level, x, z, true);
+            if (at == null || Math.abs(at.getY() - survivor.getY()) > 4
+                    || !level.isPositionEntityTicking(at) || !allowedSpawn(level, layout, at)) continue;
+            Vec3 pos = Vec3.atBottomCenterOf(at);
+            if (!level.getEntitiesOfClass(PaleDeerEntity.class, new AABB(pos, pos).inflate(3.5, 4, 3.5),
+                    d -> d.isAlive() && d.distanceToSqr(pos) < 3.5 * 3.5).isEmpty()) continue;
+            PaleDeerEntity deer = ModMobs.PALE_DEER.create(level);
+            if (deer == null) return false;
+            deer.moveTo(pos.x, pos.y, pos.z, level.random.nextFloat() * 360, 0);
+            if (!LoadedFaunaTerrain.free(level, deer, deer.getBoundingBox()) || !level.noCollision(deer.getBoundingBox())) continue;
+            deer.finalizeSpawn(level, level.getCurrentDifficultyAt(at), MobSpawnType.NATURAL, null);
+            deer.configureHerd(g.id);
+            if (level.addFreshEntity(deer)) {
+                data.join(g, deer.getUUID());
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** Surface only. Never asks the generator for a missing column or changes any block. */
     static BlockPos site(ServerLevel level,int x,int z,boolean spawn) {
         var chunk=LoadedFaunaTerrain.chunk(level,new BlockPos(x,0,z));

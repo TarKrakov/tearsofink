@@ -338,6 +338,7 @@ public final class PaleOwlEntity extends PathfinderMob {
         // Bound expensive swept-volume probes even in a dense caterpillar colony.
         for (int i = 0; i < Math.min(HUNT_CANDIDATES, candidates.size()); i++) {
             CaterpillarEntity candidate = candidates.get(i);
+            if (!canStrike(level, candidate)) continue;
             Vec3 strike = candidate.position().add(0, .25, 0);
             List<Vec3> path = huntPath(strike, perched);
             if (path == null) continue;
@@ -388,6 +389,28 @@ public final class PaleOwlEntity extends PathfinderMob {
         return null;
     }
 
+    /** Preserve the last two local prey from lethal owl strikes, not from players.
+     *  Check again at contact: another owl may have killed prey between launch and impact.
+     */
+    private static boolean canStrike(ServerLevel level, CaterpillarEntity candidate) {
+        if (candidate.getHealth() > HUNT_DAMAGE) return true;
+        Vec3 at = candidate.position();
+        return level.getEntitiesOfClass(CaterpillarEntity.class,
+                candidate.getBoundingBox().inflate(PREY_RADIUS, PREY_VERTICAL, PREY_RADIUS),
+                c -> c != candidate && c.isAlive() && c.variant() == CaterpillarEntity.Variant.PALE
+                        && Math.abs(c.getY() - at.y) <= PREY_VERTICAL
+                        && c.position().subtract(at).horizontalDistanceSqr() <= PREY_RADIUS * PREY_RADIUS)
+                .size() >= PREY_RESERVE;
+    }
+
+    @Override public void die(DamageSource source) {
+        if (level() instanceof ServerLevel server && source.getEntity() instanceof net.minecraft.server.level.ServerPlayer
+                && com.tarkrakov.tearsofink.world.ModDimensions.isLands(server)) {
+            PaleOwlEncounters.recordPlayerKill(server, blockPosition());
+        }
+        super.die(source);
+    }
+
     private void abortHunt() {
         if (prey == null) return;
         prey = null;
@@ -417,7 +440,7 @@ public final class PaleOwlEntity extends PathfinderMob {
         Vec3 target = prey.position().add(0, .25, 0);
         if (getBoundingBox().inflate(.16).intersects(prey.getBoundingBox())) {
             // Never bite through a newly placed block or across an unloaded boundary.
-            if (!clearPath(position(), target)) { returnToTrees(); return; }
+            if (!clearPath(position(), target) || !canStrike((ServerLevel)level(), prey)) { returnToTrees(); return; }
             boolean hit = prey.hurt(damageSources().mobAttack(this), HUNT_DAMAGE);
             prey = null;
             huntIn = hit ? duration(HUNT_MIN, HUNT_SPREAD) : duration(HUNT_RETRY_MIN, HUNT_RETRY_SPREAD);

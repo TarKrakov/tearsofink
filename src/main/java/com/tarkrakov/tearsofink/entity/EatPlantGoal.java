@@ -8,6 +8,7 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.phys.AABB;
 
 import java.util.EnumSet;
@@ -38,6 +39,10 @@ public class EatPlantGoal extends Goal {
 	public boolean canUse() {
 		if (--cooldown > 0) return false;
 		if (!(mob.level() instanceof ServerLevel level)) return false;
+		if (!LoadedFaunaTerrain.search(level)) {
+			cooldown = 20;
+			return false;
+		}
 		tank = null;
 		plant = null;
 		// кровавые — сначала попить (иногда всё же идут за ягодой)
@@ -46,7 +51,7 @@ public class EatPlantGoal extends Goal {
 			tank = BloodTankBlockEntity.findSippable(level, mob.blockPosition(), BloodTuning.CATERPILLAR_SEARCH);
 			if (tank != null) return true;
 		}
-		plant = findPlant();
+		plant = findPlant(level);
 		if (plant != null && !mob.nibbles(level.getBlockState(plant))
 				&& !level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) {
 			plant = null; // ломать растения нельзя
@@ -58,13 +63,14 @@ public class EatPlantGoal extends Goal {
 		return true;
 	}
 
-	private BlockPos findPlant() {
+	private BlockPos findPlant(ServerLevel level) {
 		BlockPos origin = mob.blockPosition();
 		int r = EntityTuning.EAT_SEARCH_RADIUS;
 		BlockPos best = null;
 		double bestDist = Double.MAX_VALUE;
 		for (BlockPos p : BlockPos.betweenClosed(origin.offset(-r, -2, -r), origin.offset(r, 2, r))) {
-			if (!mob.isFood(mob.level().getBlockState(p))) continue;
+			LevelChunk chunk = LoadedFaunaTerrain.chunk(level, p);
+			if (chunk == null || !mob.isFood(chunk.getBlockState(p))) continue;
 			double d = p.distSqr(origin);
 			if (d < bestDist) {
 				bestDist = d;
@@ -92,7 +98,8 @@ public class EatPlantGoal extends Goal {
 		ticks++;
 		ServerLevel level = (ServerLevel) mob.level();
 		if (tank != null) {
-			if (!(level.getBlockEntity(tank) instanceof BloodTankBlockEntity t) || !t.canSip()) {
+			if (LoadedFaunaTerrain.chunk(level, tank) == null
+					|| !(level.getBlockEntity(tank) instanceof BloodTankBlockEntity t) || !t.canSip()) {
 				tank = null; // выпили до нас — в следующий раз
 				return;
 			}
@@ -108,7 +115,9 @@ public class EatPlantGoal extends Goal {
 			return;
 		}
 		if (plant != null) {
-			if (!mob.isFood(level.getBlockState(plant))) {
+			if (LoadedFaunaTerrain.chunk(level, plant) == null || !mob.isFood(level.getBlockState(plant))
+					|| (!mob.nibbles(level.getBlockState(plant))
+					&& !level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING))) {
 				plant = null;
 				return;
 			}

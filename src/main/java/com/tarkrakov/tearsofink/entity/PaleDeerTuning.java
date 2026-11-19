@@ -10,6 +10,9 @@ public final class PaleDeerTuning {
     public static final int CELL = 224, OCCUPANCY_PERCENT = 80, ACTIVE_RADIUS = 192, HERD_CAP = 2;
     public static final int SPAWN_MIN = 40, SPAWN_MAX = 80, SPAWN_INTERVAL = 200, SPAWN_COLUMNS = 18;
     public static final int HERD_MIN = 3, HERD_MAX = 10, RESPAWN_MIN = 48000, RESPAWN_SPREAD = 24000;
+    // Replenish surviving herds one member at a time, never a new independent herd.
+    public static final int PARTIAL_RESPAWN_MIN = 24000, PARTIAL_RESPAWN_SPREAD = 24000;
+    public static final int PARTIAL_CHECK_INTERVAL = 200, PARTIAL_COLUMNS = 18;
     public static final int HOME_RADIUS = 100, ROAM_MIN = 20, ROAM_MAX = 48;
     public static final int WALK_MIN = 400, WALK_SPREAD = 500, GRAZE_MIN = 600, GRAZE_SPREAD = 1200;
     public static final int REST_MIN = 300, REST_SPREAD = 400, GUARD_MIN = 400, GUARD_SPREAD = 400;

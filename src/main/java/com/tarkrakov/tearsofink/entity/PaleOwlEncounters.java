@@ -3,6 +3,7 @@ package com.tarkrakov.tearsofink.entity;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.world.ModBiomes;
 import com.tarkrakov.tearsofink.world.ModDimensions;
+import com.tarkrakov.tearsofink.world.sanctuary.Sanctuary;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -29,8 +30,13 @@ final class PaleOwlEncounters {
         ServerTickEvents.END_WORLD_TICK.register(PaleOwlEncounters::tick);
     }
 
+    static void recordPlayerKill(ServerLevel level, BlockPos pos) {
+        PaleOwlRecovery.of(level).record(level, pos);
+    }
+
     private static void tick(ServerLevel level) {
         if (!ModDimensions.isLands(level) || !level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING)) return;
+        if (level.getGameTime() % ENCOUNTER_INTERVAL == 0) PaleOwlRecovery.of(level).prune(level.getGameTime());
         for (ServerPlayer player : level.players()) {
             if (!player.isAlive() || player.isSpectator()
                     || Math.floorMod(level.getGameTime() + player.getUUID().hashCode(), ENCOUNTER_INTERVAL) != 0) continue;
@@ -73,7 +79,9 @@ final class PaleOwlEncounters {
     private static boolean canAdd(ServerLevel level, ServerPlayer player, Vec3 at) {
         if (count(level, player.position(), ENCOUNTER_NEAR_RADIUS) >= ENCOUNTER_TARGET
                 || count(level, player.position(), ENCOUNTER_CAP_RADIUS) >= ENCOUNTER_CAP
-                || count(level, at, ENCOUNTER_CAP_RADIUS) >= ENCOUNTER_CAP) return false;
+                || count(level, at, ENCOUNTER_CAP_RADIUS) >= ENCOUNTER_CAP
+                || Sanctuary.inside(level, at.x, at.z)
+                || PaleOwlRecovery.of(level).blocked(at, level.getGameTime())) return false;
         for (ServerPlayer other : level.players()) {
             if (!other.isAlive() || other.isSpectator()) continue;
             double distance = other.position().subtract(at).horizontalDistanceSqr();

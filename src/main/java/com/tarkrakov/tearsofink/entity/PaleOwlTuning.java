@@ -22,6 +22,10 @@ public final class PaleOwlTuning {
     public static final int HUNT_CANDIDATES = 3, HUNT_LAUNCH_LIMIT = 60, HUNT_LIMIT = 160, HUNT_RETURN_LIMIT = 240;
     public static final double HUNT_RADIUS = 16.0, HUNT_VERTICAL_RANGE = 24.0;
     public static final float HUNT_DAMAGE = 3.0f;
+    // Keep a living local prey reserve; non-lethal dives remain possible.
+    public static final int PREY_RESERVE = 2, PREY_RADIUS = 28, PREY_VERTICAL = 12;
+    // Only player kills delay the supplemental encounter spawner, not normal arrivals elsewhere.
+    public static final int KILL_REPLENISH_RADIUS = 48, KILL_REPLENISH_MIN = 2400, KILL_REPLENISH_SPREAD = 2400;
     public static final int TAKEOFF_TICKS = 26, SWAY_TICKS = 60, LAND_TICKS = 20;
     // Audio only; no gameplay tuning changes.
     public static final int HOOT_FIRST_MIN = 40, HOOT_FIRST_SPREAD = 60;

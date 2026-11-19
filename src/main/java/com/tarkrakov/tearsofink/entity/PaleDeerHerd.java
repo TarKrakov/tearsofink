@@ -8,6 +8,7 @@ import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.GameRules;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.*;
@@ -46,12 +47,22 @@ final class PaleDeerHerd extends SavedData {
     }
     Group get(UUID id) { return groups.get(id); }
     void join(Group g, UUID member) { if (g.members.add(member)) setDirty(); }
+    void finishInitialSpawn(Group g) {
+        g.targetSize = g.members.size();
+        setDirty();
+    }
+    private static long nextPartial(ServerLevel level) {
+        return level.getGameTime() + duration(level, PARTIAL_RESPAWN_MIN, PARTIAL_RESPAWN_SPREAD);
+    }
     void died(ServerLevel level, Group g, UUID member) {
         if (!g.members.remove(member)) return;
         g.guards.remove(member);
         if (g.members.isEmpty()) {
+            g.partialReplenishAt = 0;
             if (g.natural) g.replenishAt = level.getGameTime() + duration(level, RESPAWN_MIN, RESPAWN_SPREAD);
             else groups.remove(g.id);
+        } else if (g.natural && g.members.size() < g.targetSize && g.partialReplenishAt == 0) {
+            g.partialReplenishAt = nextPartial(level);
         }
         setDirty();
     }
@@ -140,6 +151,19 @@ final class PaleDeerHerd extends SavedData {
         long now = level.getGameTime();
         if (g.lastTick == now) return;
         g.lastTick = now;
+        if (g.natural && !g.members.isEmpty() && g.members.size() < g.targetSize) {
+            // The timer is game time, including time away; spawning needs a real, ticking survivor.
+            if (g.partialReplenishAt == 0) g.partialReplenishAt = nextPartial(level);
+            if (now >= g.partialReplenishAt
+                    && Math.floorMod(now + g.id.hashCode(), PARTIAL_CHECK_INTERVAL) == 0
+                    && (g.mode == Mode.GRAZE || g.mode == Mode.REST)
+                    && level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING)
+                    && PaleDeerEncounters.replenishMember(level, this, g, driver)) {
+                g.partialReplenishAt = g.members.size() < g.targetSize ? nextPartial(level) : 0;
+            }
+        } else if (g.partialReplenishAt != 0) {
+            g.partialReplenishAt = 0;
+        }
         if (g.remaining > 0) --g.remaining;
         if (g.guardIn > 0) --g.guardIn;
         // The persisted clock advances only while an actual member is being simulated.
@@ -225,8 +249,8 @@ final class PaleDeerHerd extends SavedData {
         Mode mode = Mode.GRAZE;
         BlockPos target, threat;
         UUID caller;
-        long alarm, replenishAt, lastTick = Long.MIN_VALUE;
-        int remaining, guardIn, guardHeading;
+        long alarm, replenishAt, partialReplenishAt, lastTick = Long.MIN_VALUE;
+        int remaining, guardIn, guardHeading, targetSize;
         Group(UUID id, BlockPos home, boolean natural, long cell) {
             this.id=id; this.home=home; this.natural=natural; this.cell=cell;
             target=home; threat=home; guardHeading=Math.floorMod(id.hashCode(),360);
@@ -241,6 +265,7 @@ final class PaleDeerHerd extends SavedData {
             t.putUUID("Id", id); t.putLong("Home", home.asLong()); t.putBoolean("Natural", natural);
             t.putLong("Cell", cell); t.putLong("Target", target.asLong()); t.putLong("Threat", threat.asLong());
             t.putString("Mode", mode.name()); t.putLong("Alarm", alarm); t.putLong("Replenish", replenishAt);
+            t.putInt("TargetSize", targetSize); t.putLong("PartialReplenish", partialReplenishAt);
             t.putInt("Remaining", remaining); t.putInt("GuardIn", guardIn); t.putInt("GuardHeading", guardHeading);
             if (caller != null) t.putUUID("Caller", caller);
             ListTag m = new ListTag(), w = new ListTag();
@@ -259,6 +284,12 @@ final class PaleDeerHerd extends SavedData {
             if (t.hasUUID("Caller")) g.caller=t.getUUID("Caller");
             ListTag m=t.getList("Members",Tag.TAG_COMPOUND), w=t.getList("Guards",Tag.TAG_COMPOUND);
             for (int i=0;i<m.size();i++) if (m.getCompound(i).hasUUID("Id")) g.members.add(m.getCompound(i).getUUID("Id"));
+            // Older ledgers have no original size. Preserve every existing UUID; use
+            // the recorded count, with the normal minimum for a surviving natural herd.
+            g.targetSize = g.natural ? Math.max(g.members.size(), t.contains("TargetSize")
+                    ? Math.min(HERD_MAX, Math.max(0, t.getInt("TargetSize")))
+                    : (g.members.isEmpty() ? 0 : HERD_MIN)) : 0;
+            g.partialReplenishAt = Math.max(0L, t.getLong("PartialReplenish"));
             for (int i=0;i<w.size();i++) if (w.getCompound(i).hasUUID("Id")) g.guards.add(w.getCompound(i).getUUID("Id"));
             return g;
         }
