@@ -7,8 +7,8 @@ public final class PaleDeerTuning {
     // Navigation multipliers on MOVEMENT_SPEED; actual ground speed depends on terrain.
     public static final double BASE_SPEED = .28, WALK = .72, RUN = 1.48;
     public static final int FOLLOW_RANGE = 24, PATH_MARGIN = 40, PATH_RETRY = 18;
-    public static final int CELL = 224, OCCUPANCY_PERCENT = 65, ACTIVE_RADIUS = 192, HERD_CAP = 2;
-    public static final int SPAWN_MIN = 40, SPAWN_MAX = 80, SPAWN_INTERVAL = 200, SPAWN_COLUMNS = 12;
+    public static final int CELL = 224, OCCUPANCY_PERCENT = 80, ACTIVE_RADIUS = 192, HERD_CAP = 2;
+    public static final int SPAWN_MIN = 40, SPAWN_MAX = 80, SPAWN_INTERVAL = 200, SPAWN_COLUMNS = 18;
     public static final int HERD_MIN = 3, HERD_MAX = 10, RESPAWN_MIN = 48000, RESPAWN_SPREAD = 24000;
     public static final int HOME_RADIUS = 100, ROAM_MIN = 20, ROAM_MAX = 48;
     public static final int WALK_MIN = 400, WALK_SPREAD = 500, GRAZE_MIN = 600, GRAZE_SPREAD = 1200;

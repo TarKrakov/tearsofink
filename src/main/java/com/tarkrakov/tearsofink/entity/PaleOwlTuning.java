@@ -7,8 +7,8 @@ public final class PaleOwlTuning {
     public static final int SPAWN_WEIGHT = 4, GROUP_MIN = 1, GROUP_MAX = 3;
     // Local replenishment on explored terrain, separate from vanilla CREATURE capacity.
     public static final int ENCOUNTER_INTERVAL = 200, ENCOUNTER_COLUMNS = 20;
-    public static final int ENCOUNTER_TARGET = 2, ENCOUNTER_NEAR_RADIUS = 64;
-    public static final int ENCOUNTER_CAP = 3, ENCOUNTER_CAP_RADIUS = 96;
+    public static final int ENCOUNTER_TARGET = 3, ENCOUNTER_NEAR_RADIUS = 64;
+    public static final int ENCOUNTER_CAP = 4, ENCOUNTER_CAP_RADIUS = 96;
     public static final int ENCOUNTER_MIN_DISTANCE = 24, ENCOUNTER_MAX_DISTANCE = 44;
     public static final int SWAY_MIN = 160, SWAY_SPREAD = 240;
     public static final int REST_MIN = 400, REST_SPREAD = 600;
