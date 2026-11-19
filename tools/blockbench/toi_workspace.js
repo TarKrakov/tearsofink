@@ -370,6 +370,7 @@
     }
     function defaultGameRequests(lib){
       if(lib.combo)return [...(lib.combo.steps||[]).map(s=>({right:s.anim})),...(lib.combo.dual_steps||[]).map(s=>({right:s.anim||'',left:s.off_anim||''}))].filter(s=>[s.right,s.left].some(Boolean));
+      if(lib.animations.bb_author_dual_attack1&&lib.animations.bb_author_dual_attack1_off)return [1,2,3].map(i=>({right:'bb_author_attack'+i})).concat([1,2,3].map(i=>({right:'bb_author_dual_attack'+i,left:'bb_author_dual_attack'+i+'_off'})));
       if(lib.animations.axe_dual_chop&&lib.animations.axe_dual_chop_off)return [...(lib.animations.bb_author_attack1?[{right:'bb_author_attack1'},{right:'bb_author_attack2'},{right:'bb_author_attack3'}]:[]),{right:'axe_dual_chop'},{left:'axe_dual_chop_off'},{right:'axe_dual_slam',left:'axe_dual_slam_off'},{right:'axe_dual_slam_repeat',left:'axe_dual_slam_repeat_off'},{right:'axe_dual_slam_final',left:'axe_dual_slam_final_off'}];
       return Object.keys(lib.animations).filter(n=>!/(?:_third|_shoulder|_wrist|_edge|_raw|_off)$/.test(n)).map(n=>({right:n,left:lib.animations[n+'_off']?n+'_off':''}));
     }

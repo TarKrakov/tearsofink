@@ -82,7 +82,7 @@ def generate(out, only=None):
         import json as _json
         from third import REPO
         name=st[0] or st[1]
-        clip=_json.load(open(f'{REPO}/weapon_anims/{ARCH}.json'))['animations'][name]
+        clip=load(ARCH)[0]['animations'][name]
         impact=clip['impact']
         times=[0,max(0,impact-.12),max(0,impact-.06),impact,impact+.06,impact+.12,st[2],(len(frames)-1)/30]
         sheet=Image.new('RGB',(1440,960))

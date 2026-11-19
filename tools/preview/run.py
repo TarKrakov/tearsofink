@@ -37,8 +37,8 @@ def resolve_model(item_name, seen=None):
 def load(arch):
     with open(f'{REPO}/weapon_anims/{arch}.json', encoding='utf-8') as source:
         a = json.load(source)
-    # Совпадает с клиентским reload: авторские FP-клипы — отдельный ресурс,
-    # исторические F5 и парные движения неизменны.
+    # Published author resource matches the Minecraft loader. Historical
+    # host-side regression fixtures are separate and never packaged in the mod.
     if arch == 'pale_linear_greatsword':
         import pathlib
         authored = pathlib.Path(f'{REPO}/weapon_anims/{arch}_bb_author.json')
@@ -46,6 +46,11 @@ def load(arch):
             extra = json.loads(authored.read_text(encoding='utf-8'))['animations']
             assert all(name.startswith('bb_author_') and name not in a['animations'] for name in extra)
             a['animations'].update(extra)
+        archive = pathlib.Path(__file__).parent / 'references/pale_retired_anims.json'
+        if archive.exists():
+            legacy = json.loads(archive.read_text(encoding='utf-8'))['animations']
+            assert not set(legacy) & set(a['animations'])
+            a['animations'].update(legacy)  # tools-only historical lookback
     m = resolve_model(ITEM.get(arch, arch))
     # Backward-compatible aliases (including original authored left-hand poses).
     alias_path = f'{REPO}/models/item/{arch}.json'
