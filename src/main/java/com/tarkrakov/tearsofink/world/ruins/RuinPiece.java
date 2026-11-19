@@ -78,7 +78,11 @@ public class RuinPiece extends TemplateStructurePiece {
 	/** Uses the same rotation, pivot and origin as placement, including pieces read from old chunks. */
 	public BlockPos startFountain() {
 		if (!start) return null;
-		var fountains = template.filterBlocks(templatePosition, placeSettings, ModBlocks.INK_FOUNTAIN);
+		// TemplateStructurePiece.postProcess clips its mutable settings to the current
+		// chunk. A runtime query must see the entire rotated template, both before
+		// saving and after reloading the StructureStart.
+		var fountains = template.filterBlocks(templatePosition,
+				placeSettings.copy().setBoundingBox(null), ModBlocks.INK_FOUNTAIN);
 		return fountains.size() == 1 ? fountains.getFirst().pos() : null;
 	}
 

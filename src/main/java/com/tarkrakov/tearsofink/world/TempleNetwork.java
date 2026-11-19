@@ -28,6 +28,8 @@ import java.util.Set;
 /** Immutable version-two plan, computed from the same raw noise and road profiles as chunk generation. */
 public final class TempleNetwork {
 	public static final int ROAD_BUFFER = 24;
+	// Last-resort working band for V3 only: remains distinct from the deep band (850+).
+	static final int OUTER_RECOVERY_MIN = 200, OUTER_RECOVERY_MAX = 650;
 	// ruin_temple.nbt, pivot (11, 0, 16). Its south doorway sits on the last row.
 	public static final int TEMPLATE_WIDTH = 22;
 	public static final int TEMPLATE_LENGTH = 33;
@@ -167,8 +169,12 @@ public final class TempleNetwork {
 					if (!inner[road]) inner[road] = roadsideFallback(road, true);
 				}
 				for (int road = 0; road < InkLandsLayout.ROADS; road++) {
-					if (!outer[road] && !roadsideGraphFallback(road, false)) missing("external", road);
-					if (!inner[road] && !roadsideGraphFallback(road, true)) missing("deep", road);
+					if (!outer[road]) outer[road] = roadsideGraphFallback(road, false, false);
+					if (!inner[road]) inner[road] = roadsideGraphFallback(road, true, false);
+				}
+				for (int road = 0; road < InkLandsLayout.ROADS; road++) {
+					if (!outer[road] && !roadsideGraphFallback(road, false, true)) missing("external", road);
+					if (!inner[road]) missing("deep", road);
 				}
 			}
 			Set<Integer> sectors = new HashSet<>();
@@ -320,17 +326,19 @@ public final class TempleNetwork {
 		}
 
 		/** Last bounded pass: follow the actual natural contour without editing the reserved strip. */
-		private boolean roadsideGraphFallback(int road, boolean deep) {
-			failures.clear();
+		private boolean roadsideGraphFallback(int road, boolean deep, boolean widerOuter) {
+			if (!widerOuter) failures.clear();
 			slotColumnLimit = samples.size() + 6000;
-			int low = deep ? 850 : 250, high = deep ? 1350 : 500;
+			int low = deep ? 850 : widerOuter ? OUTER_RECOVERY_MIN : 250;
+			int high = deep ? 1350 : widerOuter ? OUTER_RECOVERY_MAX : 500;
 			List<Integer> places = new ArrayList<>();
-			for (int along = 650; along <= 2150; along += 16) {
+			// Offset the sampling grid on the recovery pass to inspect fresh exits.
+			for (int along = 650 + (widerOuter ? 8 : 0); along <= 2250; along += 16) {
 				double[] axis = layout.roadPoint(road, along);
 				double depth = layout.depthInside(Mth.floor(axis[0]), Mth.floor(axis[1]));
 				if (outsideOutposts(along) && depth >= low - 90 && depth <= high + 90) places.add(along);
 			}
-			RandomSource random = RandomSource.create(layout.seed() ^ (0x6772617068L + road * 31L + (deep ? 337 : 0)));
+			RandomSource random = RandomSource.create(layout.seed() ^ (0x6772617068L + road * 31L + (deep ? 337 : 0) + (widerOuter ? 601 : 0)));
 			shuffle(places, random);
 			places.sort(java.util.Comparator.comparingInt(Planner::lanternPriority));
 			int firstSide = random.nextBoolean() ? 1 : -1;
@@ -348,8 +356,8 @@ public final class TempleNetwork {
 							for (int offset : new int[]{64, 76, 56, 68, 72, 60, 52, 48}) {
 								if (samples.size() >= slotColumnLimit) return reject("graph column budget");
 								if (roadsideAt(road, siteAlong, axis, dir, offset * side, low, high, connection)) {
-									TearsOfInk.LOGGER.info("D-060 seed {}: winding exit recovered road {} {} slot",
-											inputs.seed(), road, deep ? "deep" : "external");
+									TearsOfInk.LOGGER.info("D-060 seed {}: winding exit recovered road {} {} slot (outer recovery band={})",
+											inputs.seed(), road, deep ? "deep" : "external", widerOuter);
 									return true;
 								}
 							}
@@ -416,24 +424,37 @@ public final class TempleNetwork {
 				}
 			}
 			if (result.isEmpty()) reject("no walkable winding exit");
+			if (expanded >= 300) reject("winding exit expansion limit");
 			return result;
 		}
 
 		private int graphSurface(int road, int x, int z, Set<Long> lanterns) {
 			if (lanterns.contains(ChunkPos.asLong(x, z)) || !pale(x, z)) return Integer.MIN_VALUE;
 			var zone = layout.roadNear(x, z, ROAD_BUFFER - InkLandsLayout.ROAD_HALF_WIDTH);
-			if (zone != null && ((int) zone[0] != road || !outsideOutposts(zone[1])
-					|| layout.roadBridge(road, zone[1]))) return Integer.MIN_VALUE;
+			if (zone != null && ((int) zone[0] != road || !outsideOutposts(zone[1]))) return Integer.MIN_VALUE;
 			var hit = layout.roadNear(x, z, InkLandsLayout.ROAD_SHOULDER + InkRoadsFeature.ACCESS_CUT_WIDTH);
-			if (hit != null && ((int) hit[0] != road || !outsideOutposts(hit[1]) || layout.roadBridge(road, hit[1])))
-				return Integer.MIN_VALUE;
+			if (hit != null && ((int) hit[0] != road || !outsideOutposts(hit[1]))) return Integer.MIN_VALUE;
+			boolean bridge = hit != null && layout.roadBridge(road, hit[1]);
+			if (bridge && hit[2] <= InkLandsLayout.ROAD_HALF_WIDTH + InkLandsLayout.ROAD_SHOULDER)
+				return Integer.MIN_VALUE; // never use bridge decks, rails or shoulders
+			// The natural ground beside an ordinary bridge can be traversed.
+			// No cut slope is generated for a bridge, and no blocks are modified here.
+			if (bridge) hit = null;
 			// A paved lane is cleared by the road feature even over wet raw noise.
 			// Beyond it, remain conservative and require dry natural ground.
 			if (hit != null && hit[2] <= InkLandsLayout.ROAD_HALF_WIDTH)
 				return (int) Math.round(layout.roadHeight(road, hit[1], terrain));
 			if (samples.size() >= slotColumnLimit && !samples.containsKey(ChunkPos.asLong(x,z))) return Integer.MIN_VALUE;
 			var natural = sample(x, z);
-			if (!dry(natural)) return Integer.MIN_VALUE;
+			if (!dry(natural)) {
+				// The exact shoulder fill case in InkRoadsFeature: when the surface is
+				// below the shoulder level, it is replaced by solid rock, even in water.
+				if (hit != null && hit[2] <= InkLandsLayout.ROAD_HALF_WIDTH + InkLandsLayout.ROAD_SHOULDER) {
+					int shoulder = (int) Math.round(layout.roadHeight(road, hit[1], terrain)) - 1;
+					if (natural.surface() < shoulder) return shoulder;
+				}
+				return Integer.MIN_VALUE;
+			}
 			return InkRoadsFeature.plannedAccessSurface(layout, terrain, hit, natural.surface());
 		}
 

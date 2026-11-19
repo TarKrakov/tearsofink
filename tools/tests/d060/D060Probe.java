@@ -131,7 +131,7 @@ public final class D060Probe {
         result.addProperty("temples", plan.temples().size());
         check(plan.temples().size() == 13, failures, "Expected 13 temple sites");
         int[] outer = new int[5], deep = new int[5];
-        int forest = 0, starter = 0, validStarts = 0;
+        int forest = 0, starter = 0, validStarts = 0, expandedOuter = 0;
         var origins = new HashSet<Long>();
         JsonArray sites = new JsonArray();
         var structure = level.registryAccess().registryOrThrow(Registries.STRUCTURE).get(TearsOfInk.id("ruin_temple"));
@@ -155,8 +155,9 @@ public final class D060Probe {
             } else if (t.road() < 0) {
                 forest++;
                 check(layout.roadNear(t.x(), t.z(), 135) == null, failures, "Forest temple near road");
-            } else if (depth >= 250 && depth <= 500) {
+            } else if (depth >= TempleNetwork.OUTER_RECOVERY_MIN && depth <= TempleNetwork.OUTER_RECOVERY_MAX) {
                 outer[t.road()]++;
+                if (depth < 250 || depth > 500) expandedOuter++;
                 if (selected == null) selected = t;
             } else if (depth >= 850 && depth <= 1350) {
                 deep[t.road()]++;
@@ -175,6 +176,7 @@ public final class D060Probe {
         result.addProperty("outer", Arrays.toString(outer));
         result.addProperty("deep", Arrays.toString(deep));
         result.addProperty("forest", forest);
+        result.addProperty("expanded_outer_band", expandedOuter);
         check(starter == 1 && forest == 3 && Arrays.stream(outer).allMatch(x -> x == 1)
                 && Arrays.stream(deep).allMatch(x -> x == 1), failures, "Wrong 10+3 slot distribution");
         var pathColumns = new HashSet<Long>();
@@ -223,6 +225,9 @@ public final class D060Probe {
                     if (fountain != null) break;
                 }
             }
+            result.addProperty("starter_start_valid", built != null && built.isValid());
+            result.addProperty("starter_fountain_predicted", fountain == null ? "none" : fountain.toShortString());
+            if (fountain != null) result.addProperty("starter_fountain_block", level.getBlockState(fountain).toString());
             check(fountain != null && level.getBlockState(fountain).is(ModBlocks.INK_FOUNTAIN), failures, "Missing real starter fountain");
             if (fountain != null) result.addProperty("starter_fountain", fountain.toShortString());
             if (selected == null) failures.add("No roadside temple available for physical test");
