@@ -440,6 +440,16 @@ public final class TempleNetwork {
 		}
 
 		private Connection findConnection(int road, int along, int side, int skew) {
+			// A diagonal exit must not enter a bridge anywhere in its connection band.
+			// The legacy perpendicular exit keeps its original checks and geometry.
+			if (skew != 0) {
+				for (int delta = -15; delta <= 15; delta++) {
+					if (layout.roadBridge(road, along + delta)) {
+						reject("bridge near skewed connection");
+						return null;
+					}
+				}
+			}
 			double[] axis = layout.roadPoint(road, along);
 			double[] dir = layout.roadDirection(road, along);
 			double nx = -dir[1] * side, nz = dir[0] * side;
@@ -453,13 +463,6 @@ public final class TempleNetwork {
 				if (Math.abs(x - targetX) >= Math.abs(z - targetZ) && x != targetX) x += Integer.signum(targetX - x);
 				else z += Integer.signum(targetZ - z);
 				if (!offShoulder) {
-					if (skew != 0) {
-						var near = layout.roadNear(x, z, InkLandsLayout.ROAD_SHOULDER);
-						if (near != null && (layout.roadBridge(road, along - 15) || layout.roadBridge(road, along + 15))) {
-							reject("bridge near skewed connection");
-							return null;
-						}
-					}
 					if (layout.roadNear(x, z, InkLandsLayout.ROAD_SHOULDER) != null) continue;
 					offShoulder = true;
 				}
