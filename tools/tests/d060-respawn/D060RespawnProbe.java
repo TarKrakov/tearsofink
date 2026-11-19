@@ -10,7 +10,12 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.coordinates.BlockPosArgument;
 import net.minecraft.core.BlockPos;
-import net.minecraft.network.chat.Component;
+import com.tarkrakov.tearsofink.world.InkLandsLayout;
+import com.tarkrakov.tearsofink.world.ruins.Ruins;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.network.protocol.game.ServerboundClientCommandPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -27,19 +32,21 @@ public final class D060RespawnProbe {
     private D060RespawnProbe() {}
 
     public static void init() {
-        CommandRegistrationCallback.EVENT.register((dispatcher, registry, env) ->
-            dispatcher.register(Commands.literal("toi-d060-respawn")
-                .requires(s -> s.hasPermission(4))
-                .then(Commands.argument("a", StringArgumentType.word())
-                .then(Commands.argument("b", StringArgumentType.word())
-                .then(Commands.argument("targetA", BlockPosArgument.blockPos())
-                .then(Commands.argument("targetB", BlockPosArgument.blockPos())
+        CommandRegistrationCallback.EVENT.register((dispatcher, registry, env) -> {
+            var manual = Commands.argument("targetB", BlockPosArgument.blockPos())
                 .executes(c -> start(c.getSource().getServer(),
                     StringArgumentType.getString(c,"a"),
                     StringArgumentType.getString(c,"b"),
                     BlockPosArgument.getBlockPos(c,"targetA"),
-                    BlockPosArgument.getBlockPos(c,"targetB")))))))
-        );
+                    BlockPosArgument.getBlockPos(c,"targetB")));
+            var b = Commands.argument("b", StringArgumentType.word())
+                .executes(c -> autoStart(c.getSource().getServer(),
+                    StringArgumentType.getString(c,"a"), StringArgumentType.getString(c,"b")))
+                .then(Commands.argument("targetA", BlockPosArgument.blockPos()).then(manual));
+            dispatcher.register(Commands.literal("toi-d060-respawn")
+                .requires(s -> s.hasPermission(4))
+                .then(Commands.argument("a", StringArgumentType.word()).then(b)));
+        });
         ServerTickEvents.END_SERVER_TICK.register(D060RespawnProbe::tick);
     }
 
@@ -47,6 +54,56 @@ public final class D060RespawnProbe {
     public static boolean hold(ServerLevel level, BlockPos pos, int radius) {
         return trial != null && !released && level == trial.a().serverLevel()
                 && radius == 3 && pos.equals(trial.targetA());
+    }
+
+    /** Select actual generated fountains, not invented blocks. Test setup is administrative. */
+    private static int autoStart(MinecraftServer server, String nameA, String nameB) {
+        try {
+            ServerPlayer a = server.getPlayerList().getPlayerByName(nameA);
+            ServerPlayer b = server.getPlayerList().getPlayerByName(nameB);
+            ServerLevel level = ModDimensions.lands(server);
+            if (a == null || b == null || a == b || level == null)
+                throw new IllegalStateException("Two clients must be connected");
+            var layout = InkLandsLayout.of(level);
+            var plan = layout.templeNetwork();
+            if (plan == null || plan.temples().size() != 13)
+                throw new IllegalStateException("Requires a complete generated V3 plan");
+            var arrival = ModDimensions.arrival(level, 0);
+            var template = level.getStructureManager().getOrCreate(Ruins.TEMPLE);
+            var size = template.getSize();
+            List<BlockPos> targets = new ArrayList<>();
+            for (var temple : plan.temples()) {
+                if (temple.starter() || temple.road() < 0) continue;
+                var origin = new BlockPos(temple.x()-size.getX()/2, temple.y(), temple.z()-size.getZ()/2);
+                var settings = new StructurePlaceSettings().setRotation(temple.rotation())
+                    .setRotationPivot(new BlockPos(size.getX()/2,0,size.getZ()/2));
+                var found = template.filterBlocks(origin,settings,ModBlocks.INK_FOUNTAIN);
+                if (found.size() != 1) continue;
+                var at = found.getFirst().pos();
+                if (at.distSqr(BlockPos.containing(arrival)) < 65536) continue;
+                if (!targets.isEmpty() && at.distSqr(targets.getFirst()) < 65536) continue;
+                for (int dx=-1; dx<=1; dx++) for(int dz=-1; dz<=1; dz++)
+                    level.getChunk((at.getX()>>4)+dx,(at.getZ()>>4)+dz);
+                if (!level.getBlockState(at).is(ModBlocks.INK_FOUNTAIN)) continue;
+                targets.add(at);
+                if (targets.size()==2) break;
+            }
+            if (targets.size()!=2) throw new IllegalStateException("Could not locate two generated fountains");
+            for (var player : List.of(a,b)) {
+                player.setGameMode(GameType.SURVIVAL);
+                player.teleportTo(level,arrival.x,arrival.y,arrival.z,0f,0f);
+                Travel.set(player,Travel.get(player).withStage(LandsTravel.STAGE_ENTERED));
+            }
+            TearsOfInk.LOGGER.info("D060_RESPAWN_TARGETS {} and {}",targets.get(0),targets.get(1));
+            return start(server,nameA,nameB,targets.get(0),targets.get(1));
+        } catch (Exception failure) {
+            JsonObject result = new JsonObject();
+            result.addProperty("pass",false);
+            result.addProperty("failure",failure.toString());
+            TearsOfInk.LOGGER.error("D060 respawn setup failed",failure);
+            TearsOfInk.LOGGER.info("D060_RESPAWN_RESULT {}",result);
+            return 0;
+        }
     }
 
     private static int start(MinecraftServer server, String nameA, String nameB, BlockPos targetA, BlockPos targetB) {

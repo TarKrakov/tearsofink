@@ -1,4 +1,4 @@
-name: D-060 respawn fixture compile
+name: D-060 respawn validation
 on:
   workflow_dispatch:
   push:
@@ -9,16 +9,34 @@ on:
 permissions:
   contents: read
 jobs:
-  compile:
+  respawn:
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 35
+    env:
+      JAVA_TOOL_OPTIONS: -XX:ActiveProcessorCount=2
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-java@v5
         with:
+          distribution: temurin
+          java-version: '21'
+      - uses: actions/setup-java@v5
+        with:
           distribution: microsoft
           java-version: '25'
-      - name: Install isolated diagnostic
-        run: python3 tools/tests/d060-respawn/install.py
-      - name: Compile with the real game API
-        run: bash ./gradlew compileJava --console=plain --no-daemon
+      - name: Check software graphics
+        run: |
+          command -v xvfb-run
+          command -v xauth
+      - name: Run delayed respawn with two actual clients
+        run: python3 -u tools/tests/d060-respawn/run_clients.py
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: d060-respawn-logs
+          path: |
+            out/d060/*.log
+            out/d060/respawn-result.json
+            run-d060-*/logs/
+            run-d060-*/crash-reports/
+          if-no-files-found: warn
