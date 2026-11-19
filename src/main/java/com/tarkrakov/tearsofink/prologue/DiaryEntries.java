@@ -72,6 +72,42 @@ public final class DiaryEntries {
 			.initializer(List::of)
 			.buildAndRegister(TearsOfInk.id("diary"));
 
+	/** Read state is personal, persistent and independent of discovery. Page parts start at zero. */
+	private static final AttachmentType<List<String>> READ = AttachmentRegistry.<List<String>>builder()
+			.persistent(Codec.STRING.listOf()).copyOnDeath().initializer(List::of)
+			.buildAndRegister(TearsOfInk.id("diary_read"));
+
+	public record ReadSync(List<String> pages) implements CustomPacketPayload {
+		public static final Type<ReadSync> TYPE = new Type<>(TearsOfInk.id("diary_read_sync"));
+		public static final StreamCodec<RegistryFriendlyByteBuf, ReadSync> CODEC =
+				ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()).map(ReadSync::new, ReadSync::pages).cast();
+		@Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+	}
+
+	public record ReadPage(String entry, int part) implements CustomPacketPayload {
+		public static final Type<ReadPage> TYPE = new Type<>(TearsOfInk.id("diary_read_page"));
+		public static final StreamCodec<RegistryFriendlyByteBuf, ReadPage> CODEC = StreamCodec.composite(
+				ByteBufCodecs.STRING_UTF8, ReadPage::entry, ByteBufCodecs.VAR_INT, ReadPage::part, ReadPage::new);
+		@Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+	}
+
+	public static String readKey(String entry, int part) { return entry + "#" + part; }
+
+	private static void markRead(ServerPlayer p, ReadPage message) {
+		// Only the sender's unlocked diary entries can be acknowledged; bounded parts prevent unbounded storage.
+		if (message.part() < 0 || message.part() >= 64 || !p.getAttachedOrCreate(DATA).contains(message.entry())) return;
+		String key = readKey(message.entry(), message.part());
+		List<String> have = p.getAttachedOrCreate(READ);
+		if (have.contains(key)) return;
+		List<String> next = new ArrayList<>(have);
+		next.add(key);
+		p.setAttached(READ, List.copyOf(next));
+	}
+
+	private static void syncRead(ServerPlayer p) {
+		ServerPlayNetworking.send(p, new ReadSync(p.getAttachedOrCreate(READ)));
+	}
+
 	public record Sync(List<String> entries) implements CustomPacketPayload {
 		public static final Type<Sync> TYPE = new Type<>(TearsOfInk.id("diary_sync"));
 		public static final StreamCodec<RegistryFriendlyByteBuf, Sync> CODEC =
@@ -87,10 +123,15 @@ public final class DiaryEntries {
 
 	public static void init() {
 		PayloadTypeRegistry.playS2C().register(Sync.TYPE, Sync.CODEC);
+		PayloadTypeRegistry.playS2C().register(ReadSync.TYPE, ReadSync.CODEC);
+		PayloadTypeRegistry.playC2S().register(ReadPage.TYPE, ReadPage.CODEC);
+		ServerPlayNetworking.registerGlobalReceiver(ReadPage.TYPE, (message, context) ->
+				context.server().execute(() -> markRead(context.player(), message)));
 		FateProgress.init();
 		ServerPlayConnectionEvents.JOIN.register((h, s, server) -> {
 			checkArrival(h.getPlayer()); // в том числе старые сохранения уже в Землях
 			sync(h.getPlayer());
+			syncRead(h.getPlayer());
 			FateProgress.refresh(h.getPlayer(), true);
 		});
 		ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((p, origin, destination) -> {
@@ -100,6 +141,7 @@ public final class DiaryEntries {
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
 			checkArrival(newPlayer);
 			sync(newPlayer);
+			syncRead(newPlayer);
 			FateProgress.refresh(newPlayer, true);
 		});
 		// В Fabric 1.21.1 нет общего события получения предмета для всех способов
