@@ -904,6 +904,7 @@ public final class Hunt {
 				give(p, new ItemStack(ModItems.CRIMSON_FLOWER));
 		}
 		if (a.contract() && p.getUUID().equals(a.owner)) {
+			com.tarkrakov.tearsofink.prologue.FateProgress.mark(p, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.CONTRACT);
 			com.tarkrakov.tearsofink.vow.Vows.awaken(p, "contract_" + a.rank, com.tarkrakov.tearsofink.vow.Vows.AWAKENING);
 			com.tarkrakov.tearsofink.vow.Vows.heart(p, "contract_" + a.rank, com.tarkrakov.tearsofink.vow.Vows.SMALL_HEART, 0); // малое сердце (заглушка до боссов)
 		}

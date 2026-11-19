@@ -162,7 +162,10 @@ public final class FountainTravel {
 	}
 
 	public static void activate(ServerPlayer player, BlockPos pos) {
-		if (ModDimensions.isLands(player.level()) && !player.isSpectator()) FountainTravelData.get(player).activate(player, pos);
+		if (ModDimensions.isLands(player.level()) && !player.isSpectator()) {
+			FountainTravelData.get(player).activate(player, pos);
+			com.tarkrakov.tearsofink.prologue.FateProgress.refresh(player, false);
+		}
 	}
 
 	public static void open(ServerPlayer player, BlockPos source) {

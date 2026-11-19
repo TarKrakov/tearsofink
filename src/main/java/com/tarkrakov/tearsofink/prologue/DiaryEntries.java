@@ -87,21 +87,30 @@ public final class DiaryEntries {
 
 	public static void init() {
 		PayloadTypeRegistry.playS2C().register(Sync.TYPE, Sync.CODEC);
+		FateProgress.init();
 		ServerPlayConnectionEvents.JOIN.register((h, s, server) -> {
 			checkArrival(h.getPlayer()); // в том числе старые сохранения уже в Землях
 			sync(h.getPlayer());
+			FateProgress.refresh(h.getPlayer(), true);
 		});
-		ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((p, origin, destination) -> checkArrival(p));
+		ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((p, origin, destination) -> {
+			checkArrival(p);
+			FateProgress.refresh(p, true);
+		});
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
 			checkArrival(newPlayer);
 			sync(newPlayer);
+			FateProgress.refresh(newPlayer, true);
 		});
 		// В Fabric 1.21.1 нет общего события получения предмета для всех способов
 		// изменения инвентаря. Редкая серверная проверка охватывает подбор, крафт,
 		// печь и перенос из контейнеров без нового Mixin.
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
 			if (server.getTickCount() % INVENTORY_CHECK_TICKS != 0) return;
-			for (ServerPlayer p : server.getPlayerList().getPlayers()) checkGuidance(p);
+			for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+				checkGuidance(p);
+				FateProgress.refresh(p, false);
+			}
 		});
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
 			if (!(source.getEntity() instanceof ServerPlayer p) || !ModDimensions.isLands(p.level())) return;
@@ -152,7 +161,7 @@ public final class DiaryEntries {
 		if (needFog) discovered.add(DRAFT_FOG);
 		if (needPath) discovered.add(vow == Vow.SOUL ? DRAFT_SOUL : DRAFT_INK);
 		if (needRuins && nearRuinMasonry(p)) discovered.add(DRAFT_RUINS);
-		// Первое испитие фонтана даёт возможность призвать Торговку. Проверка
+		// Первое испитие фонтана открывает справку о дальнейшем знакомстве. Проверка
 		// сохранённого VISITED открывает запись и для персонажей из старых миров.
 		if (needHunt && !p.getAttachedOrCreate(InkFountainBlock.VISITED).isEmpty()) {
 			discovered.add(FOUNTAIN_HUNT);

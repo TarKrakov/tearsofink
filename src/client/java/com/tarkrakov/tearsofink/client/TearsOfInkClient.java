@@ -136,6 +136,13 @@ public class TearsOfInkClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.prologue.DiaryEntries.Sync.TYPE, (payload, context) ->
 				context.client().execute(() -> com.tarkrakov.tearsofink.client.prologue.DiaryScreen.entries = new java.util.ArrayList<>(payload.entries())));
 
+		ClientPlayNetworking.registerGlobalReceiver(com.tarkrakov.tearsofink.prologue.FateProgress.Sync.TYPE, (payload, context) ->
+				context.client().execute(() -> com.tarkrakov.tearsofink.client.prologue.DiaryScreen.fateMask = payload.mask()));
+		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> {
+			com.tarkrakov.tearsofink.client.prologue.DiaryScreen.fateMask = -1;
+			com.tarkrakov.tearsofink.client.prologue.DiaryScreen.entries = new java.util.ArrayList<>();
+		});
+
 		// Фауна
 		EntityModelLayerRegistry.registerModelLayer(CaterpillarModel.LAYER, CaterpillarModel::createBodyLayer);
 		EntityRendererRegistry.register(ModMobs.CATERPILLAR, CaterpillarRenderer::new);

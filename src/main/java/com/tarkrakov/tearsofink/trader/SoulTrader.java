@@ -142,7 +142,7 @@ public final class SoulTrader {
 		return p.isAlive() && !p.isSpectator() && ModDimensions.isLands(p.level()) && InkPowers.get(p).inside();
 	}
 
-	static boolean introduced(ServerPlayer p) {
+	public static boolean introduced(ServerPlayer p) {
 		return p.getAttachedOrCreate(INTRO) >= INTRO_LINES;
 	}
 
@@ -161,7 +161,10 @@ public final class SoulTrader {
 		if (delivered >= INTRO_LINES || FountainTravel.openedCount(p) < REQUIRED_FOUNTAINS) return;
 		say(p, "intro." + (delivered + 1));
 		p.setAttached(INTRO, delivered + 1);
-		if (delivered + 1 == INTRO_LINES) say(p, "intro.complete");
+		if (delivered + 1 == INTRO_LINES) {
+			say(p, "intro.complete");
+			com.tarkrakov.tearsofink.prologue.FateProgress.mark(p, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.TRADER);
+		}
 	}
 
 	static void release(SoulTraderEntity trader, UUID owner) {
@@ -355,6 +358,7 @@ public final class SoulTrader {
 		if (!p.getInventory().add(reward)) p.drop(reward, false);
 		p.playNotifySound(SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1.0f, 0.6f);
 		say(p, "contracts_taken", n, n * PIGMENT_PER_CONTRACT);
+		com.tarkrakov.tearsofink.prologue.FateProgress.mark(p, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.REDEEM);
 		sendOpen(p, trader);
 	}
 }

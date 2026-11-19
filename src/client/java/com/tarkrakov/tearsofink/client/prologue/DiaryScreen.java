@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.client.prologue;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.prologue.DiaryEntries;
+import com.tarkrakov.tearsofink.prologue.FateProgress;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -19,7 +20,7 @@ import java.util.List;
 /**
  * Дневник Историка. Авторский atlas gui/diary_base.png 256x256 и подвижное перо:
  * переплёт и кольца слева, перо сверху справа, внизу печать, справа от книги
- * свободный декоративный край; шесть вкладок снаружи корешка слева.
+ * свободный декоративный край; семь вкладок снаружи корешка слева, Судьба сверху.
  *
  * Записи не меняют id и формат сохранений. Текст переносится на следующие листы
  * без уменьшения шрифта; заголовки тоже переносятся, а не упираются в перо.
@@ -32,8 +33,9 @@ public class DiaryScreen extends Screen {
 	private static final int W = 256, H = 256;
 	/** Temporary tab atlas: rows in DiarySection order, columns normal/hover/active. */
 	private static final ResourceLocation TABS = TearsOfInk.id("textures/gui/diary_tabs.png");
+	private static final ResourceLocation FATE_TAB = TearsOfInk.id("textures/gui/diary_fate_tab.png");
 	private static final int TAB_W = 24, TAB_H = 24, TAB_X = -18, TAB_ACTIVE_X = -22;
-	private static final int TAB_TOP = 38, TAB_STEP = 30, LEFT_EXTRA = 22;
+	private static final int TAB_TOP = 22, TAB_STEP = 30, LEFT_EXTRA = 22;
 	/** Безопасная колонка пергамента: за кольцами и левее пера. */
 	private static final int TEXT_X = 64, TEXT_W = 130;
 	private static final int TITLE_Y = 23, UNTITLED_Y = 27, TITLE_LINE = 12, AFTER_TITLE = 8;
@@ -44,6 +46,9 @@ public class DiaryScreen extends Screen {
 
 	/** Записи, открытые у игрока (присылает сервер). */
 	public static List<String> entries = new ArrayList<>();
+	/** -1 until the personal snapshot arrives. */
+	public static int fateMask = -1;
+	private int builtFate = Integer.MIN_VALUE;
 
 	/** Один физический лист: строки заголовка (только на первом листе записи) и текст. */
 	private record Sheet(List<FormattedCharSequence> heading, List<FormattedCharSequence> lines, int color) {}
@@ -51,7 +56,8 @@ public class DiaryScreen extends Screen {
 	private final List<Sheet> sheets = new ArrayList<>();
 	private List<String> builtFrom = null;
 	private int page;
-	private DiarySection section = DiarySection.CHRONICLES;
+	private DiarySection section = entries.contains(DiaryEntries.FIRST_STEPS) || (fateMask >= 0 && FateProgress.Goal.ARRIVAL.done(fateMask))
+			? DiarySection.FATE : DiarySection.CHRONICLES;
 	private DiarySection builtSection;
 	private final Map<DiarySection, Integer> remembered = new EnumMap<>(DiarySection.class);
 	private final Map<DiarySection, Integer> counts = new EnumMap<>(DiarySection.class);
@@ -80,12 +86,18 @@ public class DiaryScreen extends Screen {
 
 	/** Preserve discovery order inside each section. */
 	private void build() {
-		if (section == builtSection && entries.equals(builtFrom)) return;
+		if (section == builtSection && entries.equals(builtFrom) && (section != DiarySection.FATE || fateMask == builtFate)) return;
 		builtFrom = List.copyOf(entries);
 		builtSection = section;
 		counts.clear();
 		for (String id : builtFrom) counts.merge(DiarySection.of(id), 1, Integer::sum);
 		sheets.clear();
+		if (section == DiarySection.FATE) {
+			if (builtFate != fateMask) page = 0;
+			builtFate = fateMask;
+			buildFate();
+			return;
+		}
 		boolean caterpillars = false;
 		for (String id : builtFrom) {
 			if (DiarySection.of(id) != section) continue;
@@ -97,6 +109,62 @@ public class DiaryScreen extends Screen {
 				addEntry(id, true);
 			}
 		}
+	}
+
+	/** Current goals first, followed by the complete crossed-out history. */
+	private void buildFate() {
+		String prefix = "diary.tears-of-ink.fate.";
+		var heading = font.split(sectionTitle(DiarySection.FATE), TEXT_W);
+		List<FormattedCharSequence> body = new ArrayList<>();
+		if (fateMask < 0) {
+			body.addAll(font.split(Component.translatable(prefix + "sync"), TEXT_W));
+			sheets.add(new Sheet(heading, List.copyOf(body), TEXT));
+			return;
+		}
+		List<FateProgress.Goal> done = new ArrayList<>();
+		for (var goal : FateProgress.Goal.values()) if (goal.done(fateMask)) done.add(goal);
+		body.addAll(font.split(Component.translatable(prefix + "summary", done.size(), FateProgress.Goal.values().length), TEXT_W));
+		body.add(FormattedCharSequence.EMPTY);
+		var next = FateProgress.next(fateMask);
+		if (next.isEmpty()) {
+			body.addAll(font.split(Component.translatable(prefix + "end"), TEXT_W));
+		} else {
+			body.addAll(font.split(Component.translatable(prefix + "next").withStyle(style -> style.withColor(TITLE)), TEXT_W));
+			for (var goal : next) {
+				body.addAll(font.split(Component.translatable(prefix + goal.id + ".title").withStyle(ChatFormatting.BOLD), TEXT_W));
+				body.addAll(font.split(Component.translatable(prefix + goal.id + ".hint"), TEXT_W));
+			}
+		}
+		int capacity = rows(heading.size());
+		if (!done.isEmpty() && body.size() + 3 <= capacity) {
+			body.add(FormattedCharSequence.EMPTY);
+			body.addAll(font.split(Component.translatable(prefix + "done").withStyle(style -> style.withColor(FADED)), TEXT_W));
+			for (int i = Math.max(0, done.size() - 2); i < done.size(); i++) {
+				var line = completedLine(prefix, done.get(i));
+				if (body.size() + line.size() <= capacity) body.addAll(line);
+			}
+		}
+		appendFateSheets(heading, body);
+		if (!done.isEmpty()) {
+			List<FormattedCharSequence> history = new ArrayList<>();
+			for (var goal : done) history.addAll(completedLine(prefix, goal));
+			appendFateSheets(font.split(Component.translatable(prefix + "history"), TEXT_W), history);
+		}
+	}
+
+	private List<FormattedCharSequence> completedLine(String prefix, FateProgress.Goal goal) {
+		return font.split(Component.translatable(prefix + goal.id + ".title")
+				.withStyle(style -> style.withColor(FADED).withStrikethrough(true)), TEXT_W);
+	}
+
+	private void appendFateSheets(List<FormattedCharSequence> heading, List<FormattedCharSequence> body) {
+		int offset = 0;
+		do {
+			var title = offset == 0 ? heading : List.<FormattedCharSequence>of();
+			int end = Math.min(body.size(), offset + rows(title.size()));
+			sheets.add(new Sheet(title, List.copyOf(body.subList(offset, end)), TEXT));
+			offset = end;
+		} while (offset < body.size());
 	}
 
 	private void addEntry(String id, boolean open) {
@@ -167,7 +235,8 @@ public class DiaryScreen extends Screen {
 	private static Component sectionTitle(DiarySection section) {
 		return Component.translatable("diary.tears-of-ink.section." + section.id);
 	}
-	private static int tabY(DiarySection section) { return TAB_TOP + section.ordinal() * TAB_STEP; }
+	private static int tabIndex(DiarySection section) { return section == DiarySection.FATE ? 0 : section.ordinal() + 1; }
+	private static int tabY(DiarySection section) { return TAB_TOP + tabIndex(section) * TAB_STEP; }
 	private int tabX(DiarySection tab) { return tab == section ? TAB_ACTIVE_X : TAB_X; }
 
 	private DiarySection tabAt(double x, double y) {
@@ -181,14 +250,17 @@ public class DiaryScreen extends Screen {
 	private void drawTabs(GuiGraphics g, DiarySection hovered) {
 		for (DiarySection tab : DiarySection.values()) {
 			int state = tab == section ? 2 : tab == hovered ? 1 : 0;
-			g.blit(TABS, tabX(tab), tabY(tab), state * TAB_W, tab.ordinal() * TAB_H,
+			if (tab == DiarySection.FATE) g.blit(FATE_TAB, tabX(tab), tabY(tab), state * TAB_W, 0, TAB_W, TAB_H, 72, 24);
+			else g.blit(TABS, tabX(tab), tabY(tab), state * TAB_W, tab.ordinal() * TAB_H,
 					TAB_W, TAB_H, 72, 144);
 		}
 	}
 
 	private void tabTooltip(GuiGraphics g, DiarySection tab, int mouseX, int mouseY) {
-		g.renderTooltip(font, Component.translatable("diary.tears-of-ink.section.tooltip",
-				sectionTitle(tab), counts.getOrDefault(tab, 0)), mouseX, mouseY);
+		g.renderTooltip(font, tab == DiarySection.FATE
+				? Component.translatable("diary.tears-of-ink.fate.tooltip")
+				: Component.translatable("diary.tears-of-ink.section.tooltip",
+						sectionTitle(tab), counts.getOrDefault(tab, 0)), mouseX, mouseY);
 	}
 
 	private void select(DiarySection next) {
@@ -230,8 +302,8 @@ public class DiaryScreen extends Screen {
 	public boolean keyPressed(int key, int scan, int mods) {
 		if (key == 264 || key == 265) {
 			DiarySection[] tabs = DiarySection.values();
-			int next = Math.max(0, Math.min(tabs.length - 1, section.ordinal() + (key == 264 ? 1 : -1)));
-			select(tabs[next]);
+			int next = Math.max(0, Math.min(tabs.length - 1, tabIndex(section) + (key == 264 ? 1 : -1)));
+			select(next == 0 ? DiarySection.FATE : tabs[next - 1]);
 			return true;
 		}
 		if (key == 262 && page < sheets.size() - 1) { turn(1); return true; }

@@ -11,7 +11,8 @@ enum DiarySection {
 	BESTIARY("bestiary", "caterpillar", "caterpillar_pale", "caterpillar_blood", "caterpillar_ink", "pale_spearman", "pale_shieldbearer", "pale_crossbowman", "zombie", "skeleton", "spider", "draft_pale_owl", "draft_pale_deer", "draft_pale_strider", "draft_hunter_spire", "draft_hunter_blood", "draft_hunter_ink"),
 	CRAFT("craft", "pale_metal", "ink_anvil", "cursed_altar", "ascension_font", "draft_asphoda", "draft_blood_metal", "draft_ink_metal", "draft_armor", "draft_weaponcraft", "draft_alchemy", "draft_blood_collector"),
 	TRIALS("trials", "draft_hunt_field", "draft_mad_order", "draft_harvest"),
-	VOWS("vows", "draft_soul", "draft_ink", "draft_soul_bargain", "draft_soul_deeds", "draft_ink_ranks");
+	VOWS("vows", "draft_soul", "draft_ink", "draft_soul_bargain", "draft_soul_deeds", "draft_ink_ranks"),
+	FATE("fate");
 
 	private static final Map<String, DiarySection> INDEX = new HashMap<>();
 	static {

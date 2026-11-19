@@ -170,6 +170,7 @@ public final class AscensionFont {
 				}
 			if (in != null) {
 				in.seen = now;
+				com.tarkrakov.tearsofink.prologue.FateProgress.mark(p, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.FONT);
 				continue;
 			}
 			// встал в центр — проверить постройку
@@ -180,6 +181,7 @@ public final class AscensionFont {
 				int color = v == Vow.INK ? INK : v == Vow.SOUL ? SOUL : 0;
 				if (color == 0) continue;
 				ACTIVE.put(feet.immutable(), new Active(color, now));
+				com.tarkrakov.tearsofink.prologue.FateProgress.mark(p, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.FONT);
 				broadcast(lands, feet.immutable(), color);
 				lands.playSound(null, feet, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 0.8f, color == INK ? 0.6f : 1.4f);
 				p.displayClientMessage(Component.translatable("font.tears-of-ink.awake").withStyle(ChatFormatting.GRAY), true);
@@ -255,6 +257,8 @@ public final class AscensionFont {
 			take(p, res, need);
 		}
 		Gear.setTier(weapon, tier + 1);
+		com.tarkrakov.tearsofink.prologue.FateProgress.mark(p, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.FONT, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.GEAR, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.CONTRAST);
+		if (tier + 1 >= 2) com.tarkrakov.tearsofink.prologue.FateProgress.mark(p, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.RUBRICS);
 		ServerLevel level = p.serverLevel();
 		boolean ink = ACTIVE.get(c).color == INK;
 		level.sendParticles(ink ? ParticleTypes.SQUID_INK : ParticleTypes.END_ROD, c.getX() + 0.5, c.getY() + 1.2, c.getZ() + 0.5,
