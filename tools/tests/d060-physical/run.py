@@ -8,7 +8,7 @@ from pathlib import Path
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE.parent/"d060"))
 import run as d060
-from road_samples import read_snapshot, compare_snapshots
+from road_samples import read_snapshot, compare_snapshots, snapshot_digest
 
 def install():
     java=d060.JAVA
@@ -63,8 +63,10 @@ def session(label):
         server.send("toi-d060-physical-full")
         result=json.loads(server.expect("D060_FULL_PHYSICAL ",720))
         result["arrival"]=arrival
-        road = result.get("road_blocks")
-        if road is not None:
+        for key,suffix in [("road_blocks_before","-roads-before.tsv"),("road_blocks","-roads.tsv")]:
+            road = result.get(key)
+            if road is None:
+                continue
             # Snapshot names are deliberately removed from the hashed metadata.
             name = road.pop("snapshot")
             if Path(name).name != name or not name.startswith("road-samples-") or not name.endswith(".tsv"):
@@ -73,11 +75,9 @@ def session(label):
             rows = read_snapshot(snapshot)
             if len(rows) != road["blocks"]:
                 raise RuntimeError("Road snapshot count differs from original hash sample")
-            # Verify exact old-format digest independently in Python.
-            from road_samples import snapshot_digest
             if snapshot_digest(rows) != road["sha256"]:
                 raise RuntimeError("Road snapshot digest differs from original hash")
-            snapshot.rename(d060.OUT/(label+"-roads.tsv"))
+            snapshot.rename(d060.OUT/(label+suffix))
         (d060.OUT/(label+".json")).write_text(json.dumps(result,indent=2))
         normal=True
         return result
@@ -107,17 +107,24 @@ def main():
         "same_starter_bbox": bool(v3.get("starter_bbox")) and v3.get("starter_bbox")==v1.get("starter_bbox")==v1restart.get("starter_bbox"),
         "same_arrival": bool(v3["arrival"].get("position")) and v3["arrival"].get("position")==v1["arrival"].get("position")==v1restart["arrival"].get("position"),
         "same_sampled_road_blocks": bool(v3.get("road_blocks")) and v3.get("road_blocks")==v1.get("road_blocks")==v1restart.get("road_blocks"),
+        "same_road_blocks_before_structures": bool(v3.get("road_blocks_before")) and v3.get("road_blocks_before")==v1.get("road_blocks_before"),
+        "road_blocks_stable_after_structures": {k:bool(x.get("road_blocks_before")) and x["road_blocks_before"]==x.get("road_blocks") for k,x in [("v3",v3),("v1",v1),("v1_restart",v1restart)]},
         "v1_unchanged_temples": bool(v1.get("temples")) and v1.get("temples")==v1restart.get("temples"),
         "v1_unchanged_adits": bool(v1.get("adits")) and v1.get("adits")==v1restart.get("adits"),
         "timings_ms": {k: x["arrival"].get("elapsed_ms") for k,x in [("v3",v3),("v1",v1),("v1_restart",v1restart)]}
     }
     # Locate every changed block while retaining the original strict pass/fail.
     diagnostics = {}
-    for lhs,rhs in [("physical-v3","physical-v1"),("physical-v1","physical-v1-restart")]:
-        left,right = (d060.OUT/(label+"-roads.tsv") for label in (lhs,rhs))
+    late = [(a+"-roads",b+"-roads",a+"-vs-"+b) for a,b in
+            [("physical-v3","physical-v1"),("physical-v1","physical-v1-restart")]]
+    early = [(a+"-roads-before",b+"-roads-before",a+"-vs-"+b+"-before-structures") for a,b in
+             [("physical-v3","physical-v1"),("physical-v1","physical-v1-restart")]]
+    within = [(a+"-roads-before",a+"-roads",a+"-before-vs-after-structures") for a in
+              ["physical-v3","physical-v1","physical-v1-restart"]]
+    for lhs,rhs,name in late+early+within:
+        left,right = (d060.OUT/(label+".tsv") for label in (lhs,rhs))
         if left.exists() and right.exists():
             diff = compare_snapshots(read_snapshot(left),read_snapshot(right))
-            name = lhs+"-vs-"+rhs
             (d060.OUT/(name+".json")).write_text(json.dumps(diff,indent=2))
             diagnostics[name] = {k:v for k,v in diff.items() if k!="differences"}
             diagnostics[name]["examples"] = diff["differences"][:8]

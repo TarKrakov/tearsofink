@@ -58,6 +58,10 @@ public final class D060PhysicalProbe {
             if (layout.hasTempleNetwork()) layout.prepareTempleNetwork(
                 new TempleNetwork.Inputs(terrain,level.registryAccess(),level.getStructureManager(),level.getSeed()));
             var plan = layout.templeNetwork();
+            // Identical road-first request sequence in both layouts. Then inspect
+            // all remote structures and repeat the original late snapshot.
+            // Arrival is still measured before any diagnostic loading.
+            out.add("road_blocks_before",roadSamples(level,layout,terrain));
             var centers = Ruins.templePoints(layout);
             if (centers.size()!=13) failures.add("Temple quota "+centers.size()+"/13");
             var structure = level.registryAccess().registryOrThrow(Registries.STRUCTURE).get(TearsOfInk.id("ruin_temple"));
