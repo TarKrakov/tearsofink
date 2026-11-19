@@ -185,7 +185,8 @@ public final class TempleNetwork {
 				// exits first. Earlier successful placements are never moved.
 				for (int road = 0; road < InkLandsLayout.ROADS; road++) {
 					if (!outer[road] && !roadsideSiteFallback(road, false, false)
-							&& !roadsideSiteFallback(road, false, true)) missing("external", road);
+							&& !roadsideSiteFallback(road, false, true)
+							&& !roadsideSiteFallback(road,false,false,true)) missing("external", road);
 					if (!inner[road] && !roadsideSiteFallback(road, true, false)
 							&& !roadsideSiteFallback(road, true, true)) missing("deep", road);
 				}
@@ -388,12 +389,16 @@ public final class TempleNetwork {
 		 * No relaxation of biome, footprint, slope, water, or road reservations.
 		 */
 		private boolean roadsideSiteFallback(int road, boolean deep, boolean alternateFacing) {
-			if (!alternateFacing) failures.clear(); // rejection counts always belong to this slot
+			return roadsideSiteFallback(road,deep,alternateFacing,false);
+		}
+
+		private boolean roadsideSiteFallback(int road, boolean deep, boolean alternateFacing,boolean adjustFoundation) {
+			if (!alternateFacing && !adjustFoundation) failures.clear();
 			int startSamples = samples.size();
 			// Retry only the remaining empty slots and only with a different
 			// road-facing footprint. Do not expand the depth or access limits.
-			slotColumnLimit = startSamples + (alternateFacing ? 2400 : 5000);
-			int viableLimit = alternateFacing ? 18 : 40;
+			slotColumnLimit = startSamples + (adjustFoundation ? 1800 : alternateFacing ? 2400 : 5000);
+			int viableLimit = adjustFoundation?12:alternateFacing ? 18 : 40;
 			// A search now covers a whole interval, not five overlapping narrow
 			// windows. Keep the total number of expansions bounded per slot.
 			int exitLimit = alternateFacing ? 8 : 14;
@@ -450,10 +455,10 @@ public final class TempleNetwork {
 						double nearest = offset - Math.abs(dir[1]) * (hx + TERRAIN_ADAPTATION)
 								- Math.abs(dir[0]) * (hz + TERRAIN_ADAPTATION);
 						if (nearest < ROAD_BUFFER - 4) { reject("site-first projected corridor"); continue; }
-						int y = platform(x,z,facing,true);
+						int y = adjustFoundation?Integer.MIN_VALUE:platform(x,z,facing,true);
 						boolean raised = false;
 						if (y == Integer.MIN_VALUE) {
-							y = raisedPlatform(x,z,facing);
+							y = raisedPlatform(x,z,facing,adjustFoundation);
 							raised = y != Integer.MIN_VALUE;
 						}
 						if (y == Integer.MIN_VALUE) continue;
@@ -480,6 +485,12 @@ public final class TempleNetwork {
 								return true;
 							}
 						}
+					}
+					// The final height-fit retry only tests engineered branches.
+					// Do not spend its small budget repeating natural exit searches.
+					if (adjustFoundation) {
+						if (viable>=viableLimit || samples.size()>=slotColumnLimit) return false;
+						continue;
 					}
 					// Search the real curved corridor from many dry lane cells
 					// simultaneously; route around a cliff or bridge approach rather
@@ -970,6 +981,10 @@ public final class TempleNetwork {
 		 * existing adaptation reservation. Reject deep water/cliffs, not water itself.
 		 */
 		private int raisedPlatform(int x,int z,Direction facing) {
+			return raisedPlatform(x,z,facing,false);
+		}
+
+		private int raisedPlatform(int x,int z,Direction facing,boolean adjustHeight) {
 			if (layout.templeLayoutVersion()!=3) return Integer.MIN_VALUE;
 			int hx=(facing.getAxis()==Direction.Axis.X?TEMPLATE_LENGTH:TEMPLATE_WIDTH)/2+1;
 			int hz=(facing.getAxis()==Direction.Axis.Z?TEMPLATE_LENGTH:TEMPLATE_WIDTH)/2+1;
@@ -982,6 +997,7 @@ public final class TempleNetwork {
 			}
 			if (wetTop==Integer.MIN_VALUE) return Integer.MIN_VALUE;
 			int y=wetTop+2,rx=hx+TempleFoundation.APRON,rz=hz+TempleFoundation.APRON;
+			int minimum=y,maximum=y+TempleFoundation.MAX_FILL;
 			int nx=Mth.positiveCeilDiv(rx*2,4),nz=Mth.positiveCeilDiv(rz*2,4);
 			for (int ix=0;ix<=nx;ix++) for (int iz=0;iz<=nz;iz++) {
 				int dx=-rx+ix*2*rx/nx,dz=-rz+iz*2*rz/nz;
@@ -994,8 +1010,19 @@ public final class TempleNetwork {
 				var c=sample(px,pz);
 				int dist=TempleFoundation.distance(dx,dz,hx,hz);
 				int bed=c.water()?bed(px,pz):c.surface();
-				if (!TempleFoundation.fits(TempleFoundation.top(y,dist),c.surface(),bed,c.water(),dist==0))
+				if (adjustHeight) {
+					minimum=Math.max(minimum,TempleFoundation.minimumBase(c.surface(),c.water(),dist));
+					maximum=Math.min(maximum,TempleFoundation.maximumBase(bed,dist));
+					if (minimum>maximum) return rejectedFoundation("no supported foundation height");
+				} else if (!TempleFoundation.fits(TempleFoundation.top(y,dist),c.surface(),bed,c.water(),dist==0))
 					return rejectedFoundation("foundation too deep or steep");
+			}
+			// No change in geometry or grading limits, only fit the same set
+			// of constraints at a higher elevation. Skip identical retries.
+			if (adjustHeight) {
+				if (minimum<=y) return Integer.MIN_VALUE;
+				TearsOfInk.LOGGER.debug("D-060 adjusted island candidate at {},{} from {} to {}",x,z,y,minimum);
+				return minimum;
 			}
 			return y;
 		}
