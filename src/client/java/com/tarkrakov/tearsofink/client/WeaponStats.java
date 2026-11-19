@@ -118,11 +118,12 @@ public final class WeaponStats {
             }
         }
 
-        boolean detail = Screen.hasShiftDown();
+        boolean upgrades = Gear.ours(stack) && Screen.hasControlDown();
+        boolean detail = Screen.hasShiftDown() && !upgrades;
         List<Component> out = new ArrayList<>();
         if (item instanceof OrdinaryArmorItem armor) armor(out, stack, armor, detail, inside);
-        else weapon(out, stack, (AbilityWeapon) item, detail);
-        add(out, detail ? "summary_hint" : "details_hint", ChatFormatting.GRAY);
+        else weapon(out, stack, (AbilityWeapon) item, detail, upgrades);
+        add(out, detail || upgrades ? "summary_hint" : Gear.ours(stack) ? "views_hint" : item instanceof OrdinaryArmorItem ? "armor_hint" : "details_hint", ChatFormatting.GRAY);
         lines.addAll(Math.min(1, lines.size()), out);
         // Wrap by actual font pixel width, not a count of characters. Native tooltip positioning
         // stays responsible for the cursor and screen edges. Do not shrink the player's font.
@@ -177,7 +178,7 @@ public final class WeaponStats {
                 remaining, stack.getMaxDamage());
     }
 
-    private static void weapon(List<Component> out, ItemStack stack, AbilityWeapon weapon, boolean detail) {
+    private static void weapon(List<Component> out, ItemStack stack, AbilityWeapon weapon, boolean detail, boolean upgrades) {
         Item item = stack.getItem();
         boolean gear = Gear.ours(stack), ordinary = item instanceof OrdinaryWeaponItem, shield = item instanceof SoulShieldItem;
         boolean two = InkGreatswordItem.twoHanded(stack);
@@ -194,7 +195,18 @@ public final class WeaponStats {
                     line == null ? t("line.none") : t("line." + line.id));
         } else add(out, item instanceof SwordItem ? "class.knife" : "class.pendant", ChatFormatting.AQUA);
 
-        if (item instanceof SwordItem || shield) {
+        if (upgrades) {
+            int cap = Gear.SHARP_MAX[Gear.tier(stack)];
+            if (cap == 0) add(out, "sharp.none", ChatFormatting.GRAY);
+            else {
+                add(out, "sharp.value", ChatFormatting.WHITE, Gear.sharp(stack), cap, Math.round(Gear.sharpFraction(stack)*100));
+                add(out, "sharp.wear", ChatFormatting.GRAY, Gear.WEAR_HIT, Gear.WEAR_ABILITY);
+                add(out, "sharp.degrade", ChatFormatting.GRAY, fmt(Gear.DEGRADE_AT * 100));
+            }
+            awakenings(out, stack, true);
+            return;
+        }
+        if (!detail && (item instanceof SwordItem || shield)) {
             double damage = 1 + amount(stack, EquipmentSlot.MAINHAND, Attributes.ATTACK_DAMAGE);
             double charge = 4 + amount(stack, EquipmentSlot.MAINHAND, Attributes.ATTACK_SPEED);
             if (shield) add(out, "shield.bash", ChatFormatting.WHITE, fmt(damage), fmt(charge));
@@ -207,22 +219,26 @@ public final class WeaponStats {
             }
         }
 
-        if (ordinary) {
+        if (!detail && ordinary) {
             var o = (OrdinaryWeaponItem) item;
             add(out, "passive.ink", ChatFormatting.LIGHT_PURPLE, fmt(Gear.ORDINARY_COMBO_INK));
             if (o.line() == com.tarkrakov.tearsofink.hunt.HunterType.BLOOD)
                 add(out, "passive.bleed", ChatFormatting.RED, fmt(Gear.ORDINARY_BLEED_CHANCE*100));
             else if (o.line() == com.tarkrakov.tearsofink.hunt.HunterType.INK)
                 add(out, "passive.slow", ChatFormatting.LIGHT_PURPLE, fmt(Gear.INK_SLOW_TICKS/20.0));
-        } else if (gear && detail) add(out, "passive.no_ink", ChatFormatting.GRAY);
+        } else if (!detail && gear) {
+            add(out, "passive.no_ink", ChatFormatting.GRAY);
+            if (archetype != null && item instanceof ArsenalWeaponItem a && a.blood())
+                add(out, "passive.bleed", ChatFormatting.RED, fmt(com.tarkrakov.tearsofink.weapon.blood.BloodTuning.BLEED_CHANCE*100));
+        }
 
-        if (gear) {
+        if (!detail && gear) {
             int cap = Gear.SHARP_MAX[Gear.tier(stack)];
             if (cap == 0) add(out, "sharp.none", ChatFormatting.GRAY);
             else add(out, "sharp.value", Gear.sharpFraction(stack) <= Gear.WARN_AT ? ChatFormatting.GOLD : ChatFormatting.GRAY,
                     Gear.sharp(stack), cap, Math.round(Gear.sharpFraction(stack)*100));
-            awakenings(out, stack, detail);
-        } else durability(out, stack);
+            awakenings(out, stack, false);
+        } else if (!detail) durability(out, stack);
 
         Skill skill = weapon.ability();
         if (stack.is(ModItems.PALE_LINEAR_GREATSWORD)) {
@@ -255,6 +271,10 @@ public final class WeaponStats {
             if (shield) {
                 add(out, "shield.stance", ChatFormatting.AQUA, fmt(ShieldTuning.PERFECT_TICKS/20.0));
                 add(out, "shield.resonance", ChatFormatting.GRAY, SkillKeys.weaponKeyLabel(), ShieldTuning.CHARGE_MAX);
+                add(out, "shield.resonance_cost", ChatFormatting.AQUA,
+                        com.tarkrakov.tearsofink.weapon.shield.ResonanceTuning.SOUL_COST,
+                        fmt(com.tarkrakov.tearsofink.weapon.shield.ResonanceTuning.COOLDOWN_TICKS/20.0));
+                add(out, "shield.paired", ChatFormatting.GRAY);
                 add(out, "shield.offhand", ChatFormatting.GRAY, t("offkey", SkillKeys.weaponKeyLabel()));
             } else if (gear && archetype != null) {
                 if (!two) add(out, "hilt", ChatFormatting.GRAY, Minecraft.getInstance().options.keyUse.getTranslatedKeyMessage(), fmt(HiltStrike.COOLDOWN/20.0));
@@ -312,7 +332,8 @@ public final class WeaponStats {
         }
         add(out, "awakening.count", ChatFormatting.LIGHT_PURPLE, active, cap);
         if (dormant > 0 && !detail) add(out, "awakening.dormant", ChatFormatting.GRAY, dormant);
-        // Names of every installed property stay visible, even if inactive; empty rows are consolidated.
+        if (!detail) return;
+        // Names and effective values are separated from attack statistics.
         List<Component> named = new ArrayList<>();
         Awakening.tooltip(stack, named);
         for (Component line : named) if (!key(line).equals("awakening.tears-of-ink.empty")) out.add(line);
