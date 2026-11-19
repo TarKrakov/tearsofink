@@ -126,6 +126,7 @@ public final class Lanterns {
 			InkPowers.update(sp, data.withInk(data.ink() - LIGHT_COST));
 		}
 		level.setBlock(pos, state.setValue(FogClearing.LIT, true), Block.UPDATE_ALL);
+		com.tarkrakov.tearsofink.entity.patrol.BarricadeGates.ignited(server,pos);
 		com.tarkrakov.tearsofink.advancement.ModAdvancements.grant(sp, com.tarkrakov.tearsofink.advancement.ModAdvancements.FIRST_FLAME);
 		level.playSound(null, pos, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 0.5f, 1.4f);
 		emberBurst(server, pos.getX() + 0.5, pos.getY() + 0.6, pos.getZ() + 0.5, 14);

@@ -43,15 +43,18 @@ public final class Outposts {
 		boolean bloodied;
 	}
 
-	private static final Map<Key, Post> POSTS = new HashMap<>();
+	private static final Map<ServerLevel, Map<Key, Post>> POSTS = new java.util.WeakHashMap<>();
 
 	private Outposts() {}
 
 	public static void init() {
+		BarricadeGates.initProtection();
 		ServerTickEvents.END_SERVER_TICK.register(Outposts::tick);
 		ServerLivingEntityEvents.AFTER_DEATH.register((entity, source) -> {
-			if (!(entity instanceof PaleSoldier) || !(source.getEntity() instanceof Player)) return;
-			for (Post p : POSTS.values()) if (p.members.contains(entity.getUUID())) p.bloodied = true;
+			if (!(entity instanceof PaleSoldier) || !(entity.level() instanceof ServerLevel level) || !ModDimensions.isLands(level)) return;
+			BarricadeGates.of(level).died(level,entity.getUUID());
+			if (!(source.getEntity() instanceof Player)) return;
+			for (Post p : POSTS.getOrDefault(level,Map.of()).values()) if (p.members.contains(entity.getUUID())) p.bloodied = true;
 		});
 	}
 
@@ -59,18 +62,34 @@ public final class Outposts {
 		if (server.getTickCount() % 40 != 0) return;
 		ServerLevel level = ModDimensions.lands(server);
 		if (level == null) return;
-		if (level.getDifficulty() == net.minecraft.world.Difficulty.PEACEFUL) return;
+		boolean canSpawn=level.getDifficulty()!=net.minecraft.world.Difficulty.PEACEFUL
+				&& level.getGameRules().getBoolean(net.minecraft.world.level.GameRules.RULE_DOMOBSPAWNING);
+		BarricadeGates gates=BarricadeGates.of(level);
+		gates.tickFlames(level);
+		Map<Key,Post> legacy=POSTS.computeIfAbsent(level,ignored->new HashMap<>());
 		InkLandsLayout layout = InkLandsLayout.of(level);
 		if (layout == null) return;
 		long now = level.getGameTime();
 		for (int road = 0; road < InkLandsLayout.ROADS; road++) {
 			for (int n = 0; n < InkLandsLayout.OUTPOSTS.length; n++) {
 				Key key = new Key(road, n);
-				Post post = POSTS.computeIfAbsent(key, k -> new Post());
+				Post post = legacy.computeIfAbsent(key, k -> new Post());
 				double d = layout.outpostDistance(n);
 				double[] at = layout.roadPoint(road, d);
 				double nearest = Double.MAX_VALUE;
-				for (ServerPlayer p : level.players()) nearest = Math.min(nearest, Math.hypot(p.getX() - at[0], p.getZ() - at[1]));
+				for (ServerPlayer p : level.players()) if(p.isAlive()&&!p.isSpectator())
+					nearest = Math.min(nearest, Math.hypot(p.getX() - at[0], p.getZ() - at[1]));
+				var gate=gates.get(road,n);
+				if(gate==null&&nearest<=WAKE+16) {
+					gate=gates.tryInstall(level,layout,road,n);
+					if(gate!=null)gates.adoptLegacy(level,gate,road,d,post.members);
+				}
+				if(gate!=null) {
+					legacy.remove(key);
+					gates.garrison(level,layout,road,d,gate,nearest,canSpawn);
+					continue;
+				}
+				if(!canSpawn)continue;
 				post.members.removeIf(id -> {
 					Entity e = level.getEntity(id);
 					return e == null || !e.isAlive();

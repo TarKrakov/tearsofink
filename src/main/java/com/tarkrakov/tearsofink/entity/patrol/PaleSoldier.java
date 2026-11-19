@@ -33,6 +33,7 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 	private float power = 1f;
 	public double patrolFrom, patrolTo;
 	private int alertCooldown;
+	@Nullable private net.minecraft.core.BlockPos gateHome;
 
 	protected PaleSoldier(EntityType<? extends Monster> type, Level level) {
 		super(type, level);
@@ -55,6 +56,15 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 
 	public boolean isAggressiveSynced() {
 		return this.entityData.get(AGGRESSIVE);
+	}
+
+	// ===== Гарнизон заставы: только для новых ворот =====
+	public void setGateHome(net.minecraft.core.BlockPos home) {
+		this.gateHome=home.immutable();
+		setPersistenceRequired();
+	}
+	private boolean farFromGate(LivingEntity target) {
+		return gateHome!=null&&gateHome.distToCenterSqr(target.position())>BarricadeGates.GUARD_LEASH*BarricadeGates.GUARD_LEASH;
 	}
 
 	// ===== Отряд =====
@@ -150,6 +160,13 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 	public void aiStep() {
 		super.aiStep();
 		if (this.level().isClientSide) return;
+		if (gateHome!=null&&level() instanceof ServerLevel server) {
+			if(getTarget()!=null&&farFromGate(getTarget()))setTarget(null);
+			if(getTarget()==null&&gateHome.distToCenterSqr(position())>14*14&&tickCount%40==0
+					&&com.tarkrakov.tearsofink.world.ModDimensions.chunksReady(server,blockPosition(),48)
+					&&com.tarkrakov.tearsofink.world.ModDimensions.chunksReady(server,gateHome,2))
+				getNavigation().moveTo(gateHome.getX()+.5,gateHome.getY(),gateHome.getZ()+.5,.9);
+		}
 		if (guardsArchers()) guardArchers();
 		LivingEntity target = this.getTarget();
 		this.entityData.set(AGGRESSIVE, target != null && target.isAlive());
@@ -165,7 +182,7 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 
 	@Override
 	public void setTarget(@Nullable LivingEntity target) {
-		if (target != null && isAlly(target)) return; // своих не бьём
+		if (target != null && (isAlly(target)||farFromGate(target))) return; // свои и дальние цели гарнизона
 		super.setTarget(target);
 	}
 
@@ -200,6 +217,7 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 	public void addAdditionalSaveData(CompoundTag tag) {
 		super.addAdditionalSaveData(tag);
 		tag.putFloat("Power", power);
+		if(gateHome!=null)tag.putLong("GateHome",gateHome.asLong());
 		if (squad != null) tag.putUUID("Squad", squad);
 		if (leader != null) tag.putUUID("SquadLeader", leader);
 		if (patrolRoad >= 0) {
@@ -212,6 +230,8 @@ public abstract class PaleSoldier extends Monster implements com.tarkrakov.tears
 	@Override
 	public void readAdditionalSaveData(CompoundTag tag) {
 		super.readAdditionalSaveData(tag);
+		gateHome=tag.contains("GateHome")?net.minecraft.core.BlockPos.of(tag.getLong("GateHome")):null;
+		if(gateHome!=null)setPersistenceRequired();
 		if (tag.contains("Power")) power = tag.getFloat("Power"); // здоровье/урон уже сохранены в атрибутах
 		if (tag.hasUUID("Squad")) squad = tag.getUUID("Squad");
 		if (tag.hasUUID("SquadLeader")) leader = tag.getUUID("SquadLeader");

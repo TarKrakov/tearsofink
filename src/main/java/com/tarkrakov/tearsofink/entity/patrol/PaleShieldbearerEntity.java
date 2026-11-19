@@ -319,6 +319,7 @@ public class PaleShieldbearerEntity extends PaleSoldier implements com.tarkrakov
 	}
 
 	private boolean isSoft(BlockState state, BlockPos pos) {
+		if (BarricadeGates.protectedAt(level(),pos)) return false;
 		if (state.isAir() || !state.getFluidState().isEmpty()) return false;
 		float hardness = state.getDestroySpeed(this.level(), pos);
 		if (hardness < 0 || hardness > SquadTuning.CHARGE_BREAK_HARDNESS) return false;

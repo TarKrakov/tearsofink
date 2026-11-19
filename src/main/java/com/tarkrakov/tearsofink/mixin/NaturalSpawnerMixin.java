@@ -32,6 +32,9 @@ public abstract class NaturalSpawnerMixin {
 	private static void tearsofink$noMonstersUnderHerald(ServerLevel level, Mob mob, double distance,
 														 CallbackInfoReturnable<Boolean> cir) {
 		if (!(mob instanceof Enemy)) return;
+		if(com.tarkrakov.tearsofink.entity.patrol.BarricadeGates.suppressesSpawns(level,mob.blockPosition())) {
+			cir.setReturnValue(false);return;
+		}
 		if (!"minecraft".equals(BuiltInRegistries.ENTITY_TYPE.getKey(mob.getType()).getNamespace())) return;
 		if (!(level.getChunkSource().getGenerator().getBiomeSource() instanceof InkLandsAccess access)) return;
 		InkLandsLayout layout = access.tearsofink$layout(level.getChunkSource().randomState().sampler());
