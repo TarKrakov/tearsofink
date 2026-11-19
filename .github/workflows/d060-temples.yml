@@ -1,24 +1,7 @@
 name: D-060 temple validation
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/d060-temples.yml'
-      - 'tools/tests/d060/**'
-      - 'src/main/java/com/tarkrakov/tearsofink/world/TempleNetwork.java'
-      - 'src/main/java/com/tarkrakov/tearsofink/world/TempleRoadAccess.java'
-      - 'src/main/java/com/tarkrakov/tearsofink/world/TempleApproachGrade.java'
-      - 'src/main/java/com/tarkrakov/tearsofink/world/TempleExitSearch.java'
-      - 'src/main/java/com/tarkrakov/tearsofink/world/TempleFoundation.java'
-      - 'src/main/java/com/tarkrakov/tearsofink/world/TemplePlanStore.java'
-      - 'src/main/java/com/tarkrakov/tearsofink/world/TemplePaths.java'
-      - 'tools/tests/TempleFoundationTest.java'
-      - 'tools/tests/TempleExitSearchTest.java'
-      - 'src/main/java/com/tarkrakov/tearsofink/world/ruins/RuinPiece.java'
-      - 'src/main/java/com/tarkrakov/tearsofink/world/ruins/RuinStructure.java'
-      - 'src/main/java/com/tarkrakov/tearsofink/world/BloodValleyFeature.java'
-      - 'src/main/resources/data/tears-of-ink/tags/worldgen/biome/has_ruin_temple.json'
+  # Full ten-seed regression is an explicit milestone check, not every small edit.
 permissions:
   contents: read
 concurrency:

@@ -26,9 +26,11 @@ def setup(seed):
         raise RuntimeError("Refusing to reuse any existing world")
     OUT.mkdir(parents=True, exist_ok=True)
     RUN.mkdir(exist_ok=True)
-    # Replace only in temporary CI checkout. Never commit an enabled dimension.
-    original = DIM.read_bytes()
-    dimension = json.loads(original)
+    # Keep an explicit V1 fixture even after the production default is V3.
+    # All edits below affect only this disposable CI checkout.
+    dimension = json.loads(DIM.read_bytes())
+    dimension["generator"]["biome_source"].pop("temple_layout", None)
+    original = json.dumps(dimension).encode("utf-8")
     dimension["generator"]["biome_source"]["temple_layout"] = 3
     DIM.write_text(json.dumps(dimension))
     for name, target in [
@@ -160,7 +162,7 @@ def main():
     first = session("first", physical)
     results = {"first": first}
     if physical:
-        # Restart using the ordinary dimension definition (V1 default). The saved
+        # Restart using the explicit legacy V1 fixture. The saved
         # marker must preserve V3 and the authoritative plan must be read, not recomputed.
         plan_file = WORLD / "data/tearsofink_temple_network_v3.bin"
         before = digest(plan_file)

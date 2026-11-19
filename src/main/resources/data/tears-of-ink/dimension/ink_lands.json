@@ -4,7 +4,8 @@
     "type": "minecraft:noise",
     "settings": "tears-of-ink:ink_lands",
     "biome_source": {
-      "type": "tears-of-ink:ink_lands"
+      "type": "tears-of-ink:ink_lands",
+      "temple_layout": 3
     }
   }
 }
