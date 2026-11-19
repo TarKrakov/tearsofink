@@ -132,8 +132,21 @@ public final class D060RespawnProbe {
         // Same vanilla server packet handler as real death-screen requests; this
         // test injects the initial packet server-side, not by a network client.
         // In particular, there is no test-injected retry after release.
-        a.hurt(a.damageSources().genericKill(), Float.MAX_VALUE);
-        b.hurt(b.damageSources().genericKill(), Float.MAX_VALUE);
+        // The first real-client run reached this point, but hurt() was rejected
+        // before death (fresh login/arrival protection or a damage hook).
+        // This fixture tests respawn, not damage or death protection. Keep the
+        // ordinary ServerPlayer death lifecycle but establish its precondition
+        // explicitly, without modifying any production protection or handler.
+        for (ServerPlayer player : List.of(a,b)) {
+            boolean accepted = player.hurt(player.damageSources().genericKill(), Float.MAX_VALUE);
+            boolean forced = player.isAlive();
+            if (forced) {
+                player.setHealth(0.0F);
+                player.die(player.damageSources().genericKill());
+            }
+            TearsOfInk.LOGGER.info("D060_RESPAWN_DEATH {} hurtAccepted={} forced={} alive={} health={}",
+                    player.getGameProfile().getName(), accepted, forced, player.isAlive(), player.getHealth());
+        }
         if (a.isAlive() || b.isAlive()) {
             finish(server,"Initial death was prevented");
             return 0;
