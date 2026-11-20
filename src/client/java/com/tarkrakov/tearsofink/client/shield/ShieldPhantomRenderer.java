@@ -4,6 +4,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.tarkrakov.tearsofink.weapon.shield.ShieldPhantomEntity;
+import com.tarkrakov.tearsofink.weapon.shield.ShieldTuning;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -23,7 +24,7 @@ public final class ShieldPhantomRenderer extends EntityRenderer<ShieldPhantomEnt
     private static final ResourceLocation LIGHT_TEXTURE = ResourceLocation.withDefaultNamespace("textures/block/white_concrete.png");
     @Override public ResourceLocation getTextureLocation(ShieldPhantomEntity entity) { return LIGHT_TEXTURE; }
     @Override public void render(ShieldPhantomEntity e, float yaw, float partial, PoseStack poses, MultiBufferSource buffers, int light) {
-        if (e.shield().isEmpty()) return;
+        if (e.shield().isEmpty() || e.flightAge() >= e.flightTicks() || e.flightAge() >= ShieldTuning.PHANTOM_MAX_TICKS) return;
         var model = Minecraft.getInstance().getItemRenderer().getModel(e.shield(), e.level(), null, 0);
         var quads = new ArrayList<BakedQuad>();
         for (Direction side : Direction.values()) quads.addAll(model.getQuads(null, side, RandomSource.create(42)));
@@ -38,13 +39,15 @@ public final class ShieldPhantomRenderer extends EntityRenderer<ShieldPhantomEnt
             }
         }
         poses.pushPose();
+        var offset = e.flightOffset(partial);
+        poses.translate(offset.x, offset.y, offset.z);
         poses.mulPose(Axis.YP.rotationDegrees(-e.getYRot()));
         poses.mulPose(Axis.XP.rotationDegrees(e.getXRot()));
-        float scale=0.72f/Math.max(.01f,Math.max(maxX-minX,maxY-minY));
+        float scale=ShieldTuning.PHANTOM_SIZE/Math.max(.01f,Math.max(maxX-minX,maxY-minY));
         poses.scale(scale,scale,scale);
         poses.translate(-(minX+maxX)/2f,-(minY+maxY)/2f,-(minZ+maxZ)/2f);
         VertexConsumer out=buffers.getBuffer(RenderType.entityTranslucent(LIGHT_TEXTURE));
-        int alpha=Math.max(45,150-e.tickCount*12);
+        int alpha=Math.max(45,170-(int)(100f*(e.flightAge()+partial)/e.flightTicks()));
         for(BakedQuad q:quads) {
             int[] data=q.getVertices(); int stride=data.length/4;
             Direction n=q.getDirection();

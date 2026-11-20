@@ -18,64 +18,115 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.util.Mth;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
-/** Short, non-persistent luminous shield. Server sweeps the segment against walls and one target. */
+/**
+ * A short shield sweep. The network entity stays at the launch point: no velocity,
+ * position interpolation or restarting client simulation. Both sides evaluate the
+ * same bounded path; only the server resolves contact and damage.
+ */
 public final class ShieldPhantomEntity extends Entity {
     private static final EntityDataAccessor<ItemStack> SHIELD = SynchedEntityData.defineId(ShieldPhantomEntity.class, EntityDataSerializers.ITEM_STACK);
+    private static final EntityDataAccessor<Float> RANGE = SynchedEntityData.defineId(ShieldPhantomEntity.class, EntityDataSerializers.FLOAT);
     private UUID owner;
     private float damage;
-    private double remaining;
+    private int age;
+    private final Set<UUID> hit = new HashSet<>();
+
     public ShieldPhantomEntity(EntityType<? extends ShieldPhantomEntity> type, Level level) {
         super(type, level);
         noPhysics = true;
     }
-    public ShieldPhantomEntity(ServerLevel level, ServerPlayer player, ItemStack shield, float damage, double reach) {
+
+    public ShieldPhantomEntity(ServerLevel level, ServerPlayer player, ItemStack shield, float damage) {
         this(ModEntities.SHIELD_PHANTOM, level);
         owner = player.getUUID();
         this.damage = damage * ShieldTuning.PHANTOM_DAMAGE_MULT;
-        remaining = reach + ShieldTuning.PHANTOM_EXTRA_REACH;
         entityData.set(SHIELD, new ItemStack(shield.getItem()));
-        Vec3 start = player.getEyePosition().add(0,-0.20,0);
-        setPos(start.x,start.y,start.z);
-        setDeltaMovement(player.getLookAngle().normalize().scale(ShieldTuning.PHANTOM_SPEED));
+        Vec3 start = player.getEyePosition().add(0, -0.35, 0);
+        setPos(start.x, start.y, start.z);
         setYRot(player.getYRot());
         setXRot(player.getXRot());
+        setDeltaMovement(Vec3.ZERO);
+        // Truncate even the visual path at the first wall. Check again on each
+        // server tick in case a block is placed during the short flight.
+        Vec3 end = start.add(getLookAngle().scale(ShieldTuning.PHANTOM_RANGE));
+        var wall = level.clip(new ClipContext(start, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+        float range = (float)(wall.getType() == HitResult.Type.MISS ? ShieldTuning.PHANTOM_RANGE : start.distanceTo(wall.getLocation()));
+        entityData.set(RANGE, range);
     }
+
     public ItemStack shield() { return entityData.get(SHIELD); }
-    @Override protected void defineSynchedData(SynchedEntityData.Builder b) { b.define(SHIELD, ItemStack.EMPTY); }
+    public int flightAge() { return age; }
+    public int flightTicks() {
+        return Math.max(1, (int)Math.ceil(entityData.get(RANGE) / ShieldTuning.PHANTOM_SPEED));
+    }
+    public double flightDistance(float ticks) {
+        return Math.min(entityData.get(RANGE), Math.max(0, ticks) * ShieldTuning.PHANTOM_SPEED);
+    }
+    public Vec3 flightOffset(float partialTick) {
+        return getLookAngle().scale(flightDistance(age + partialTick));
+    }
+
+    @Override protected void defineSynchedData(SynchedEntityData.Builder b) {
+        b.define(SHIELD, ItemStack.EMPTY);
+        b.define(RANGE, (float)ShieldTuning.PHANTOM_RANGE);
+    }
+
     @Override public void tick() {
         super.tick();
-        Vec3 from = position(), velocity = getDeltaMovement();
-        if (level().isClientSide) {
-            setPos(from.add(velocity));
+        // An independent hard lifetime also bounds stationary, obstructed and
+        // zero-range sweeps. No client-side setPos or repeated flight.
+        if (age >= flightTicks() || age >= ShieldTuning.PHANTOM_MAX_TICKS) {
+            discard();
             return;
         }
+        int previous = age++;
+        if (level().isClientSide) return;
+
         ServerLevel level = (ServerLevel)level();
-        if (owner == null || !(level.getEntity(owner) instanceof ServerPlayer player) || !player.isAlive() || remaining <= 0 || velocity.lengthSqr() < 1e-6) { discard(); return; }
-        Vec3 to = from.add(velocity.normalize().scale(Math.min(remaining, velocity.length())));
-        var block = level.clip(new ClipContext(from,to,ClipContext.Block.COLLIDER,ClipContext.Fluid.NONE,this));
-        boolean wall = block.getType() != HitResult.Type.MISS;
-        if (wall) to = block.getLocation();
-        LivingEntity nearest = null;
-        double best = from.distanceToSqr(to);
-        Vec3 impact = to;
-        for (LivingEntity t : level.getEntitiesOfClass(LivingEntity.class,new AABB(from,to).inflate(0.6),e -> ShieldStance.offensiveTarget(player,e))) {
-            var box = t.getBoundingBox().inflate(ShieldTuning.PHANTOM_HIT_MARGIN);
-            var hit = box.contains(from) ? java.util.Optional.of(from) : box.clip(from,to);
-            if (hit.isEmpty() || !player.hasLineOfSight(t)) continue;
-            double dist = from.distanceToSqr(hit.get());
-            if (dist < best) { best = dist; nearest = t; impact = hit.get(); }
+        if (owner == null || !(level.getEntity(owner) instanceof ServerPlayer player) || !player.isAlive()) {
+            discard();
+            return;
         }
-        if (nearest != null) {
-            Gear.hurtModWave(nearest, player.damageSources().playerAttack(player), damage);
-            level.sendParticles(ParticleTypes.END_ROD,impact.x,impact.y,impact.z,7,0.15,0.2,0.15,0.035);
-            discard(); return;
+        Vec3 origin = position(), direction = getLookAngle();
+        Vec3 from = origin.add(direction.scale(flightDistance(previous)));
+        Vec3 to = origin.add(direction.scale(flightDistance(age)));
+        var wall = level.clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this));
+        boolean blocked = wall.getType() != HitResult.Type.MISS;
+        if (blocked) to = wall.getLocation();
+
+        // Sweep the whole enlarged shield volume, including the first and last
+        // positions. The projectile survives a hit. Each target can take damage
+        // only once per cast; a rejected hurt can be retried on a later tick.
+        double radius = ShieldTuning.PHANTOM_SIZE / 2.0;
+        for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
+                new AABB(from, to).inflate(radius), t -> ShieldStance.offensiveTarget(player, t) && !hit.contains(t.getUUID()))) {
+            AABB targetBox = target.getBoundingBox();
+            AABB expanded = targetBox.inflate(radius);
+            var contact = expanded.contains(from) ? java.util.Optional.of(from) : expanded.clip(from, to);
+            if (contact.isEmpty()) {
+                if (!expanded.contains(to)) continue;
+                contact = java.util.Optional.of(to);
+            }
+            Vec3 at = contact.get();
+            // Visibility is measured from the launch point, not from wherever
+            // the player has moved since casting the phantom.
+            Vec3 closest = new Vec3(Mth.clamp(at.x, targetBox.minX, targetBox.maxX),
+                    Mth.clamp(at.y, targetBox.minY, targetBox.maxY),
+                    Mth.clamp(at.z, targetBox.minZ, targetBox.maxZ));
+            if (level.clip(new ClipContext(origin, closest, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, this)).getType() != HitResult.Type.MISS) continue;
+            if (Gear.hurtModWave(target, player.damageSources().playerAttack(player), damage)) {
+                hit.add(target.getUUID());
+                level.sendParticles(ParticleTypes.END_ROD, closest.x, closest.y, closest.z, 7, 0.15, 0.2, 0.15, 0.035);
+            }
         }
-        setPos(to);
-        remaining -= from.distanceTo(to);
-        if (wall || remaining <= 0) discard();
+        if (blocked) discard();
     }
+
     @Override protected void readAdditionalSaveData(CompoundTag tag) { discard(); }
     @Override protected void addAdditionalSaveData(CompoundTag tag) {}
     @Override public boolean isPickable() { return false; }

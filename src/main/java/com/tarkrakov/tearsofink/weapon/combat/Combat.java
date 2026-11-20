@@ -457,7 +457,7 @@ public final class Combat {
 			}
 		}
 		if (shieldAttack && !physicalContact && scale >= 0.999f) {
-			level.addFreshEntity(new com.tarkrakov.tearsofink.weapon.shield.ShieldPhantomEntity(level,p,weapon,(float)base,step.reach()));
+			level.addFreshEntity(new com.tarkrakov.tearsofink.weapon.shield.ShieldPhantomEntity(level,p,weapon,(float)base));
 		}
 		if (hitAny) {
 			com.tarkrakov.tearsofink.weapon.forge.Gear.onSuccessfulCombo(p, weapon); // +Чернила только обычным оружием, один раз за взмах

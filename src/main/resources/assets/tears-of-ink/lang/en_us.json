@@ -1116,7 +1116,7 @@
   "equipment.tears-of-ink.shield.family.defense": "Family: Defense",
   "equipment.tears-of-ink.shield.family.support": "Family: Support",
   "equipment.tears-of-ink.shield.profile": "Pair block: %s%% cost · %s° coverage (shield contribution)",
-  "equipment.tears-of-ink.shield.phantom": "Full swing miss: phantom +%s blocks, %s%% damage.",
+  "equipment.tears-of-ink.shield.phantom": "Full swing miss: phantom up to %s blocks, %s%% damage.",
   "equipment.tears-of-ink.shield.paired": "With two shields: R — Resonance, Shift+R — left shield skill.",
   "diary.tears-of-ink.section.fate": "Fate",
   "diary.tears-of-ink.recipe.crafting": "Crafting table",

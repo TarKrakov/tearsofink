@@ -306,7 +306,7 @@ public final class WeaponStats {
                         com.tarkrakov.tearsofink.weapon.shield.ResonanceTuning.SOUL_COST,
                         fmt(com.tarkrakov.tearsofink.weapon.shield.ResonanceTuning.COOLDOWN_TICKS/20.0));
                 add(out, "shield.paired", ChatFormatting.GRAY);
-                add(out, "shield.phantom", ChatFormatting.GRAY, fmt(ShieldTuning.PHANTOM_EXTRA_REACH), fmt(ShieldTuning.PHANTOM_DAMAGE_MULT * 100));
+                add(out, "shield.phantom", ChatFormatting.GRAY, fmt(ShieldTuning.PHANTOM_RANGE), fmt(ShieldTuning.PHANTOM_DAMAGE_MULT * 100));
                 add(out, "shield.offhand", ChatFormatting.GRAY, t("offkey", SkillKeys.weaponKeyLabel()));
             } else if (gear && archetype != null) {
                 if (!two) add(out, "hilt", ChatFormatting.GRAY, Minecraft.getInstance().options.keyUse.getTranslatedKeyMessage(), fmt(HiltStrike.COOLDOWN/20.0));
