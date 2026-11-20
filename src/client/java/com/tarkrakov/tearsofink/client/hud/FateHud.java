@@ -87,7 +87,9 @@ public final class FateHud {
             var goal = FateProgress.active(track, mask, Vow.CLIENT);
             if (goal == null) continue;
             var label = mc.font.split(Component.translatable(PREFIX + "track." + track.id), available - 10);
-            var task = mc.font.split(Component.translatable(PREFIX + goal.id + ".hud"), available - 10);
+            String taskKey = goal == FateProgress.Goal.WEAPON && Vow.CLIENT == Vow.SOUL
+                    ? "weapon.soul_hud" : goal.id + ".hud";
+            var task = mc.font.split(Component.translatable(PREFIX + taskKey), available - 10);
             lines.add(new Line(label, task));
             height += 7 + 10 * (label.size() + task.size());
         }

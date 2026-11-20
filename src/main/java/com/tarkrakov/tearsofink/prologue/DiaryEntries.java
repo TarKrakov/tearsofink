@@ -148,9 +148,11 @@ public final class DiaryEntries {
 		// изменения инвентаря. Редкая серверная проверка охватывает подбор, крафт,
 		// печь и перенос из контейнеров без нового Mixin.
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
-			if (server.getTickCount() % INVENTORY_CHECK_TICKS != 0) return;
+			int tick = server.getTickCount();
+			if (tick % 20 != 0) return;
+			boolean discover = tick % INVENTORY_CHECK_TICKS == 0;
 			for (ServerPlayer p : server.getPlayerList().getPlayers()) {
-				checkGuidance(p);
+				if (discover) checkGuidance(p);
 				FateProgress.refresh(p, false);
 			}
 		});

@@ -176,7 +176,6 @@ public final class FateProgress {
         if (!Goal.TRADER.done(mask)) return null;
         Goal hunt = first(mask, Goal.CONTRACT, Goal.REDEEM);
         if (hunt != null) return hunt;
-        if (!Goal.WEAPON.done(mask)) return Goal.WEAPON;
         // Awakening is independent of ascension: never make a rare altar reagent a mandatory detour.
         Goal tier = first(mask, Goal.FONT, Goal.CONTRAST, Goal.RUBRICS);
         return tier != null ? tier : first(mask, Goal.ALTAR, Goal.AWAKENING);
