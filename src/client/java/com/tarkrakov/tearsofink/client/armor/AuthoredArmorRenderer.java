@@ -8,6 +8,7 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer;
+import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
 import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -78,11 +79,14 @@ public final class AuthoredArmorRenderer implements ArmorRenderer {
     private static final Map<Item, AuthoredArmorRenderer> RENDERERS = new HashMap<>();
     private final ResourceLocation texture;
     private final Map<EquipmentSlot, Map<Bone, List<Quad>>> mesh = new EnumMap<>(EquipmentSlot.class);
+    private final Map<Bone, Vector3f> neutralPivots = new EnumMap<>(Bone.class);
+    private static final List<EquipmentSlot> ITEM_SLOTS = List.of(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET);
 
     private AuthoredArmorRenderer(ResourceLocation texture) { this.texture = texture; }
 
     public static void init() {
         registerSet("pale_heavy_armor", "pale_closed_helmet", "pale_cuirass", "pale_plate_leggings", "pale_sabatons");
+        registerSet("pale_medium_armor", "pale_chain_hood", "pale_brigandine", "pale_reinforced_leggings", "pale_leather_boots");
     }
 
     /** Additional sets use the same group contract, with no new renderer class. */
@@ -108,8 +112,18 @@ public final class AuthoredArmorRenderer implements ArmorRenderer {
                 if (!BuiltInRegistries.ITEM.containsKey(id)) throw new IllegalArgumentException("Unknown item " + id);
                 items[i] = BuiltInRegistries.ITEM.get(id);
             }
+            if (items.length != ITEM_SLOTS.size()) throw new IllegalArgumentException("Expected four armor items");
+            // Bake a standalone item mesh from the same geometry, once per slot.
+            List<List<Quad>> previews = new ArrayList<>();
+            for (EquipmentSlot slot : ITEM_SLOTS) previews.add(result.itemMesh(slot));
             ArmorRenderer.register(result, items);
-            for (Item item : items) RENDERERS.put(item, result);
+            for (int i = 0; i < items.length; i++) {
+                RENDERERS.put(items[i], result);
+                List<Quad> preview = previews.get(i);
+                BuiltinItemRendererRegistry.INSTANCE.register(items[i],
+                        (stack, mode, pose, buffers, light, overlay) ->
+                                result.renderItemPreview(preview, stack, pose, buffers, light, overlay));
+            }
         } catch (Exception e) {
             // Leave the vanilla placeholder rather than preventing the client from starting.
             TearsOfInk.LOGGER.error("Unable to load authored armor {}", file, e);
@@ -158,6 +172,7 @@ public final class AuthoredArmorRenderer implements ArmorRenderer {
             Binding nextBinding = GROUPS.getOrDefault(name, binding);
             List<Turn> nextTurns = turns;
             if (nextBone != null) {
+                neutralPivots.put(nextBone, new Vector3f(origin));
                 nextTurns = List.of();
                 nextBinding = GROUPS.get(name);
             } else if (rotation.lengthSquared() != 0) {
@@ -256,6 +271,62 @@ public final class AuthoredArmorRenderer implements ArmorRenderer {
                 consumer.addVertex(matrix, p.x, p.y, p.z).setColor(0xFFFFFFFF)
                         .setUv(vertex.u(), vertex.v()).setOverlay(OverlayTexture.NO_OVERLAY)
                         .setLight(light).setNormal(matrix, n.x, n.y, n.z);
+            }
+        }
+        pose.popPose();
+    }
+
+    /** Undo the player bone-local transform to recover neutral BB geometry, then center
+     * each equipped item's own mesh in a unit item cube. No mannequin or other slots.
+     * Fit the bounding sphere (diameter 0.90) so every display rotation stays inside
+     * the icon without clipping; both boots/legs and both sleeves retain their spacing. */
+    private List<Quad> itemMesh(EquipmentSlot slot) {
+        List<Quad> result = new ArrayList<>();
+        Vector3f min = new Vector3f(Float.POSITIVE_INFINITY);
+        Vector3f max = new Vector3f(Float.NEGATIVE_INFINITY);
+        for (var entry : mesh.get(slot).entrySet()) {
+            Vector3f pivot = new Vector3f(neutralPivots.get(entry.getKey())).div(16f);
+            for (Quad quad : entry.getValue()) {
+                Vertex[] vertices = new Vertex[4];
+                for (int i = 0; i < 4; i++) {
+                    Vertex vertex = quad.vertices()[i];
+                    Vector3f point = new Vector3f(vertex.position()).mul(-1f, -1f, 1f).add(pivot);
+                    min.min(point);
+                    max.max(point);
+                    vertices[i] = new Vertex(point, vertex.u(), vertex.v());
+                }
+                result.add(new Quad(vertices, new Vector3f(quad.normal()).mul(-1f, -1f, 1f)));
+            }
+        }
+        if (result.isEmpty()) throw new IllegalArgumentException("Empty item mesh " + slot);
+        Vector3f center = new Vector3f(min).add(max).mul(0.5f);
+        float radius = 0;
+        for (Quad quad : result) {
+            for (Vertex vertex : quad.vertices()) {
+                radius = Math.max(radius, vertex.position().sub(center).length());
+            }
+        }
+        if (!(radius > 0) || !Float.isFinite(radius)) throw new IllegalArgumentException("Invalid item bounds " + slot);
+        for (Quad quad : result) {
+            for (Vertex vertex : quad.vertices()) vertex.position().mul(0.45f / radius);
+        }
+        return List.copyOf(result);
+    }
+
+    private void renderItemPreview(List<Quad> quads, ItemStack stack, PoseStack pose,
+                                   MultiBufferSource buffers, int light, int overlay) {
+        pose.pushPose();
+        // ItemRenderer already applies the JSON display transform and translates by -0.5.
+        pose.translate(0.5, 0.5, 0.5);
+        VertexConsumer consumer = buffer(buffers, stack);
+        var matrix = pose.last();
+        for (Quad quad : quads) {
+            Vector3f normal = quad.normal();
+            for (Vertex vertex : quad.vertices()) {
+                Vector3f p = vertex.position();
+                consumer.addVertex(matrix, p.x, p.y, p.z).setColor(0xFFFFFFFF)
+                        .setUv(vertex.u(), vertex.v()).setOverlay(overlay)
+                        .setLight(light).setNormal(matrix, normal.x, normal.y, normal.z);
             }
         }
         pose.popPose();
