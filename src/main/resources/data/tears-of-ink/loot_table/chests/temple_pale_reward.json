@@ -6,16 +6,6 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "tears-of-ink:pigment",
-          "weight": 1
-        }
-      ]
-    },
-    {
-      "rolls": 1,
-      "entries": [
-        {
-          "type": "minecraft:item",
           "name": "tears-of-ink:raw_pale_metal",
           "weight": 45,
           "functions": [
@@ -23,8 +13,8 @@
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 1,
-                "max": 2
+                "min": 2,
+                "max": 3
               }
             }
           ]

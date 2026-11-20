@@ -41,13 +41,33 @@
         },
         {
           "type": "minecraft:item",
-          "name": "tears-of-ink:tearbloom_brew",
-          "weight": 20
+          "name": "minecraft:torch",
+          "weight": 20,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 3
+              }
+            }
+          ]
         },
         {
           "type": "minecraft:item",
-          "name": "tears-of-ink:strong_tearbloom_brew",
-          "weight": 10
+          "name": "minecraft:torch",
+          "weight": 10,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 3
+              }
+            }
+          ]
         }
       ]
     },
@@ -139,7 +159,7 @@
       "conditions": [
         {
           "condition": "minecraft:random_chance",
-          "chance": 0.35
+          "chance": 0.1
         }
       ]
     }

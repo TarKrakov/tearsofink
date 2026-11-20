@@ -43,6 +43,14 @@ public abstract class NaturalSpawnerMixin {
 				||com.tarkrakov.tearsofink.world.herald.BloodSettlements.contains(level,mob.blockPosition()))){
 			cir.setReturnValue(false);return;
 		}
+		// D-101: reject most natural vanilla hostile-mob candidates; leave scripted
+		// encounters and mod fauna alone. Inkwood retains more enemies for metal farming.
+		if (com.tarkrakov.tearsofink.world.ModDimensions.isLands(level)) {
+			int acceptance = level.getBiome(mob.blockPosition()).is(com.tarkrakov.tearsofink.world.ModBiomes.INKWOOD) ? 35 : 10;
+			if (level.getRandom().nextInt(100) >= acceptance) {
+				cir.setReturnValue(false);return;
+			}
+		}
 		if (!(level.getChunkSource().getGenerator().getBiomeSource() instanceof InkLandsAccess access)) return;
 		InkLandsLayout layout = access.tearsofink$layout(level.getChunkSource().randomState().sampler());
 		if (layout != null && layout.nearHerald(mob.getBlockX(), mob.getBlockZ(), BloodHerald.NO_MONSTER_RADIUS)) {

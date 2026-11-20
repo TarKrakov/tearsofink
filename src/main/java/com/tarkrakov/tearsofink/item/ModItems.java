@@ -199,7 +199,7 @@ public final class ModItems {
 	public static final Item SILK_THREAD = register("silk_thread", new Item(new Item.Properties()));
 	/** Сгусток крови (кровавые гусеницы, Кровосборник). */
 	public static final Item BLOOD_CLOT = register("blood_clot", new Item(new Item.Properties()));
-	/** Кристалл крови — редко застывает в Накопителе Кровосборника (для крафтов). */
+	/** Кристалл крови — редкая награда Жатвы и особых заказов (для усиления свойств). */
 	public static final Item BLOOD_CRYSTAL = register("blood_crystal", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.UNCOMMON)));
 	/** Чернила (чернильные гусеницы). */
 	public static final Item INK = register("ink", new Item(new Item.Properties()));

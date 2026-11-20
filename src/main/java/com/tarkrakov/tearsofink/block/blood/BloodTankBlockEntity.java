@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import org.jetbrains.annotations.Nullable;
 
-/** Накопитель: хранит кровь и застывшие Кристаллы крови. */
+/** Накопитель: хранит кровь и ранее полученные Кристаллы крови (совместимость сохранений). */
 public class BloodTankBlockEntity extends BlockEntity {
 	private int blood;
 	private int crystals;
@@ -29,10 +29,9 @@ public class BloodTankBlockEntity extends BlockEntity {
 		return crystals;
 	}
 
-	/** Удар помпы: +1 крови и, с малым шансом, Кристалл. */
+	/** Удар помпы: +1 крови. Кристаллы больше не образуются пассивно. */
 	public void pumpIn(RandomSource random) {
 		if (blood < BloodTuning.TANK_CAPACITY) blood++;
-		if (crystals < BloodTuning.CRYSTAL_MAX && random.nextInt(BloodTuning.CRYSTAL_ONE_IN) == 0) crystals++;
 		setChanged();
 	}
 

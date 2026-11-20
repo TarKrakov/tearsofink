@@ -12,7 +12,7 @@ public final class BloodTuning {
 	public static final int TANK_CAPACITY = 64;
 	/** Сколько крови = 1 Сгусток крови при сборе. */
 	public static final int BLOOD_PER_CLOT = 10;
-	/** Шанс, что за удар в Накопителе застынет Кристалл крови (1 из N), и сколько их может лежать максимум. */
+	/** Исторические параметры до D-101; пассивная генерация Кристаллов выключена. */
 	public static final int CRYSTAL_ONE_IN = 200, CRYSTAL_MAX = 3;
 	/** Ниже этого гусеницы не пьют — идут есть Плотеягоду. */
 	public static final int CATERPILLAR_MIN = 10;
