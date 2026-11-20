@@ -212,8 +212,8 @@ public class DiaryScreen extends Screen {
 		} else {
 			body.addAll(font.split(Component.translatable(prefix + "next").withStyle(style -> style.withColor(TITLE)), TEXT_W));
 			for (var goal : next) {
-				body.addAll(font.split(Component.translatable(prefix + goal.id + ".title").withStyle(ChatFormatting.BOLD), TEXT_W));
-				body.addAll(font.split(Component.translatable(prefix + goal.id + ".hint"), TEXT_W));
+				body.addAll(font.split(DiaryRecipeLinks.decorate(Component.translatable(prefix + goal.id + ".title").withStyle(ChatFormatting.BOLD)), TEXT_W));
+				body.addAll(font.split(DiaryRecipeLinks.decorate(Component.translatable(prefix + goal.id + ".hint")), TEXT_W));
 			}
 		}
 		int capacity = rows(heading.size());
@@ -234,8 +234,8 @@ public class DiaryScreen extends Screen {
 	}
 
 	private List<FormattedCharSequence> completedLine(String prefix, FateProgress.Goal goal) {
-		return font.split(Component.translatable(prefix + goal.id + ".title")
-				.withStyle(style -> style.withColor(FADED).withStrikethrough(true)), TEXT_W);
+		return font.split(DiaryRecipeLinks.decorate(Component.translatable(prefix + goal.id + ".title")
+				.withStyle(style -> style.withColor(FADED).withStrikethrough(true))), TEXT_W);
 	}
 
 	private void appendFateSheets(List<FormattedCharSequence> heading, List<FormattedCharSequence> body) {
@@ -256,8 +256,8 @@ public class DiaryScreen extends Screen {
 				: Component.literal("???");
 		Component text = open ? Component.translatable("diary.tears-of-ink.entry." + id + ".text")
 				: Component.translatable("diary.tears-of-ink.illegible").withStyle(ChatFormatting.ITALIC);
-		List<FormattedCharSequence> heading = font.split(title, TEXT_W);
-		List<FormattedCharSequence> all = font.split(text, TEXT_W);
+		List<FormattedCharSequence> heading = font.split(open ? DiaryRecipeLinks.decorate(title) : title, TEXT_W);
+		List<FormattedCharSequence> all = font.split(open ? DiaryRecipeLinks.decorate(text) : text, TEXT_W);
 		int i = 0;
 		boolean first = true;
 		int part = 0;
@@ -299,14 +299,18 @@ public class DiaryScreen extends Screen {
 
 		page = Math.max(0, Math.min(page, sheets.size() - 1));
 		Sheet sheet = sheets.get(page);
+		ResourceLocation recipe = null;
 		int y = TITLE_Y;
 		for (FormattedCharSequence h : sheet.heading()) {
-			g.drawString(font, h, TEXT_X + (TEXT_W - font.width(h)) / 2, y, TITLE, false);
+			int x = TEXT_X + (TEXT_W - font.width(h)) / 2;
+			g.drawString(font, h, x, y, TITLE, false);
+			if (sheet.open() && recipe == null) recipe = DiaryRecipeLinks.hit(font, h, x, y, mx, my);
 			y += TITLE_LINE;
 		}
 		y = textStart(sheet.heading().size());
 		for (FormattedCharSequence line : sheet.lines()) {
 			g.drawString(font, line, TEXT_X, y, sheet.color(), false);
+			if (sheet.open() && recipe == null) recipe = DiaryRecipeLinks.hit(font, line, TEXT_X, y, mx, my);
 			y += LINE;
 		}
 
@@ -315,6 +319,7 @@ public class DiaryScreen extends Screen {
 		if (page < sheets.size() - 1) arrow(g, "diary_next", NEXT_X, mx, my);
 		g.pose().popPose();
 		if (hovered != null) tabTooltip(g, hovered, mouseX, mouseY);
+		else if (recipe != null) DiaryRecipeLinks.render(g, font, minecraft, recipe, mouseX, mouseY, width, height);
 	}
 
 	private static Component sectionTitle(DiarySection section) {
