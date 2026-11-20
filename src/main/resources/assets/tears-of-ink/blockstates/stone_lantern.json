@@ -1,7 +1,7 @@
 {
   "variants": {
     "half=lower": {
-      "model": "tears-of-ink:block/stone_lantern"
+      "model": "tears-of-ink:block/ink_lantern"
     },
     "half=upper": {
       "model": "tears-of-ink:block/stone_lantern_upper"

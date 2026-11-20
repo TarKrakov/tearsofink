@@ -23,15 +23,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.ChunkAccess;
 import net.minecraft.world.level.chunk.status.ChunkStatus;
 
-/** Общая логика фонарей: зажечь/погасить, лимит самодельных, поиск горящих фонарей рядом. */
+/** Общая логика фонарей: зажечь/погасить, поиск горящих фонарей рядом. */
 public final class Lanterns {
 	// ===== Настройки — крутить здесь =====
 	/** Сколько Чернил стоит зажечь фонарь. */
 	public static final int LIGHT_COST = 10;
-	/** Сколько самодельных фонарей может гореть рядом... */
-	public static final int PLAYER_MADE_LIMIT = 4;
-	/** ...в этом радиусе (блоков). */
-	public static final int PLAYER_MADE_LIMIT_RADIUS = 48;
 	/** На сколько блоков за радиусом ясность плавно спадает до обычной мглы. */
 	public static final int CLEAR_FADE = 8;
 	/** Самый большой радиус ясности среди фонарей (для поиска). */
@@ -71,19 +67,6 @@ public final class Lanterns {
 		return safe[0];
 	}
 
-	/** Сколько самодельных фонарей горит рядом. */
-	public static int litPlayerMadeNear(Level level, BlockPos at) {
-		int[] count = {0};
-		long r2 = (long) PLAYER_MADE_LIMIT_RADIUS * PLAYER_MADE_LIMIT_RADIUS;
-		forEachLit(level, at.getX(), at.getZ(), PLAYER_MADE_LIMIT_RADIUS, (pos, state, lantern) -> {
-			if (lantern.isPlayerMade(state) && !pos.equals(at)) {
-				long dx = pos.getX() - at.getX(), dz = pos.getZ() - at.getZ();
-				if (dx * dx + dz * dz <= r2) count[0]++;
-			}
-		});
-		return count[0];
-	}
-
 	/**
 	 * ПКМ по фонарю. Потухший — зажечь (стоит Чернил, только в Чернильных Землях).
 	 * Горящий + Shift — погасить (только самодельный; в креативе — любой).
@@ -113,12 +96,7 @@ public final class Lanterns {
 				fizzle(sp);
 				return InteractionResult.CONSUME;
 			}
-			if (playerMade && litPlayerMadeNear(level, pos) >= PLAYER_MADE_LIMIT) {
-				sp.sendSystemMessage(Component.translatable("message.tears-of-ink.too_many_flames").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
-				fizzle(sp);
-				return InteractionResult.CONSUME;
-			}
-			if (data.ink() < LIGHT_COST) {
+				if (data.ink() < LIGHT_COST) {
 				ServerPlayNetworking.send(sp, new SkillPayloads.NotEnough(false));
 				fizzle(sp);
 				return InteractionResult.CONSUME;

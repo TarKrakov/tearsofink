@@ -7,7 +7,7 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "tears-of-ink:stone_lantern"
+          "name": "tears-of-ink:ink_lantern"
         }
       ],
       "conditions": [

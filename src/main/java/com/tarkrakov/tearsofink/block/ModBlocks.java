@@ -326,7 +326,8 @@ public final class ModBlocks {
 
 	/** Чернильный фонарь: малый, ставится на землю/забор или подвешивается. Можно скрафтить. */
 	public static final Block INK_LANTERN = register("ink_lantern", new InkLanternBlock(INK_LANTERN_RADIUS, false, lanternProps(14)));
-	/** Каменный фонарь (модель автора): большой, в два блока; огонь — танцующая частица. Можно скрафтить. */
+	/** Legacy каменный фонарь: ID/двухблочное состояние оставлены только для старых сохранений.
+	 * Авторская модель и текстура перемещены в резерв вне игровых ресурсов. */
 	public static final Block STONE_LANTERN = register("stone_lantern", new StoneLanternBlock(STONE_LANTERN_RADIUS,
 			lanternProps(15).sound(SoundType.STONE).noOcclusion()
 					.lightLevel(s -> s.getValue(StoneLanternBlock.HALF) == net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER
