@@ -1231,5 +1231,8 @@
   "gui.tears-of-ink.personal": "Личные вещи",
   "gui.tears-of-ink.personal.0": "Книга",
   "gui.tears-of-ink.personal.1": "Зерк.",
-  "gui.tears-of-ink.personal.2": "Ключ"
+  "gui.tears-of-ink.personal.2": "Ключ",
+  "diary.tears-of-ink.section.collection": "Коллекция",
+  "diary.tears-of-ink.entry.collection_invitation.title": "Письмо-приглашение",
+  "diary.tears-of-ink.collection.empty": "Здесь будут храниться найденные свидетельства и письма."
 }

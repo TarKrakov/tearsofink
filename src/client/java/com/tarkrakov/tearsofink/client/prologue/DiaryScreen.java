@@ -279,7 +279,8 @@ public class DiaryScreen extends Screen {
 				&& builtFrom.stream().anyMatch(DiaryEntries.CATERPILLAR_PAGES::contains))
 				? Component.translatable("diary.tears-of-ink.entry." + id + ".title")
 				: Component.literal("???");
-		Component text = open ? Component.translatable("diary.tears-of-ink.entry." + id + ".text")
+		Component text = open ? Component.translatable(id.equals(DiaryEntries.COLLECTION_INVITATION)
+				? "letter.tears-of-ink.invitation" : "diary.tears-of-ink.entry." + id + ".text")
 				: Component.translatable("diary.tears-of-ink.illegible").withStyle(ChatFormatting.ITALIC);
 		List<FormattedCharSequence> heading = font.split(open ? DiaryRecipeLinks.decorate(title) : title, TEXT_W);
 		List<FormattedCharSequence> all = font.split(open ? DiaryRecipeLinks.decorate(text) : text, TEXT_W);
@@ -350,7 +351,12 @@ public class DiaryScreen extends Screen {
 	private static Component sectionTitle(DiarySection section) {
 		return Component.translatable("diary.tears-of-ink.section." + section.id);
 	}
-	private static int tabIndex(DiarySection section) { return section == DiarySection.FATE ? 0 : section.ordinal() + 1; }
+	private static int tabIndex(DiarySection section) {
+		return section == DiarySection.FATE ? 0 : section == DiarySection.COLLECTION ? 7 : section.ordinal() + 1;
+	}
+	private static DiarySection tabAtIndex(int index) {
+		return index == 0 ? DiarySection.FATE : index == 7 ? DiarySection.COLLECTION : DiarySection.values()[index - 1];
+	}
 	private static int tabY(DiarySection section) { return TAB_TOP + tabIndex(section) * TAB_STEP; }
 	private int tabX(DiarySection tab) { return tab == section ? TAB_ACTIVE_X : TAB_X; }
 
@@ -366,6 +372,12 @@ public class DiaryScreen extends Screen {
 		for (DiarySection tab : DiarySection.values()) {
 			int state = tab == section ? 2 : tab == hovered ? 1 : 0;
 			if (tab == DiarySection.FATE) g.blit(FATE_TAB, tabX(tab), tabY(tab), state * TAB_W, 0, TAB_W, TAB_H, 72, 24);
+			else if (tab == DiarySection.COLLECTION) {
+				// The original atlas contains six rows; draw a functional new tab without replacing author art.
+				int x = tabX(tab), y = tabY(tab);
+				g.fill(x, y, x + TAB_W, y + TAB_H, state == 2 ? 0xFF7C655B : state == 1 ? 0xFF998274 : 0xFF594851);
+				g.drawString(font, "C", x + 9, y + 8, 0xFFEED9AE, false);
+			}
 			else g.blit(TABS, tabX(tab), tabY(tab), state * TAB_W, tab.ordinal() * TAB_H,
 					TAB_W, TAB_H, 72, 144);
 			if (sectionUnread(tab)) dot(g, tabX(tab) + TAB_W - 4, tabY(tab) + 3);
@@ -477,7 +489,7 @@ public class DiaryScreen extends Screen {
 		if (key == 264 || key == 265) {
 			DiarySection[] tabs = DiarySection.values();
 			int next = Math.max(0, Math.min(tabs.length - 1, tabIndex(section) + (key == 264 ? 1 : -1)));
-			select(next == 0 ? DiarySection.FATE : tabs[next - 1]);
+			select(tabAtIndex(next));
 			return true;
 		}
 		if (key == 262 && page < sheets.size() - 1) { turn(1); return true; }

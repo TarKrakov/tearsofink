@@ -1231,5 +1231,8 @@
   "gui.tears-of-ink.personal": "Keepsakes",
   "gui.tears-of-ink.personal.0": "Book",
   "gui.tears-of-ink.personal.1": "Mirror",
-  "gui.tears-of-ink.personal.2": "Key"
+  "gui.tears-of-ink.personal.2": "Key",
+  "diary.tears-of-ink.section.collection": "Collection",
+  "diary.tears-of-ink.entry.collection_invitation.title": "The Invitation",
+  "diary.tears-of-ink.collection.empty": "Collected letters and records will appear here."
 }

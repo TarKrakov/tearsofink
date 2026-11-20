@@ -12,7 +12,8 @@ enum DiarySection {
 	CRAFT("craft", "pale_metal", "draft_asphoda", "ink_anvil", "draft_weaponcraft", "draft_armor", "draft_alchemy", "draft_blood_metal", "draft_blood_collector", "draft_ink_metal", "cursed_altar", "ascension_font"),
 	TRIALS("trials", "draft_hunt_field", "draft_mad_order", "draft_harvest"),
 	VOWS("vows", "draft_soul", "draft_soul_deeds", "draft_ink", "draft_ink_ranks", "draft_soul_bargain"),
-	FATE("fate");
+	FATE("fate"),
+	COLLECTION("collection", "collection_invitation");
 
 	private static final Map<String, DiarySection> INDEX = new HashMap<>();
 	static {
@@ -35,6 +36,6 @@ enum DiarySection {
 
 	/** Unknown future entries remain readable. */
 	static DiarySection of(String id) {
-		return INDEX.getOrDefault(id, CHRONICLES);
+		return id.startsWith("collection_") ? COLLECTION : INDEX.getOrDefault(id, CHRONICLES);
 	}
 }

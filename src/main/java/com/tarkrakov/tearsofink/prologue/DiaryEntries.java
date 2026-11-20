@@ -48,6 +48,8 @@ public final class DiaryEntries {
 	public static final List<String> CREATURES = List.of("pale_spearman", "pale_shieldbearer",
 			"pale_crossbowman", "zombie", "skeleton", "spider");
 	public static final String INTRO = "intro";
+	/** The signed invitation is collected into the Diary; the physical letter was consumed at signing. */
+	public static final String COLLECTION_INVITATION = "collection_invitation";
 	public static final String FIRST_STEPS = "first_steps";
 	public static final String PALE_METAL = "pale_metal";
 	public static final String INK_ANVIL = "ink_anvil";
@@ -179,6 +181,10 @@ public final class DiaryEntries {
 
 	private static void checkArrival(ServerPlayer p) {
 		if (!ModDimensions.isLands(p.level())) return;
+		// Backfill old characters: signing already consumed the physical invitation.
+		if (com.tarkrakov.tearsofink.travel.Travel.get(p).stage() >=
+				com.tarkrakov.tearsofink.travel.LandsTravel.STAGE_SIGNED)
+			unlock(p, COLLECTION_INVITATION);
 		Vow vow = Vows.vow(p);
 		if (vow == Vow.SOUL) unlock(p, FIRST_STEPS, DRAFT_FOG, DRAFT_SOUL);
 		else if (vow == Vow.INK) unlock(p, FIRST_STEPS, DRAFT_FOG, DRAFT_INK);

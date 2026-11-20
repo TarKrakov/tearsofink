@@ -216,6 +216,7 @@ public final class Prologue {
 		inv.getItem(slot).shrink(1);
 		if (!inv.contains(new ItemStack(ModItems.DIM_MIRROR))) PrologueItems.give(p, ModItems.DIM_MIRROR);
 		Travel.set(p, t.withStage(LandsTravel.STAGE_SIGNED));
+		DiaryEntries.unlock(p, DiaryEntries.COLLECTION_INVITATION);
 		preloadArrival(p);
 		// письмо вылетает и сгорает
 		ServerLevel level = p.serverLevel();
