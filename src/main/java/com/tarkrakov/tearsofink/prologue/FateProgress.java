@@ -41,6 +41,11 @@ public final class FateProgress {
         private final int bit;
         Goal(String id, int index) { this.id = id; this.bit = 1 << index; }
         public boolean done(int mask) { return (mask & bit) != 0; }
+
+        /** The same persistent weapon milestone has vow-specific guidance, not new completion bits. */
+        public String textId(Vow vow) {
+            return this == WEAPON && vow != Vow.NONE ? id + "." + vow.id : id;
+        }
     }
 
     /** Three directions share one persistent history. GEAR is a legacy bit, never reused. */

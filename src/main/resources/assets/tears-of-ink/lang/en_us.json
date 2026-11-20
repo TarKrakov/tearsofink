@@ -991,7 +991,7 @@
   "diary.tears-of-ink.entry.draft_pale_deer.title": "Pale Deer",
   "diary.tears-of-ink.entry.draft_pale_deer.text": "Herds of deer still live in the Pale Forest. While some feed on grass and flowers, sentinels rise onto their hind legs and watch the surroundings. At an alarm call, the herd answers and flees in long bounds. Their voices and hoofbeats often reach you before antlers emerge from the fog. Approach carefully and make use of light and a bow: giving chase rarely succeeds. A successful hunt yields plenty of meat and some hide.",
   "diary.tears-of-ink.entry.draft_weaponcraft.title": "Weapons of the Lands",
-  "diary.tears-of-ink.entry.draft_weaponcraft.text": "Local blades are made at the [[ink_anvil|Ink Anvil]]. Try a [[pale_sword|Pale Sword]]. Forging a new [[ram_shield|Ram Shield]] requires Pigment, but a worn shield can be [[restore_ram_shield|restored]] with one Pale Ingot at a crafting table.\nOrdinary blades restore Ink once per successful swing, not for every enemy struck. Blood blades may cause bleeding; Ink blades slow targets. Hunter weapons are earned from contracts or forged with special recipes; they do not restore Ink on hits. Foreign weapons deal 60% less damage here, including against other travelers.",
+  "diary.tears-of-ink.entry.draft_weaponcraft.text": "Local blades are made at the [[ink_anvil|Ink Anvil]]. Restore your starter [[restore_dim_scimitar|Dim Scimitar]] with one Pale Ingot at a crafting table to obtain the Wave Sword. For a new blade, try a [[pale_sword|Pale Sword]]. Forging a new [[ram_shield|Ram Shield]] requires Pigment, but a worn shield can be [[restore_ram_shield|restored]] with one Pale Ingot at a crafting table.\nOrdinary blades restore Ink once per successful swing, not for every enemy struck. Blood blades may cause bleeding; Ink blades slow targets. Hunter weapons are earned from contracts or forged with special recipes; they do not restore Ink on hits. Foreign weapons deal 60% less damage here, including against other travelers.",
   "equipment.tears-of-ink.details_hint": "[Shift] Moves and details",
   "equipment.tears-of-ink.summary_hint": "Release key: summary",
   "equipment.tears-of-ink.armor.type": "%s armor · %s",
@@ -1213,5 +1213,11 @@
   "diary.tears-of-ink.fate.contrast.hud": "Ascend a blade to Contrast",
   "diary.tears-of-ink.fate.rubrics.hud": "Ascend a blade to Rubric",
   "key.tears-of-ink.fate_hud": "Show/hide objectives",
-  "diary.tears-of-ink.fate.weapon.soul_hud": "Restore a shield or obtain a blade"
+  "diary.tears-of-ink.fate.weapon.soul_hud": "Restore a shield or obtain a blade",
+  "diary.tears-of-ink.fate.weapon.ink.title": "Restore your blade",
+  "diary.tears-of-ink.fate.weapon.ink.hint": "Combine your [[restore_dim_scimitar|Dim Scimitar]] with one Pale Ingot at a regular crafting table to obtain the Wave Sword. If you lost your starter blade, forge another local blade at the [[ink_anvil|Ink Anvil]].",
+  "diary.tears-of-ink.fate.weapon.ink.hud": "Restore the Dim Scimitar (1 ingot)",
+  "diary.tears-of-ink.fate.weapon.soul.title": "Restore your shield",
+  "diary.tears-of-ink.fate.weapon.soul.hint": "Restore a [[restore_ram_shield|worn Ram Shield]] or [[restore_mercy_shield|Mercy Shield]] with one Pale Ingot at a regular crafting table. Alternatively, obtain a local blade or a full shield.",
+  "diary.tears-of-ink.fate.weapon.soul.hud": "Restore a shield (1 ingot)"
 }

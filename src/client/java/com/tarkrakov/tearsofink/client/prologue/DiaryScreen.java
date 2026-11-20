@@ -212,7 +212,7 @@ public class DiaryScreen extends Screen {
 					.withStyle(style -> style.withColor(TITLE).withBold(true)), TEXT_W));
 			var active = FateProgress.active(track, fateMask, builtVow);
 			if (active != null) body.addAll(font.split(DiaryRecipeLinks.decorate(Component.translatable(
-					prefix + active.id + ".title")), TEXT_W));
+					prefix + active.textId(builtVow) + ".title")), TEXT_W));
 			else body.addAll(font.split(Component.translatable(prefix + (trackFinished(track) ? "track_done" : "track_wait"))
 					.withStyle(style -> style.withColor(FADED)), TEXT_W));
 		}
@@ -238,9 +238,9 @@ public class DiaryScreen extends Screen {
 		if (active != null) {
 			body.add(FormattedCharSequence.EMPTY);
 			body.addAll(font.split(Component.translatable(prefix + "next").withStyle(style -> style.withColor(TITLE)), TEXT_W));
-			body.addAll(font.split(DiaryRecipeLinks.decorate(Component.translatable(prefix + active.id + ".title")
+			body.addAll(font.split(DiaryRecipeLinks.decorate(Component.translatable(prefix + active.textId(builtVow) + ".title")
 					.withStyle(ChatFormatting.BOLD)), TEXT_W));
-			body.addAll(font.split(DiaryRecipeLinks.decorate(Component.translatable(prefix + active.id + ".hint")), TEXT_W));
+			body.addAll(font.split(DiaryRecipeLinks.decorate(Component.translatable(prefix + active.textId(builtVow) + ".hint")), TEXT_W));
 		} else {
 			body.addAll(font.split(Component.translatable(prefix + (trackFinished(track) ? "track_done" : "track_wait")), TEXT_W));
 		}
@@ -251,7 +251,7 @@ public class DiaryScreen extends Screen {
 			String state = complete ? "done" : skippedGoal ? "skipped" : goal == active ? "active"
 					: FateProgress.optional(goal) ? "optional" : "pending";
 			var label = Component.translatable(prefix + "state." + state).append(" ")
-					.append(DiaryRecipeLinks.decorate(Component.translatable(prefix + goal.id + ".title")))
+					.append(DiaryRecipeLinks.decorate(Component.translatable(prefix + goal.textId(builtVow) + ".title")))
 					.withStyle(style -> style.withColor(complete || skippedGoal ? FADED : goal == active ? TITLE : TEXT)
 							.withStrikethrough(complete).withBold(goal == active));
 			body.addAll(font.split(label, TEXT_W));
