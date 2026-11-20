@@ -4,6 +4,7 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.client.prologue.DiaryScreen;
 import com.tarkrakov.tearsofink.prologue.FateProgress;
+import com.tarkrakov.tearsofink.vow.Vow;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
@@ -57,6 +58,8 @@ public final class FateHud {
         return toggleKey != null && toggleKey.matches(key, scan);
     }
 
+    public static boolean enabled() { return enabled; }
+
     public static void toggle() {
         enabled = !enabled;
         try {
@@ -75,13 +78,13 @@ public final class FateHud {
         int mask = DiaryScreen.fateMask;
         if (mask < 0 || !FateProgress.Goal.ARRIVAL.done(mask)) return;
         int w = g.guiWidth(), h = g.guiHeight();
-        int available = Math.min(190, Math.max(76, w / 3 - 14));
+        int available = Math.min(190, Math.max(76, w / 2 - 18));
         int limit = Math.min(h - 70, h / 2 - 10);
         if (limit < 24 || w < 160) return;
         List<Line> lines = new ArrayList<>();
         int height = 4;
         for (var track : FateProgress.Track.values()) {
-            var goal = FateProgress.active(track, mask);
+            var goal = FateProgress.active(track, mask, Vow.CLIENT);
             if (goal == null) continue;
             var label = mc.font.split(Component.translatable(PREFIX + "track." + track.id), available - 10);
             var task = mc.font.split(Component.translatable(PREFIX + goal.id + ".hud"), available - 10);

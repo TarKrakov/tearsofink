@@ -9,6 +9,7 @@ import com.tarkrakov.tearsofink.item.OrdinaryArmorItem;
 import com.tarkrakov.tearsofink.trader.SoulTrader;
 import com.tarkrakov.tearsofink.travel.FountainTravel;
 import com.tarkrakov.tearsofink.vow.Vows;
+import com.tarkrakov.tearsofink.vow.Vow;
 import com.tarkrakov.tearsofink.weapon.SoulShieldItem;
 import com.tarkrakov.tearsofink.weapon.forge.AscensionFont;
 import com.tarkrakov.tearsofink.weapon.forge.Gear;
@@ -47,11 +48,19 @@ public final class FateProgress {
         STORY("story", Goal.ARRIVAL, Goal.FIRST_FOUNTAIN, Goal.SECOND_FOUNTAIN, Goal.TRADER),
         CALL("call", Goal.KEY, Goal.TRAVEL),
         CRAFT("craft", Goal.INGOT, Goal.ANVIL, Goal.WEAPON, Goal.ARMOR, Goal.CONTRACT, Goal.REDEEM,
-                Goal.ALTAR, Goal.AWAKENING, Goal.FONT, Goal.CONTRAST, Goal.RUBRICS);
+                Goal.FONT, Goal.CONTRAST, Goal.RUBRICS, Goal.ALTAR, Goal.AWAKENING);
 
         public final String id;
         public final List<Goal> goals;
         Track(String id, Goal... goals) { this.id = id; this.goals = List.of(goals); }
+
+        private static final List<Goal> SOUL_CRAFT = List.of(Goal.INGOT, Goal.ANVIL, Goal.ARMOR,
+                Goal.CONTRACT, Goal.REDEEM, Goal.WEAPON, Goal.FONT, Goal.CONTRAST, Goal.RUBRICS,
+                Goal.ALTAR, Goal.AWAKENING);
+
+        public List<Goal> goalsFor(Vow vow) {
+            return this == CRAFT && vow == Vow.SOUL ? SOUL_CRAFT : goals;
+        }
     }
 
     public static boolean optional(Goal goal) {
@@ -147,7 +156,9 @@ public final class FateProgress {
     }
 
     /** At most one currently suggested action per lane. No action gates any game mechanic. */
-    public static Goal active(Track track, int mask) {
+    public static Goal active(Track track, int mask) { return active(track, mask, Vow.NONE); }
+
+    public static Goal active(Track track, int mask, Vow vow) {
         if (mask < 0) return null;
         if (track == Track.STORY)
             return first(mask, Goal.ARRIVAL, Goal.FIRST_FOUNTAIN, Goal.SECOND_FOUNTAIN, Goal.TRADER);
@@ -156,11 +167,16 @@ public final class FateProgress {
             if (!Goal.SECOND_FOUNTAIN.done(mask)) return first(mask, Goal.KEY);
             return Goal.TRADER.done(mask) ? first(mask, Goal.TRAVEL) : null;
         }
-        Goal basic = first(mask, Goal.INGOT, Goal.ANVIL, Goal.WEAPON, Goal.ARMOR);
+        // Full Soul shields use Pigment. Let a pilgrim earn it with worn shields
+        // instead of directing them to an expensive new shield before their first contract.
+        Goal basic = vow == Vow.SOUL
+                ? first(mask, Goal.INGOT, Goal.ANVIL, Goal.ARMOR)
+                : first(mask, Goal.INGOT, Goal.ANVIL, Goal.WEAPON, Goal.ARMOR);
         if (basic != null) return basic;
         if (!Goal.TRADER.done(mask)) return null;
         Goal hunt = first(mask, Goal.CONTRACT, Goal.REDEEM);
         if (hunt != null) return hunt;
+        if (!Goal.WEAPON.done(mask)) return Goal.WEAPON;
         // Awakening is independent of ascension: never make a rare altar reagent a mandatory detour.
         Goal tier = first(mask, Goal.FONT, Goal.CONTRAST, Goal.RUBRICS);
         return tier != null ? tier : first(mask, Goal.ALTAR, Goal.AWAKENING);

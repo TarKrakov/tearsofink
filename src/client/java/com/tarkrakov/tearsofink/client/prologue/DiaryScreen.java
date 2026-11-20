@@ -3,6 +3,7 @@ package com.tarkrakov.tearsofink.client.prologue;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.prologue.DiaryEntries;
 import com.tarkrakov.tearsofink.prologue.FateProgress;
+import com.tarkrakov.tearsofink.vow.Vow;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
@@ -68,6 +69,7 @@ public class DiaryScreen extends Screen {
 	/** -1 until the personal snapshot arrives. */
 	public static int fateMask = -1;
 	private int builtFate = Integer.MIN_VALUE;
+	private Vow builtVow;
 
 	/** Один физический лист: строки заголовка (только на первом листе записи) и текст. */
 	private record Sheet(List<FormattedCharSequence> heading, List<FormattedCharSequence> lines, int color,
@@ -139,11 +141,12 @@ public class DiaryScreen extends Screen {
 
 	/** Stable chapter order includes one opaque placeholder for every undiscovered chapter. */
 	private void build() {
-		if (entries.equals(builtFrom) && fateMask == builtFate) return;
+		if (entries.equals(builtFrom) && fateMask == builtFate && builtVow == Vow.CLIENT) return;
 		PageAnchor anchor = currentAnchor();
 		int fallback = section == DiarySection.FATE && builtFate != fateMask ? 0 : page;
 		builtFrom = List.copyOf(entries);
 		builtFate = fateMask;
+		builtVow = Vow.CLIENT;
 		counts.clear();
 		for (String id : builtFrom) counts.merge(DiarySection.of(id), 1, Integer::sum);
 		sectionSheets.clear();
@@ -207,7 +210,7 @@ public class DiaryScreen extends Screen {
 			body.add(FormattedCharSequence.EMPTY);
 			body.addAll(font.split(Component.translatable(prefix + "track." + track.id)
 					.withStyle(style -> style.withColor(TITLE).withBold(true)), TEXT_W));
-			var active = FateProgress.active(track, fateMask);
+			var active = FateProgress.active(track, fateMask, builtVow);
 			if (active != null) body.addAll(font.split(DiaryRecipeLinks.decorate(Component.translatable(
 					prefix + active.id + ".title")), TEXT_W));
 			else body.addAll(font.split(Component.translatable(prefix + (trackFinished(track) ? "track_done" : "track_wait"))
@@ -215,22 +218,23 @@ public class DiaryScreen extends Screen {
 		}
 		body.add(FormattedCharSequence.EMPTY);
 		body.addAll(font.split(Component.translatable(prefix + "hud_toggle",
+				Component.translatable(prefix + (com.tarkrakov.tearsofink.client.hud.FateHud.enabled() ? "hud_on" : "hud_off")),
 				com.tarkrakov.tearsofink.client.hud.FateHud.keyLabel()).withStyle(style -> style.withColor(FADED)), TEXT_W));
 		appendFateSheets(heading, body);
 		for (var track : FateProgress.Track.values()) buildTrack(prefix, track);
 	}
 
 	private boolean trackFinished(FateProgress.Track track) {
-		return track.goals.stream().allMatch(goal -> goal.done(fateMask) || FateProgress.skipped(goal, fateMask));
+		return track.goalsFor(builtVow).stream().allMatch(goal -> goal.done(fateMask) || FateProgress.skipped(goal, fateMask));
 	}
 
 	private void buildTrack(String prefix, FateProgress.Track track) {
 		var heading = font.split(Component.translatable(prefix + "track." + track.id), TEXT_W);
-		var active = FateProgress.active(track, fateMask);
+		var active = FateProgress.active(track, fateMask, builtVow);
 		List<FormattedCharSequence> body = new ArrayList<>();
-		long done = track.goals.stream().filter(goal -> goal.done(fateMask)).count();
-		long skipped = track.goals.stream().filter(goal -> FateProgress.skipped(goal, fateMask)).count();
-		body.addAll(font.split(Component.translatable(prefix + "summary", done, track.goals.size() - skipped), TEXT_W));
+		long done = track.goalsFor(builtVow).stream().filter(goal -> goal.done(fateMask)).count();
+		long skipped = track.goalsFor(builtVow).stream().filter(goal -> FateProgress.skipped(goal, fateMask)).count();
+		body.addAll(font.split(Component.translatable(prefix + "summary", done, track.goalsFor(builtVow).size() - skipped), TEXT_W));
 		if (active != null) {
 			body.add(FormattedCharSequence.EMPTY);
 			body.addAll(font.split(Component.translatable(prefix + "next").withStyle(style -> style.withColor(TITLE)), TEXT_W));
@@ -241,7 +245,7 @@ public class DiaryScreen extends Screen {
 			body.addAll(font.split(Component.translatable(prefix + (trackFinished(track) ? "track_done" : "track_wait")), TEXT_W));
 		}
 		body.add(FormattedCharSequence.EMPTY);
-		for (var goal : track.goals) {
+		for (var goal : track.goalsFor(builtVow)) {
 			boolean complete = goal.done(fateMask);
 			boolean skippedGoal = FateProgress.skipped(goal, fateMask);
 			String state = complete ? "done" : skippedGoal ? "skipped" : goal == active ? "active"
@@ -466,6 +470,7 @@ public class DiaryScreen extends Screen {
 	public boolean keyPressed(int key, int scan, int mods) {
 		if (com.tarkrakov.tearsofink.client.hud.FateHud.matches(key, scan)) {
 			com.tarkrakov.tearsofink.client.hud.FateHud.toggle();
+			builtFate = Integer.MIN_VALUE;
 			return true;
 		}
 		build();
