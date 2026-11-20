@@ -102,7 +102,7 @@ public class InkWaveEntity extends Entity {
 								|| com.tarkrakov.tearsofink.weapon.shield.ShieldStance.offensiveTarget(player, t)))) {
 			if (!hit.add(target.getUUID())) continue;
 			if (owner instanceof ServerPlayer player) {
-				target.hurt(player.damageSources().playerAttack(player), damage);
+				com.tarkrakov.tearsofink.weapon.forge.Gear.hurtModWave(target, player.damageSources().playerAttack(player), damage);
 			} else if (owner instanceof LivingEntity mob) {
 				target.hurt(level.damageSources().mobAttack(mob), damage);
 			} else {

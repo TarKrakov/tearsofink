@@ -4,20 +4,19 @@ import com.tarkrakov.tearsofink.mixin.PlayerArmorMixin.EquippedArmor;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
+import com.tarkrakov.tearsofink.weapon.forge.Gear;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 
 import java.util.List;
 
-/** D-043. Масштабирует временные модификаторы каждой надетой ванильной части. */
+/** D-043 / D-097. Scales each equipped item's protection in the foreign world, without changing the item. */
 public final class VanillaArmorPenalty {
-	public static final double LAND_MULTIPLIER = 0.60;
+	public static final double LAND_MULTIPLIER = EquipmentAffinity.FOREIGN_MULTIPLIER;
 	private static final List<EquipmentSlot> SLOTS =
 			List.of(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET);
 
@@ -28,19 +27,17 @@ public final class VanillaArmorPenalty {
 	}
 
 	public static void update(ServerPlayer player) {
-		double multiplier = ModDimensions.isLands(player.level()) ? LAND_MULTIPLIER : 1.0;
+		boolean lands = ModDimensions.isLands(player.level());
 		var equipment = (EquippedArmor) player;
 		for (EquipmentSlot slot : SLOTS) {
 			// Читаем тот же снимок, с которым работают уже применённые ванилью модификаторы.
 			var stack = equipment.tearsofink$getAppliedArmor(slot);
-			if (!(stack.getItem() instanceof ArmorItem armor) || stack.isEmpty()
-					|| !BuiltInRegistries.ITEM.getKey(armor).getNamespace().equals("minecraft")) {
-				continue;
-			}
+			if (stack.isEmpty()) continue;
+			double multiplier = EquipmentAffinity.multiplier(lands, Gear.isModItem(stack));
 			// ItemStack.forEachModifier добавляет чары, поэтому берём только модификаторы самого предмета.
 			var modifiers = stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
 			if (modifiers.modifiers().isEmpty()) {
-				modifiers = armor.getDefaultAttributeModifiers();
+				modifiers = stack.getItem().getDefaultAttributeModifiers();
 			}
 			modifiers.forEach(slot, (attribute, modifier) -> rescale(player, attribute, modifier, multiplier));
 		}
@@ -52,6 +49,7 @@ public final class VanillaArmorPenalty {
 			return;
 		}
 		var instance = player.getAttribute(attribute);
+		if (instance == null) return;
 		var applied = instance.getModifier(original.id());
 		double amount = original.amount() * multiplier;
 		if (applied != null && applied.amount() != amount) {

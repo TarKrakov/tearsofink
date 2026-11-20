@@ -3,6 +3,7 @@ package com.tarkrakov.tearsofink.weapon.forge;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.weapon.InkGreatswordItem;
 import com.tarkrakov.tearsofink.world.ModDimensions;
+import com.tarkrakov.tearsofink.world.EquipmentAffinity;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -13,9 +14,12 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.AbstractArrow;
@@ -25,10 +29,11 @@ import net.minecraft.world.item.MaceItem;
 import net.minecraft.world.item.TieredItem;
 import net.minecraft.world.item.TridentItem;
 import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 
 /**
  * Снаряжение Земель: ступени (Тусклое / Контрастное / Рубрики), заточка и деградация, дебафф ванильного оружия.
- * Ступень и заточка лежат в самом предмете. Всё работает только в Чернильных землях.
+ * Ступень, заточка и пробуждения действуют в Землях; штраф чужого снаряжения зеркален.
  */
 public final class Gear {
 	// ===== Настройки — крутить здесь (код → перезапуск игры) =====
@@ -43,8 +48,8 @@ public final class Gear {
 	public static final float DEGRADE_AT = 0.10f, WARN_AT = 0.25f;
 	/** Заточка на Чернильной наковальне: доля шкалы за один Пигмент (по одному в клетку). */
 	public static final float SHARPEN_PER_PIGMENT = 0.25f;
-	/** Ванильное оружие (и всё не из мода) по существам в Землях: ×0,6. */
-	public static final float VANILLA_WEAPON_MULT = 0.6f; // 16 ноя: было 0,7 — зачарованный алмаз обгонял наше оружие
+	/** Совместимое имя прежнего коэффициента; новый единый источник — EquipmentAffinity. */
+	public static final float VANILLA_WEAPON_MULT = (float) EquipmentAffinity.FOREIGN_MULTIPLIER;
 	/** Пассивки обычного оружия: Кровь — шанс кровотечения; Чернила — замедление (тики, сила 0 = I). */
 	public static final float ORDINARY_BLEED_CHANCE = 0.10f;
 	public static final int INK_SLOW_TICKS = 30, INK_SLOW_AMP = 0;
@@ -155,42 +160,90 @@ public final class Gear {
 		}
 	}
 
-	/** Множитель урона: ступень нашего оружия; дебафф ванильного по существам. Вызывается из LivingEntity.hurt. */
-	public static float outgoing(LivingEntity target, DamageSource source, float amount) {
-		if (!ModDimensions.isLands(target.level())) return amount;
-		Entity attacker = source.getEntity();
-		if (!(attacker instanceof LivingEntity user)) return amount;
-		Entity direct = source.getDirectEntity();
-		ItemStack held = com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.damageWeapon(user, com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.damageWeapon(user));
-		// своё оружие: удар рукой или снаряд приёма мода (Волна, дуга…) — ступень и пробуждения
-		boolean modProjectile = direct != null && direct != attacker
-				&& TearsOfInk.MOD_ID.equals(BuiltInRegistries.ENTITY_TYPE.getKey(direct.getType()).getNamespace());
-		// только игроки: урон охотников-NPC уже задан рангом (HuntTuning), ступень сверху задвоила бы рост
-		if (user instanceof Player && ours(held) && (direct == attacker || modProjectile)) {
-			float out = amount * TIER_MULT[tier(held)];
-			if (user instanceof ServerPlayer sp) {
-				out *= Awakening.damageMult(sp, held, target);
-				Awakening.afterDamage(sp, held, out);
-			}
-			return out;
-		}
-		if (direct == attacker) {
-			if (user instanceof Player && !(target instanceof Player) && vanillaWeapon(held)) return amount * VANILLA_WEAPON_MULT;
-			return amount;
-		}
-		// стрелы, трезубец, фейерверк арбалета — от игрока по существу
-		if (user instanceof Player && !(target instanceof Player)
-				&& (direct instanceof AbstractArrow || direct instanceof FireworkRocketEntity)
-				&& !TearsOfInk.MOD_ID.equals(BuiltInRegistries.ENTITY_TYPE.getKey(direct.getType()).getNamespace())) {
-			return amount * VANILLA_WEAPON_MULT;
-		}
-		return amount;
+	/** Namespace, not tier/class, determines the birthplace of equipment. */
+	public static boolean isModItem(ItemStack stack) {
+		return stack != null && !stack.isEmpty()
+				&& TearsOfInk.MOD_ID.equals(BuiltInRegistries.ITEM.getKey(stack.getItem()).getNamespace());
 	}
 
-	private static boolean vanillaWeapon(ItemStack stack) {
+	/** Wave uses the existing playerAttack DamageSource for blocking and kill attribution.
+	 * Preserve its provenance even if the caster switches hands before impact. */
+	private static final ThreadLocal<DamageSource> MOD_WAVE = new ThreadLocal<>();
+
+	public static boolean hurtModWave(LivingEntity target, DamageSource source, float damage) {
+		DamageSource previous = MOD_WAVE.get();
+		MOD_WAVE.set(source);
+		try {
+			return target.hurt(source, damage);
+		} finally {
+			if (previous == null) MOD_WAVE.remove(); else MOD_WAVE.set(previous);
+		}
+	}
+
+	/** Apply affinity exactly once at the damage boundary; perks still operate only in Lands. */
+	public static float outgoing(LivingEntity target, DamageSource source, float amount) {
+		if (!(source.getEntity() instanceof Player user)) return amount;
+		boolean lands = ModDimensions.isLands(target.level());
+		Entity direct = source.getDirectEntity();
+		ItemStack held = com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.damageWeapon(user,
+				com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.damageWeapon(user));
+
+		// Bleeding has its own damage type and may outlive the original weapon or dimension.
+		if (source.is(com.tarkrakov.tearsofink.weapon.blood.Bleeding.DAMAGE)) {
+			return amount * (float) EquipmentAffinity.multiplier(lands, true);
+		}
+
+		boolean wave = MOD_WAVE.get() == source;
+		boolean melee = direct == user && source.is(DamageTypes.PLAYER_ATTACK);
+		ItemStack weapon = held;
+		boolean modWeapon;
+		if (wave) {
+			modWeapon = true;
+		} else if (melee) {
+			if (!meleeWeapon(held)) return amount; // bare hand, food, blocks, unrelated damage
+			modWeapon = isModItem(held);
+		} else if (direct != null && direct != user) {
+			// In 1.21.1 arrows/tridents retain the firing weapon, unlike the owner's current hand.
+			ItemStack fired = direct.getWeaponItem();
+			boolean modEntity = TearsOfInk.MOD_ID.equals(BuiltInRegistries.ENTITY_TYPE.getKey(direct.getType()).getNamespace());
+			if (fired != null && !fired.isEmpty()) {
+				weapon = fired;
+				modWeapon = isModItem(fired);
+			} else if (direct instanceof AbstractArrow || modEntity
+					|| direct instanceof FireworkRocketEntity rocket && rocket.isShotAtAngle()
+					|| source.is(DamageTypes.WIND_CHARGE)) {
+				weapon = ItemStack.EMPTY;
+				modWeapon = modEntity;
+			} else {
+				return amount; // no known weapon provenance; do not penalize potions or unrelated damage
+			}
+		} else {
+			return amount;
+		}
+		float out = amount * (float) EquipmentAffinity.multiplier(lands, modWeapon);
+		// Keep the original Lands-only tier/awakening rule; no NPC rank multiplication.
+		if (lands && modWeapon && ours(weapon)) {
+			out *= TIER_MULT[tier(weapon)];
+			if (user instanceof ServerPlayer sp) {
+				out *= Awakening.damageMult(sp, weapon, target);
+				Awakening.afterDamage(sp, weapon, out);
+			}
+		}
+		return out;
+	}
+
+	private static boolean meleeWeapon(ItemStack stack) {
 		if (stack.isEmpty()) return false;
-		if (TearsOfInk.MOD_ID.equals(BuiltInRegistries.ITEM.getKey(stack.getItem()).getNamespace())) return false;
-		return stack.getItem() instanceof TieredItem || stack.getItem() instanceof MaceItem || stack.getItem() instanceof TridentItem;
+		if (stack.getItem() instanceof TieredItem || stack.getItem() instanceof MaceItem
+				|| stack.getItem() instanceof TridentItem) return true;
+		// Supports the Soul shields and other mods using standard attack attributes.
+		var modifiers = stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
+		if (modifiers.modifiers().isEmpty()) modifiers = stack.getItem().getDefaultAttributeModifiers();
+		boolean[] attack = {false};
+		modifiers.forEach(EquipmentSlot.MAINHAND, (attribute, modifier) -> {
+			if (attribute.equals(Attributes.ATTACK_DAMAGE) && modifier.amount() > 0) attack[0] = true;
+		});
+		return attack[0];
 	}
 
 	/**

@@ -2,7 +2,7 @@ package com.tarkrakov.tearsofink.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.tarkrakov.tearsofink.item.OrdinaryArmorItem;
+import com.tarkrakov.tearsofink.weapon.forge.Gear;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import com.tarkrakov.tearsofink.world.VanillaArmorPenalty;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,8 +26,8 @@ public abstract class PlayerArmorMixin {
 	}
 
 	@Inject(method = "handleEquipmentChanges", at = @At("TAIL"))
-	private void tearsofink$scaleVanillaArmor(CallbackInfo ci) {
-		if ((Object) this instanceof ServerPlayer player && ModDimensions.isLands(player.level())) {
+	private void tearsofink$scaleEquipmentArmor(CallbackInfo ci) {
+		if ((Object) this instanceof ServerPlayer player) {
 			VanillaArmorPenalty.update(player);
 		}
 	}
@@ -38,7 +38,7 @@ public abstract class PlayerArmorMixin {
 	private float tearsofink$useFractionalProtection(LivingEntity entity, float damage, DamageSource source,
 													 float armor, float toughness, Operation<Float> original) {
 		if (entity instanceof ServerPlayer player && (ModDimensions.isLands(player.level())
-				|| player.getInventory().armor.stream().anyMatch(stack -> stack.getItem() instanceof OrdinaryArmorItem))) {
+				|| player.getInventory().armor.stream().anyMatch(Gear::isModItem))) {
 			armor = (float) player.getAttributeValue(Attributes.ARMOR);
 		}
 		return original.call(entity, damage, source, armor, toughness);

@@ -26,6 +26,11 @@ jobs:
         run: python3 tools/check_advancement_icons.py
       - name: validate chest loot progression
         run: python3 tools/check_chest_loot.py
+      - name: validate equipment affinity and armor math
+        run: |
+          mkdir -p /tmp/toi-equipment-test
+          javac -d /tmp/toi-equipment-test src/main/java/com/tarkrakov/tearsofink/world/EquipmentAffinity.java tools/tests/EquipmentAffinityTest.java
+          java -cp /tmp/toi-equipment-test EquipmentAffinityTest
       - name: validate Blockbench workspace and automatic F5
         run: node tools/blockbench/test_workspace.js
       - name: validate final author scene and active Pale clip mapping
