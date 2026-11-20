@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.compat.jaber;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.world.InkLandsLayout;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
@@ -61,6 +62,18 @@ public final class JaberCompat {
             }
         }
         return true;
+    }
+
+    /** Actual supporting block, not a heightmap or hypothetical road. A missing
+     * deck is never passable just because the generator has a road at that X/Z. */
+    public static double offRoadCost(Level level, int x, int y, int z, boolean swimming) {
+        if (swimming || !readable(level, x, y - 1, z)) return 0.0;
+        var floor = level.getBlockState(new BlockPos(x, y - 1, z));
+        if (floor.is(ModBlocks.ASHEN_PATH)) return 0.0;
+        // The road generator uses pale planks for the deck. Treat actual planked
+        // floors as comfortable too, including player-built bridges.
+        if (floor.is(ModBlocks.PALE_PLANKS)) return 0.0;
+        return 1.4;
     }
 
     public static void init() {
