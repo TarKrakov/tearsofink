@@ -192,7 +192,7 @@ public class DiaryScreen extends Screen {
 		}
 	}
 
-	/** Current goals first, followed by the complete crossed-out history. */
+	/** Overview, then one independent quest chain per chapter. No fictional future goals. */
 	private void buildFate() {
 		String prefix = "diary.tears-of-ink.fate.";
 		var heading = font.split(sectionTitle(DiarySection.FATE), TEXT_W);
@@ -202,40 +202,61 @@ public class DiaryScreen extends Screen {
 			sheets.add(new Sheet(heading, List.copyOf(body), TEXT, null, 0, true));
 			return;
 		}
-		List<FateProgress.Goal> done = new ArrayList<>();
-		for (var goal : FateProgress.Goal.values()) if (goal.done(fateMask)) done.add(goal);
-		body.addAll(font.split(Component.translatable(prefix + "summary", done.size(), FateProgress.Goal.values().length), TEXT_W));
-		body.add(FormattedCharSequence.EMPTY);
-		var next = FateProgress.next(fateMask);
-		if (next.isEmpty()) {
-			body.addAll(font.split(Component.translatable(prefix + "end"), TEXT_W));
-		} else {
-			body.addAll(font.split(Component.translatable(prefix + "next").withStyle(style -> style.withColor(TITLE)), TEXT_W));
-			for (var goal : next) {
-				body.addAll(font.split(DiaryRecipeLinks.decorate(Component.translatable(prefix + goal.id + ".title").withStyle(ChatFormatting.BOLD)), TEXT_W));
-				body.addAll(font.split(DiaryRecipeLinks.decorate(Component.translatable(prefix + goal.id + ".hint")), TEXT_W));
-			}
-		}
-		int capacity = rows(heading.size());
-		if (!done.isEmpty() && body.size() + 3 <= capacity) {
+		body.addAll(font.split(Component.translatable(prefix + "overview"), TEXT_W));
+		for (var track : FateProgress.Track.values()) {
 			body.add(FormattedCharSequence.EMPTY);
-			body.addAll(font.split(Component.translatable(prefix + "done").withStyle(style -> style.withColor(FADED)), TEXT_W));
-			for (int i = Math.max(0, done.size() - 2); i < done.size(); i++) {
-				var line = completedLine(prefix, done.get(i));
-				if (body.size() + line.size() <= capacity) body.addAll(line);
-			}
+			body.addAll(font.split(Component.translatable(prefix + "track." + track.id)
+					.withStyle(style -> style.withColor(TITLE).withBold(true)), TEXT_W));
+			var active = FateProgress.active(track, fateMask);
+			if (active != null) body.addAll(font.split(DiaryRecipeLinks.decorate(Component.translatable(
+					prefix + active.id + ".title")), TEXT_W));
+			else body.addAll(font.split(Component.translatable(prefix + (trackFinished(track) ? "track_done" : "track_wait"))
+					.withStyle(style -> style.withColor(FADED)), TEXT_W));
 		}
+		body.add(FormattedCharSequence.EMPTY);
+		body.addAll(font.split(Component.translatable(prefix + "hud_toggle",
+				com.tarkrakov.tearsofink.client.hud.FateHud.keyLabel()).withStyle(style -> style.withColor(FADED)), TEXT_W));
 		appendFateSheets(heading, body);
-		if (!done.isEmpty()) {
-			List<FormattedCharSequence> history = new ArrayList<>();
-			for (var goal : done) history.addAll(completedLine(prefix, goal));
-			appendFateSheets(font.split(Component.translatable(prefix + "history"), TEXT_W), history);
-		}
+		for (var track : FateProgress.Track.values()) buildTrack(prefix, track);
 	}
 
-	private List<FormattedCharSequence> completedLine(String prefix, FateProgress.Goal goal) {
-		return font.split(DiaryRecipeLinks.decorate(Component.translatable(prefix + goal.id + ".title")
-				.withStyle(style -> style.withColor(FADED).withStrikethrough(true))), TEXT_W);
+	private boolean trackFinished(FateProgress.Track track) {
+		return track.goals.stream().allMatch(goal -> goal.done(fateMask) || FateProgress.skipped(goal, fateMask));
+	}
+
+	private void buildTrack(String prefix, FateProgress.Track track) {
+		var heading = font.split(Component.translatable(prefix + "track." + track.id), TEXT_W);
+		var active = FateProgress.active(track, fateMask);
+		List<FormattedCharSequence> body = new ArrayList<>();
+		long done = track.goals.stream().filter(goal -> goal.done(fateMask)).count();
+		long skipped = track.goals.stream().filter(goal -> FateProgress.skipped(goal, fateMask)).count();
+		body.addAll(font.split(Component.translatable(prefix + "summary", done, track.goals.size() - skipped), TEXT_W));
+		if (active != null) {
+			body.add(FormattedCharSequence.EMPTY);
+			body.addAll(font.split(Component.translatable(prefix + "next").withStyle(style -> style.withColor(TITLE)), TEXT_W));
+			body.addAll(font.split(DiaryRecipeLinks.decorate(Component.translatable(prefix + active.id + ".title")
+					.withStyle(ChatFormatting.BOLD)), TEXT_W));
+			body.addAll(font.split(DiaryRecipeLinks.decorate(Component.translatable(prefix + active.id + ".hint")), TEXT_W));
+		} else {
+			body.addAll(font.split(Component.translatable(prefix + (trackFinished(track) ? "track_done" : "track_wait")), TEXT_W));
+		}
+		body.add(FormattedCharSequence.EMPTY);
+		for (var goal : track.goals) {
+			boolean complete = goal.done(fateMask);
+			boolean skippedGoal = FateProgress.skipped(goal, fateMask);
+			String state = complete ? "done" : skippedGoal ? "skipped" : goal == active ? "active"
+					: FateProgress.optional(goal) ? "optional" : "pending";
+			var label = Component.translatable(prefix + "state." + state).append(" ")
+					.append(DiaryRecipeLinks.decorate(Component.translatable(prefix + goal.id + ".title")))
+					.withStyle(style -> style.withColor(complete || skippedGoal ? FADED : goal == active ? TITLE : TEXT)
+							.withStrikethrough(complete).withBold(goal == active));
+			body.addAll(font.split(label, TEXT_W));
+		}
+		if (track == FateProgress.Track.CRAFT) {
+			body.add(FormattedCharSequence.EMPTY);
+			body.addAll(font.split(Component.translatable(prefix + "side_hint").withStyle(style -> style.withColor(FADED)), TEXT_W));
+		}
+		appendFateSheets(heading, body);
 	}
 
 	private void appendFateSheets(List<FormattedCharSequence> heading, List<FormattedCharSequence> body) {
@@ -443,6 +464,10 @@ public class DiaryScreen extends Screen {
 
 	@Override
 	public boolean keyPressed(int key, int scan, int mods) {
+		if (com.tarkrakov.tearsofink.client.hud.FateHud.matches(key, scan)) {
+			com.tarkrakov.tearsofink.client.hud.FateHud.toggle();
+			return true;
+		}
 		build();
 		if (key == 264 || key == 265) {
 			DiarySection[] tabs = DiarySection.values();

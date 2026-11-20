@@ -80,6 +80,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 		ClientPlayNetworking.registerGlobalReceiver(InkSyncPayload.TYPE, (payload, context) -> context.client().execute(() -> InkHud.receive(payload)));
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> InkHud.reset());
 		HudRenderCallback.EVENT.register(InkHud::render);
+		com.tarkrakov.tearsofink.client.hud.FateHud.init();
 		ClientPlayNetworking.registerGlobalReceiver(SkillPayloads.NotEnough.TYPE, (payload, context) -> context.client().execute(() -> InkHud.pulse(payload.soul())));
 
 		// Навыки: клавиши

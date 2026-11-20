@@ -162,7 +162,6 @@ public final class FateProgress {
         Goal hunt = first(mask, Goal.CONTRACT, Goal.REDEEM);
         if (hunt != null) return hunt;
         // Awakening is independent of ascension: never make a rare altar reagent a mandatory detour.
-        if (Goal.ALTAR.done(mask) && !Goal.AWAKENING.done(mask)) return Goal.AWAKENING;
         Goal tier = first(mask, Goal.FONT, Goal.CONTRAST, Goal.RUBRICS);
         return tier != null ? tier : first(mask, Goal.ALTAR, Goal.AWAKENING);
     }
