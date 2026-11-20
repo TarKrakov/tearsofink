@@ -75,9 +75,9 @@ public final class Resonance {
 
 	public static final ResonanceSkill SKILL = new ResonanceSkill();
 
-	private record Pending(Kind kind, int ticks, float power) {}
+	private record Pending(Kind kind, int ticks, float power, float support, ItemStack main, ItemStack off) {}
 
-	private record Dash(Kind kind, double dx, double dz, int ticksLeft, float power, Set<UUID> touched) {}
+	private record Dash(Kind kind, double dx, double dz, int ticksLeft, float power, float support, Set<UUID> touched) {}
 
 	private static final Map<UUID, Pending> PENDING = new HashMap<>();
 	private static final Map<UUID, Dash> DASH = new HashMap<>();
@@ -105,11 +105,12 @@ public final class Resonance {
 			if (PENDING.containsKey(p.getUUID()) || DASH.containsKey(p.getUUID())) return false;
 			Kind kind = kind(p.getMainHandItem(), p.getOffhandItem());
 			if (kind == null) return false;
-			if (p.isUsingItem()) p.stopUsingItem(); // из стойки — без выброса: заряд уйдёт в Резонанс
 			int charge = ShieldStance.takeCharge(p);
+			if (p.isUsingItem()) p.stopUsingItem(); // charge already consumed
 			com.tarkrakov.tearsofink.vow.SoulFeats.onChargedResonance(p, charge);
 			float power = (1 + ResonanceTuning.POWER_PER_CHARGE * charge) * com.tarkrakov.tearsofink.weapon.SoulShieldItem.pairPower(p); // потёртые — слабее
-			PENDING.put(p.getUUID(), new Pending(kind, ResonanceTuning.CLAP_TICKS, power));
+			float support = (1 + ResonanceTuning.SUPPORT_PER_CHARGE * charge) * com.tarkrakov.tearsofink.weapon.SoulShieldItem.pairPower(p);
+			PENDING.put(p.getUUID(), new Pending(kind, ResonanceTuning.CLAP_TICKS, power, support, p.getMainHandItem(), p.getOffhandItem()));
 			Combat.dualAnim(p, Archetype.BASTION, "clap", "clap", ResonanceTuning.CLAP_TICKS + 8);
 			p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.ARMOR_EQUIP_IRON.value(), SoundSource.PLAYERS, 0.8f, 0.7f);
 			return true;
@@ -158,16 +159,16 @@ public final class Resonance {
 			Map.Entry<UUID, Pending> e = it.next();
 			ServerPlayer p = server.getPlayerList().getPlayer(e.getKey());
 			Pending pd = e.getValue();
-			if (p == null || !p.isAlive() || !ShieldStance.dual(p)) {
+			if (p == null || !p.isAlive() || !ShieldStance.dual(p) || p.getMainHandItem() != pd.main() || p.getOffhandItem() != pd.off() || !com.tarkrakov.tearsofink.world.ModDimensions.isLands(p.level())) {
 				it.remove();
 				continue;
 			}
 			if (pd.ticks() > 1) {
-				e.setValue(new Pending(pd.kind(), pd.ticks() - 1, pd.power()));
+				e.setValue(new Pending(pd.kind(), pd.ticks() - 1, pd.power(), pd.support(), pd.main(), pd.off()));
 				continue;
 			}
 			it.remove();
-			clap(p, pd.kind(), pd.power());
+			clap(p, pd.kind(), pd.power(), pd.support());
 		}
 		for (Iterator<Map.Entry<UUID, Dash>> it = DASH.entrySet().iterator(); it.hasNext(); ) {
 			Map.Entry<UUID, Dash> e = it.next();
@@ -195,7 +196,7 @@ public final class Resonance {
 	}
 
 	/** Хлопок: звон, вспышка — и Резонанс. */
-	private static void clap(ServerPlayer p, Kind kind, float power) {
+	private static void clap(ServerPlayer p, Kind kind, float power, float support) {
 		ServerLevel level = p.serverLevel();
 		Vec3 look = flatLook(p);
 		Vec3 at = p.position().add(look.scale(0.7)).add(0, 1.2, 0);
@@ -207,29 +208,29 @@ public final class Resonance {
 		level.playSound(null, p.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1.2f, 0.9f);
 		p.displayClientMessage(Component.translatable("resonance.tears-of-ink." + kind.id).withStyle(ChatFormatting.GOLD), true);
 		switch (kind) {
-			case AVALANCHE -> startDash(p, kind, ResonanceTuning.AVALANCHE_TICKS, power);
+			case AVALANCHE -> startDash(p, kind, ResonanceTuning.AVALANCHE_TICKS, power, support);
 			case ADVANCE, PHALANX, INTERCESSOR -> {
 				if (kind == Kind.PHALANX) PHALANX_UNTIL.put(p.getUUID(), level.getGameTime() + ResonanceTuning.DASH_TICKS + ResonanceTuning.PHALANX_AFTER_TICKS);
-				startDash(p, kind, ResonanceTuning.DASH_TICKS, power);
+				startDash(p, kind, ResonanceTuning.DASH_TICKS, power, support);
 			}
 			case SUN -> sun(p, power);
-			case GRACE -> grace(p, power);
+			case GRACE -> grace(p, support);
 			case SHOCKWAVE -> ring(p, ResonanceTuning.SHOCKWAVE_RADIUS, ResonanceTuning.SHOCKWAVE_DAMAGE * power,
 					ResonanceTuning.SHOCKWAVE_KNOCKBACK * power, 0.25);
 			case HALO -> {
-				HALO.put(p.getUUID(), new float[]{ResonanceTuning.HALO_TICKS, power});
+				HALO.put(p.getUUID(), new float[]{ResonanceTuning.HALO_TICKS, support});
 				level.playSound(null, p.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.8f, 1.4f);
 			}
 			case FLASH -> flash(p, power);
-			case VEIL -> veil(p, power);
+			case VEIL -> veil(p, power, support);
 		}
 	}
 
 	// ---------------- рывки: Лавина, Наступление, Фаланга, Заступник ----------------
 
-	private static void startDash(ServerPlayer p, Kind kind, int ticks, float power) {
+	private static void startDash(ServerPlayer p, Kind kind, int ticks, float power, float support) {
 		Vec3 dir = flatLook(p);
-		DASH.put(p.getUUID(), new Dash(kind, dir.x, dir.z, ticks, power, new HashSet<>()));
+		DASH.put(p.getUUID(), new Dash(kind, dir.x, dir.z, ticks, power, support, new HashSet<>()));
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1f, 0.5f);
 	}
 
@@ -240,8 +241,8 @@ public final class Resonance {
 		AABB box = p.getBoundingBox().inflate(0.9, 0.3, 0.9).move(d.dx() * 0.7, 0, d.dz() * 0.7);
 		boolean bumped = false;
 		for (LivingEntity t : level.getEntitiesOfClass(LivingEntity.class, box, t -> t != p && t.isAlive() && !(t instanceof ArmorStand))) {
-			if (!d.touched().add(t.getUUID())) continue;
-			if (enemy(p, t)) {
+			if (!p.hasLineOfSight(t) || !d.touched().add(t.getUUID())) continue;
+			if (enemy(p, t) || (d.kind() != Kind.ADVANCE && !ally(p,t) && ShieldStance.offensiveTarget(p,t))) {
 				switch (d.kind()) {
 					case AVALANCHE -> {
 						t.hurt(p.damageSources().playerAttack(p), ResonanceTuning.AVALANCHE_DAMAGE * d.power());
@@ -254,13 +255,15 @@ public final class Resonance {
 						blind(t, ResonanceTuning.PHALANX_BLIND_TICKS);
 					}
 					case ADVANCE -> bumped = true;
-					case INTERCESSOR -> t.knockback(0.6, -d.dx(), -d.dz()); // врагов просто отодвигает
+					case INTERCESSOR -> {
+						t.hurt(p.damageSources().playerAttack(p), ResonanceTuning.INTERCESSOR_DAMAGE * d.power());
+						t.knockback(0.35, -d.dx(), -d.dz());
+					}
 					default -> {}
 				}
 				level.playSound(null, t.blockPosition(), SoundEvents.PLAYER_ATTACK_KNOCKBACK, SoundSource.PLAYERS, 1f, 0.7f);
-			} else if (d.kind() == Kind.INTERCESSOR) {
-				heal(t, ResonanceTuning.INTERCESSOR_HEAL * d.power());
-				t.addEffect(new MobEffectInstance(MobEffects.REGENERATION, ResonanceTuning.INTERCESSOR_REGEN_TICKS, 0));
+			} else if (d.kind() == Kind.INTERCESSOR && ally(p,t)) {
+				heal(t, ResonanceTuning.INTERCESSOR_HEAL * d.support());
 				level.sendParticles(ParticleTypes.HEART, t.getX(), t.getY() + t.getBbHeight() + 0.3, t.getZ(), 3, 0.3, 0.1, 0.3, 0);
 				level.playSound(null, t.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1f, 1.4f);
 			}
@@ -273,7 +276,7 @@ public final class Resonance {
 				ring(p, ResonanceTuning.ADVANCE_RADIUS, ResonanceTuning.ADVANCE_DAMAGE * d.power(), ResonanceTuning.ADVANCE_KNOCKBACK * d.power(), 0.45);
 				level.playSound(null, p.blockPosition(), SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.5f, 1.4f);
 			}
-			if (d.kind() == Kind.INTERCESSOR) heal(p, ResonanceTuning.INTERCESSOR_SELF_HEAL * d.power());
+			if (d.kind() == Kind.INTERCESSOR) heal(p, ResonanceTuning.INTERCESSOR_SELF_HEAL * d.support());
 			return null;
 		}
 		p.setDeltaMovement(d.dx() * speed, Math.min(p.getDeltaMovement().y, 0.1), d.dz() * speed);
@@ -285,7 +288,7 @@ public final class Resonance {
 		};
 		level.sendParticles(trail, p.getX(), p.getY() + 0.6, p.getZ(), 3, 0.3, 0.3, 0.3, 0.01);
 		level.sendParticles(ModParticles.TEAR_GLINT, p.getX(), p.getY() + 1.0, p.getZ(), 2, 0.3, 0.4, 0.3, 0);
-		return new Dash(d.kind(), d.dx(), d.dz(), d.ticksLeft() - 1, d.power(), d.touched());
+		return new Dash(d.kind(), d.dx(), d.dz(), d.ticksLeft() - 1, d.power(), d.support(), d.touched());
 	}
 
 	/** Фаланга: спереди не пробить, пока идёт рывок и чуть после. */
@@ -308,12 +311,12 @@ public final class Resonance {
 	private static void sun(ServerPlayer p, float power) {
 		ServerLevel level = p.serverLevel();
 		double r = ResonanceTuning.SUN_RADIUS;
-		int ticks = (int) (ResonanceTuning.SUN_TICKS * power);
+		int ticks = ResonanceTuning.SUN_TICKS;
 		for (LivingEntity t : around(p, r)) {
 			if (enemy(p, t)) {
 				blind(t, ResonanceTuning.SUN_BLIND_TICKS);
 				if (t instanceof Mob m) m.setTarget(null);
-			} else if (t instanceof Player || t == p) {
+			} else if (ally(p,t)) {
 				t.addEffect(new MobEffectInstance(ModEffects.RADIANCE, ticks, 0, false, false, true));
 				t.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, ticks, 1, false, false, false));
 			}
@@ -330,10 +333,10 @@ public final class Resonance {
 		List<LivingEntity> all = new ArrayList<>(around(p, ResonanceTuning.GRACE_RADIUS));
 		all.add(p);
 		for (LivingEntity t : all) {
-			if (t != p && enemy(p, t)) continue;
+			if (!ally(p,t)) continue;
 			heal(t, ResonanceTuning.GRACE_HEAL * power);
 			for (MobEffectInstance fx : new ArrayList<>(t.getActiveEffects())) {
-				if (fx.getEffect().value().getCategory() == MobEffectCategory.HARMFUL) t.removeEffect(fx.getEffect());
+				if (java.util.Set.of(MobEffects.POISON, MobEffects.WITHER, MobEffects.MOVEMENT_SLOWDOWN, MobEffects.WEAKNESS, MobEffects.BLINDNESS).contains(fx.getEffect())) t.removeEffect(fx.getEffect());
 			}
 			level.sendParticles(ParticleTypes.HEART, t.getX(), t.getY() + t.getBbHeight() + 0.3, t.getZ(), 4, 0.3, 0.2, 0.3, 0);
 		}
@@ -346,7 +349,7 @@ public final class Resonance {
 		ServerLevel level = p.serverLevel();
 		for (LivingEntity t : around(p, r)) {
 			if (!enemy(p, t)) continue;
-			if (t.hurt(p.damageSources().playerAttack(p), damage)) t.invulnerableTime = 0;
+			t.hurt(p.damageSources().playerAttack(p), damage);
 			Vec3 d = away(p, t);
 			t.knockback(knock, -d.x, -d.z);
 			t.setDeltaMovement(t.getDeltaMovement().add(0, lift, 0));
@@ -379,7 +382,7 @@ public final class Resonance {
 		List<LivingEntity> all = new ArrayList<>(around(p, r));
 		all.add(p);
 		for (LivingEntity t : all) {
-			if (t != p && enemy(p, t)) continue;
+			if (!ally(p,t)) continue;
 			heal(t, ResonanceTuning.HALO_HEAL_PER_SECOND * power);
 			t.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 30, 0, false, false, false));
 		}
@@ -394,7 +397,7 @@ public final class Resonance {
 			if (!enemy(p, t)) continue;
 			Vec3 d = t.position().subtract(p.position()).multiply(1, 0, 1);
 			if (d.lengthSqr() > 1.0e-4 && Math.toDegrees(Math.acos(Mth.clamp(look.dot(d.normalize()), -1, 1))) > ResonanceTuning.FLASH_HALF_ANGLE) continue;
-			if (t.hurt(p.damageSources().playerAttack(p), ResonanceTuning.FLASH_DAMAGE * power)) t.invulnerableTime = 0;
+			t.hurt(p.damageSources().playerAttack(p), ResonanceTuning.FLASH_DAMAGE * power);
 			t.knockback(ResonanceTuning.FLASH_KNOCKBACK * power, -look.x, -look.z);
 			blind(t, ResonanceTuning.FLASH_BLIND_TICKS);
 			t.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, ResonanceTuning.FLASH_BLIND_TICKS, 1));
@@ -412,17 +415,17 @@ public final class Resonance {
 	}
 
 	/** Покров: импульс — свои лечатся, враги отлетают. */
-	private static void veil(ServerPlayer p, float power) {
+	private static void veil(ServerPlayer p, float power, float support) {
 		ServerLevel level = p.serverLevel();
 		double r = ResonanceTuning.VEIL_RADIUS;
-		heal(p, ResonanceTuning.VEIL_HEAL * power);
+		heal(p, ResonanceTuning.VEIL_HEAL * support);
 		for (LivingEntity t : around(p, r)) {
 			if (enemy(p, t)) {
-				if (t.hurt(p.damageSources().playerAttack(p), ResonanceTuning.VEIL_DAMAGE * power)) t.invulnerableTime = 0;
+				t.hurt(p.damageSources().playerAttack(p), ResonanceTuning.VEIL_DAMAGE * power);
 				Vec3 d = away(p, t);
 				t.knockback(ResonanceTuning.VEIL_KNOCKBACK * power, -d.x, -d.z);
-			} else {
-				heal(t, ResonanceTuning.VEIL_HEAL * power);
+			} else if (ally(p,t)) {
+				heal(t, ResonanceTuning.VEIL_HEAL * support);
 				level.sendParticles(ParticleTypes.HEART, t.getX(), t.getY() + t.getBbHeight() + 0.3, t.getZ(), 2, 0.3, 0.1, 0.3, 0);
 			}
 		}
@@ -439,14 +442,18 @@ public final class Resonance {
 	 * игроки, охотник, которому помогаешь, звери, жители.
 	 */
 	static boolean enemy(ServerPlayer p, LivingEntity t) {
-		if (t instanceof Player) return false;
+		if (!ShieldStance.offensiveTarget(p,t) || ally(p,t)) return false;
 		if (t instanceof Mob m && m.getTarget() == p) return true;
 		return t instanceof Enemy;
 	}
 
+	private static boolean ally(ServerPlayer p, LivingEntity t) {
+		return t == p || t.isAlliedTo(p) || t instanceof Player && (p.getTeam() == null || t.getTeam() == null) || t instanceof net.minecraft.world.entity.OwnableEntity own && p.getUUID().equals(own.getOwnerUUID());
+	}
+
 	private static List<LivingEntity> around(ServerPlayer p, double r) {
 		return p.serverLevel().getEntitiesOfClass(LivingEntity.class, p.getBoundingBox().inflate(r, 2, r),
-				t -> t != p && t.isAlive() && !(t instanceof ArmorStand) && t.distanceToSqr(p) <= (r + 0.5) * (r + 0.5));
+				t -> t != p && t.isAlive() && !(t instanceof ArmorStand) && p.hasLineOfSight(t) && t.distanceToSqr(p) <= (r + 0.5) * (r + 0.5));
 	}
 
 	private static void heal(LivingEntity t, float amount) {

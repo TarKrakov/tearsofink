@@ -63,6 +63,7 @@ public final class WeaponAbilities {
 		ServerPlayNetworking.registerGlobalReceiver(SkillPayloads.UseWeapon.TYPE, (payload, context) ->
 				context.player().server.execute(() -> use(context.player(), payload)));
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
+			SHIELD_ABILITY_UNTIL.values().removeIf(until -> until <= server.getTickCount());
 			RAM.tick(server);
 			RADIANCE.tick(server);
 			CLEAVE.tick(server);
@@ -71,12 +72,19 @@ public final class WeaponAbilities {
 		});
 	}
 
+	private static final java.util.Map<UUID, Integer> SHIELD_ABILITY_UNTIL = new java.util.HashMap<>();
+
 	private static void use(ServerPlayer player, SkillPayloads.UseWeapon payload) {
 		if (!player.isAlive() || player.isSpectator() || com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.locked(player)) return;
-		// два щита Души: R — Хлопок и Резонанс; одиночные абилки щитов молчат; Shift+R — пока свободно
+		// два щита Души: R — Резонанс, Shift+R — способность левого щита
 		if (com.tarkrakov.tearsofink.weapon.shield.ShieldStance.dual(player)) {
-			if (!payload.offhand()) Skills.activate(player, com.tarkrakov.tearsofink.weapon.shield.Resonance.SKILL,
-					new SkillInput(payload.strafe(), payload.forward(), false));
+			Skill ability = payload.offhand() ? ((SoulShieldItem)player.getOffhandItem().getItem()).ability()
+					: com.tarkrakov.tearsofink.weapon.shield.Resonance.SKILL;
+			if (ability == MERCY && MERCY.isActive(player)) { MERCY.stop(player); return; }
+			int now = player.server.getTickCount();
+			if (now < SHIELD_ABILITY_UNTIL.getOrDefault(player.getUUID(), 0)) return;
+			if (Skills.activate(player, ability, new SkillInput(payload.strafe(), payload.forward(), payload.offhand())))
+				SHIELD_ABILITY_UNTIL.put(player.getUUID(), now + com.tarkrakov.tearsofink.weapon.shield.ShieldTuning.ABILITY_SHARED_TICKS);
 			return;
 		}
 		// Shift+R is a separate defensive action for the Pale Linear Greatsword.
@@ -109,6 +117,12 @@ public final class WeaponAbilities {
 		SkillInput input = new SkillInput(payload.strafe(), payload.forward(), payload.offhand());
 		// двуручник в левой (в правой одноручный) — можно, но абилка слабее
 		POWER.put(player.getUUID(), payload.offhand() && InkGreatswordItem.twoHanded(stack) ? OFFHAND_TWO_HANDED_POWER : 1f);
+		if (stack.getItem() instanceof SoulShieldItem) {
+			int now = player.server.getTickCount();
+			if (now < SHIELD_ABILITY_UNTIL.getOrDefault(player.getUUID(), 0)) return;
+			if (Skills.activate(player, weapon.ability(), input)) SHIELD_ABILITY_UNTIL.put(player.getUUID(), now + com.tarkrakov.tearsofink.weapon.shield.ShieldTuning.ABILITY_SHARED_TICKS);
+			return;
+		}
 		if (Skills.activate(player, weapon.ability(), input) && stack.getItem() instanceof InkGreatswordItem) {
 			// белая «шторка» перезарядки на иконке меча
 			player.getCooldowns().addCooldown(stack.getItem(), weapon.ability().cooldownTicks());
@@ -127,8 +141,8 @@ public final class WeaponAbilities {
 	public static class RamAbility extends Skill {
 		public static final double SPEED = 0.85;
 		public static final int DURATION_TICKS = 5;
-		public static final float DAMAGE = 4f;
-		public static final double KNOCKBACK = 1.6;
+		public static final float DAMAGE = 7f;
+		public static final double KNOCKBACK = 0.55;
 		public static final int SLOW_TICKS = 20;
 
 		private record Ram(double dx, double dz, int ticksLeft, Set<UUID> hit) {}
@@ -172,7 +186,7 @@ public final class WeaponAbilities {
 				ServerLevel level = player.serverLevel();
 				AABB box = player.getBoundingBox().inflate(0.8, 0.2, 0.8).move(r.dx() * 0.6, 0, r.dz() * 0.6);
 				for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, box,
-						t -> com.tarkrakov.tearsofink.weapon.shield.ShieldStance.offensiveTarget(player, t))) {
+						t -> com.tarkrakov.tearsofink.weapon.shield.ShieldStance.offensiveTarget(player, t) && player.hasLineOfSight(t))) {
 					if (!r.hit().add(target.getUUID())) continue;
 					float f = SoulShieldItem.factor(player, RAM); // потёртый щит слабее
 					target.hurt(player.damageSources().playerAttack(player), DAMAGE * f);
@@ -215,7 +229,7 @@ public final class WeaponAbilities {
 				Map.Entry<UUID, Integer> e = it.next();
 				ServerPlayer player = server.getPlayerList().getPlayer(e.getKey());
 				int left = e.getValue() - 1;
-				boolean shieldInHand = player != null && player.getOffhandItem().getItem() instanceof SoulShieldItem;
+				boolean shieldInHand = player != null && (player.getOffhandItem().getItem() instanceof SoulShieldItem sh && sh.ability() == RADIANCE || player.getMainHandItem().getItem() instanceof SoulShieldItem main && main.ability() == RADIANCE);
 				if (player == null || left <= 0 || !shieldInHand || !player.isAlive()) {
 					if (player != null) {
 						player.removeEffect(ModEffects.RADIANCE);
@@ -481,7 +495,8 @@ public final class WeaponAbilities {
 	// ======================================================================
 	/** Щит Отпора: светлая волна — слабее Волны меча, зато сильно расталкивает. Дешёвая. */
 	public static class RepelAbility extends Skill {
-		public static final float DAMAGE = 4f;
+		public static final float DAMAGE = 5f;
+		public static final double RANGE = 7;
 		public static final double KNOCKBACK = 0.77;
 
 		RepelAbility() {
@@ -492,7 +507,7 @@ public final class WeaponAbilities {
 		public boolean activate(ServerPlayer player, SkillInput input) {
 			ServerLevel level = player.serverLevel();
 			Vec3 dir = flatLook(player);
-			level.addFreshEntity(new InkWaveEntity(level, player, dir, true, DAMAGE, KNOCKBACK));
+			level.addFreshEntity(new InkWaveEntity(level, player, dir, true, DAMAGE * SoulShieldItem.factor(player, REPEL), KNOCKBACK).maxDistance(RANGE));
 			player.swing(input.sneaking() ? net.minecraft.world.InteractionHand.OFF_HAND : net.minecraft.world.InteractionHand.MAIN_HAND, true);
 			level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1f, 1.5f);
 			return true;

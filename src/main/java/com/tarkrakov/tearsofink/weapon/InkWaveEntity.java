@@ -36,6 +36,8 @@ public class InkWaveEntity extends Entity {
 	private UUID ownerId;
 	private UUID onlyTarget;
 	private double travelled = 0;
+	private double maxDistance = MAX_DISTANCE;
+	public InkWaveEntity maxDistance(double distance) { this.maxDistance = distance; return this; }
 	private final Set<UUID> hit = new HashSet<>();
 
 	public InkWaveEntity(EntityType<? extends InkWaveEntity> type, Level level) {
@@ -89,7 +91,7 @@ public class InkWaveEntity extends Entity {
 
 		ServerLevel level = (ServerLevel) this.level();
 		BlockPos at = BlockPos.containing(next.x, next.y + 0.3, next.z);
-		if (!level.getBlockState(at).getCollisionShape(level, at).isEmpty() || travelled >= MAX_DISTANCE) {
+		if (!level.getBlockState(at).getCollisionShape(level, at).isEmpty() || travelled >= maxDistance) {
 			level.sendParticles(this.entityData.get(LIGHT) ? ParticleTypes.END_ROD : ParticleTypes.SQUID_INK,
 					getX(), getY() + 0.3, getZ(), 15, 0.4, 0.3, 0.4, 0.05);
 			this.discard();

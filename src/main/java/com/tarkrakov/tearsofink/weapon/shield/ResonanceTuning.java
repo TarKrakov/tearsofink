@@ -14,6 +14,7 @@ public final class ResonanceTuning {
 	public static final int CLAP_TICKS = 6;
 	/** Каждая единица заряда стойки (до 5) — столько к силе Резонанса; заряд при этом тратится. */
 	public static final float POWER_PER_CHARGE = 0.15f;
+	public static final float SUPPORT_PER_CHARGE = 0.08f;
 	/** Сбить замах врага (кольца, Лавина). */
 	public static final int STAGGER_TICKS = 20;
 
@@ -24,16 +25,16 @@ public final class ResonanceTuning {
 	/** Таран + Таран — Лавина: длинный неудержимый рывок. */
 	public static final double AVALANCHE_SPEED = 1.05;
 	public static final int AVALANCHE_TICKS = 14;
-	public static final float AVALANCHE_DAMAGE = 6f;
+	public static final float AVALANCHE_DAMAGE = 10f;
 	public static final double AVALANCHE_KNOCKBACK = 2.0;
 
 	/** Таран + Отпор — Наступление: рывок, в конце или при столкновении — хлопок о землю кольцом. */
 	public static final double ADVANCE_RADIUS = 4.5;
-	public static final float ADVANCE_DAMAGE = 6f;
+	public static final float ADVANCE_DAMAGE = 8f;
 	public static final double ADVANCE_KNOCKBACK = 1.3;
 
 	/** Таран + Светлый — Фаланга: рывок, спереди не пробить, задетых ослепляет. */
-	public static final float PHALANX_DAMAGE = 4f;
+	public static final float PHALANX_DAMAGE = 6f;
 	public static final double PHALANX_KNOCKBACK = 1.2;
 	public static final int PHALANX_BLIND_TICKS = 50;
 	/** Сколько ещё после рывка спереди не пробить. */
@@ -42,41 +43,42 @@ public final class ResonanceTuning {
 	public static final double PHALANX_COVER_DEGREES = 70;
 
 	/** Таран + Милосердие — Заступник: рывок, своих на пути лечит, себя — немного в конце. */
-	public static final float INTERCESSOR_HEAL = 6f;
-	public static final int INTERCESSOR_REGEN_TICKS = 60;
+	public static final float INTERCESSOR_HEAL = 5f;
+	public static final float INTERCESSOR_DAMAGE = 5f;
+	public static final int INTERCESSOR_REGEN_TICKS = 0;
 	public static final float INTERCESSOR_SELF_HEAL = 3f;
 
 	// --- вокруг себя ---
 	/** Светлый + Светлый — Солнце: свои — сияние (−40% урона), враги — ослеплены. */
 	public static final double SUN_RADIUS = 8;
-	public static final int SUN_TICKS = 160;
-	public static final int SUN_BLIND_TICKS = 60;
+	public static final int SUN_TICKS = 100;
+	public static final int SUN_BLIND_TICKS = 40;
 
 	/** Милосердие + Милосердие — Благодать: сильное лечение, снять дурные эффекты. */
 	public static final double GRACE_RADIUS = 8;
-	public static final float GRACE_HEAL = 10f;
+	public static final float GRACE_HEAL = 8f;
 
 	/** Отпор + Отпор — Ударная волна: кольцо вокруг. */
 	public static final double SHOCKWAVE_RADIUS = 6;
-	public static final float SHOCKWAVE_DAMAGE = 5f;
+	public static final float SHOCKWAVE_DAMAGE = 7f;
 	public static final double SHOCKWAVE_KNOCKBACK = 1.5;
 
 	/** Светлый + Милосердие — Ореол: аура — свои рядом лечатся и получают сопротивление. */
-	public static final int HALO_TICKS = 160;
+	public static final int HALO_TICKS = 120;
 	public static final double HALO_RADIUS = 6;
-	public static final float HALO_HEAL_PER_SECOND = 1.5f;
+	public static final float HALO_HEAL_PER_SECOND = 1f;
 
 	/** Светлый + Отпор — Вспышка: конус — отброс, ослепление, замедление. */
 	public static final double FLASH_RANGE = 7;
 	public static final double FLASH_HALF_ANGLE = 50;
-	public static final float FLASH_DAMAGE = 3f;
+	public static final float FLASH_DAMAGE = 4f;
 	public static final double FLASH_KNOCKBACK = 1.2;
-	public static final int FLASH_BLIND_TICKS = 60;
+	public static final int FLASH_BLIND_TICKS = 40;
 
 	/** Милосердие + Отпор — Покров: импульс — свои лечатся, враги отлетают. */
 	public static final double VEIL_RADIUS = 6;
 	public static final float VEIL_HEAL = 5f;
-	public static final float VEIL_DAMAGE = 2f;
+	public static final float VEIL_DAMAGE = 3f;
 	public static final double VEIL_KNOCKBACK = 1.2;
 
 	private ResonanceTuning() {}
