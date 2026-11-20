@@ -208,7 +208,8 @@ public final class WeaponAbilities {
 		/** Сопротивление II = −40% урона. */
 		public static final int RESISTANCE_LEVEL = 1;
 
-		private final Map<UUID, Integer> active = new HashMap<>();
+		private record Radiance(ItemStack shield, int left) {}
+		private final Map<UUID, Radiance> active = new HashMap<>();
 
 		RadianceAbility() {
 			super(TearsOfInk.id("radiance"), 0, 20, 240);
@@ -216,33 +217,38 @@ public final class WeaponAbilities {
 
 		@Override
 		public boolean activate(ServerPlayer player, SkillInput input) {
-			active.put(player.getUUID(), DURATION_TICKS);
-			player.addEffect(new MobEffectInstance(ModEffects.RADIANCE, DURATION_TICKS, 0, false, false, true));
-			player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, DURATION_TICKS, RESISTANCE_LEVEL, false, false, false));
+			ItemStack shield = player.getItemInHand(input.sneaking() ? net.minecraft.world.InteractionHand.OFF_HAND : net.minecraft.world.InteractionHand.MAIN_HAND);
+			active.put(player.getUUID(), new Radiance(shield,DURATION_TICKS));
+			refreshRadiance(player,2);
 			player.serverLevel().playSound(null, player.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 0.8f, 1.5f);
 			return true;
 		}
 
+		private static void refreshRadiance(ServerPlayer player, int duration) {
+			player.addEffect(new MobEffectInstance(ModEffects.RADIANCE, duration, 0, false, false, true));
+			player.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, duration, RESISTANCE_LEVEL, false, false, false));
+		}
+
 		void tick(MinecraftServer server) {
-			Iterator<Map.Entry<UUID, Integer>> it = active.entrySet().iterator();
+			Iterator<Map.Entry<UUID, Radiance>> it = active.entrySet().iterator();
 			while (it.hasNext()) {
-				Map.Entry<UUID, Integer> e = it.next();
+				var e = it.next();
 				ServerPlayer player = server.getPlayerList().getPlayer(e.getKey());
-				int left = e.getValue() - 1;
-				boolean shieldInHand = player != null && (player.getOffhandItem().getItem() instanceof SoulShieldItem sh && sh.ability() == RADIANCE || player.getMainHandItem().getItem() instanceof SoulShieldItem main && main.ability() == RADIANCE);
-				if (player == null || left <= 0 || !shieldInHand || !player.isAlive()) {
-					if (player != null) {
-						player.removeEffect(ModEffects.RADIANCE);
-						player.removeEffect(MobEffects.DAMAGE_RESISTANCE);
-					}
+				Radiance state = e.getValue();
+				int left = state.left() - 1;
+				boolean held = player != null && (player.getMainHandItem() == state.shield()
+						|| player.getOffhandItem() == state.shield() && !InkGreatswordItem.twoHanded(player.getMainHandItem()));
+				if (!held || !player.isAlive() || !com.tarkrakov.tearsofink.world.ModDimensions.isLands(player.level()) || left <= 0) {
+					// Only our short pulse expires. Never remove another source of resistance.
 					it.remove();
 					continue;
 				}
+				refreshRadiance(player, Math.min(2,left));
 				if (left % 3 == 0) {
 					player.serverLevel().sendParticles(ParticleTypes.END_ROD, player.getX(), player.getY() + 1.0, player.getZ(),
 							2, 0.5, 0.6, 0.5, 0.01);
 				}
-				e.setValue(left);
+				e.setValue(new Radiance(state.shield(),left));
 			}
 		}
 	}
@@ -409,7 +415,8 @@ public final class WeaponAbilities {
 		/** Через сколько тиков после конца ауры её можно включить снова. */
 		public static final int LOCKOUT_TICKS = 6 * 20;
 
-		private final Map<UUID, Integer> active = new HashMap<>();
+		private record Aura(ItemStack shield,int age,float power) {}
+		private final Map<UUID, Aura> active = new HashMap<>();
 		private final Map<UUID, Integer> lockedUntil = new HashMap<>();
 
 		MercyAbility() {
@@ -425,9 +432,9 @@ public final class WeaponAbilities {
 				return false; // выключение бесплатное
 			}
 			if (lockedUntil.getOrDefault(id, 0) > player.server.getTickCount()) return false;
-			active.put(id, 0);
-			player.addEffect(new MobEffectInstance(ModEffects.MERCY, MobEffectInstance.INFINITE_DURATION, 0, false, false, true));
-			player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, MobEffectInstance.INFINITE_DURATION, 1, false, false, false));
+			ItemStack shield = input.sneaking() ? player.getOffhandItem() : player.getMainHandItem();
+			active.put(id,new Aura(shield,0,SoulShieldItem.selectedPower(player,MERCY,input.sneaking())));
+			refreshAura(player);
 			player.serverLevel().playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 1f, 1.2f);
 			return true;
 		}
@@ -440,16 +447,13 @@ public final class WeaponAbilities {
 			active.remove(player.getUUID());
 			lockedUntil.put(player.getUUID(), player.server.getTickCount() + LOCKOUT_TICKS);
 			player.removeEffect(ModEffects.MERCY);
-			player.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
+			// Our slowdown is a short refreshed pulse; do not strip external debuffs.
 			player.serverLevel().playSound(null, player.blockPosition(), SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.PLAYERS, 0.8f, 1.4f);
 		}
 
-		private static boolean holdsMercyShield(ServerPlayer player) {
-			return isMercy(player.getMainHandItem()) || isMercy(player.getOffhandItem());
-		}
-
-		private static boolean isMercy(ItemStack stack) {
-			return stack.getItem() instanceof AbilityWeapon w && w.ability() == MERCY;
+		private static void refreshAura(ServerPlayer player) {
+			player.addEffect(new MobEffectInstance(ModEffects.MERCY, 2, 0, false, false, true));
+			player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 2, 1, false, false, false));
 		}
 
 		void tick(MinecraftServer server) {
@@ -459,16 +463,18 @@ public final class WeaponAbilities {
 					active.remove(id);
 					continue;
 				}
+				Aura aura = active.get(id);
 				var data = com.tarkrakov.tearsofink.ink.InkPowers.get(player);
 				boolean creative = player.getAbilities().instabuild;
 				float drain = SOUL_PER_SECOND / 20f;
-				if (!player.isAlive() || !data.inside() || !holdsMercyShield(player) || (!creative && data.soul() < drain)) {
+				if (!player.isAlive() || !data.inside() || !(player.getMainHandItem() == aura.shield() || player.getOffhandItem() == aura.shield() && !InkGreatswordItem.twoHanded(player.getMainHandItem())) || (!creative && data.soul() < drain)) {
 					stop(player);
 					continue;
 				}
 				if (!creative) com.tarkrakov.tearsofink.ink.InkPowers.set(player, data.withSoul(data.soul() - drain));
-				int t = active.get(id) + 1;
-				active.put(id, t);
+				int t = aura.age() + 1;
+				active.put(id,new Aura(aura.shield(),t,aura.power()));
+				refreshAura(player);
 				ServerLevel level = player.serverLevel();
 				// кольцо искорок по краю ауры
 				if (t % 4 == 0) {
@@ -482,7 +488,7 @@ public final class WeaponAbilities {
 					for (ServerPlayer ally : level.getEntitiesOfClass(ServerPlayer.class, player.getBoundingBox().inflate(RADIUS),
 							p -> p.isAlive() && (p == player || player.hasLineOfSight(p)) && (player.getTeam() == null || p.getTeam() == null || p.isAlliedTo(player)) && p.distanceToSqr(player) <= RADIUS * RADIUS)) {
 						float before = ally.getHealth();
-						ally.heal(HEAL_PER_SECOND * SoulShieldItem.factor(player, MERCY) * com.tarkrakov.tearsofink.ink.SoulPenalty.multiplier(ally));
+						if (!com.tarkrakov.tearsofink.weapon.shield.ShieldAuraHealing.heal(ally, HEAL_PER_SECOND * aura.power() * com.tarkrakov.tearsofink.ink.SoulPenalty.multiplier(ally), false)) continue;
 						com.tarkrakov.tearsofink.vow.SoulFeats.onEmergencyHeal(player, ally, before);
 						level.sendParticles(ParticleTypes.HEART, ally.getX(), ally.getY() + 1.9, ally.getZ(), 1, 0.2, 0.1, 0.2, 0);
 					}

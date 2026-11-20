@@ -185,11 +185,12 @@ public final class Resonance {
 			Map.Entry<UUID, float[]> e = it.next();
 			ServerPlayer p = server.getPlayerList().getPlayer(e.getKey());
 			float[] h = e.getValue();
-			if (p == null || !p.isAlive() || kind(p.getMainHandItem(),p.getOffhandItem()) != Kind.HALO || !com.tarkrakov.tearsofink.world.ModDimensions.isLands(p.level()) || --h[0] <= 0) {
+			if (p == null || !p.isAlive() || kind(p.getMainHandItem(),p.getOffhandItem()) != Kind.HALO || !com.tarkrakov.tearsofink.world.ModDimensions.isLands(p.level()) || --h[0] < 0) {
 				it.remove();
 				continue;
 			}
 			haloTick(p, (int) h[0], h[1]);
+			if (h[0] == 0) it.remove();
 		}
 		long now = server.overworld().getGameTime();
 		PHALANX_UNTIL.values().removeIf(t -> t < now);
@@ -219,6 +220,7 @@ public final class Resonance {
 					ResonanceTuning.SHOCKWAVE_KNOCKBACK, 0.25);
 			case HALO -> {
 				HALO.put(p.getUUID(), new float[]{ResonanceTuning.HALO_TICKS, support});
+				haloTick(p, ResonanceTuning.HALO_TICKS, support);
 				level.playSound(null, p.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.8f, 1.4f);
 			}
 			case FLASH -> flash(p, power);
@@ -378,13 +380,16 @@ public final class Resonance {
 			}
 			level.sendParticles(ParticleTypes.END_ROD, p.getX(), p.getY() + 2.3, p.getZ(), 1, 0.3, 0, 0.3, 0);
 		}
-		if (left % 20 != 0) return;
+		if (left % 4 != 0) return;
 		List<LivingEntity> all = new ArrayList<>(around(p, r));
 		all.add(p);
 		for (LivingEntity t : all) {
 			if (!ally(p,t)) continue;
-			heal(t, ResonanceTuning.HALO_HEAL_PER_SECOND * power);
-			t.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 30, 0, false, false, false));
+			if (left < ResonanceTuning.HALO_TICKS && left % 20 == 0) {
+				float amount = ResonanceTuning.HALO_HEAL_PER_SECOND * power;
+				ShieldAuraHealing.heal(t, t instanceof ServerPlayer sp ? amount * SoulPenalty.multiplier(sp) : amount, true);
+			}
+			if (left > 0) t.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, Math.min(5,left), 0, false, false, false));
 		}
 	}
 
