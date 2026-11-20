@@ -11,6 +11,8 @@ import com.tarkrakov.tearsofink.weapon.combat.*;
 import com.tarkrakov.tearsofink.weapon.forge.*;
 import com.tarkrakov.tearsofink.weapon.shield.ShieldTuning;
 import com.tarkrakov.tearsofink.world.ModDimensions;
+import com.tarkrakov.tearsofink.ink.FoodBalance;
+import com.tarkrakov.tearsofink.ink.SoulPenalty;
 import com.tarkrakov.tearsofink.world.EquipmentAffinity;
 import com.tarkrakov.tearsofink.world.VanillaArmorPenalty;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
@@ -90,6 +92,12 @@ public final class WeaponStats {
         Minecraft mc = Minecraft.getInstance();
         boolean inside = mc.level != null && ModDimensions.isLands(mc.level);
         Item item = stack.getItem();
+        if (inside && vanilla(stack) && stack.get(DataComponents.FOOD) != null) {
+            lines.add(t("food.foreign", fmt((1 - FoodBalance.VANILLA_IN_LANDS) * 100)).withStyle(ChatFormatting.RED));
+        }
+        if (inside && stack.is(ModItems.RAW_CATERPILLAR_MEAT)) {
+            lines.add(t("food.corrupted", SoulPenalty.RAW_MEAT_STAGE).withStyle(ChatFormatting.GRAY));
+        }
         if (!(item instanceof AbilityWeapon) && !(item instanceof OrdinaryArmorItem)) {
             if (inside && !Gear.isModItem(stack)) {
                 if (item instanceof ArmorItem) lines.add(t("penalty.armor", fmt((1 - VanillaArmorPenalty.LAND_MULTIPLIER) * 100)).withStyle(ChatFormatting.RED));

@@ -28,7 +28,7 @@ public final class SoulPenalty {
 		if (!(entity instanceof ServerPlayer player) || !stack.is(com.tarkrakov.tearsofink.item.ModItems.RAW_CATERPILLAR_MEAT)) return food;
 		InkData data = InkPowers.get(player);
 		if (!data.inside() || data.soulMax() > RAW_MEAT_STAGE) return food;
-		return new net.minecraft.world.food.FoodProperties(8, 9.6f, food.canAlwaysEat(), food.eatSeconds(),
+		return new net.minecraft.world.food.FoodProperties(FoodBalance.CORRUPTED_MEAT_NUTRITION, FoodBalance.CORRUPTED_MEAT_SATURATION, food.canAlwaysEat(), food.eatSeconds(),
 				food.usingConvertsTo(), food.effects());
 	}
 

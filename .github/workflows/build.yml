@@ -28,6 +28,10 @@ jobs:
         run: python3 tools/check_chest_loot.py
       - name: validate armor weights, progression and recipes
         run: python3 tools/check_armor_balance.py
+      - name: validate food balance and soul composition
+        run: |
+          javac -d /tmp/toi-food-test src/main/java/com/tarkrakov/tearsofink/ink/FoodBalance.java tools/tests/FoodBalanceTest.java
+          java -cp /tmp/toi-food-test FoodBalanceTest
       - name: validate equipment affinity and armor math
         run: |
           mkdir -p /tmp/toi-equipment-test

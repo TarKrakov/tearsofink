@@ -12,6 +12,7 @@ import com.tarkrakov.tearsofink.weapon.WeaponAbilities;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.SpawnEggItem;
 import net.minecraft.world.food.FoodProperties;
+import com.tarkrakov.tearsofink.ink.FoodBalance;
 import net.minecraft.world.item.Rarity;
 
 /** Предметы мода (не блоки). */
@@ -36,7 +37,7 @@ public final class ModItems {
 			.food(new FoodProperties.Builder().nutrition(2).saturationModifier(0.1f).build())));
 	/** Печёная плотеягода (чуть слабее жареного мяса гусеницы). */
 	public static final Item ROASTED_FLESHBERRY = register("roasted_fleshberry", new Item(new Item.Properties()
-			.food(new FoodProperties.Builder().nutrition(5).saturationModifier(0.5f).build())));
+			.food(new FoodProperties.Builder().nutrition(FoodBalance.ROASTED_FLESHBERRY_NUTRITION).saturationModifier(FoodBalance.ROASTED_FLESHBERRY_SATURATION_MODIFIER).build())));
 	public static final Item INKROOT_ROOT = register("inkroot_root", new Item(new Item.Properties()));
 	public static final Item TARWEED_EXTRACT = register("tarweed_extract", new Item(new Item.Properties()));
 	public static final Item WATERBLOOM_JUICE = register("waterbloom_juice", new Item(new Item.Properties()));
