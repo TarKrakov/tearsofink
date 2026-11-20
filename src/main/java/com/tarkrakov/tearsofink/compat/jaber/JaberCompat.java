@@ -1,10 +1,13 @@
 package com.tarkrakov.tearsofink.compat.jaber;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
-import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.world.InkLandsLayout;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.animal.frog.Frog;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -64,21 +67,13 @@ public final class JaberCompat {
         return true;
     }
 
-    /** Actual supporting block, not a heightmap or hypothetical road. A missing
-     * deck is never passable just because the generator has a road at that X/Z. */
-    public static double offRoadCost(Level level, int x, int y, int z, boolean swimming) {
-        if (swimming || !readable(level, x, y - 1, z)) return 0.0;
-        var floor = level.getBlockState(new BlockPos(x, y - 1, z));
-        if (floor.is(ModBlocks.ASHEN_PATH)) return 0.0;
-        // The road generator uses pale planks for the deck. Treat actual planked
-        // floors as comfortable too, including player-built bridges.
-        if (floor.is(ModBlocks.PALE_PLANKS)) return 0.0;
-        return 1.4;
-    }
-
     public static void init() {
         if (!supported()) return;
-        TearsOfInk.LOGGER.info("JABER 1.0.0: Ink Lands compatibility enabled");
+        TearsOfInk.LOGGER.info("JABER 1.0.0: Ink Lands road router enabled");
+        ServerEntityEvents.ENTITY_UNLOAD.register((entity, level) -> {
+            if (active(level) && entity instanceof Frog frog && frog.getTags().stream().anyMatch(t -> t.startsWith("jaber_owner_"))) JaberRouter.forget(frog);
+        });
+        ServerLifecycleEvents.SERVER_STOPPED.register(server -> JaberRouter.reset());
         // JABER's call item places the frog at exactly player.x + 4, player.y, player.z.
         // It does not look for free space. Reject unsafe calls before it creates/repositions the frog.
         final ResourceLocation call = ResourceLocation.fromNamespaceAndPath(MOD_ID, "frog_call");
@@ -108,7 +103,10 @@ public final class JaberCompat {
                         && (water || support.isFaceSturdy(server, below, net.minecraft.core.Direction.UP))
                         && server.noCollision(null, space);
             }
-            if (safe) return InteractionResultHolder.pass(stack);
+            if (safe) {
+                if (player instanceof ServerPlayer rider) JaberRouter.cancelOwner(rider);
+                return InteractionResultHolder.pass(stack);
+            }
             player.displayClientMessage(Component.translatable("message.tears-of-ink.jaber.unsafe_call"), true);
             return InteractionResultHolder.fail(stack);
         });
