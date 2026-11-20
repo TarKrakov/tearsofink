@@ -27,6 +27,7 @@ import java.util.List;
 /** Read-only projection of the same personal server mask as the Historian's diary. */
 public final class FateHud {
     private static final String PREFIX = "diary.tears-of-ink.fate.";
+    private static final float HUD_SCALE = 0.5f;
     private static KeyMapping toggleKey;
     private static boolean enabled = true;
     private static final Path PREF = FabricLoader.getInstance().getConfigDir().resolve("tearsofink_fate_hud.txt");
@@ -68,7 +69,26 @@ public final class FateHud {
         } catch (IOException ignored) { }
     }
 
-    private record Line(List<FormattedCharSequence> label, List<FormattedCharSequence> task) {}
+    private record Theme(int panel, int bar, int title, int task) {}
+    private record Line(List<FormattedCharSequence> label, List<FormattedCharSequence> task, Theme theme) {}
+
+    private static final Theme STORY = new Theme(0x7A241F1C, 0xFFD8C39A, 0xFFF3E5C8, 0xFFF7F1E7);
+    private static final Theme SOUL_CALL = new Theme(0x7A2A2416, 0xFFFFD36A, 0xFFFFE08A, 0xFFFFF3D1);
+    private static final Theme INK_CALL = new Theme(0x7A231B2E, 0xFFB38CFF, 0xFFD3BBFF, 0xFFF0E8FF);
+    private static final Theme NEUTRAL_CALL = new Theme(0x7A252028, 0xFFC8B6E8, 0xFFE0D6F4, 0xFFF2EEFA);
+    private static final Theme CRAFT = new Theme(0x7A2A2018, 0xFFD28A47, 0xFFE9B172, 0xFFF8E7D2);
+
+    private static Theme themeFor(FateProgress.Track track) {
+        return switch (track) {
+            case STORY -> STORY;
+            case CALL -> switch (Vow.CLIENT) {
+                case SOUL -> SOUL_CALL;
+                case INK -> INK_CALL;
+                default -> NEUTRAL_CALL;
+            };
+            case CRAFT -> CRAFT;
+        };
+    }
 
     private static void render(GuiGraphics g, DeltaTracker delta) {
         Minecraft mc = Minecraft.getInstance();
@@ -89,11 +109,11 @@ public final class FateHud {
             var label = mc.font.split(Component.translatable(PREFIX + "track." + track.id), available - 10);
             String taskKey = goal.textId(Vow.CLIENT) + ".hud";
             var task = mc.font.split(Component.translatable(PREFIX + taskKey), available - 10);
-            lines.add(new Line(label, task));
+            lines.add(new Line(label, task, themeFor(track)));
             height += 7 + 10 * (label.size() + task.size());
         }
         if (lines.isEmpty()) return;
-        float scale = Math.min(1f, (float) limit / height);
+        float scale = HUD_SCALE * Math.min(1f, (float) limit / height);
         // Top-left, well clear of the central boss bar and bottom combat indicators.
         g.pose().pushPose();
         g.pose().translate(6, 6, 0);
@@ -101,15 +121,15 @@ public final class FateHud {
         int y = 0;
         for (Line line : lines) {
             int boxH = 4 + 10 * (line.label().size() + line.task().size());
-            g.fill(0, y, available, y + boxH, 0x80221A23);
-            g.fill(0, y, 2, y + boxH, 0xFFC6A168);
+            g.fill(0, y, available, y + boxH, line.theme().panel());
+            g.fill(0, y, 2, y + boxH, line.theme().bar());
             int yy = y + 2;
             for (var row : line.label()) {
-                g.drawString(mc.font, row, 6, yy, 0xFFE7C58D, true);
+                g.drawString(mc.font, row, 6, yy, line.theme().title(), true);
                 yy += 10;
             }
             for (var row : line.task()) {
-                g.drawString(mc.font, row, 6, yy, 0xFFF0EAE2, true);
+                g.drawString(mc.font, row, 6, yy, line.theme().task(), true);
                 yy += 10;
             }
             y += boxH + 3;
