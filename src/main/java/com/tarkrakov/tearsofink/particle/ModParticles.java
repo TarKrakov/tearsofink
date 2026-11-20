@@ -43,6 +43,10 @@ public final class ModParticles {
 	public static final SimpleParticleType EMBER = simple("ember");
 	public static final SimpleParticleType INK_SPARK = simple("ink_spark");
 
+	/** Personal story-key guidance; independent artwork and lifetime from combat sparks. */
+	public static final SimpleParticleType STORY_INK_SPARK = simple("story_ink_spark");
+	public static final SimpleParticleType STORY_SOUL_SPARK = simple("story_soul_spark");
+
 	private static SimpleParticleType simple(String name) {
 		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id(name), FabricParticleTypes.simple());
 	}

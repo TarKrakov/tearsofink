@@ -13,7 +13,6 @@ import com.tarkrakov.tearsofink.world.ruins.Ruins;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -23,7 +22,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
-import org.joml.Vector3f;
 
 /** First slice of the personal storyline: a short, on-demand bearing to another temple. */
 public final class StoryKeyItem extends Item {
@@ -31,7 +29,8 @@ public final class StoryKeyItem extends Item {
     private static final AttachmentType<Integer> HISTORY = AttachmentRegistry.<Integer>builder()
             .persistent(Codec.INT).copyOnDeath().initializer(() -> 0)
             .buildAndRegister(TearsOfInk.id("story_key_history"));
-    private static final ParticleOptions GOLD_SPARK = new DustParticleOptions(new Vector3f(1.0f, 0.78f, 0.15f), 0.65f);
+    private static final int TRAIL_POINTS = 20, SPARKS_PER_POINT = 3;
+    private static final double TRAIL_REACH = 9.0;
     private final Vow path;
 
     public StoryKeyItem(Vow path, Properties properties) {
@@ -85,14 +84,14 @@ public final class StoryKeyItem extends Item {
             double dx = target[0] + 0.5 - server.getX(), dz = target[1] + 0.5 - server.getZ();
             double length = Math.hypot(dx, dz);
             if (length > 0.05) {
-                ParticleOptions spark = path == Vow.INK ? ModParticles.INK_SPARK : GOLD_SPARK;
-                double reach = Math.min(6.0, length);
+                ParticleOptions spark = path == Vow.INK ? ModParticles.STORY_INK_SPARK : ModParticles.STORY_SOUL_SPARK;
+                double reach = Math.min(TRAIL_REACH, length);
                 double y = server.getY() + 1.25;
-                for (int i = 1; i <= 12; i++) {
-                    double offset = reach * i / 12.0;
+                for (int i = 1; i <= TRAIL_POINTS; i++) {
+                    double offset = reach * i / TRAIL_POINTS;
                     server.serverLevel().sendParticles(server, spark, false,
                             server.getX() + dx / length * offset, y + 0.15 * Math.sin(i * 0.6),
-                            server.getZ() + dz / length * offset, 2, 0.07, 0.08, 0.07, 0.01);
+                            server.getZ() + dz / length * offset, SPARKS_PER_POINT, 0.12, 0.12, 0.12, 0.008);
                 }
             }
             server.getCooldowns().addCooldown(this, 20);
