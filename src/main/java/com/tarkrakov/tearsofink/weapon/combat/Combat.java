@@ -168,7 +168,7 @@ public final class Combat {
 		ItemStack weapon = p.getMainHandItem();
 		Archetype a = Archetype.of(weapon);
 		if (a == null) return;
-		if (a == Archetype.BASTION && !bastion(p)) return; // щит один или вне Земель — обычный удар
+		if (a == Archetype.BASTION && (!bastion(p) || com.tarkrakov.tearsofink.weapon.shield.ShieldStance.inStance(p))) return; // щит один или вне Земель — обычный удар
 		State s = state(p);
 		long now = p.serverLevel().getGameTime();
 		Combos.Combo combo = Combos.get(a);
@@ -389,13 +389,23 @@ public final class Combat {
 	private static void strike(ServerPlayer p, Combos.Step step, float scale, boolean second) {
 		ServerLevel level = p.serverLevel();
 		boolean paleLeft = "bb_author_dual_attack2".equals(step.anim()) && PaleLongswordMoves.dual(p);
-		ItemStack weapon = paleLeft ? p.getOffhandItem() : p.getMainHandItem();
+		boolean shieldAttack = Archetype.of(p.getMainHandItem()) == Archetype.BASTION;
+		if (shieldAttack && (!bastion(p) || com.tarkrakov.tearsofink.weapon.shield.ShieldStance.inStance(p))) return;
+		boolean shieldLeft = shieldAttack && "".equals(step.anim()) && step.offAnim() != null;
+		boolean shieldBoth = shieldAttack && "slam".equals(step.anim());
+		ItemStack weapon = paleLeft || shieldLeft ? p.getOffhandItem() : p.getMainHandItem();
 		Vec3 eye = p.getEyePosition();
 		Vec3 look = p.getLookAngle();
 		Vec3 flat = new Vec3(look.x, 0, look.z);
 		flat = flat.lengthSqr() < 1e-4 ? new Vec3(0, 0, 1) : flat.normalize();
 		double half = Math.toRadians(step.arc() / 2);
 		double base = (paleLeft ? PaleLongswordMoves.attackDamage(p, weapon) : p.getAttributeValue(Attributes.ATTACK_DAMAGE)) * step.damage() * scale;
+		if (shieldAttack) {
+			var main = (com.tarkrakov.tearsofink.weapon.SoulShieldItem)p.getMainHandItem().getItem();
+			var off = (com.tarkrakov.tearsofink.weapon.SoulShieldItem)p.getOffhandItem().getItem();
+			float handDamage = shieldBoth ? (main.baseDamage() + off.baseDamage()) / 2f : shieldLeft ? off.baseDamage() : main.baseDamage();
+			base *= handDamage / main.baseDamage();
+		}
 		boolean hitAny = false;
 		// Бастион — превозмогание: ответ после своевременного блока (×2 и сбивает), сильнее против сильных
 		boolean bastion = Archetype.of(weapon) == Archetype.BASTION;
@@ -440,7 +450,8 @@ public final class Combat {
 		}
 		if (hitAny) {
 			com.tarkrakov.tearsofink.weapon.forge.Gear.onSuccessfulCombo(p, weapon); // +Чернила только обычным оружием, один раз за взмах
-			weapon.hurtAndBreak(1, p, paleLeft ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND);
+			weapon.hurtAndBreak(1, p, paleLeft || shieldLeft ? EquipmentSlot.OFFHAND : EquipmentSlot.MAINHAND);
+			if (shieldBoth) p.getOffhandItem().hurtAndBreak(1, p, EquipmentSlot.OFFHAND);
 			level.sendParticles(ParticleTypes.SWEEP_ATTACK, eye.x + flat.x * 1.6, eye.y - 0.4, eye.z + flat.z * 1.6, 1, 0, 0, 0, 0);
 			level.playSound(null, p.blockPosition(), SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 0.8f, 0.8f);
 		}

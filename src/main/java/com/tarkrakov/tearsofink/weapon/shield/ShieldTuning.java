@@ -58,5 +58,8 @@ public final class ShieldTuning {
 	/** Видимость в тумане с двумя щитами (как ручной фонарь: тусклый 18, обычный 26) + за каждый заряд. */
 	public static final float CLARITY = 18f, CLARITY_PER_CHARGE = 4f;
 
+	public static final double PHANTOM_EXTRA_REACH = 2.0, PHANTOM_SPEED = 0.8, PHANTOM_HIT_MARGIN = 0.20;
+	public static final float PHANTOM_DAMAGE_MULT = 0.60f;
+	public static final int ABILITY_SHARED_TICKS = 20;
 	private ShieldTuning() {}
 }

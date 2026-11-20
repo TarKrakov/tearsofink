@@ -145,7 +145,7 @@ public final class ShieldStance {
 		Vec3 look = p.getLookAngle().multiply(1, 0, 1);
 		Vec3 to = from.subtract(p.position()).multiply(1, 0, 1);
 		boolean covered = look.lengthSqr() < 1.0e-4 || to.lengthSqr() < 1.0e-4
-				|| Math.toDegrees(Math.acos(Mth.clamp(look.normalize().dot(to.normalize()), -1, 1))) <= ShieldTuning.COVER_DEGREES;
+				|| Math.toDegrees(Math.acos(Mth.clamp(look.normalize().dot(to.normalize()), -1, 1))) <= SoulShieldItem.cover(p);
 		if (!covered) { // со спины — половина урона
 			passing = true;
 			try {
@@ -162,7 +162,7 @@ public final class ShieldStance {
 		com.tarkrakov.tearsofink.vow.SoulRank rank = com.tarkrakov.tearsofink.vow.SoulRank.active(p);
 		if (!perfect && !p.getAbilities().instabuild) {
 			InkData d = InkPowers.get(p);
-			float cost = amount * ShieldTuning.SOUL_PER_DAMAGE
+			float cost = amount * ShieldTuning.SOUL_PER_DAMAGE * SoulShieldItem.blockCost(p)
 					* (rank.atLeast(com.tarkrakov.tearsofink.vow.SoulRank.STEADFAST) ? ShieldTuning.STEADFAST_COST_MULT : 1f);
 			if (d.soul() < cost) {
 				breakShields(p);
@@ -272,8 +272,9 @@ public final class ShieldStance {
 			Vec3 d = t.position().subtract(p.position()).multiply(1, 0, 1);
 			if (d.length() > r + t.getBbWidth() / 2) continue;
 			if (d.lengthSqr() > 1.0e-4 && Math.toDegrees(Math.acos(Mth.clamp(look.dot(d.normalize()), -1, 1))) > ShieldTuning.BURST_HALF_ANGLE) continue;
-			if (t.hurt(p.damageSources().playerAttack(p), dmg * strongMult(t))) t.invulnerableTime = 0;
-			stagger(p, t, ShieldTuning.BURST_STAGGER, knock);
+			if (!p.hasLineOfSight(t)) continue;
+			if (t.hurt(p.damageSources().playerAttack(p), dmg * strongMult(t) * SoulShieldItem.pairPower(p)))
+				stagger(p, t, ShieldTuning.BURST_STAGGER, knock);
 		}
 		for (int i = 0; i < 8 + c * 6; i++) {
 			double a = (p.getRandom().nextDouble() * 2 - 1) * Math.toRadians(ShieldTuning.BURST_HALF_ANGLE);

@@ -29,6 +29,22 @@ public class SoulShieldItem extends ShieldItem implements AbilityWeapon {
 	public static final float WORN_POWER = 0.7f;
 
 	private final float power;
+	private final Profile profile;
+	public enum Profile {
+		RAM(6f,1.10f,100f), REPEL(5.5f,1f,110f), LIGHT(5f,0.8f,120f), MERCY(5f,1f,110f);
+		public final float damage, blockCost, cover;
+		Profile(float damage,float blockCost,float cover) { this.damage=damage; this.blockCost=blockCost; this.cover=cover; }
+	}
+	private static Profile profile(Skill skill) {
+		if (skill == WeaponAbilities.RAM) return Profile.RAM;
+		if (skill == WeaponAbilities.REPEL) return Profile.REPEL;
+		if (skill == WeaponAbilities.RADIANCE) return Profile.LIGHT;
+		return Profile.MERCY;
+	}
+	private static float baseDamage(Profile profile,float power) { return power < 1f ? 3.5f : profile.damage; }
+	public float baseDamage() { return baseDamage(profile,power); }
+	public static float blockCost(Player p) { return (((SoulShieldItem)p.getMainHandItem().getItem()).profile.blockCost + ((SoulShieldItem)p.getOffhandItem().getItem()).profile.blockCost)/2f; }
+	public static float cover(Player p) { return (((SoulShieldItem)p.getMainHandItem().getItem()).profile.cover + ((SoulShieldItem)p.getOffhandItem().getItem()).profile.cover)/2f; }
 
 	public SoulShieldItem(Supplier<Skill> ability, Properties properties) {
 		this(ability, properties, 1f);
@@ -38,7 +54,7 @@ public class SoulShieldItem extends ShieldItem implements AbilityWeapon {
 	public SoulShieldItem(Supplier<Skill> ability, Properties properties, float power) {
 		super(properties.attributes(net.minecraft.world.item.component.ItemAttributeModifiers.builder()
 				.add(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE, new net.minecraft.world.entity.ai.attributes.AttributeModifier(
-						BASE_ATTACK_DAMAGE_ID, (BASH_DAMAGE + 1) * power - 1, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE),
+						BASE_ATTACK_DAMAGE_ID, baseDamage(profile(ability.get()), power) - 1, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE),
 						net.minecraft.world.entity.EquipmentSlotGroup.MAINHAND)
 				.add(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_SPEED, new net.minecraft.world.entity.ai.attributes.AttributeModifier(
 						BASE_ATTACK_SPEED_ID, BASH_SPEED, net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE),
@@ -46,6 +62,7 @@ public class SoulShieldItem extends ShieldItem implements AbilityWeapon {
 				.build()));
 		this.ability = ability;
 		this.power = power;
+		this.profile = profile(ability.get());
 	}
 
 	public float power() {
