@@ -84,6 +84,11 @@ dependencies {
 }
 
 processResources {
+	// Author armor source is the runtime geometry; keep one editable source of truth.
+	from('blockbench') {
+		include '*_armor.bbmodel'
+		into 'assets/tears-of-ink/armor_models'
+	}
 	def version = project.version
 	inputs.property "version", version
 

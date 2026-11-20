@@ -13,6 +13,7 @@
 		"ItemInHandRendererInvoker",
 		"ItemInHandRendererMixin",
 		"HumanoidModelMixin",
+		"PlayerArmorHandMixin",
 		"ItemInHandLayerMixin",
 		"LivingEntityRendererMixin",
 		"NoExperimentalWarningMixin"

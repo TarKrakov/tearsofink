@@ -41,6 +41,7 @@ import net.minecraft.client.renderer.RenderType;
 public class TearsOfInkClient implements ClientModInitializer {
 	@Override
 	public void onInitializeClient() {
+		com.tarkrakov.tearsofink.client.armor.AuthoredArmorRenderer.init();
 		StriderSongClient.init();
 		PaleForestAmbience.init();
 		com.tarkrakov.tearsofink.client.audio.AudioMixer.init();
