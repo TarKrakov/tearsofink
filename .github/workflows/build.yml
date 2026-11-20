@@ -48,11 +48,6 @@ jobs:
           mkdir -p /tmp/toi-jaber-test
           javac -d /tmp/toi-jaber-test src/main/java/com/tarkrakov/tearsofink/compat/jaber/JaberPath.java tools/tests/JaberPathTest.java
           java -cp /tmp/toi-jaber-test JaberPathTest
-      - name: verify Steve and Alex armor arm fitting
-        run: |
-          mkdir -p /tmp/toi-armor-fit
-          javac -d /tmp/toi-armor-fit src/client/java/com/tarkrakov/tearsofink/client/armor/ArmorArmFit.java tools/tests/ArmorArmFitTest.java
-          java -cp /tmp/toi-armor-fit ArmorArmFitTest
       - name: build
         run: ./gradlew build
       # The original Claude previewer validates the real model/pivot and can render

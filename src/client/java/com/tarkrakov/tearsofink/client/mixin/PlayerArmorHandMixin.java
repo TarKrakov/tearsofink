@@ -20,6 +20,6 @@ public abstract class PlayerArmorHandMixin {
                                      AbstractClientPlayer player, ModelPart arm, ModelPart sleeve, CallbackInfo ci) {
         var model = ((PlayerRenderer) (Object) this).getModel();
         AuthoredArmorRenderer.renderHand(pose, buffers, player.getItemBySlot(EquipmentSlot.CHEST),
-                arm, arm == model.rightArm, light, player);
+                arm, arm == model.rightArm, light);
     }
 }
