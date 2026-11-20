@@ -92,6 +92,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 
 		// Оружие: волна без модели (видна по брызгам); щиты — модель «в блоке» и «сияет»
 		EntityRendererRegistry.register(ModEntities.INK_WAVE, NoopRenderer::new);
+		EntityRendererRegistry.register(ModEntities.SHIELD_PHANTOM, com.tarkrakov.tearsofink.client.shield.ShieldPhantomRenderer::new);
 		EntityRendererRegistry.register(ModEntities.BLOOD_ARC, NoopRenderer::new);
 		EntityRendererRegistry.register(ModEntities.INK_BLOT, net.minecraft.client.renderer.entity.ThrownItemRenderer::new);
 		// ----- пролог -----

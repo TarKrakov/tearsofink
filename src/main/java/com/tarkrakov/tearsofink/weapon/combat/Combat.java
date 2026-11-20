@@ -407,6 +407,7 @@ public final class Combat {
 			base *= handDamage / main.baseDamage();
 		}
 		boolean hitAny = false;
+		boolean physicalContact = false;
 		// Бастион — превозмогание: ответ после своевременного блока (×2 и сбивает), сильнее против сильных
 		boolean bastion = Archetype.of(weapon) == Archetype.BASTION;
 		boolean riposte = bastion && com.tarkrakov.tearsofink.weapon.shield.ShieldStance.takeRiposte(p);
@@ -423,6 +424,7 @@ public final class Combat {
 				if (angle > half) continue;
 			}
 			if (!p.hasLineOfSight(t)) continue;
+			physicalContact = true;
 			DamageSource src = p.damageSources().playerAttack(p);
 			float dmg = EnchantmentHelper.modifyDamage(level, weapon, t, src, (float) base);
 			if (bastion) dmg *= com.tarkrakov.tearsofink.weapon.shield.ShieldStance.strongMult(t)
@@ -447,6 +449,9 @@ public final class Combat {
 				EnchantmentHelper.doPostAttackEffects(level, t, src);
 				p.setLastHurtMob(t);
 			}
+		}
+		if (shieldAttack && !physicalContact && scale >= 0.999f) {
+			level.addFreshEntity(new com.tarkrakov.tearsofink.weapon.shield.ShieldPhantomEntity(level,p,weapon,(float)base,step.reach()));
 		}
 		if (hitAny) {
 			com.tarkrakov.tearsofink.weapon.forge.Gear.onSuccessfulCombo(p, weapon); // +Чернила только обычным оружием, один раз за взмах

@@ -22,6 +22,9 @@ public final class ModEntities {
 			EntityType.Builder.<com.tarkrakov.tearsofink.weapon.blood.BloodArcEntity>of(com.tarkrakov.tearsofink.weapon.blood.BloodArcEntity::new, MobCategory.MISC)
 					.sized(1.6f, 0.9f).clientTrackingRange(6).updateInterval(1).noSave().build("blood_arc"));
 
+	public static final EntityType<com.tarkrakov.tearsofink.weapon.shield.ShieldPhantomEntity> SHIELD_PHANTOM = Registry.register(BuiltInRegistries.ENTITY_TYPE,
+			TearsOfInk.id("shield_phantom"), EntityType.Builder.<com.tarkrakov.tearsofink.weapon.shield.ShieldPhantomEntity>of(com.tarkrakov.tearsofink.weapon.shield.ShieldPhantomEntity::new, MobCategory.MISC)
+				.sized(0.6f,0.8f).clientTrackingRange(6).updateInterval(1).noSave().build("shield_phantom"));
 	private ModEntities() {}
 
 	public static void init() {}
