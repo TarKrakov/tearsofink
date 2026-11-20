@@ -6,6 +6,26 @@
       "entries": [
         {
           "type": "minecraft:item",
+          "name": "tears-of-ink:ink",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 3
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
           "name": "tears-of-ink:roasted_fleshberry",
           "weight": 1,
           "functions": [
@@ -87,7 +107,7 @@
       "conditions": [
         {
           "condition": "minecraft:random_chance",
-          "chance": 0.75
+          "chance": 0.8
         }
       ]
     }

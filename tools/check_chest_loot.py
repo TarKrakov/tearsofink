@@ -1,4 +1,4 @@
-"""D-093: exact loot expectations and site budgets. Run from repository root."""
+"""D-105: guaranteed useful chest contents, exact loot expectations and site budgets. Run from repository root."""
 import json
 import re
 from pathlib import Path
@@ -32,7 +32,29 @@ def expected(name,item,biome="pale"):
     return total
 def any_item(name,items):
     return sum(expected(name,k) for k in items)
+# Each chest has its own unconditional Ink pool and at least two other
+# guaranteed item rolls, including one roll of useful crafting materials.
+basic_materials={"minecraft:stick","minecraft:iron_ingot","minecraft:charcoal",
+                 prefix+"asphoda",prefix+"silk_thread",prefix+"raw_pale_metal",
+                 prefix+"raw_blood_metal",prefix+"blood_clot"}
 for name,table in tables.items():
+    ink_range=(2,4) if name.endswith("_reward") else (2,3) if (
+        name.endswith("_rich") or name in {"ruins_inkwood","settlement_pantry"}) else (
+        (1,3) if name.endswith("_common") or name=="temple_blood_supply" else (1,2))
+    ink_pools=[p for p in table["pools"] if any(e.get("name")==prefix+"ink" for e in p["entries"])]
+    assert len(ink_pools)==1, name
+    ip=ink_pools[0]
+    assert not ip.get("conditions") and ip["rolls"]==1 and len(ip["entries"])==1, name
+    ie=ip["entries"][0]
+    assert not ie.get("conditions") and ie["type"]=="minecraft:item", name
+    assert ie["functions"]==[{"function":"minecraft:set_count","count":{
+        "type":"minecraft:uniform","min":ink_range[0],"max":ink_range[1]}}], name
+    assert expected(name,"ink")==sum(ink_range)/2, name
+    guaranteed=[p for p in table["pools"] if not p.get("conditions")
+        and isinstance(p["rolls"],int) and p["rolls"]>=1
+        and all(e["type"]=="minecraft:item" and not e.get("conditions") for e in p["entries"])]
+    assert sum(p["rolls"] for p in guaranteed)>=3, name
+    assert any(all(e.get("name") in basic_materials for e in p["entries"]) for p in guaranteed), name
     assert table["type"]=="minecraft:chest" and table["random_sequence"]==prefix+"chests/"+name
     rare_pools=0
     for pool in table["pools"]:
@@ -53,19 +75,19 @@ for name,table in tables.items():
     if name.startswith(("gate_","camp_","watchtower_","settlement_","temple_pale_supply_")) or name=="temple_blood_supply": assert rare_pools==0
 for name in ("gate_supplies","camp_supplies","settlement_supplies","settlement_pantry"):
     assert any_item(name,valuable-({"raw_blood_metal"} if name.startswith("settlement_") else set()))==0
-    if name.startswith("settlement_"): assert expected(name,"asphoda")==0 and expected(name,"ink")==0
-assert expected("ruins_start","ink")==1 and expected("ruins_start","pigment")==0
+    if name.startswith("settlement_"): assert expected(name,"asphoda")==0
+assert expected("ruins_start","ink")==1.5 and expected("ruins_start","pigment")==0
 assert expected("ruins_start","cooked_caterpillar_meat")==2
 assert expected("ruins_rich","raw_pale_metal","inkwood")==0
-assert abs(expected("ruins_rich","raw_ink_metal","inkwood")-.975)<1e-9
-assert abs(expected("ruins_inkwood","raw_ink_metal")-.975)<1e-9
+assert abs(expected("ruins_rich","raw_ink_metal","inkwood")-1.125)<1e-9
+assert abs(expected("ruins_inkwood","raw_ink_metal")-1.125)<1e-9
 for group in ("ruins_","gate_","gate_cache_","camp_cache_","watchtower_cache_"):
     assert expected(group+"poor","pigment")<expected(group+"common","pigment")<expected(group+"rich","pigment")
 for i,t in enumerate(tiers):
     for group,side,counts,maxpig,maxore in (
-       ("gate_cache_","gate_supplies",range(1,4),[.08,.12,.15][i],[1.5,2,2.5][i]),
-       ("camp_cache_","camp_supplies",range(1,3),[.05,.08,.10][i],[1,1.5,2][i]),
-       ("watchtower_cache_","camp_supplies",range(1,2),[.06,.10,.12][i],[1.5,2,2.5][i])):
+       ("gate_cache_","gate_supplies",range(1,4),[.08,.12,.15][i],[1.7,2.2,2.7][i]),
+       ("camp_cache_","camp_supplies",range(1,3),[.05,.08,.10][i],[1.2,1.7,2.2][i]),
+       ("watchtower_cache_","camp_supplies",range(1,2),[.06,.10,.12][i],[1.7,2.2,2.7][i])):
         for count in counts:
             for item,budget in (("pigment",maxpig),("raw_pale_metal",maxore)):
                 assert abs(expected(group+t,item)+(count-1)*expected(side,item)-budget)<1e-9
@@ -74,9 +96,9 @@ for i,t in enumerate(tiers):
     assert expected("temple_pale_supply_"+t,"pigment")==0
 assert expected("temple_blood_supply","pigment")==0
 assert expected("temple_blood_reward","pigment")==0 and expected("temple_pale_reward","pigment")==0
-assert abs(expected("ruins_start","raw_pale_metal")-1.45)<1e-9
+assert abs(expected("ruins_start","raw_pale_metal")-1.6)<1e-9
 assert expected("ruins_start","minecraft:torch")>=1.5
-for tier,ore,pig in zip(tiers,(.8,1.125,1.7),(.05,.08,.10)):
+for tier,ore,pig in zip(tiers,(1.0,1.275,1.9),(.05,.08,.10)):
     assert abs(expected("ruins_"+tier,"raw_pale_metal")-ore)<1e-9
     assert abs(expected("ruins_"+tier,"pigment")-pig)<1e-9
     assert expected("ruins_"+tier,"blood_clot")==.05
@@ -88,8 +110,13 @@ for name in tables:
         assert expected(name,"blood_clot")==0
 assert expected("settlement_supplies","blood_clot")==1.25
 assert expected("settlement_pantry","blood_clot")==3
-assert abs(expected("settlement_supplies","raw_blood_metal")-.675)<1e-9
-assert abs(expected("settlement_pantry","raw_blood_metal")-1.875)<1e-9
+assert abs(expected("settlement_supplies","raw_blood_metal")-.825)<1e-9
+assert abs(expected("settlement_pantry","raw_blood_metal")-2.0)<1e-9
+assert abs(expected("temple_blood_supply","raw_blood_metal")-1.125)<1e-9
+for tier,ore in zip(tiers,(1.0,1.275,1.9)):
+    assert abs(expected("temple_pale_supply_"+tier,"raw_pale_metal")-ore)<1e-9
+assert abs(any_item("temple_pale_reward",rare)-.65)<1e-9
+assert abs(any_item("temple_blood_reward",rare)-.60)<1e-9
 for tier, chance in zip(tiers,(.05,.08,.12)):
     name="ruins_"+tier
     assert abs(expected(name,"raw_blood_metal")-chance)<1e-9
@@ -108,4 +135,4 @@ assert "i==0?loot:supplies" in (java/"entity/patrol/BarricadeGates.java").read_t
 assert "i==0?loot:supplies" in (java/"entity/patrol/ForestCamps.java").read_text()
 assert "q.equals(p.pantry)?PANTRY:LOOT" in (java/"world/herald/BloodSettlements.java").read_text()
 assert "Ruins.PALE_TEMPLE_SUPPLIES[tier]" in (java/"world/ruins/RuinPiece.java").read_text()
-print(f"D-102: {len(tables)} tables, regional loot and bounded site budgets verified")
+print(f"D-105: {len(tables)} tables, guaranteed Ink and useful material rolls, rare rewards and bounded site budgets verified")

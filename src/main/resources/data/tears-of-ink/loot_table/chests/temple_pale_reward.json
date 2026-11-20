@@ -6,8 +6,28 @@
       "entries": [
         {
           "type": "minecraft:item",
+          "name": "tears-of-ink:ink",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 4
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
           "name": "tears-of-ink:raw_pale_metal",
-          "weight": 45,
+          "weight": 50,
           "functions": [
             {
               "function": "minecraft:set_count",
@@ -22,7 +42,7 @@
         {
           "type": "minecraft:item",
           "name": "tears-of-ink:asphoda",
-          "weight": 35,
+          "weight": 30,
           "functions": [
             {
               "function": "minecraft:set_count",
@@ -36,15 +56,15 @@
         },
         {
           "type": "minecraft:item",
-          "name": "tears-of-ink:ink",
+          "name": "minecraft:stick",
           "weight": 20,
           "functions": [
             {
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 1,
-                "max": 2
+                "min": 2,
+                "max": 3
               }
             }
           ]

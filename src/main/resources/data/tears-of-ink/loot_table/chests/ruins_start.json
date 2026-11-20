@@ -6,6 +6,26 @@
       "entries": [
         {
           "type": "minecraft:item",
+          "name": "tears-of-ink:ink",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 2
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
           "name": "tears-of-ink:cooked_caterpillar_meat",
           "weight": 1,
           "functions": [
@@ -26,18 +46,8 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "tears-of-ink:ink",
-          "weight": 1
-        }
-      ]
-    },
-    {
-      "rolls": 1,
-      "entries": [
-        {
-          "type": "minecraft:item",
           "name": "tears-of-ink:raw_pale_metal",
-          "weight": 45,
+          "weight": 60,
           "functions": [
             {
               "function": "minecraft:set_count",
@@ -48,7 +58,7 @@
         {
           "type": "minecraft:item",
           "name": "tears-of-ink:asphoda",
-          "weight": 40,
+          "weight": 30,
           "functions": [
             {
               "function": "minecraft:set_count",
@@ -63,7 +73,7 @@
         {
           "type": "minecraft:item",
           "name": "minecraft:iron_ingot",
-          "weight": 15
+          "weight": 10
         }
       ]
     },
@@ -104,7 +114,7 @@
               "count": {
                 "type": "minecraft:uniform",
                 "min": 2,
-                "max": 3
+                "max": 4
               }
             }
           ]
@@ -138,8 +148,8 @@
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 1,
-                "max": 2
+                "min": 2,
+                "max": 3
               }
             }
           ]

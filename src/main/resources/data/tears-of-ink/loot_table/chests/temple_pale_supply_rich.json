@@ -6,6 +6,26 @@
       "entries": [
         {
           "type": "minecraft:item",
+          "name": "tears-of-ink:ink",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 3
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
           "name": "tears-of-ink:cooked_caterpillar_meat",
           "weight": 30,
           "functions": [
@@ -29,22 +49,22 @@
               "count": {
                 "type": "minecraft:uniform",
                 "min": 2,
-                "max": 3
+                "max": 4
               }
             }
           ]
         },
         {
           "type": "minecraft:item",
-          "name": "minecraft:torch",
+          "name": "tears-of-ink:silk_thread",
           "weight": 15,
           "functions": [
             {
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 2,
-                "max": 3
+                "min": 1,
+                "max": 2
               }
             }
           ]
@@ -81,15 +101,15 @@
         },
         {
           "type": "minecraft:item",
-          "name": "tears-of-ink:ink",
+          "name": "minecraft:stick",
           "weight": 40,
           "functions": [
             {
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 1,
-                "max": 2
+                "min": 2,
+                "max": 3
               }
             }
           ]
@@ -133,7 +153,7 @@
       "conditions": [
         {
           "condition": "minecraft:random_chance",
-          "chance": 0.85
+          "chance": 0.95
         }
       ]
     }
