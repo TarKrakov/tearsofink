@@ -87,6 +87,7 @@ public final class AuthoredArmorRenderer implements ArmorRenderer {
     public static void init() {
         registerSet("pale_heavy_armor", "pale_closed_helmet", "pale_cuirass", "pale_plate_leggings", "pale_sabatons");
         registerSet("pale_medium_armor", "pale_chain_hood", "pale_brigandine", "pale_reinforced_leggings", "pale_leather_boots");
+        registerSet("pale_light_armor", "pale_headband", "pale_quilted_jacket", "pale_pants", "pale_shoes");
     }
 
     /** Additional sets use the same group contract, with no new renderer class. */
