@@ -48,7 +48,10 @@ import java.util.*;
 
 /** D-089. Persisted, seed-stable camps; placement is restricted to already FULL chunks. */
 public final class ForestCamps extends SavedData {
-    static final int CELL=288, JITTER=36, INSTALL_RADIUS=112, WAKE=72, LEASH=24, PATROL_BUFFER=40;
+    static final int CELL=192, JITTER=24, INSTALL_RADIUS=112, WAKE=72, LEASH=24, PATROL_BUFFER=40;
+    private static final int MIN_CAMP_GAP=110;
+    // Denser grid uses a separate key namespace; never re-key persisted D-089 camps or guards.
+    private static final long DENSE_GRID_NAMESPACE=0x4000000000000000L;
     private static final int[] COUNTS={463,230,242};
     private static final String[] ASSETS={"pale_watchtower_camp","pale_camp_fire","pale_camp_flat"};
     private static final Factory<ForestCamps> FACTORY=new Factory<>(ForestCamps::new,ForestCamps::load,null);
@@ -150,7 +153,7 @@ public final class ForestCamps extends SavedData {
             if(!p.isAlive()||p.isSpectator())continue;
             int gx=Math.floorDiv(p.getBlockX(),CELL),gz=Math.floorDiv(p.getBlockZ(),CELL);
             for(int x=gx-1;x<=gx+1;x++)for(int z=gz-1;z<=gz+1;z++){
-                long k=key(x,z);
+                long k=key(x,z)^DENSE_GRID_NAMESPACE;
                 if(data.camps.containsKey(k)||now<data.retry.getOrDefault(k,0L))continue;
                 RandomSource r=rng(level,k);
                 int cx=x*CELL+CELL/2+r.nextInt(2*JITTER+1)-JITTER,cz=z*CELL+CELL/2+r.nextInt(2*JITTER+1)-JITTER;
@@ -167,7 +170,7 @@ public final class ForestCamps extends SavedData {
                         ||layout.depthInside(site.getX(),site.getZ())<24||layout.nearRoad(site.getX(),site.getZ(),40)
                         ||layout.nearLake(site.getX(),site.getZ(),40)||layout.nearHerald(site.getX(),site.getZ(),64)
                         ||Ruins.nearStart(layout,site.getX(),site.getZ())||Sanctuary.near(layout,site.getX(),site.getZ(),48)
-                        ||near(level,site,170)||BarricadeGates.nearGate(level,site,64))continue;
+                        ||near(level,site,MIN_CAMP_GAP)||BarricadeGates.nearGate(level,site,64))continue;
                     Camp c=data.install(level,layout,k,type,rot,site);
                     if(c!=null){data.index(c);data.retry.remove(k);data.setDirty();
                         TearsOfInk.LOGGER.info("Installed forest camp {} at {}",ASSETS[type],c.center);
