@@ -54,8 +54,8 @@ public final class FateProgress {
         public final List<Goal> goals;
         Track(String id, Goal... goals) { this.id = id; this.goals = List.of(goals); }
 
-        private static final List<Goal> SOUL_CRAFT = List.of(Goal.INGOT, Goal.ANVIL, Goal.ARMOR,
-                Goal.CONTRACT, Goal.REDEEM, Goal.WEAPON, Goal.FONT, Goal.CONTRAST, Goal.RUBRICS,
+        private static final List<Goal> SOUL_CRAFT = List.of(Goal.INGOT, Goal.WEAPON, Goal.ANVIL, Goal.ARMOR,
+                Goal.CONTRACT, Goal.REDEEM, Goal.FONT, Goal.CONTRAST, Goal.RUBRICS,
                 Goal.ALTAR, Goal.AWAKENING);
 
         public List<Goal> goalsFor(Vow vow) {
@@ -167,10 +167,10 @@ public final class FateProgress {
             if (!Goal.SECOND_FOUNTAIN.done(mask)) return first(mask, Goal.KEY);
             return Goal.TRADER.done(mask) ? first(mask, Goal.TRAVEL) : null;
         }
-        // Full Soul shields use Pigment. Let a pilgrim earn it with worn shields
-        // instead of directing them to an expensive new shield before their first contract.
+        // Restoring a worn shield requires just one Pale Ingot at a crafting table.
+        // Guide Soul pilgrims to restoration before forging or hunting.
         Goal basic = vow == Vow.SOUL
-                ? first(mask, Goal.INGOT, Goal.ANVIL, Goal.ARMOR)
+                ? first(mask, Goal.INGOT, Goal.WEAPON, Goal.ANVIL, Goal.ARMOR)
                 : first(mask, Goal.INGOT, Goal.ANVIL, Goal.WEAPON, Goal.ARMOR);
         if (basic != null) return basic;
         if (!Goal.TRADER.done(mask)) return null;
