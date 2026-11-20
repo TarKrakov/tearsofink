@@ -11,6 +11,7 @@ import com.tarkrakov.tearsofink.weapon.combat.*;
 import com.tarkrakov.tearsofink.weapon.forge.*;
 import com.tarkrakov.tearsofink.weapon.shield.ShieldTuning;
 import com.tarkrakov.tearsofink.world.ModDimensions;
+import com.tarkrakov.tearsofink.world.EquipmentAffinity;
 import com.tarkrakov.tearsofink.world.VanillaArmorPenalty;
 import net.fabricmc.fabric.api.client.item.v1.ItemTooltipCallback;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
@@ -90,7 +91,7 @@ public final class WeaponStats {
         boolean inside = mc.level != null && ModDimensions.isLands(mc.level);
         Item item = stack.getItem();
         if (!(item instanceof AbilityWeapon) && !(item instanceof OrdinaryArmorItem)) {
-            if (inside && vanilla(stack)) {
+            if (inside && !Gear.isModItem(stack)) {
                 if (item instanceof ArmorItem) lines.add(t("penalty.armor", fmt((1 - VanillaArmorPenalty.LAND_MULTIPLIER) * 100)).withStyle(ChatFormatting.RED));
                 else if (item instanceof TieredItem || item instanceof BowItem || item instanceof CrossbowItem
                         || item instanceof TridentItem || item instanceof MaceItem)
@@ -124,6 +125,10 @@ public final class WeaponStats {
         List<Component> out = new ArrayList<>();
         if (item instanceof OrdinaryArmorItem armor) armor(out, stack, armor, detail, inside);
         else weapon(out, stack, (AbilityWeapon) item, detail, upgrades);
+        if (mc.level != null && !inside && (item instanceof OrdinaryArmorItem || item instanceof SwordItem || item instanceof SoulShieldItem)) {
+            add(out, item instanceof OrdinaryArmorItem ? "penalty.mod_armor" : "penalty.mod_weapon", ChatFormatting.RED,
+                    fmt((1 - EquipmentAffinity.MOD_OUTSIDE_LANDS) * 100));
+        }
         add(out, detail || upgrades ? "summary_hint" : Gear.ours(stack) ? "views_hint" : item instanceof OrdinaryArmorItem ? "armor_hint" : "details_hint", ChatFormatting.GRAY);
         lines.addAll(Math.min(1, lines.size()), out);
         // Wrap by actual font pixel width, not a count of characters. Native tooltip positioning
@@ -148,6 +153,9 @@ public final class WeaponStats {
     private static void armor(List<Component> out, ItemStack stack, OrdinaryArmorItem armor, boolean detail, boolean inside) {
         var slot = armor.getEquipmentSlot();
         double defense = amount(stack, slot, Attributes.ARMOR), tough = amount(stack, slot, Attributes.ARMOR_TOUGHNESS);
+        double multiplierHere = EquipmentAffinity.multiplier(inside, true);
+        defense *= multiplierHere;
+        tough *= multiplierHere;
         double speed = amount(stack, slot, Attributes.MOVEMENT_SPEED) * 100;
         add(out, "armor.type", ChatFormatting.GOLD, t("weight." + armor.weightId()), tier(armor.tier(stack).ordinal()));
         add(out, "armor.defense", ChatFormatting.WHITE, fmt(defense));
@@ -160,7 +168,7 @@ public final class WeaponStats {
             var player = Minecraft.getInstance().player;
             ItemStack worn = player == null ? ItemStack.EMPTY : player.getItemBySlot(slot);
             if (!worn.isEmpty() && worn != stack && worn.getItem() instanceof ArmorItem) {
-                double multiplier = inside && vanilla(worn) ? VanillaArmorPenalty.LAND_MULTIPLIER : 1;
+                double multiplier = EquipmentAffinity.multiplier(inside, Gear.isModItem(worn));
                 add(out, "armor.compare", ChatFormatting.YELLOW,
                         signed(defense - amount(worn, slot, Attributes.ARMOR) * multiplier),
                         signed(tough - amount(worn, slot, Attributes.ARMOR_TOUGHNESS) * multiplier),

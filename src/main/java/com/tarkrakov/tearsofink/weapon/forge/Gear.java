@@ -33,7 +33,7 @@ import net.minecraft.world.item.component.ItemAttributeModifiers;
 
 /**
  * Снаряжение Земель: ступени (Тусклое / Контрастное / Рубрики), заточка и деградация, дебафф ванильного оружия.
- * Ступень, заточка и пробуждения действуют в Землях; штраф чужого снаряжения зеркален.
+ * Ступень, заточка и пробуждения действуют в Землях; штраф чужого снаряжения зависит от направления.
  */
 public final class Gear {
 	// ===== Настройки — крутить здесь (код → перезапуск игры) =====
@@ -49,7 +49,7 @@ public final class Gear {
 	/** Заточка на Чернильной наковальне: доля шкалы за один Пигмент (по одному в клетку). */
 	public static final float SHARPEN_PER_PIGMENT = 0.25f;
 	/** Совместимое имя прежнего коэффициента; новый единый источник — EquipmentAffinity. */
-	public static final float VANILLA_WEAPON_MULT = (float) EquipmentAffinity.FOREIGN_MULTIPLIER;
+	public static final float VANILLA_WEAPON_MULT = (float) EquipmentAffinity.EXTERNAL_IN_LANDS;
 	/** Пассивки обычного оружия: Кровь — шанс кровотечения; Чернила — замедление (тики, сила 0 = I). */
 	public static final float ORDINARY_BLEED_CHANCE = 0.10f;
 	public static final int INK_SLOW_TICKS = 30, INK_SLOW_AMP = 0;

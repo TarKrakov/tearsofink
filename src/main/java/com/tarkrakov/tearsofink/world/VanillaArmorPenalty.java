@@ -16,7 +16,7 @@ import java.util.List;
 
 /** D-043 / D-097. Scales each equipped item's protection in the foreign world, without changing the item. */
 public final class VanillaArmorPenalty {
-	public static final double LAND_MULTIPLIER = EquipmentAffinity.FOREIGN_MULTIPLIER;
+	public static final double LAND_MULTIPLIER = EquipmentAffinity.EXTERNAL_IN_LANDS;
 	private static final List<EquipmentSlot> SLOTS =
 			List.of(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET);
 
