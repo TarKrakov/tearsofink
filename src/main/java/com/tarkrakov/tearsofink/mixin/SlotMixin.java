@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.mixin;
 
 import com.tarkrakov.tearsofink.travel.Travel;
+import com.tarkrakov.tearsofink.prologue.PersonalSlots;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.Slot;
@@ -19,6 +20,6 @@ public abstract class SlotMixin {
 
 	@Inject(method = "mayPlace", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$mirrorStaysWithYou(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
-		if (Travel.isMirror(stack) && !(this.container instanceof Inventory)) cir.setReturnValue(false);
+		if (Travel.isMirror(stack) && !(this.container instanceof Inventory) && !(this.container instanceof PersonalSlots.Items)) cir.setReturnValue(false);
 	}
 }

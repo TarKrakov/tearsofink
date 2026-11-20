@@ -1,6 +1,8 @@
 package com.tarkrakov.tearsofink.prologue;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
+import com.mojang.serialization.Codec;
+import net.minecraft.server.level.ServerPlayer;
 import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
@@ -27,7 +29,29 @@ public final class PersonalSlots {
             .initializer(() -> List.of(ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY))
             .buildAndRegister(TearsOfInk.id("personal_items"));
 
+    private static final AttachmentType<Boolean> MIGRATED = AttachmentRegistry.<Boolean>builder()
+            .persistent(Codec.BOOL).copyOnDeath().initializer(() -> false)
+            .buildAndRegister(TearsOfInk.id("personal_items_migrated"));
+
     private PersonalSlots() {}
+
+    /** One-time, server-side migration of starter gifts when arriving in the Lands.
+     * Existing characters keep exact item stacks; repeated visits do not steal from the hotbar. */
+    public static void migrateStarterItems(ServerPlayer player) {
+        if (!ModDimensions.isLands(player.level()) || player.getAttachedOrCreate(MIGRATED)) return;
+        var inventory = player.getInventory();
+        for (int slot = 0; slot < COUNT; slot++) {
+            if (holds(player,slot)) continue;
+            for (int i = 0; i < inventory.getContainerSize(); i++) {
+                ItemStack item = inventory.getItem(i);
+                if (item.getCount() != 1 || !accepts(slot,item) || item.isEmpty()) continue;
+                put(player,slot,item);
+                inventory.setItem(i,ItemStack.EMPTY);
+                break;
+            }
+        }
+        player.setAttached(MIGRATED,true);
+    }
 
     public static boolean accepts(int index, ItemStack stack) {
         if (stack.isEmpty()) return true;

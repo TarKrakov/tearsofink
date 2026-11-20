@@ -214,7 +214,8 @@ public final class Prologue {
 		for (int i = 0; i < inv.getContainerSize(); i++) if (inv.getItem(i).is(ModItems.INVITATION_LETTER)) { slot = i; break; }
 		if (slot < 0) return;
 		inv.getItem(slot).shrink(1);
-		if (!inv.contains(new ItemStack(ModItems.DIM_MIRROR))) PrologueItems.give(p, ModItems.DIM_MIRROR);
+		if (!inv.contains(new ItemStack(ModItems.DIM_MIRROR)) && !PersonalSlots.get(p,PersonalSlots.MIRROR).is(ModItems.DIM_MIRROR))
+            PrologueItems.give(p, ModItems.DIM_MIRROR);
 		Travel.set(p, t.withStage(LandsTravel.STAGE_SIGNED));
 		DiaryEntries.unlock(p, DiaryEntries.COLLECTION_INVITATION);
 		preloadArrival(p);

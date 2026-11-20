@@ -181,6 +181,7 @@ public final class DiaryEntries {
 
 	private static void checkArrival(ServerPlayer p) {
 		if (!ModDimensions.isLands(p.level())) return;
+		PersonalSlots.migrateStarterItems(p);
 		// Backfill old characters: signing already consumed the physical invitation.
 		if (com.tarkrakov.tearsofink.travel.Travel.get(p).stage() >=
 				com.tarkrakov.tearsofink.travel.LandsTravel.STAGE_SIGNED)

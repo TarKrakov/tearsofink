@@ -54,7 +54,8 @@ public final class StoryKeyItem extends Item {
         int history = player.getAttachedOrCreate(HISTORY);
         if ((history & bit) != 0) return;
         Item key = path == Vow.INK ? ModItems.INK_TEAR : ModItems.SHARD_OF_HOPE;
-        if (!player.getInventory().contains(new ItemStack(key))) PrologueItems.give(player, key);
+        if (!player.getInventory().contains(new ItemStack(key)) && !PersonalSlots.get(player,PersonalSlots.KEY).is(key))
+            PrologueItems.give(player, key);
         player.setAttached(HISTORY, history | bit);
     }
 

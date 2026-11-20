@@ -38,7 +38,8 @@ public final class PrologueItems {
 			if (player instanceof ServerPlayer sp) {
 				stack.consume(1, sp);
 				give(sp, ModItems.INVITATION_LETTER);
-				if (!sp.getInventory().contains(new ItemStack(ModItems.DIM_MIRROR))) give(sp, ModItems.DIM_MIRROR);
+				if (!sp.getInventory().contains(new ItemStack(ModItems.DIM_MIRROR)) && !PersonalSlots.get(sp,PersonalSlots.MIRROR).is(ModItems.DIM_MIRROR))
+                    give(sp, ModItems.DIM_MIRROR);
 				level.playSound(null, sp.blockPosition(), SoundEvents.BOOK_PAGE_TURN, SoundSource.PLAYERS, 1f, 0.7f);
 				level.playSound(null, sp.blockPosition(), SoundEvents.CANDLE_EXTINGUISH, SoundSource.PLAYERS, 0.6f, 0.6f);
 			}
