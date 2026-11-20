@@ -145,7 +145,7 @@ public final class WeaponAbilities {
 		public static final double KNOCKBACK = 0.55;
 		public static final int SLOW_TICKS = 20;
 
-		private record Ram(double dx, double dz, int ticksLeft, Set<UUID> hit) {}
+		private record Ram(double dx, double dz, int ticksLeft, Set<UUID> hit, float power) {}
 
 		private final Map<UUID, Ram> active = new HashMap<>();
 
@@ -157,7 +157,7 @@ public final class WeaponAbilities {
 		public boolean activate(ServerPlayer player, SkillInput input) {
 			if (active.containsKey(player.getUUID())) return false;
 			Vec3 dir = flatLook(player);
-			active.put(player.getUUID(), new Ram(dir.x, dir.z, DURATION_TICKS, new HashSet<>()));
+			active.put(player.getUUID(), new Ram(dir.x, dir.z, DURATION_TICKS, new HashSet<>(), SoulShieldItem.selectedPower(player,RAM,input.sneaking())));
 			push(player, dir.x, dir.z);
 			player.serverLevel().playSound(null, player.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 1f, 0.6f);
 			return true;
@@ -188,7 +188,7 @@ public final class WeaponAbilities {
 				for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class, box,
 						t -> com.tarkrakov.tearsofink.weapon.shield.ShieldStance.offensiveTarget(player, t) && player.hasLineOfSight(t))) {
 					if (!r.hit().add(target.getUUID())) continue;
-					float f = SoulShieldItem.factor(player, RAM); // потёртый щит слабее
+					float f = r.power(); // потёртый щит слабее
 					target.hurt(player.damageSources().playerAttack(player), DAMAGE * f);
 					target.knockback(KNOCKBACK * f, -r.dx(), -r.dz());
 					target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, SLOW_TICKS, 2));
@@ -196,7 +196,7 @@ public final class WeaponAbilities {
 				}
 				push(player, r.dx(), r.dz());
 				level.sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.5, player.getZ(), 2, 0.2, 0.2, 0.2, 0.01);
-				e.setValue(new Ram(r.dx(), r.dz(), r.ticksLeft() - 1, r.hit()));
+				e.setValue(new Ram(r.dx(), r.dz(), r.ticksLeft() - 1, r.hit(), r.power()));
 			}
 		}
 	}
@@ -480,7 +480,7 @@ public final class WeaponAbilities {
 				}
 				if (t % 20 == 0) {
 					for (ServerPlayer ally : level.getEntitiesOfClass(ServerPlayer.class, player.getBoundingBox().inflate(RADIUS),
-							p -> p.isAlive() && p.distanceToSqr(player) <= RADIUS * RADIUS)) {
+							p -> p.isAlive() && (p == player || player.hasLineOfSight(p)) && (player.getTeam() == null || p.getTeam() == null || p.isAlliedTo(player)) && p.distanceToSqr(player) <= RADIUS * RADIUS)) {
 						float before = ally.getHealth();
 						ally.heal(HEAL_PER_SECOND * SoulShieldItem.factor(player, MERCY) * com.tarkrakov.tearsofink.ink.SoulPenalty.multiplier(ally));
 						com.tarkrakov.tearsofink.vow.SoulFeats.onEmergencyHeal(player, ally, before);
@@ -507,7 +507,7 @@ public final class WeaponAbilities {
 		public boolean activate(ServerPlayer player, SkillInput input) {
 			ServerLevel level = player.serverLevel();
 			Vec3 dir = flatLook(player);
-			level.addFreshEntity(new InkWaveEntity(level, player, dir, true, DAMAGE * SoulShieldItem.factor(player, REPEL), KNOCKBACK).maxDistance(RANGE));
+			level.addFreshEntity(new InkWaveEntity(level, player, dir, true, DAMAGE * SoulShieldItem.selectedPower(player, REPEL,input.sneaking()), KNOCKBACK).maxDistance(RANGE - 0.8));
 			player.swing(input.sneaking() ? net.minecraft.world.InteractionHand.OFF_HAND : net.minecraft.world.InteractionHand.MAIN_HAND, true);
 			level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1f, 1.5f);
 			return true;

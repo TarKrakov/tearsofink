@@ -91,7 +91,8 @@ public class InkWaveEntity extends Entity {
 
 		ServerLevel level = (ServerLevel) this.level();
 		BlockPos at = BlockPos.containing(next.x, next.y + 0.3, next.z);
-		if (!level.getBlockState(at).getCollisionShape(level, at).isEmpty() || travelled >= maxDistance) {
+		boolean light = this.entityData.get(LIGHT);
+		if (!level.getBlockState(at).getCollisionShape(level, at).isEmpty() || travelled >= maxDistance || (light && level.clip(new net.minecraft.world.level.ClipContext(position(),next,net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,this)).getType() != net.minecraft.world.phys.HitResult.Type.MISS)) {
 			level.sendParticles(this.entityData.get(LIGHT) ? ParticleTypes.END_ROD : ParticleTypes.SQUID_INK,
 					getX(), getY() + 0.3, getZ(), 15, 0.4, 0.3, 0.4, 0.05);
 			this.discard();
@@ -102,9 +103,11 @@ public class InkWaveEntity extends Entity {
 				t -> t != owner && t.isAlive() && (onlyTarget == null || onlyTarget.equals(t.getUUID()))
 						&& (!(owner instanceof ServerPlayer player && this.entityData.get(LIGHT))
 								|| com.tarkrakov.tearsofink.weapon.shield.ShieldStance.offensiveTarget(player, t)))) {
+			if (light && owner instanceof ServerPlayer player && !player.hasLineOfSight(target)) continue;
 			if (!hit.add(target.getUUID())) continue;
 			if (owner instanceof ServerPlayer player) {
-				com.tarkrakov.tearsofink.weapon.forge.Gear.hurtModWave(target, player.damageSources().playerAttack(player), damage);
+				boolean hurt = com.tarkrakov.tearsofink.weapon.forge.Gear.hurtModWave(target, player.damageSources().playerAttack(player), damage);
+				if (light && hurt) target.addEffect(new net.minecraft.world.effect.MobEffectInstance(net.minecraft.world.effect.MobEffects.MOVEMENT_SLOWDOWN,20,0));
 			} else if (owner instanceof LivingEntity mob) {
 				target.hurt(level.damageSources().mobAttack(mob), damage);
 			} else {

@@ -58,6 +58,8 @@ public final class ShieldStance {
 
 	/** Заряд щитов у игрока (сервер). */
 	private static final Map<UUID, Integer> CHARGE = new HashMap<>();
+	private record HeldPair(net.minecraft.world.item.ItemStack main, net.minecraft.world.item.ItemStack off) {}
+	private static final Map<UUID, HeldPair> PAIRS = new HashMap<>();
 	/** Сколько урона щиты поглотили в этой стойке (сгорает вместе с зарядом). */
 	private static final Map<UUID, Float> ABSORBED = new HashMap<>();
 	/** До какого тика открыт ответ после своевременного блока. */
@@ -107,6 +109,7 @@ public final class ShieldStance {
 			UUID id = handler.getPlayer().getUUID();
 			LAST_PERFECT.remove(id);
 			CHARGE.remove(id);
+			PAIRS.remove(id);
 			ABSORBED.remove(id);
 			RIPOSTE.remove(id);
 			CHOIR.remove(id);
@@ -137,8 +140,18 @@ public final class ShieldStance {
 				&& !(target instanceof OwnableEntity owned && owned.getOwnerUUID() != null);
 	}
 
+	private static void validatePair(ServerPlayer p) {
+		HeldPair pair = PAIRS.get(p.getUUID());
+		if (pair != null && (!p.isAlive() || !ModDimensions.isLands(p.level()) || p.getMainHandItem() != pair.main() || p.getOffhandItem() != pair.off())) {
+			PAIRS.remove(p.getUUID());
+			RIPOSTE.remove(p.getUUID());
+			if (CHARGE.containsKey(p.getUUID())) setCharge(p,0);
+		}
+	}
+
 	private static boolean allowDamage(LivingEntity entity, DamageSource source, float amount) {
 		if (passing || !(entity instanceof ServerPlayer p) || !inStance(p)) return true;
+		validatePair(p);
 		if (source.is(DamageTypeTags.BYPASSES_SHIELD)) return true;
 		Vec3 from = source.getSourcePosition();
 		if (from == null) return true; // падение, огонь, голод — щиты не помогут
@@ -179,6 +192,7 @@ public final class ShieldStance {
 		if (perfect) LAST_PERFECT.put(p.getUUID(), now);
 		int extraCharge = perfect && rank.atLeast(com.tarkrakov.tearsofink.vow.SoulRank.LUMINOUS)
 				? ShieldTuning.LUMINOUS_PERFECT_CHARGE : 1;
+		PAIRS.put(p.getUUID(),new HeldPair(p.getMainHandItem(),p.getOffhandItem()));
 		setCharge(p, Math.min(ShieldTuning.CHARGE_MAX, charge(p) + extraCharge));
 		ABSORBED.merge(p.getUUID(), Math.min(ShieldTuning.STORED_DAMAGE_CAP, amount),
 				(previous, gain) -> Math.min(ShieldTuning.STORED_DAMAGE_CAP, previous + gain));
@@ -218,6 +232,7 @@ public final class ShieldStance {
 
 	/** Ответ после своевременного блока: открыт — забрать (один удар). */
 	public static boolean takeRiposte(ServerPlayer p) {
+		validatePair(p);
 		Long until = RIPOSTE.remove(p.getUUID());
 		return until != null && until >= p.serverLevel().getGameTime();
 	}
@@ -243,14 +258,16 @@ public final class ShieldStance {
 	private static void breakShields(ServerPlayer p) {
 		p.getCooldowns().addCooldown(p.getMainHandItem().getItem(), ShieldTuning.BREAK_TICKS);
 		p.getCooldowns().addCooldown(p.getOffhandItem().getItem(), ShieldTuning.BREAK_TICKS);
-		p.stopUsingItem();
 		setCharge(p, 0);
+		RIPOSTE.remove(p.getUUID());
+		p.stopUsingItem();
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.SHIELD_BREAK, SoundSource.PLAYERS, 1f, 0.8f);
 		p.serverLevel().playSound(null, p.blockPosition(), SoundEvents.AMETHYST_BLOCK_BREAK, SoundSource.PLAYERS, 1f, 0.6f);
 	}
 
 	/** Отпустил ПКМ в стойке (из щита): заряд — выброс конусом перед собой. */
 	public static void release(ServerPlayer p) {
+		validatePair(p);
 		int c = charge(p);
 		if (c <= 0 || !ModDimensions.isLands(p.level()) || !dual(p)) return;
 		float absorbed = ABSORBED.getOrDefault(p.getUUID(), 0f);
@@ -289,6 +306,7 @@ public final class ShieldStance {
 
 	/** Забрать весь заряд (Резонанс тратит его на силу). */
 	public static int takeCharge(ServerPlayer p) {
+		validatePair(p);
 		int c = charge(p);
 		if (c > 0) setCharge(p, 0);
 		return c;
@@ -323,6 +341,7 @@ public final class ShieldStance {
 			REFLECT.clear();
 		}
 		for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+			validatePair(p);
 			boolean stance = inStance(p);
 			rock(p, stance);
 			if (!dual(p) || !ModDimensions.isLands(p.level())) {

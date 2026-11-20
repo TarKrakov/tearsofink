@@ -117,7 +117,7 @@ public final class Combat {
 		s.firstHit.clear();
 		s.queued = false;
 		s.next = 0;
-		s.busyUntil = now;
+		s.busyUntil = s.hitArchetype == Archetype.BASTION ? Math.max(now,s.busyUntil) : now;
 		s.speed = 1f;
 		s.carry = 0;
 		s.paleMain = s.paleOff = null;
@@ -191,6 +191,7 @@ public final class Combat {
 
 	private static void start(ServerPlayer p, State s, Archetype a, Combos.Combo combo, float strength, long now) {
 		s.queued = false;
+		if (a == Archetype.BASTION && (!bastion(p) || com.tarkrakov.tearsofink.weapon.shield.ShieldStance.inStance(p))) return;
 		boolean dual = !combo.dualSteps().isEmpty() && Archetype.of(p.getOffhandItem()) == a;
 		java.util.List<Combos.Step> steps = dual ? combo.dualSteps() : combo.steps();
 		if (s.dual != dual) {
@@ -220,7 +221,7 @@ public final class Combat {
 		s.hitStep = step;
 		s.hitScale = scale;
 		s.firstHit.clear();
-		if (a == Archetype.PALE_LINEAR_GREATSWORD || a == Archetype.PALE_LONGSWORD) {
+		if (a == Archetype.PALE_LINEAR_GREATSWORD || a == Archetype.PALE_LONGSWORD || a == Archetype.BASTION) {
 			s.paleMain = p.getMainHandItem();
 			s.paleOff = p.getOffhandItem();
 		} else s.paleMain = s.paleOff = null;
@@ -317,6 +318,11 @@ public final class Combat {
 		s.lastEnd = s.busyUntil;
 		s.next = 0;
 		s.queued = false;
+		if (a == Archetype.BASTION) {
+			s.hitAt = -1;
+			s.extra.clear();
+			s.firstHit.clear();
+		}
 		broadcast(p, a, mainAnim, ticks, -1f, 1f);
 		broadcast(p, a, "off:" + offAnim, ticks, -1f, 1f);
 	}

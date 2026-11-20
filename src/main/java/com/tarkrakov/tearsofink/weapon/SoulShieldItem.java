@@ -43,6 +43,11 @@ public class SoulShieldItem extends ShieldItem implements AbilityWeapon {
 	}
 	private static float baseDamage(Profile profile,float power) { return power < 1f ? 3.5f : profile.damage; }
 	public float baseDamage() { return baseDamage(profile,power); }
+	public Profile profile() { return profile; }
+	public static float selectedPower(Player p, Skill ability, boolean offhand) {
+		ItemStack stack = offhand ? p.getOffhandItem() : p.getMainHandItem();
+		return stack.getItem() instanceof SoulShieldItem sh && sh.ability() == ability ? sh.power : 1f;
+	}
 	public static float blockCost(Player p) { return (((SoulShieldItem)p.getMainHandItem().getItem()).profile.blockCost + ((SoulShieldItem)p.getOffhandItem().getItem()).profile.blockCost)/2f; }
 	public static float cover(Player p) { return (((SoulShieldItem)p.getMainHandItem().getItem()).profile.cover + ((SoulShieldItem)p.getOffhandItem().getItem()).profile.cover)/2f; }
 

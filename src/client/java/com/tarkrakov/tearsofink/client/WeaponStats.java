@@ -200,7 +200,12 @@ public final class WeaponStats {
         boolean gear = Gear.ours(stack), ordinary = item instanceof OrdinaryWeaponItem, shield = item instanceof SoulShieldItem;
         boolean two = InkGreatswordItem.twoHanded(stack);
         Archetype archetype = Archetype.of(stack);
-        if (shield) add(out, "shield.type", ChatFormatting.AQUA, fmt(((SoulShieldItem) item).power() * 100));
+        if (shield) {
+            SoulShieldItem sh = (SoulShieldItem)item;
+            add(out, "shield.type", ChatFormatting.AQUA, fmt(sh.power() * 100));
+            add(out, "shield.family." + switch(sh.profile()) { case RAM, REPEL -> "attack"; case LIGHT -> "defense"; case MERCY -> "support"; }, ChatFormatting.GOLD);
+            if (detail) add(out, "shield.profile", ChatFormatting.AQUA, fmt(sh.profile().blockCost * 100), fmt(sh.profile().cover * 2));
+        }
         else if (gear) {
             Component kind = t(ordinary ? "class.ordinary" : item instanceof HunterWeaponItem || item instanceof ArsenalWeaponItem
                     || stack.is(ModItems.CLEAVE_GREATSWORD) || stack.is(ModItems.WAVE_GREATSWORD) ? "class.hunter" : "class.other");
@@ -301,6 +306,7 @@ public final class WeaponStats {
                         com.tarkrakov.tearsofink.weapon.shield.ResonanceTuning.SOUL_COST,
                         fmt(com.tarkrakov.tearsofink.weapon.shield.ResonanceTuning.COOLDOWN_TICKS/20.0));
                 add(out, "shield.paired", ChatFormatting.GRAY);
+                add(out, "shield.phantom", ChatFormatting.GRAY, fmt(ShieldTuning.PHANTOM_EXTRA_REACH), fmt(ShieldTuning.PHANTOM_DAMAGE_MULT * 100));
                 add(out, "shield.offhand", ChatFormatting.GRAY, t("offkey", SkillKeys.weaponKeyLabel()));
             } else if (gear && archetype != null) {
                 if (!two) add(out, "hilt", ChatFormatting.GRAY, Minecraft.getInstance().options.keyUse.getTranslatedKeyMessage(), fmt(HiltStrike.COOLDOWN/20.0));
