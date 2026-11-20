@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_worn_shield": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "tears-of-ink:worn_mercy_shield"
+          }
+        ]
+      }
+    },
+    "has_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "tears-of-ink:restore_mercy_shield"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_worn_shield",
+      "has_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "tears-of-ink:restore_mercy_shield"
+    ]
+  }
+}

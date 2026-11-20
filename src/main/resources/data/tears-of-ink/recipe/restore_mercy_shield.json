@@ -1,0 +1,11 @@
+{
+  "type": "tears-of-ink:shield_restoration",
+  "worn": {
+    "id": "tears-of-ink:worn_mercy_shield",
+    "count": 1
+  },
+  "result": {
+    "id": "tears-of-ink:mercy_shield",
+    "count": 1
+  }
+}

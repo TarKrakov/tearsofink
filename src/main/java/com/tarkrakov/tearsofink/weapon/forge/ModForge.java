@@ -34,6 +34,12 @@ public final class ModForge {
 				}
 			});
 
+	public static final RecipeSerializer<ShieldRestorationRecipe> SHIELD_RESTORATION = Registry.register(BuiltInRegistries.RECIPE_SERIALIZER,
+			TearsOfInk.id("shield_restoration"), new RecipeSerializer<>() {
+				@Override public MapCodec<ShieldRestorationRecipe> codec() { return ShieldRestorationRecipe.CODEC; }
+				@Override public StreamCodec<RegistryFriendlyByteBuf, ShieldRestorationRecipe> streamCodec() { return ShieldRestorationRecipe.STREAM_CODEC; }
+			});
+
 	public static final MenuType<InkAnvilMenu> MENU = Registry.register(BuiltInRegistries.MENU,
 			TearsOfInk.id("ink_anvil"), new MenuType<>(InkAnvilMenu::new, FeatureFlags.VANILLA_SET));
 
