@@ -1219,5 +1219,7 @@
   "diary.tears-of-ink.fate.weapon.ink.hud": "Restore the Dim Scimitar (1 ingot)",
   "diary.tears-of-ink.fate.weapon.soul.title": "Restore your shield",
   "diary.tears-of-ink.fate.weapon.soul.hint": "Restore a [[restore_ram_shield|worn Ram Shield]] or [[restore_mercy_shield|Mercy Shield]] with one Pale Ingot at a regular crafting table. Alternatively, obtain a local blade or a full shield.",
-  "diary.tears-of-ink.fate.weapon.soul.hud": "Restore a shield (1 ingot)"
+  "diary.tears-of-ink.fate.weapon.soul.hud": "Restore a shield (1 ingot)",
+  "message.tears-of-ink.jaber.unsafe_call": "Jaber needs a safe place to appear. Call him from an open, level area.",
+  "message.tears-of-ink.jaber.outside": "Jaber cannot travel beyond the fog wall. Choose coordinates inside the Ink Lands."
 }

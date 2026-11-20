@@ -29,6 +29,7 @@
 	},
 	"mixins": [
 		"tears-of-ink.mixins.json",
+		"tears-of-ink.jaber.mixins.json",
 		{
 			"config": "tears-of-ink.client.mixins.json",
 			"environment": "client"

@@ -1,0 +1,13 @@
+{
+  "required": false,
+  "package": "com.tarkrakov.tearsofink.compat.jaber.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "plugin": "com.tarkrakov.tearsofink.compat.jaber.JaberMixinPlugin",
+  "mixins": [
+    "JaberDriverMixin",
+    "JaberCommandMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

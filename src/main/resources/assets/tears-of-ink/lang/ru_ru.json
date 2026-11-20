@@ -1219,5 +1219,7 @@
   "diary.tears-of-ink.fate.weapon.ink.hud": "Восстанови Тусклый скимитар (1 слиток)",
   "diary.tears-of-ink.fate.weapon.soul.title": "Восстановление щита",
   "diary.tears-of-ink.fate.weapon.soul.hint": "Восстанови [[restore_ram_shield|потёртый Таран]] или [[restore_mercy_shield|Милосердие]] одним бледным слитком на обычном верстаке. Другой путь — получить местный клинок или полноценный щит.",
-  "diary.tears-of-ink.fate.weapon.soul.hud": "Восстанови щит (1 слиток)"
+  "diary.tears-of-ink.fate.weapon.soul.hud": "Восстанови щит (1 слиток)",
+  "message.tears-of-ink.jaber.unsafe_call": "Здесь Жаберу негде безопасно появиться. Позови его с открытой ровной площадки.",
+  "message.tears-of-ink.jaber.outside": "Жабер не поедет за стену тумана. Укажи координаты внутри Чернильных Земель."
 }
