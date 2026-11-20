@@ -1227,5 +1227,9 @@
   "message.tears-of-ink.jaber.no_route": "Jaber: No safe route yet. Waiting, or try another destination.",
   "message.tears-of-ink.jaber.arrived": "Jaber: We've arrived!",
   "message.tears-of-ink.jaber.unavailable": "Jaber: Compatibility with this version is unavailable.",
-  "message.tears-of-ink.jaber.occupied": "Your Jaber is already carrying another passenger."
+  "message.tears-of-ink.jaber.occupied": "Your Jaber is already carrying another passenger.",
+  "gui.tears-of-ink.personal": "Keepsakes",
+  "gui.tears-of-ink.personal.0": "Book",
+  "gui.tears-of-ink.personal.1": "Mirror",
+  "gui.tears-of-ink.personal.2": "Key"
 }

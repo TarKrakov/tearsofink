@@ -1,27 +1,28 @@
 {
-	"required": true,
-	"package": "com.tarkrakov.tearsofink.client.mixin",
-	"compatibilityLevel": "JAVA_21",
-	"client": [
-		"DimensionSpecialEffectsMixin",
-		"FogRendererMixin",
-		"PaleForestMusicMixin",
-		"AudioMixerSoundMixin",
-		"LevelRendererMixin",
-		"ItemRendererMixin",
-		"MinecraftAttackMixin",
-		"ItemInHandRendererInvoker",
-		"ItemInHandRendererMixin",
-		"HumanoidModelMixin",
-		"PlayerArmorHandMixin",
-		"ItemInHandLayerMixin",
-		"LivingEntityRendererMixin",
-		"NoExperimentalWarningMixin"
-	],
-	"injectors": {
-		"defaultRequire": 1
-	},
-	"overwrites": {
-		"requireAnnotations": true
-	}
+  "required": true,
+  "package": "com.tarkrakov.tearsofink.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "DimensionSpecialEffectsMixin",
+    "FogRendererMixin",
+    "PaleForestMusicMixin",
+    "AudioMixerSoundMixin",
+    "LevelRendererMixin",
+    "ItemRendererMixin",
+    "MinecraftAttackMixin",
+    "ItemInHandRendererInvoker",
+    "ItemInHandRendererMixin",
+    "HumanoidModelMixin",
+    "PlayerArmorHandMixin",
+    "ItemInHandLayerMixin",
+    "LivingEntityRendererMixin",
+    "NoExperimentalWarningMixin",
+    "InventoryScreenMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
 }

@@ -1227,5 +1227,9 @@
   "message.tears-of-ink.jaber.no_route": "Жабер: безопасного пути пока нет. Жду или попробуй другую цель.",
   "message.tears-of-ink.jaber.arrived": "Жабер: прибыли!",
   "message.tears-of-ink.jaber.unavailable": "Жабер: совместимость с этой версией не готова.",
-  "message.tears-of-ink.jaber.occupied": "Твой Жабер уже везёт другого пассажира."
+  "message.tears-of-ink.jaber.occupied": "Твой Жабер уже везёт другого пассажира.",
+  "gui.tears-of-ink.personal": "Личные вещи",
+  "gui.tears-of-ink.personal.0": "Книга",
+  "gui.tears-of-ink.personal.1": "Зерк.",
+  "gui.tears-of-ink.personal.2": "Ключ"
 }

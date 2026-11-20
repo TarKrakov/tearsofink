@@ -1,39 +1,40 @@
 {
-	"required": true,
-	"package": "com.tarkrakov.tearsofink.mixin",
-	"compatibilityLevel": "JAVA_21",
-	"mixins": [
-		"NoiseGeneratorSettingsMixin",
-		"NoiseColumnAccessor",
-		"AditLightingMixin",
-		"TempleLayoutVersionMixin",
-		"TempleWorldStorageMixin",
-		"PlayerEatMixin",
-		"HealEffectsMixin",
-		"VisibilityMixin",
-		"NaturalSpawnerMixin",
-		"GateBlockProtectionMixin",
-		"GateExplosionProtectionMixin",
-		"GatePistonProtectionMixin",
-		"SlotMixin",
-		"ContainerMenuMixin",
-		"PlayerDifficultyMixin",
-		"ServerPlayerRespawnMixin",
-		"RespawnRequestMixin",
-		"RespawnPlayerCreationMixin",
-		"MobAccessor",
-		"LivingEntityAttackAccessor",
-		"SanctuaryAttackMixin",
-		"NoSunBurnMixin",
-		"PreyDamageMixin",
-		"GearDamageMixin",
-		"PlayerArmorMixin",
-		"PlayerArmorMixin$EquippedArmor"
-	],
-	"injectors": {
-		"defaultRequire": 1
-	},
-	"overwrites": {
-		"requireAnnotations": true
-	}
+  "required": true,
+  "package": "com.tarkrakov.tearsofink.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "NoiseGeneratorSettingsMixin",
+    "NoiseColumnAccessor",
+    "AditLightingMixin",
+    "TempleLayoutVersionMixin",
+    "TempleWorldStorageMixin",
+    "PlayerEatMixin",
+    "HealEffectsMixin",
+    "VisibilityMixin",
+    "NaturalSpawnerMixin",
+    "GateBlockProtectionMixin",
+    "GateExplosionProtectionMixin",
+    "GatePistonProtectionMixin",
+    "SlotMixin",
+    "ContainerMenuMixin",
+    "PlayerDifficultyMixin",
+    "ServerPlayerRespawnMixin",
+    "RespawnRequestMixin",
+    "RespawnPlayerCreationMixin",
+    "MobAccessor",
+    "LivingEntityAttackAccessor",
+    "SanctuaryAttackMixin",
+    "NoSunBurnMixin",
+    "PreyDamageMixin",
+    "GearDamageMixin",
+    "PlayerArmorMixin",
+    "PlayerArmorMixin$EquippedArmor",
+    "InventoryMenuMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+  }
 }
