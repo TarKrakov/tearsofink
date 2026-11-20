@@ -27,7 +27,10 @@ import java.util.List;
 /** Read-only projection of the same personal server mask as the Historian's diary. */
 public final class FateHud {
     private static final String PREFIX = "diary.tears-of-ink.fate.";
-    private static final float HUD_SCALE = 0.5f;
+    private static final float HUD_SCALE = 0.65f;
+    // Full HD at GUI scale 3 is the reference logical viewport.
+    // GUI dimensions already include Minecraft's GUI scale: do not multiply by framebuffer DPI again.
+    private static final float REFERENCE_GUI_WIDTH = 640f, REFERENCE_GUI_HEIGHT = 360f;
     private static KeyMapping toggleKey;
     private static boolean enabled = true;
     private static final Path PREF = FabricLoader.getInstance().getConfigDir().resolve("tearsofink_fate_hud.txt");
@@ -113,7 +116,12 @@ public final class FateHud {
             height += 7 + 10 * (label.size() + task.size());
         }
         if (lines.isEmpty()) return;
-        float scale = HUD_SCALE * Math.min(1f, (float) limit / height);
+        // Grow on larger logical viewports, including 1440p/4K at the same GUI setting.
+        // If the user already increased Minecraft's GUI scale, only the remaining
+        // logical growth is applied; ultrawide width alone does not enlarge the HUD.
+        float resolutionScale = Math.max(1f, Math.min(w / REFERENCE_GUI_WIDTH, h / REFERENCE_GUI_HEIGHT));
+        float preferred = HUD_SCALE * resolutionScale;
+        float scale = Math.min(preferred, Math.min((float) limit / height, (w / 2f - 12f) / available));
         // Top-left, well clear of the central boss bar and bottom combat indicators.
         g.pose().pushPose();
         g.pose().translate(6, 6, 0);
