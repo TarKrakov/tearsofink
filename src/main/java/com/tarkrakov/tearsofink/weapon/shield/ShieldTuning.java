@@ -59,9 +59,11 @@ public final class ShieldTuning {
 	public static final float CLARITY = 18f, CLARITY_PER_CHARGE = 4f;
 
 	/** Absolute flight distance, blocks per tick, and visible shield diameter. */
-	public static final double PHANTOM_RANGE = 3.0, PHANTOM_SPEED = 0.5;
+	public static final double PHANTOM_RANGE = 5.0, PHANTOM_SPEED = 0.5;
 	public static final float PHANTOM_SIZE = 1.2f;
-	public static final int PHANTOM_MAX_TICKS = 6;
+	/** Extra collision reach on each side of the visible shield. */
+	public static final double PHANTOM_HIT_MARGIN = 0.25;
+	public static final int PHANTOM_MAX_TICKS = (int)Math.ceil(PHANTOM_RANGE / PHANTOM_SPEED);
 	public static final float PHANTOM_DAMAGE_MULT = 0.60f;
 	public static final int ABILITY_SHARED_TICKS = 20;
 	private ShieldTuning() {}

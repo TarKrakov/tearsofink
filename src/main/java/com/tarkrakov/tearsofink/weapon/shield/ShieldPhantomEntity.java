@@ -102,7 +102,7 @@ public final class ShieldPhantomEntity extends Entity {
         // Sweep the whole enlarged shield volume, including the first and last
         // positions. The projectile survives a hit. Each target can take damage
         // only once per cast; a rejected hurt can be retried on a later tick.
-        double radius = ShieldTuning.PHANTOM_SIZE / 2.0;
+        double radius = ShieldTuning.PHANTOM_SIZE / 2.0 + ShieldTuning.PHANTOM_HIT_MARGIN;
         for (LivingEntity target : level.getEntitiesOfClass(LivingEntity.class,
                 new AABB(from, to).inflate(radius), t -> ShieldStance.offensiveTarget(player, t) && !hit.contains(t.getUUID()))) {
             AABB targetBox = target.getBoundingBox();
