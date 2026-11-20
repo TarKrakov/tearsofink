@@ -44,11 +44,11 @@ def validate(model_name, ids):
     assert len(textures) == 1, f"{model_name}: expected one texture"
     tex = textures[0]
     filename = tex["name"]
-    assert re.fullmatch(r"[a-z0-9_.-]+\\.png", filename), (model_name, filename)
+    assert re.fullmatch(r"[a-z0-9_.-]+\.png", filename), (model_name, filename)
     png_path = ASSETS / "textures/armor" / filename
     assert png_path.is_file(), f"{model_name}: missing PNG {png_path}"
     png = png_path.read_bytes()
-    assert png[:16] == b"\\x89PNG\\r\\n\\x1a\\n\\x00\\x00\\x00\\rIHDR", (model_name, "bad PNG")
+    assert png[:16] == b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR", (model_name, "bad PNG")
     width, height = struct.unpack(">II", png[16:24])
     assert width == tex["width"] and height == tex["height"], (model_name, "PNG dimensions")
     resolution = model["resolution"]
