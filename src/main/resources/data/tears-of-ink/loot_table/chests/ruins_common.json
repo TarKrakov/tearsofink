@@ -225,6 +225,22 @@
           "chance": 0.05
         }
       ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:raw_blood_metal",
+          "weight": 1
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:random_chance",
+          "chance": 0.08
+        }
+      ]
     }
   ],
   "random_sequence": "tears-of-ink:chests/ruins_common"

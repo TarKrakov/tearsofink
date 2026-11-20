@@ -49,10 +49,10 @@ for name,table in tables.items():
             if c["condition"]=="minecraft:random_chance": assert 0<=c["chance"]<=1
     assert rare_pools<=1
     if name!="ruins_inkwood": assert expected(name,"raw_ink_metal")==0
-    if name not in {"temple_blood_supply","temple_blood_reward"}: assert expected(name,"raw_blood_metal")==0
+    if name not in {"temple_blood_supply","temple_blood_reward","settlement_supplies","settlement_pantry","ruins_poor","ruins_common","ruins_rich"}: assert expected(name,"raw_blood_metal")==0
     if name.startswith(("gate_","camp_","watchtower_","settlement_","temple_pale_supply_")) or name=="temple_blood_supply": assert rare_pools==0
 for name in ("gate_supplies","camp_supplies","settlement_supplies","settlement_pantry"):
-    assert any_item(name,valuable)==0
+    assert any_item(name,valuable-({"raw_blood_metal"} if name.startswith("settlement_") else set()))==0
     if name.startswith("settlement_"): assert expected(name,"asphoda")==0 and expected(name,"ink")==0
 assert expected("ruins_start","ink")==1 and expected("ruins_start","pigment")==0
 assert expected("ruins_start","cooked_caterpillar_meat")==2
@@ -88,6 +88,14 @@ for name in tables:
         assert expected(name,"blood_clot")==0
 assert expected("settlement_supplies","blood_clot")==1.25
 assert expected("settlement_pantry","blood_clot")==3
+assert abs(expected("settlement_supplies","raw_blood_metal")-.675)<1e-9
+assert abs(expected("settlement_pantry","raw_blood_metal")-1.875)<1e-9
+for tier, chance in zip(tiers,(.05,.08,.12)):
+    name="ruins_"+tier
+    assert abs(expected(name,"raw_blood_metal")-chance)<1e-9
+    assert expected(name,"raw_blood_metal")<expected(name,"raw_pale_metal")
+dimension=root.parent.parent/"dimension_type"
+assert json.loads((dimension/"ink_lands.json").read_text())["fixed_time"]==6000
 for mob in ("pale_spearman","pale_crossbowman","pale_shieldbearer"):
     table=json.loads((root.parent/"entities"/(mob+".json")).read_text())
     pool=next(p for p in table["pools"] if any(e.get("name")==prefix+"raw_pale_metal" for e in p["entries"]))
@@ -100,4 +108,4 @@ assert "i==0?loot:supplies" in (java/"entity/patrol/BarricadeGates.java").read_t
 assert "i==0?loot:supplies" in (java/"entity/patrol/ForestCamps.java").read_text()
 assert "q.equals(p.pantry)?PANTRY:LOOT" in (java/"world/herald/BloodSettlements.java").read_text()
 assert "Ruins.PALE_TEMPLE_SUPPLIES[tier]" in (java/"world/ruins/RuinPiece.java").read_text()
-print(f"D-101: {len(tables)} tables, regional loot and bounded site budgets verified")
+print(f"D-102: {len(tables)} tables, regional loot and bounded site budgets verified")
