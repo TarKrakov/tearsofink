@@ -16,6 +16,12 @@ MODELS = {
         "pale_chain_hood", "pale_brigandine", "pale_reinforced_leggings", "pale_leather_boots"),
     "pale_light_armor": (
         "pale_headband", "pale_quilted_jacket", "pale_pants", "pale_shoes"),
+    "blood_light_armor": (
+        "blood_veil", "blood_robe", "blood_skirt", "blood_sandals"),
+    "blood_medium_armor": (
+        "blood_reinforced_mask", "blood_padded_mantle", "blood_reinforced_skirt", "blood_caligae"),
+    "blood_heavy_armor": (
+        "blood_closed_helmet", "blood_chainmail", "blood_plate_kilt", "blood_armored_boots"),
 }
 SLOT_GROUPS = {
     "helmet": "head",

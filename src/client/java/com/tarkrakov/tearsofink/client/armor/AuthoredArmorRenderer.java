@@ -88,6 +88,9 @@ public final class AuthoredArmorRenderer implements ArmorRenderer {
         registerSet("pale_heavy_armor", "pale_closed_helmet", "pale_cuirass", "pale_plate_leggings", "pale_sabatons");
         registerSet("pale_medium_armor", "pale_chain_hood", "pale_brigandine", "pale_reinforced_leggings", "pale_leather_boots");
         registerSet("pale_light_armor", "pale_headband", "pale_quilted_jacket", "pale_pants", "pale_shoes");
+        registerSet("blood_light_armor", "blood_veil", "blood_robe", "blood_skirt", "blood_sandals");
+        registerSet("blood_medium_armor", "blood_reinforced_mask", "blood_padded_mantle", "blood_reinforced_skirt", "blood_caligae");
+        registerSet("blood_heavy_armor", "blood_closed_helmet", "blood_chainmail", "blood_plate_kilt", "blood_armored_boots");
     }
 
     /** Additional sets use the same group contract, with no new renderer class. */
