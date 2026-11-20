@@ -384,6 +384,9 @@ public final class FountainTravel {
 			player.resetFallDistance();
 			FountainTravelData.get(player).cooldown(player, time(player) + COOLDOWN_TICKS);
 			Travel.arriveEffects(player);
+			// Only a completed menu transfer between two different personally opened fountains.
+			if (transfer.source != null && !transfer.source.equals(transfer.destination))
+				com.tarkrakov.tearsofink.prologue.FateProgress.mark(player, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.TRAVEL);
 			tell(player, "arrived");
 		} finally {
 			cancel(player, null);

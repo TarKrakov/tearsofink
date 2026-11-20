@@ -40,6 +40,13 @@ public final class StoryKeyItem extends Item {
 
     public static void init() {}
 
+    /** The pre-existing key history is authoritative for old characters, too. */
+    public static boolean wasUsed(ServerPlayer player) {
+        Vow vow = Vows.vow(player);
+        int bit = vow == Vow.INK ? INK_USED : vow == Vow.SOUL ? SOUL_USED : 0;
+        return (player.getAttachedOrCreate(HISTORY) & bit) != 0;
+    }
+
     /** One grant per vow, also used to migrate characters whose starter gift predates these items. */
     static void grant(ServerPlayer player, Vow path) {
         if (path == Vow.NONE || Vows.vow(player) != path) return;
@@ -94,6 +101,7 @@ public final class StoryKeyItem extends Item {
                             server.getZ() + dz / length * offset, SPARKS_PER_POINT, 0.12, 0.12, 0.12, 0.008);
                 }
             }
+            FateProgress.mark(server, FateProgress.Goal.KEY);
             server.getCooldowns().addCooldown(this, 20);
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);

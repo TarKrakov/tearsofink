@@ -200,6 +200,10 @@ public final class DiaryEntries {
 		// Новые наблюдения проверяются независимо от старых уже известных глав.
 
 		List<String> discovered = new ArrayList<>(8);
+		if (com.tarkrakov.tearsofink.travel.FountainTravel.hasOpenedFountain(p)) {
+			guide(have, discovered, PALE_METAL);
+			guide(have, discovered, "draft_asphoda");
+		}
 		if (needFog) discovered.add(DRAFT_FOG);
 		if (needPath) discovered.add(vow == Vow.SOUL ? DRAFT_SOUL : DRAFT_INK);
 		if (needRuins && nearRuinMasonry(p)) discovered.add(DRAFT_RUINS);
@@ -214,7 +218,7 @@ public final class DiaryEntries {
 		var inventory = p.getInventory();
 		for (int slot = 0; slot < inventory.getContainerSize(); slot++) {
 			ItemStack stack = inventory.getItem(slot);
-			if (needMetal && (stack.is(ModItems.RAW_PALE_METAL) || stack.is(ModItems.PALE_INGOT))) {
+			if (needMetal && !knows(have, discovered, PALE_METAL) && (stack.is(ModItems.RAW_PALE_METAL) || stack.is(ModItems.PALE_INGOT))) {
 				discovered.add(PALE_METAL);
 				needMetal = false;
 			}

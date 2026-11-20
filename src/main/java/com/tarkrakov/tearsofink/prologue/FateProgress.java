@@ -3,6 +3,8 @@ package com.tarkrakov.tearsofink.prologue;
 import com.mojang.serialization.Codec;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.item.ModItems;
+import com.tarkrakov.tearsofink.block.ModBlocks;
+import net.minecraft.world.item.ItemStack;
 import com.tarkrakov.tearsofink.item.OrdinaryArmorItem;
 import com.tarkrakov.tearsofink.trader.SoulTrader;
 import com.tarkrakov.tearsofink.travel.FountainTravel;
@@ -30,12 +32,36 @@ public final class FateProgress {
         ARRIVAL("arrival", 0), FIRST_FOUNTAIN("first_fountain", 1), ANVIL("anvil", 10), GEAR("gear", 2),
         SECOND_FOUNTAIN("second_fountain", 3), TRADER("trader", 4),
         CONTRACT("contract", 5), REDEEM("redeem", 6), FONT("font", 7),
-        CONTRAST("contrast", 8), RUBRICS("rubrics", 9);
+        CONTRAST("contrast", 8), RUBRICS("rubrics", 9),
+        INGOT("ingot", 11), WEAPON("weapon", 12), ARMOR("armor", 13), KEY("key", 14),
+        TRAVEL("travel", 15), ALTAR("altar", 16), AWAKENING("awakening", 17);
 
         public final String id;
         private final int bit;
         Goal(String id, int index) { this.id = id; this.bit = 1 << index; }
         public boolean done(int mask) { return (mask & bit) != 0; }
+    }
+
+    /** Three directions share one persistent history. GEAR is a legacy bit, never reused. */
+    public enum Track {
+        STORY("story", Goal.ARRIVAL, Goal.FIRST_FOUNTAIN, Goal.SECOND_FOUNTAIN, Goal.TRADER),
+        CALL("call", Goal.KEY, Goal.TRAVEL),
+        CRAFT("craft", Goal.INGOT, Goal.ANVIL, Goal.WEAPON, Goal.ARMOR, Goal.CONTRACT, Goal.REDEEM,
+                Goal.ALTAR, Goal.AWAKENING, Goal.FONT, Goal.CONTRAST, Goal.RUBRICS);
+
+        public final String id;
+        public final List<Goal> goals;
+        Track(String id, Goal... goals) { this.id = id; this.goals = List.of(goals); }
+    }
+
+    public static boolean optional(Goal goal) {
+        return goal == Goal.ALTAR || goal == Goal.AWAKENING;
+    }
+
+    /** Superseded tutorials are not awarded as completed. Older players need not repeat them. */
+    public static boolean skipped(Goal goal, int mask) {
+        return !goal.done(mask) && ((goal == Goal.KEY && Goal.SECOND_FOUNTAIN.done(mask))
+                || (goal == Goal.INGOT && Goal.ANVIL.done(mask)));
     }
 
     private static final AttachmentType<Integer> DATA = AttachmentRegistry.<Integer>builder()
@@ -78,45 +104,74 @@ public final class FateProgress {
                 if (opened >= 1) mask |= Goal.FIRST_FOUNTAIN.bit;
                 if (opened >= SoulTrader.REQUIRED_FOUNTAINS) mask |= Goal.SECOND_FOUNTAIN.bit;
                 if (SoulTrader.introduced(p)) mask |= Goal.TRADER.bit;
+                if (StoryKeyItem.wasUsed(p)) mask |= Goal.KEY.bit;
                 if (p.getAttachedOrCreate(AscensionFont.HARD_CONTRACTS) > 0
                         || Vows.get(p).awakenings().stream().anyMatch(id -> id.matches("(heart:)?contract_[012]")))
                     mask |= Goal.CONTRACT.bit;
-                if (inside && !(Goal.ANVIL.done(mask) && Goal.GEAR.done(mask) && Goal.CONTRAST.done(mask) && Goal.RUBRICS.done(mask))) {
+                if (inside) {
                     var inv = p.getInventory();
-                    for (int i = 0; i < inv.getContainerSize(); i++) {
-                        var stack = inv.getItem(i);
-                        if (stack.isEmpty()) continue;
-                        if (stack.is(com.tarkrakov.tearsofink.block.ModBlocks.INK_ANVIL.asItem())) mask |= Goal.ANVIL.bit;
-                        if ((Gear.ours(stack) && !stack.is(ModItems.DIM_SCIMITAR))
-                                || stack.getItem() instanceof OrdinaryArmorItem
-                                || (stack.getItem() instanceof SoulShieldItem shield && shield.power() >= 1f))
-                            mask |= Goal.GEAR.bit;
-                        if (Gear.ours(stack)) {
-                            if (Gear.tier(stack) >= 1) mask |= Goal.CONTRAST.bit;
-                            if (Gear.tier(stack) >= 2) mask |= Goal.RUBRICS.bit;
-                        }
-                    }
+                    for (int i = 0; i < inv.getContainerSize(); i++)
+                        mask |= itemBits(inv.getItem(i));
                 }
             }
         }
         save(p, mask, force);
     }
 
-    /** At most two useful next steps. Finishing any later goal first is allowed and remembered. */
+    private static int itemBits(ItemStack stack) {
+        if (stack.isEmpty()) return 0;
+        int bits = 0;
+        if (stack.is(ModItems.PALE_INGOT)) bits |= Goal.INGOT.bit;
+        if (stack.is(ModBlocks.INK_ANVIL.asItem())) bits |= Goal.ANVIL.bit;
+        if (stack.is(ModBlocks.CURSED_ALTAR.asItem())) bits |= Goal.ALTAR.bit;
+        if (stack.getItem() instanceof OrdinaryArmorItem) bits |= Goal.ARMOR.bit | Goal.GEAR.bit;
+        if ((Gear.ours(stack) && !stack.is(ModItems.DIM_SCIMITAR))
+                || (stack.getItem() instanceof SoulShieldItem shield && shield.power() >= 1f))
+            bits |= Goal.WEAPON.bit | Goal.GEAR.bit;
+        if (Gear.ours(stack)) {
+            if (Gear.tier(stack) >= 1) bits |= Goal.CONTRAST.bit;
+            if (Gear.tier(stack) >= 2) bits |= Goal.RUBRICS.bit;
+        }
+        return bits;
+    }
+
+    /** Forge result access catches even a piece that is immediately equipped, stored or given away. */
+    public static void obtained(ServerPlayer player, ItemStack stack) {
+        if (!ModDimensions.isLands(player.level()) || player.isSpectator() || !player.isAlive()) return;
+        save(player, player.getAttachedOrCreate(DATA) | itemBits(stack), false);
+    }
+
+    private static Goal first(int mask, Goal... goals) {
+        for (Goal goal : goals) if (!goal.done(mask) && !skipped(goal, mask)) return goal;
+        return null;
+    }
+
+    /** At most one currently suggested action per lane. No action gates any game mechanic. */
+    public static Goal active(Track track, int mask) {
+        if (mask < 0) return null;
+        if (track == Track.STORY)
+            return first(mask, Goal.ARRIVAL, Goal.FIRST_FOUNTAIN, Goal.SECOND_FOUNTAIN, Goal.TRADER);
+        if (!Goal.FIRST_FOUNTAIN.done(mask)) return null;
+        if (track == Track.CALL) {
+            if (!Goal.SECOND_FOUNTAIN.done(mask)) return first(mask, Goal.KEY);
+            return Goal.TRADER.done(mask) ? first(mask, Goal.TRAVEL) : null;
+        }
+        Goal basic = first(mask, Goal.INGOT, Goal.ANVIL, Goal.WEAPON, Goal.ARMOR);
+        if (basic != null) return basic;
+        if (!Goal.TRADER.done(mask)) return null;
+        Goal hunt = first(mask, Goal.CONTRACT, Goal.REDEEM);
+        if (hunt != null) return hunt;
+        // Awakening is independent of ascension: never make a rare altar reagent a mandatory detour.
+        if (Goal.ALTAR.done(mask) && !Goal.AWAKENING.done(mask)) return Goal.AWAKENING;
+        Goal tier = first(mask, Goal.FONT, Goal.CONTRAST, Goal.RUBRICS);
+        return tier != null ? tier : first(mask, Goal.ALTAR, Goal.AWAKENING);
+    }
+
     public static List<Goal> next(int mask) {
-        if (!Goal.ARRIVAL.done(mask)) return List.of(Goal.ARRIVAL);
-        List<Goal> out = new ArrayList<>(2);
-        if (!Goal.FIRST_FOUNTAIN.done(mask)) out.add(Goal.FIRST_FOUNTAIN);
-        else if (!Goal.SECOND_FOUNTAIN.done(mask)) out.add(Goal.SECOND_FOUNTAIN);
-        else if (!Goal.TRADER.done(mask)) out.add(Goal.TRADER);
-        else if (!Goal.CONTRACT.done(mask)) out.add(Goal.CONTRACT);
-        else if (!Goal.REDEEM.done(mask)) out.add(Goal.REDEEM);
-        if (!Goal.ANVIL.done(mask)) out.add(Goal.ANVIL);
-        else if (!Goal.GEAR.done(mask)) out.add(Goal.GEAR);
-        if (Goal.TRADER.done(mask) && Goal.CONTRACT.done(mask) && out.size() < 2) {
-            if (!Goal.FONT.done(mask)) out.add(Goal.FONT);
-            else if (!Goal.CONTRAST.done(mask)) out.add(Goal.CONTRAST);
-            else if (!Goal.RUBRICS.done(mask)) out.add(Goal.RUBRICS);
+        List<Goal> out = new ArrayList<>(3);
+        for (Track track : Track.values()) {
+            Goal goal = active(track, mask);
+            if (goal != null) out.add(goal);
         }
         return List.copyOf(out);
     }

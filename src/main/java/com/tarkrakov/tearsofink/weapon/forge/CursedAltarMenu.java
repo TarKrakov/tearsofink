@@ -127,6 +127,7 @@ public class CursedAltarMenu extends AbstractContainerMenu {
 				if (!Awakening.allowedOn(weapon, candidate)) return false;
 				Awakening.set(weapon, data.get(D_SLOT),
 						new Awakening.Slot(candidate, data.get(D_LEVEL)));
+				com.tarkrakov.tearsofink.prologue.FateProgress.mark(sp, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.ALTAR, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.AWAKENING);
 				clearPending();
 				pendingFor = weapon;
 				sound(SoundEvents.AMETHYST_BLOCK_RESONATE, 1.2f);

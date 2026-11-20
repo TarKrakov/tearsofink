@@ -50,6 +50,8 @@ public class InkAnvilMenu extends AbstractContainerMenu {
 				}
 				access.execute((level, pos) -> level.playSound(null, pos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.6f, 1.2f));
 				slotsChanged(grid);
+				if (taker instanceof net.minecraft.server.level.ServerPlayer sp)
+					com.tarkrakov.tearsofink.prologue.FateProgress.obtained(sp, stack);
 				super.onTake(taker, stack);
 			}
 		});
