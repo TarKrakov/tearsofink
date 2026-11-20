@@ -19,10 +19,10 @@ public class EquipmentAffinityTest {
             eq(10*own,lands?10:6);
             eq(10*foreign,lands?6:10);
         }
-        eq(received(6,7,0),5.04);
+        eq(received(6,9,1),4.48);
         eq(received(6,11,2),3.936);
-        eq(received(6,15,4),2.88);
-        eq(received(8,15*.6,4*.6),8*(1-(9-8/2.6)/25));
+        eq(received(6,13,3),3.4036363636363633);
+        eq(received(8,13*.6,3*.6),8*(1-(7.8-8/2.45)/25));
         System.out.println("EquipmentAffinity: four directions, mixed armor, damage and current armor math OK");
     }
 }
