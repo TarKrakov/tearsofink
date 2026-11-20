@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_starter_blade": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "tears-of-ink:dim_scimitar"
+          }
+        ]
+      }
+    },
+    "has_recipe": {
+      "trigger": "minecraft:recipe_unlocked",
+      "conditions": {
+        "recipe": "tears-of-ink:restore_dim_scimitar"
+      }
+    }
+  },
+  "requirements": [
+    [
+      "has_starter_blade",
+      "has_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "tears-of-ink:restore_dim_scimitar"
+    ]
+  }
+}

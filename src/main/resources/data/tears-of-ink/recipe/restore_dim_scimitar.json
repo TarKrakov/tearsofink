@@ -1,0 +1,11 @@
+{
+  "type": "tears-of-ink:shield_restoration",
+  "worn": {
+    "id": "tears-of-ink:dim_scimitar",
+    "count": 1
+  },
+  "result": {
+    "id": "tears-of-ink:spire_shadow_scimitar",
+    "count": 1
+  }
+}

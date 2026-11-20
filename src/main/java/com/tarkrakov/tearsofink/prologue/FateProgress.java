@@ -47,7 +47,7 @@ public final class FateProgress {
     public enum Track {
         STORY("story", Goal.ARRIVAL, Goal.FIRST_FOUNTAIN, Goal.SECOND_FOUNTAIN, Goal.TRADER),
         CALL("call", Goal.KEY, Goal.TRAVEL),
-        CRAFT("craft", Goal.INGOT, Goal.ANVIL, Goal.WEAPON, Goal.ARMOR, Goal.CONTRACT, Goal.REDEEM,
+        CRAFT("craft", Goal.INGOT, Goal.WEAPON, Goal.ANVIL, Goal.ARMOR, Goal.CONTRACT, Goal.REDEEM,
                 Goal.FONT, Goal.CONTRAST, Goal.RUBRICS, Goal.ALTAR, Goal.AWAKENING);
 
         public final String id;
@@ -167,11 +167,8 @@ public final class FateProgress {
             if (!Goal.SECOND_FOUNTAIN.done(mask)) return first(mask, Goal.KEY);
             return Goal.TRADER.done(mask) ? first(mask, Goal.TRAVEL) : null;
         }
-        // Restoring a worn shield requires just one Pale Ingot at a crafting table.
-        // Guide Soul pilgrims to restoration before forging or hunting.
-        Goal basic = vow == Vow.SOUL
-                ? first(mask, Goal.INGOT, Goal.WEAPON, Goal.ANVIL, Goal.ARMOR)
-                : first(mask, Goal.INGOT, Goal.ANVIL, Goal.WEAPON, Goal.ARMOR);
+        // Both vows can restore their starter equipment for one Pale Ingot.
+        Goal basic = first(mask, Goal.INGOT, Goal.WEAPON, Goal.ANVIL, Goal.ARMOR);
         if (basic != null) return basic;
         if (!Goal.TRADER.done(mask)) return null;
         Goal hunt = first(mask, Goal.CONTRACT, Goal.REDEEM);

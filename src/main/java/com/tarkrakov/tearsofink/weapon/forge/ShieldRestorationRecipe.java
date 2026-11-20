@@ -17,10 +17,10 @@ import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.item.crafting.ShapelessRecipe;
 
 /**
- * Repair the pilgrim's worn shield at an ordinary crafting table.
+ * Restore the pilgrim's starter equipment at an ordinary crafting table.
  * ShapelessRecipe exposes the actual ingredients and result to the recipe book,
  * diary links and JEI. Assembly preserves personal components but takes the
- * full shield's own attributes, durability and other mechanical defaults.
+ * restored item's own attributes, durability and other mechanical defaults. The serializer ID is retained for compatibility.
  */
 public final class ShieldRestorationRecipe extends ShapelessRecipe {
     public static final MapCodec<ShieldRestorationRecipe> CODEC = RecordCodecBuilder.mapCodec(i -> i.group(
@@ -39,8 +39,9 @@ public final class ShieldRestorationRecipe extends ShapelessRecipe {
             NonNullList.of(Ingredient.EMPTY, Ingredient.of(worn.getItem()), Ingredient.of(ModItems.PALE_INGOT)));
         if (worn.getCount() != 1 || restored.getCount() != 1 ||
             !(worn.is(ModItems.WORN_RAM_SHIELD) && restored.is(ModItems.RAM_SHIELD)
-              || worn.is(ModItems.WORN_MERCY_SHIELD) && restored.is(ModItems.MERCY_SHIELD)))
-            throw new IllegalArgumentException("Invalid worn shield restoration pair");
+              || worn.is(ModItems.WORN_MERCY_SHIELD) && restored.is(ModItems.MERCY_SHIELD)
+              || worn.is(ModItems.DIM_SCIMITAR) && restored.is(ModItems.WAVE_GREATSWORD)))
+            throw new IllegalArgumentException("Invalid starter equipment restoration pair");
         this.worn = worn.copy();
         this.restored = restored.copy();
     }
