@@ -234,7 +234,8 @@ public final class JaberRouter {
                         if (!visibleSummonSeat(player, at)) continue;
                         AABB space = new AABB(at.x-terrain.half, at.y+0.015, at.z-terrain.half,
                                 at.x+terrain.half, at.y+terrain.height, at.z+terrain.half);
-                        if (!terrain.level.getEntities(frog, space, e -> e != player && e.isAlive() && e.isCollidable()).isEmpty()) continue;
+                        if (!terrain.level.getEntities(frog, space, e -> e != player && e.isAlive() && !e.isSpectator()
+                                && (e instanceof net.minecraft.world.entity.LivingEntity || e.canBeCollidedWith())).isEmpty()) continue;
                         if (surface.water()) {
                             if (water == null || cost < water.distanceToSqr(player.position())) water = at;
                         } else if (cost < score) {

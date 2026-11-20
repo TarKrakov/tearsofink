@@ -46,10 +46,10 @@ final class JaberSummon {
         UUID id = owned.get(player.getUUID());
         // Same live cross-level lookup as the original; recover a loaded tagged frog
         // after losing the in-memory owner map, without loading missing chunks.
-        if (id != null) for (ServerLevel level : player.server.getAllLevels()) {
+        if (id != null) for (ServerLevel level : player.serverLevel().getServer().getAllLevels()) {
             if (level.getEntity(id) instanceof Frog frog && frog.isAlive() && JaberRouter.owned(frog, player)) return frog;
         }
-        for (ServerLevel level : player.server.getAllLevels()) {
+        for (ServerLevel level : player.serverLevel().getServer().getAllLevels()) {
             for (Entity entity : level.getAllEntities()) {
                 if (entity instanceof Frog frog && frog.isAlive() && JaberRouter.owned(frog, player)) return frog;
             }
@@ -106,7 +106,9 @@ final class JaberSummon {
         } catch (ReflectiveOperationException e) {
             TearsOfInk.LOGGER.warn("Could not reset original JABER auxiliary state", e);
         }
-        player.startRiding(frog, true);
+        if (!player.startRiding(frog, true)) {
+            player.displayClientMessage(Component.translatable("message.tears-of-ink.jaber.unsafe_call"), true);
+        }
         // No random destination; the router gives its /jaber prompt on the next AI tick.
         return true;
     }
