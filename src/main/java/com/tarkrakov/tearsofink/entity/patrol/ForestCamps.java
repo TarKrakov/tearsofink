@@ -268,12 +268,14 @@ public final class ForestCamps extends SavedData {
             List<BlockPos> selected=new ArrayList<>(markers);
             for(int i=selected.size()-1;i>0;i--)Collections.swap(selected,i,random.nextInt(i+1));
             int count=type==0?1:type==1?1+random.nextInt(2):2;
-            ResourceKey<LootTable> loot=ResourceKey.create(Registries.LOOT_TABLE,Ruins.GATE_LOOT[tier]);
+            ResourceKey<LootTable> loot=ResourceKey.create(Registries.LOOT_TABLE,
+                    (type==0?Ruins.WATCHTOWER_LOOT:Ruins.CAMP_LOOT)[tier]);
+            ResourceKey<LootTable> supplies=ResourceKey.create(Registries.LOOT_TABLE,Ruins.CAMP_SUPPLIES);
             for(int i=0;i<selected.size();i++){
                 BlockPos p=selected.get(i);
                 if(i<count){
                     if(!level.setBlock(p,Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING,rot.rotate(Direction.NORTH)),Block.UPDATE_CLIENTS))throw new IllegalStateException("chest");
-                    RandomizableContainer.setBlockEntityLootTable(level,random,p,loot);
+                    RandomizableContainer.setBlockEntityLootTable(level,random,p,i==0?loot:supplies);
                 }else{level.setBlock(p,Blocks.AIR.defaultBlockState(),Block.UPDATE_CLIENTS);c.blocks.remove(p.asLong());}
             }
             for(BlockPos p:light){

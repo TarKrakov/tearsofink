@@ -71,8 +71,13 @@ public final class Ruins {
 	public static final float[] CHEST_CHANCE = {0.25f, 0.45f, 0.65f};
 	public static final ResourceLocation[] CHEST_LOOT = {
 			TearsOfInk.id("chests/ruins_poor"), TearsOfInk.id("chests/ruins_common"), TearsOfInk.id("chests/ruins_rich")};
-	public static final ResourceLocation[] GATE_LOOT = {
-			TearsOfInk.id("chests/gate_poor"), TearsOfInk.id("chests/gate_common"), TearsOfInk.id("chests/gate_rich")};
+	// Legacy gate_poor/common/rich tables are retained for unopened old chests.
+	public static final ResourceLocation[] GATE_LOOT = {TearsOfInk.id("chests/gate_cache_poor"), TearsOfInk.id("chests/gate_cache_common"), TearsOfInk.id("chests/gate_cache_rich")};
+	public static final ResourceLocation[] CAMP_LOOT = {TearsOfInk.id("chests/camp_cache_poor"), TearsOfInk.id("chests/camp_cache_common"), TearsOfInk.id("chests/camp_cache_rich")};
+	public static final ResourceLocation[] WATCHTOWER_LOOT = {TearsOfInk.id("chests/watchtower_cache_poor"), TearsOfInk.id("chests/watchtower_cache_common"), TearsOfInk.id("chests/watchtower_cache_rich")};
+	public static final ResourceLocation[] PALE_TEMPLE_SUPPLIES = {TearsOfInk.id("chests/temple_pale_supply_poor"), TearsOfInk.id("chests/temple_pale_supply_common"), TearsOfInk.id("chests/temple_pale_supply_rich")};
+	public static final ResourceLocation GATE_SUPPLIES = TearsOfInk.id("chests/gate_supplies");
+	public static final ResourceLocation CAMP_SUPPLIES = TearsOfInk.id("chests/camp_supplies");
 
 	// ===== Ряска (только в Бледнолесье) =====
 	/** Шанс, что у открытой стены руины повиснет ряска; и сколько ещё блоков она свисает вниз. */

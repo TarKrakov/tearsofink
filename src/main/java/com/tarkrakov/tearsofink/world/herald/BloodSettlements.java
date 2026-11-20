@@ -50,6 +50,7 @@ public final class BloodSettlements extends SavedData {
     private static final int WAKE=112, RETRY=20*5, MAX_FOUNDATION=12, MAX_EDITS=18000;
     private static final int FLAGS=Block.UPDATE_CLIENTS|Block.UPDATE_KNOWN_SHAPE;
     private static final ResourceKey<LootTable> LOOT=ResourceKey.create(Registries.LOOT_TABLE,TearsOfInk.id("chests/settlement_supplies"));
+    private static final ResourceKey<LootTable> PANTRY=ResourceKey.create(Registries.LOOT_TABLE,TearsOfInk.id("chests/settlement_pantry"));
     private static final String[] NAMES={"blood_wall","blood_wall_corner","blood_gate","blood_house","blood_settlement_center"};
     private static final int[] COUNTS={186,175,348,277,185};
     private static final BlockPos WALL_ANCHOR=new BlockPos(2,0,4), CORNER_ANCHOR=new BlockPos(5,0,5),
@@ -238,6 +239,7 @@ public final class BloodSettlements extends SavedData {
         final Map<BlockPos,BlockState> art=new LinkedHashMap<>();
         final Map<BlockPos,Integer> columns=new HashMap<>();
         int houses;
+        BlockPos pantry;
         Plan(BlockPos center,Protection protect){this.center=center;this.protect=protect;}
         boolean add(Piece p){
             Art a=p.art;int minX=Integer.MAX_VALUE,maxX=Integer.MIN_VALUE,minZ=Integer.MAX_VALUE,maxZ=Integer.MIN_VALUE;
@@ -278,6 +280,12 @@ public final class BloodSettlements extends SavedData {
             }
             // The segment endpoints can share an ornamental leaf/flower; never erase a solid building block with vegetation.
             placed.forEach((pos,s)->art.merge(pos,s,(old,n)->plant(old)&&!plant(n)?n:old));
+            // One stocked pantry per settlement, preferably in the warehouse.
+            if(p.variant>=0&&(pantry==null||p.variant==4)){
+                BlockPos chosen=placed.entrySet().stream().filter(e->e.getValue().is(Blocks.CHEST))
+                        .map(Map.Entry::getKey).min(Comparator.comparingLong(BlockPos::asLong)).orElse(null);
+                if(chosen!=null)pantry=chosen;
+            }
             return true;
         }
         void court(int rx,int rz,Rotation rot){
@@ -455,7 +463,7 @@ public final class BloodSettlements extends SavedData {
                     BlockState updated=Block.updateFromNeighbourShapes(st,level,q);
                     if(!updated.isAir()&&!updated.equals(st))level.setBlock(q,updated,FLAGS);
                 }
-                if(st.is(Blocks.CHEST))RandomizableContainer.setBlockEntityLootTable(level,r,q,LOOT);
+                if(st.is(Blocks.CHEST))RandomizableContainer.setBlockEntityLootTable(level,r,q,q.equals(p.pantry)?PANTRY:LOOT);
             }
             long[] lamps=p.art.keySet().stream().filter(q->!protect.protectedAt(q)&&level.getBlockState(q).is(ModBlocks.INK_LANTERN))
                     .mapToLong(BlockPos::asLong).toArray();

@@ -412,6 +412,7 @@ public final class BarricadeGates extends SavedData {
             for(int i=selected.size()-1;i>0;i--)Collections.swap(selected,i,fixed.nextInt(i+1));
             int count=1+fixed.nextInt(3);
             ResourceKey<LootTable> loot=ResourceKey.create(Registries.LOOT_TABLE,Ruins.GATE_LOOT[SquadPatrols.tier(layout,p[0],p[1])]);
+            ResourceKey<LootTable> supplies=ResourceKey.create(Registries.LOOT_TABLE,Ruins.GATE_SUPPLIES);
             for(int i=0;i<selected.size();i++) {
                 BlockPos at=selected.get(i);
                 if(i<count) {
@@ -420,7 +421,7 @@ public final class BarricadeGates extends SavedData {
                     Direction face=rot.rotate(inner?Direction.WEST:Direction.EAST);
                     if(!level.setBlock(at,Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING,face),Block.UPDATE_CLIENTS))
                         throw new IllegalStateException("gate chest");
-                    RandomizableContainer.setBlockEntityLootTable(level,fixed,at,loot);
+                    RandomizableContainer.setBlockEntityLootTable(level,fixed,at,i==0?loot:supplies);
                 } else {
                     level.setBlock(at,Blocks.AIR.defaultBlockState(),Block.UPDATE_CLIENTS);
                     protection.remove(at.asLong());

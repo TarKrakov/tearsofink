@@ -112,13 +112,13 @@ public class RuinPiece extends TemplateStructurePiece {
 							BoundingBox box, ChunkPos chunkPos, BlockPos pivot) {
 		super.postProcess(level, structures, generator, random, box, chunkPos, pivot);
 		RandomSource fixed = RandomSource.create(templatePosition.asLong() * 31 + 0x5EED);
-		ResourceKey<LootTable> loot = ResourceKey.create(Registries.LOOT_TABLE,
-				start ? Ruins.START_LOOT : bloodTemple ? Ruins.BLOOD_TEMPLE_LOOT
-						: !pale ? Ruins.INKWOOD_LOOT : Ruins.CHEST_LOOT[tier]);
-		// One existing authored chest per non-start temple receives the relic table.
-		// Obtain the complete template rather than selecting independently in each chunk.
+		// Read the full template so the one relic chest is independent of chunk clipping.
 		List<StructureTemplate.StructureBlockInfo> allAuthorChests = template.filterBlocks(
 				templatePosition, placeSettings.copy().setBoundingBox(null), Blocks.CHEST);
+		ResourceKey<LootTable> loot = ResourceKey.create(Registries.LOOT_TABLE,
+				start ? Ruins.START_LOOT : bloodTemple ? Ruins.BLOOD_TEMPLE_LOOT
+						: !pale ? Ruins.INKWOOD_LOOT : !allAuthorChests.isEmpty()
+						? Ruins.PALE_TEMPLE_SUPPLIES[tier] : Ruins.CHEST_LOOT[tier]);
 		BlockPos rewardChest = !start && (pale || bloodTemple) && !allAuthorChests.isEmpty()
 				? allAuthorChests.getFirst().pos() : null;
 		ResourceKey<LootTable> rewardLoot = ResourceKey.create(Registries.LOOT_TABLE,
