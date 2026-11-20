@@ -4,7 +4,7 @@ from pathlib import Path
 
 root = Path("src/main/resources")
 src = Path("src/main/java/com/tarkrakov/tearsofink")
-client = Path("src/client/java/com/tarkrakov/tearsofink")
+client = Path("src/client/java/com/tarkrakov/tearsofink/client")
 assets = root / "assets/tears-of-ink"
 data = root / "data/tears-of-ink"
 reserved = Path("reserved/stone_lantern")
