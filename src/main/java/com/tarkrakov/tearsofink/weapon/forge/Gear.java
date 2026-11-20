@@ -180,6 +180,28 @@ public final class Gear {
 		}
 	}
 
+	// Keep recursion context in an ordinary Java class, not a transformed mixin inner class.
+	private record HitFrame(LivingEntity target, DamageSource source, HitFrame parent) {}
+	private static final ThreadLocal<HitFrame> ACTIVE_HIT = new ThreadLocal<>();
+
+	@FunctionalInterface
+	public interface AdjustedHit {
+		boolean hurt(float amount);
+	}
+
+	public static boolean withAdjustedDamage(LivingEntity target, DamageSource source, float amount, AdjustedHit original) {
+		HitFrame previous = ACTIVE_HIT.get();
+		for (HitFrame frame = previous; frame != null; frame = frame.parent()) {
+			if (frame.target() == target && frame.source() == source) return original.hurt(amount);
+		}
+		ACTIVE_HIT.set(new HitFrame(target, source, previous));
+		try {
+			return original.hurt(outgoing(target, source, amount));
+		} finally {
+			if (previous == null) ACTIVE_HIT.remove(); else ACTIVE_HIT.set(previous);
+		}
+	}
+
 	/** Apply affinity exactly once at the damage boundary; perks still operate only in Lands. */
 	public static float outgoing(LivingEntity target, DamageSource source, float amount) {
 		if (!(source.getEntity() instanceof Player user)) return amount;
