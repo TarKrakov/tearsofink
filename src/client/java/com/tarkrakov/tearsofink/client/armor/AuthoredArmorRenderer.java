@@ -10,6 +10,8 @@ import com.tarkrakov.tearsofink.TearsOfInk;
 import net.fabricmc.fabric.api.client.rendering.v1.ArmorRenderer;
 import net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry;
 import net.minecraft.client.model.HumanoidModel;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.resources.PlayerSkin;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -254,16 +256,31 @@ public final class AuthoredArmorRenderer implements ArmorRenderer {
         var parts = mesh.get(slot);
         if (parts == null) return;
         VertexConsumer consumer = buffer(buffers, stack);
+        boolean slimArms = slimArms(entity);
         for (var entry : parts.entrySet()) {
-            renderPart(pose, consumer, entry.getKey().part(contextModel), entry.getValue(), light);
+            Bone bone = entry.getKey();
+            renderPart(pose, consumer, bone.part(contextModel), entry.getValue(), light, bone, slimArms);
         }
     }
+
+    private static boolean slimArms(LivingEntity entity) {
+        return entity instanceof AbstractClientPlayer player
+                && player.getSkin().model() == PlayerSkin.Model.SLIM;
+    }
+
     private VertexConsumer buffer(MultiBufferSource buffers, ItemStack stack) {
         return ItemRenderer.getArmorFoilBuffer(buffers, RenderType.entityCutout(texture), stack.hasFoil());
     }
-    private static void renderPart(PoseStack pose, VertexConsumer consumer, ModelPart part, List<Quad> quads, int light) {
+    private static void renderPart(PoseStack pose, VertexConsumer consumer, ModelPart part, List<Quad> quads,
+                                   int light, Bone bone, boolean slimArms) {
         pose.pushPose();
+        // Keep the game's animated arm pivot, even when crouching or holding a shield.
         part.translateAndRotate(pose);
+        if (slimArms && (bone == Bone.RIGHT_ARM || bone == Bone.LEFT_ARM)) {
+            boolean right = bone == Bone.RIGHT_ARM;
+            pose.translate(ArmorArmFit.slimOffsetX(right), 0, 0);
+            pose.scale(ArmorArmFit.SLIM_X_SCALE, 1, 1);
+        }
         var matrix = pose.last();
         for (Quad quad : quads) {
             Vector3f n = quad.normal();
@@ -335,12 +352,15 @@ public final class AuthoredArmorRenderer implements ArmorRenderer {
 
     /** Vanilla first-person visible hands (empty hand/map). Weapon-only FP paths do not render a player arm. */
     public static void renderHand(PoseStack pose, MultiBufferSource buffers, ItemStack chest,
-                                  ModelPart arm, boolean right, int light) {
+                                  ModelPart arm, boolean right, int light, AbstractClientPlayer player) {
         var renderer = RENDERERS.get(chest.getItem());
         if (renderer == null) return;
         var parts = renderer.mesh.get(EquipmentSlot.CHEST);
         if (parts == null) return;
-        var quads = parts.get(right ? Bone.RIGHT_ARM : Bone.LEFT_ARM);
-        if (quads != null) renderPart(pose, renderer.buffer(buffers, chest), arm, quads, light);
+        Bone bone = right ? Bone.RIGHT_ARM : Bone.LEFT_ARM;
+        var quads = parts.get(bone);
+        if (quads != null) {
+            renderPart(pose, renderer.buffer(buffers, chest), arm, quads, light, bone, slimArms(player));
+        }
     }
 }
