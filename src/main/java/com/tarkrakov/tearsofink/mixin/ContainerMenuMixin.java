@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.mixin;
 
 import com.tarkrakov.tearsofink.travel.MirrorBond;
 import com.tarkrakov.tearsofink.travel.Travel;
+import com.tarkrakov.tearsofink.prologue.PersonalSlots;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -26,7 +27,7 @@ public abstract class ContainerMenuMixin {
 		AbstractContainerMenu self = (AbstractContainerMenu) (Object) this;
 		if (slotId < 0 || slotId >= self.slots.size()) return;
 		Slot slot = self.slots.get(slotId);
-		boolean foreign = !(slot.container instanceof Inventory);
+		boolean foreign = !(slot.container instanceof Inventory) && !(slot.container instanceof PersonalSlots.Items);
 		boolean attempt = switch (type) {
 			case PICKUP, QUICK_CRAFT -> foreign && Travel.isMirror(getCarried());
 			case QUICK_MOVE -> !(self instanceof InventoryMenu) && !foreign && Travel.isMirror(slot.getItem());
