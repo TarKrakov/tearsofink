@@ -22,6 +22,9 @@ import java.util.List;
 public final class PersonalSlots {
     public static final int DIARY = 0, MIRROR = 1, KEY = 2, COUNT = 3;
     public static final int INVENTORY_MENU_START = 46;
+    /** Layout relative to the ordinary inventory GUI, shared by menu slots and client rendering. */
+    public static final int PANEL_X = -71, PANEL_Y = 9, PANEL_WIDTH = 67, PANEL_HEIGHT = 86;
+    public static final int SLOT_X = PANEL_X + 5, SLOT_Y = 20, SLOT_STEP = 23;
 
     private static final AttachmentType<List<ItemStack>> DATA = AttachmentRegistry.<List<ItemStack>>builder()
             .persistent(ItemStack.OPTIONAL_CODEC.listOf())

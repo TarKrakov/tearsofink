@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
-/** Small panel just to the right of the vanilla inventory; no new artwork. */
+/** Personal keepsakes to the left of the vanilla inventory, clear of JEI on the right. */
 @Mixin(InventoryScreen.class)
 public abstract class InventoryScreenMixin extends EffectRenderingInventoryScreen<InventoryMenu> {
     protected InventoryScreenMixin(InventoryMenu menu, Inventory inventory, Component title) {
@@ -23,24 +23,27 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
 
     @Inject(method = "renderBg", at = @At("TAIL"))
     private void tearsofink$personalPanel(GuiGraphics graphics, float partial, int mouseX, int mouseY, CallbackInfo ci) {
-        int x = leftPos + 178, y = topPos + 9;
-        graphics.fill(x, y, x + 67, y + 86, 0xD927222C);
-        graphics.fill(x, y, x + 67, y + 1, 0xFFAC9272);
-        graphics.fill(x, y + 85, x + 67, y + 86, 0xFFAC9272);
+        int x = leftPos + PersonalSlots.PANEL_X, y = topPos + PersonalSlots.PANEL_Y;
+        graphics.fill(x, y, x + PersonalSlots.PANEL_WIDTH, y + PersonalSlots.PANEL_HEIGHT, 0xD927222C);
+        graphics.fill(x, y, x + PersonalSlots.PANEL_WIDTH, y + 1, 0xFFAC9272);
+        graphics.fill(x, y + PersonalSlots.PANEL_HEIGHT - 1,
+                x + PersonalSlots.PANEL_WIDTH, y + PersonalSlots.PANEL_HEIGHT, 0xFFAC9272);
         graphics.drawString(font, Component.translatable("gui.tears-of-ink.personal"), x + 4, y + 3, 0xE5D6BF, false);
         for (int i = 0; i < PersonalSlots.COUNT; i++) {
-            int sy = topPos + 19 + 23 * i;
-            graphics.fill(leftPos + 182, sy, leftPos + 201, sy + 19, 0xFF8A7967);
-            graphics.fill(leftPos + 183, sy + 1, leftPos + 200, sy + 18, 0xFF433C44);
+            int sx = leftPos + PersonalSlots.SLOT_X;
+            int sy = topPos + PersonalSlots.SLOT_Y + PersonalSlots.SLOT_STEP * i;
+            graphics.fill(sx - 1, sy - 1, sx + 18, sy + 18, 0xFF8A7967);
+            graphics.fill(sx, sy, sx + 17, sy + 17, 0xFF433C44);
             graphics.drawString(font, Component.translatable("gui.tears-of-ink.personal." + i),
-                    leftPos + 204, sy + 5, 0xF2E1CD, false);
+                    sx + 21, sy + 4, 0xF2E1CD, false);
         }
     }
 
     /** The personal panel must not be mistaken for an outside-inventory drop zone. */
     @Inject(method = "hasClickedOutside", at = @At("HEAD"), cancellable = true)
     private void tearsofink$panelIsInside(double x, double y, int left, int top, int button, CallbackInfoReturnable<Boolean> cir) {
-        if (x >= left + 178 && x < left + 245 && y >= top + 9 && y < top + 95)
+        if (x >= left + PersonalSlots.PANEL_X && x < left + PersonalSlots.PANEL_X + PersonalSlots.PANEL_WIDTH
+                && y >= top + PersonalSlots.PANEL_Y && y < top + PersonalSlots.PANEL_Y + PersonalSlots.PANEL_HEIGHT)
             cir.setReturnValue(false);
     }
 
@@ -49,8 +52,8 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
     private void tearsofink$openDiary(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
         if (button != 1 || !menu.getCarried().isEmpty() || !menu.slots.get(PersonalSlots.INVENTORY_MENU_START).hasItem())
             return;
-        if (mouseX >= leftPos + 183 && mouseX < leftPos + 201
-                && mouseY >= topPos + 20 && mouseY < topPos + 38) {
+        if (mouseX >= leftPos + PersonalSlots.SLOT_X && mouseX < leftPos + PersonalSlots.SLOT_X + 18
+                && mouseY >= topPos + PersonalSlots.SLOT_Y && mouseY < topPos + PersonalSlots.SLOT_Y + 18) {
             PrologueItems.openDiary.accept(minecraft.player);
             cir.setReturnValue(true);
         }

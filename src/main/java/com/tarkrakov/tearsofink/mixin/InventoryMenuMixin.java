@@ -23,7 +23,7 @@ public abstract class InventoryMenuMixin extends AbstractContainerMenu {
         var container = new PersonalSlots.Items(owner);
         for (int index = 0; index < PersonalSlots.COUNT; index++) {
             final int which = index;
-            addSlot(new Slot(container, index, 183, 20 + 23 * index) {
+            addSlot(new Slot(container, index, PersonalSlots.SLOT_X, PersonalSlots.SLOT_Y + PersonalSlots.SLOT_STEP * index) {
                 @Override public boolean mayPlace(ItemStack stack) {
                     return stack.getCount() == 1 && PersonalSlots.available(owner, which)
                             && PersonalSlots.accepts(which, stack);

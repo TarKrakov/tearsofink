@@ -58,4 +58,15 @@ for lang in ("ru_ru","en_us"):
                 "diary.tears-of-ink.entry.collection_invitation.title"):
         assert key in loc, key
 
-print("D-106: personal slots, collection and reserved author art verified")
+# The three active slots, visible panel, outside-click area and Diary hot area
+# must all use one coordinate system; the right-hand JEI panel remains free.
+menu = (src / "mixin/InventoryMenuMixin.java").read_text()
+screen = (Path("src/client/java/com/tarkrakov/tearsofink/mixin/InventoryScreenMixin.java")).read_text()
+assert "PANEL_X = -71" in slots and "SLOT_X = PANEL_X + 5" in slots
+assert "PersonalSlots.SLOT_X" in menu and "PersonalSlots.SLOT_STEP" in menu
+assert "leftPos + PersonalSlots.PANEL_X" in screen
+assert "left + PersonalSlots.PANEL_X" in screen
+assert "mouseX >= leftPos + PersonalSlots.SLOT_X" in screen
+assert "mouseY >= topPos + PersonalSlots.SLOT_Y" in screen
+assert "leftPos + 178" not in screen
+print("D-106: personal slots, left-hand inventory panel, collection and reserved author art verified")
