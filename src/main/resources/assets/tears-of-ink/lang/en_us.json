@@ -1220,10 +1220,12 @@
   "diary.tears-of-ink.fate.weapon.soul.title": "Restore your shield",
   "diary.tears-of-ink.fate.weapon.soul.hint": "Restore a [[restore_ram_shield|worn Ram Shield]] or [[restore_mercy_shield|Mercy Shield]] with one Pale Ingot at a regular crafting table. Alternatively, obtain a local blade or a full shield.",
   "diary.tears-of-ink.fate.weapon.soul.hud": "Restore a shield (1 ingot)",
-  "message.tears-of-ink.jaber.unsafe_call": "Jaber needs a safe place to appear. Call him from an open, level area.",
+  "message.tears-of-ink.jaber.unsafe_call": "Jaber: No safe space nearby. Try moving a little.",
   "message.tears-of-ink.jaber.outside": "Jaber cannot travel beyond the fog wall. Choose coordinates inside the Ink Lands.",
   "message.tears-of-ink.jaber.ready": "Jaber is ready! Enter /jaber X Z.",
   "message.tears-of-ink.jaber.not_owner": "Call your own Jaber first.",
   "message.tears-of-ink.jaber.no_route": "Jaber: No safe route yet. Waiting, or try another destination.",
-  "message.tears-of-ink.jaber.arrived": "Jaber: We've arrived!"
+  "message.tears-of-ink.jaber.arrived": "Jaber: We've arrived!",
+  "message.tears-of-ink.jaber.unavailable": "Jaber: Compatibility with this version is unavailable.",
+  "message.tears-of-ink.jaber.occupied": "Your Jaber is already carrying another passenger."
 }

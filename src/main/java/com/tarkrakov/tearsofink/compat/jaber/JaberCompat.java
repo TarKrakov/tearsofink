@@ -11,13 +11,10 @@ import net.minecraft.world.entity.animal.frog.Frog;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.AABB;
 
 /** Optional compatibility with the inspected JABER 1.0.0 binary; no dependency on its Java classes. */
 public final class JaberCompat {
@@ -74,41 +71,14 @@ public final class JaberCompat {
             if (active(level) && entity instanceof Frog frog && frog.getTags().stream().anyMatch(t -> t.startsWith("jaber_owner_"))) JaberRouter.forget(frog);
         });
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> JaberRouter.reset());
-        // JABER's call item places the frog at exactly player.x + 4, player.y, player.z.
-        // It does not look for free space. Reject unsafe calls before it creates/repositions the frog.
         final ResourceLocation call = ResourceLocation.fromNamespaceAndPath(MOD_ID, "frog_call");
         UseItemCallback.EVENT.register((player, level, hand) -> {
             var stack = player.getItemInHand(hand);
             if (!active(level) || !call.equals(BuiltInRegistries.ITEM.getKey(stack.getItem()))) {
                 return InteractionResultHolder.pass(stack);
             }
-            if (player.isSpectator()) return InteractionResultHolder.fail(stack);
-            ServerLevel server = (ServerLevel) level;
-            double x = player.getX() + 4.0, y = player.getY(), z = player.getZ();
-            // Allow room for the temporarily scale-3 frog and its rider. Check loaded chunks before collision.
-            AABB space = new AABB(x - 0.8, y, z - 0.8, x + 0.8, y + 3.0, z + 0.8);
-            boolean safe = y >= server.getMinBuildHeight() + 1 && y + 3.0 < server.getMaxBuildHeight();
-            for (int bx = Mth.floor(space.minX) - 1; safe && bx <= Mth.floor(space.maxX) + 1; bx++) {
-                for (int bz = Mth.floor(space.minZ) - 1; safe && bz <= Mth.floor(space.maxZ) + 1; bz++) {
-                    safe = columnReady(server, bx, bz);
-                }
-            }
-            if (safe) {
-                BlockPos feet = BlockPos.containing(x, y, z);
-                BlockPos below = feet.below();
-                var fluid = server.getFluidState(feet);
-                var support = server.getBlockState(below);
-                boolean water = fluid.is(net.minecraft.tags.FluidTags.WATER);
-                safe = !fluid.is(net.minecraft.tags.FluidTags.LAVA)
-                        && (water || support.isFaceSturdy(server, below, net.minecraft.core.Direction.UP))
-                        && server.noCollision(null, space);
-            }
-            if (safe) {
-                if (player instanceof ServerPlayer rider) JaberRouter.cancelOwner(rider);
-                return InteractionResultHolder.pass(stack);
-            }
-            player.displayClientMessage(Component.translatable("message.tears-of-ink.jaber.unsafe_call"), true);
-            return InteractionResultHolder.fail(stack);
+            if (!(player instanceof ServerPlayer rider) || player.isSpectator()) return InteractionResultHolder.fail(stack);
+            return JaberSummon.call(rider) ? InteractionResultHolder.consume(stack) : InteractionResultHolder.fail(stack);
         });
     }
 }

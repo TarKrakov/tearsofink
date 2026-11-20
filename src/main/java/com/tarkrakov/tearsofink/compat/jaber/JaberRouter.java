@@ -16,6 +16,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.animal.frog.Frog;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.*;
@@ -207,6 +209,56 @@ public final class JaberRouter {
         if (frog.isInWater()) vy = Mth.clamp(dy * 0.30, -0.08, 0.30);
         else if (frog.onGround() && dy > 0.48 && terrain.clear(frog.getX(), frog.getY() + Math.min(1, dy), frog.getZ())) vy = 0.43;
         frog.setDeltaMovement(vx, vy, vz);
+    }
+
+    /** A bounded local summon search; no heightmap, chunk tickets or teleport to the surface.
+     * Try nearby dry support first, then open water. The seat must be visible from
+     * the caller, so a call cannot carry the player through a solid wall. */
+    static Vec3 summonPosition(ServerPlayer player, Frog frog) {
+        Terrain terrain = new Terrain(player.serverLevel(), frog);
+        int cx = player.getBlockX(), cz = player.getBlockZ();
+        Vec3 water = null;
+        for (int radius = 0; radius <= 12; radius++) {
+            Vec3 best = null;
+            double score = Double.POSITIVE_INFINITY;
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) != radius) continue;
+                    if (dx * dx + dz * dz > 144) continue;
+                    int x = cx + dx, z = cz + dz;
+                    if (!JaberCompat.columnReady(terrain.level, x, z)) continue;
+                    for (Surface surface : terrain.around(x, z, player.getY(), 6.0, 6.0)) {
+                        Node n = surface.node();
+                        Vec3 at = new Vec3(x + 0.5, n.y(), z + 0.5);
+                        double cost = at.distanceToSqr(player.position());
+                        if (!visibleSummonSeat(player, at)) continue;
+                        AABB space = new AABB(at.x-terrain.half, at.y+0.015, at.z-terrain.half,
+                                at.x+terrain.half, at.y+terrain.height, at.z+terrain.half);
+                        if (!terrain.level.getEntities(frog, space, e -> e != player && e.isAlive() && e.isCollidable()).isEmpty()) continue;
+                        if (surface.water()) {
+                            if (water == null || cost < water.distanceToSqr(player.position())) water = at;
+                        } else if (cost < score) {
+                            best = at; score = cost;
+                        }
+                    }
+                }
+            }
+            if (best != null) return best;
+            if (radius >= 4 && water != null) return water;
+        }
+        return water;
+    }
+
+    private static boolean visibleSummonSeat(ServerPlayer player, Vec3 at) {
+        Vec3 from = player.getEyePosition(), to = at.add(0, 1.25, 0);
+        ServerLevel level = player.serverLevel();
+        int steps = Math.max(1, (int)Math.ceil(from.distanceTo(to) * 2));
+        for (int i=0; i<=steps; i++) {
+            Vec3 v = from.lerp(to, i/(double)steps);
+            if (!JaberCompat.shapeReady(level, Mth.floor(v.x), Mth.floor(v.y), Mth.floor(v.z))) return false;
+        }
+        return level.clip(new ClipContext(from, to, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player))
+                .getType() == HitResult.Type.MISS;
     }
 
     private record Surface(Node node, boolean road, boolean water) {}
