@@ -94,7 +94,7 @@ public final class ModItems {
 	public static final Item CLEAVE_GREATSWORD = register("spire_torturer_greatsword",
 			new InkGreatswordItem(() -> WeaponAbilities.CLEAVE, new Item.Properties()));
 
-	/** Оружие охотников: линия и ступень — в самом предмете (HunterWeaponItem.make). */
+	/** Устаревшие ID hunter_* сохранены для старых предметов и контрактов (D-107). */
 	public static final Item HUNTER_GREATSWORD = register("hunter_greatsword",
 			new com.tarkrakov.tearsofink.hunt.HunterWeaponItem(new Item.Properties(), true));
 	public static final Item HUNTER_SABER = register("hunter_saber",
@@ -155,6 +155,7 @@ public final class ModItems {
 	public static final Item PALE_MISERICORDE = register("pale_misericorde",
 			new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
 					new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE, 4, 2.1f));
+	/** Старый обычный меч: ID ради сохранений; новые рецепты сняты (D-107). */
 	public static final Item PALE_SWORD = register("pale_sword", new com.tarkrakov.tearsofink.weapon.forge.OrdinaryWeaponItem(
 			new Item.Properties(), false, com.tarkrakov.tearsofink.hunt.HunterType.SPIRE, 5, 1.7f));
 	/** Первый предмет утверждённой средней бледной линейки. Временный боевой профиль —
