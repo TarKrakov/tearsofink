@@ -5,7 +5,7 @@ import net.minecraft.client.animation.AnimationDefinition;
 import net.minecraft.client.animation.Keyframe;
 import net.minecraft.client.animation.KeyframeAnimations;
 
-// Author's exported clips, commit 4b7d51e. Keyframes and loop flags unchanged.
+// Author's Blockbench clips (commit 4b7d51e); FLY alone retimed in-game by author request (D-109).
 public final class PaleOwlAnimations {
     private PaleOwlAnimations() {}
 	public static final AnimationDefinition IDLE = AnimationDefinition.Builder.withLength(3.0F).looping()
