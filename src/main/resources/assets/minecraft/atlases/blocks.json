@@ -1,0 +1,19 @@
+{
+  "sources": [
+    {
+      "type": "minecraft:single",
+      "resource": "tears-of-ink:entity/pale_spearman",
+      "sprite": "tears-of-ink:entity/pale_spearman"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "tears-of-ink:entity/pale_shieldbearer",
+      "sprite": "tears-of-ink:entity/pale_shieldbearer"
+    },
+    {
+      "type": "minecraft:single",
+      "resource": "tears-of-ink:entity/pale_crossbowman",
+      "sprite": "tears-of-ink:entity/pale_crossbowman"
+    }
+  ]
+}
