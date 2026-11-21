@@ -137,7 +137,45 @@ public final class BattlefieldHistoricalScenes {
                     at(Prop.PALE_LONGSWORD, 2.75f, 3.93f*m, -0.12f, 52f*m, 82, -13f*m, true),
                     at(Prop.SPEAR, -2.02f, 3.48f*m, -0.10f, -62f*m, 76, 11f*m, false)
             );
-            default -> throw new IllegalArgumentException("Not a D-131 historical preset: " + scene);
+            // Three distinct paladin narratives, using actual preexisting Soul shields
+            // at x1.5. No false regular-army banner stands in for their flag.
+            case PALADIN_SOUL_SHIELD_WALL -> List.of(
+                    at(Prop.SOUL_RAM_SHIELD, -2.15f, -3.56f*m, -0.37f, -17f*m, 22, -26f*m, true),
+                    at(Prop.SOUL_REPEL_SHIELD, -1.52f, -0.45f*m, -0.40f, 13f*m, 36, 24f*m, true),
+                    at(Prop.SOUL_RADIANT_SHIELD, -2.07f, 3.23f*m, -0.33f, 33f*m, 27, 28f*m, true),
+                    at(Prop.PALE_LONGSWORD, 1.54f, 1.86f*m, -0.11f, -61f*m, 76, -11f*m, false)
+            );
+            case PALADIN_MERCY_HOLDOUT -> List.of(
+                    at(Prop.SOUL_MERCY_SHIELD, -0.90f, -1.46f*m, -0.44f, 28f*m, 38, -22f*m, true),
+                    at(Prop.SOUL_RADIANT_SHIELD, 0.12f, 1.21f*m, -0.29f, -31f*m, 18, 22f*m, true),
+                    at(Prop.PALE_LINEAR_GREATSWORD, 2.72f, 3.26f*m, -0.11f, 64f*m, 81, -12f*m, false)
+            );
+            case PALADIN_BROKEN_HALO -> List.of(
+                    at(Prop.SOUL_REPEL_SHIELD, -2.53f, -3.34f*m, -0.36f, 47f*m, 31, 26f*m, true),
+                    at(Prop.SOUL_RAM_SHIELD, -3.02f, 0.24f*m, -0.37f, -12f*m, 36, -21f*m, true),
+                    at(Prop.SOUL_MERCY_SHIELD, -1.54f, 3.96f*m, -0.33f, -51f*m, 43, 23f*m, true),
+                    at(Prop.PALE_LONGSWORD, 1.53f, -1.03f*m, -0.09f, 68f*m, 82, -13f*m, false)
+            );
+            // Ink Hunters were the historical defenders, not today's maddened
+            // hunters. Spire-derived blades are visual proxies, NOT canonical gear.
+            case INK_HUNTER_SWEEP -> List.of(
+                    at(Prop.SPIRE_SHADOW_SCIMITAR, -3.24f, -4.10f*m, -0.11f, 21f*m, 77, -12f*m, true),
+                    at(Prop.SPIRE_RAPID_KNIFE, -0.84f, -1.59f*m, -0.07f, -62f*m, 84, 14f*m, true),
+                    at(Prop.SPIRE_TORTURER_GREATSWORD, 2.44f, 2.71f*m, -0.19f, 49f*m, 30, -19f*m, true),
+                    at(Prop.SPIRE_ROARING_AXE, 3.08f, 4.38f*m, -0.12f, -43f*m, 71, 12f*m, false)
+            );
+            case INK_HUNTER_AMBUSH -> List.of(
+                    at(Prop.SPIRE_RAPID_KNIFE, -1.91f, -4.34f*m, -0.09f, 59f*m, 81, -16f*m, true),
+                    at(Prop.SPIRE_ROARING_AXE, 1.46f, -3.07f*m, -0.17f, -25f*m, 37, 24f*m, true),
+                    at(Prop.SPIRE_SHADOW_SCIMITAR, -1.05f, 2.79f*m, -0.12f, 33f*m, 83, -13f*m, true),
+                    at(Prop.CROSSBOW, 2.65f, 3.69f*m, -0.09f, -51f*m, 78, 8f*m, false)
+            );
+            case INK_HUNTER_LAST_TRACE -> List.of(
+                    at(Prop.SPIRE_TORTURER_GREATSWORD, -2.88f, -3.85f*m, -0.16f, -28f*m, 43, 21f*m, true),
+                    at(Prop.SPIRE_SHADOW_SCIMITAR, 0.47f, 0.62f*m, -0.10f, 63f*m, 78, -17f*m, true),
+                    at(Prop.SPIRE_RAPID_KNIFE, 2.89f, 3.96f*m, -0.08f, -54f*m, 82, 11f*m, false)
+            );
+            default -> throw new IllegalArgumentException("Not a D-131/132 historical preset: " + scene);
         };
 
         if (!other) return base;

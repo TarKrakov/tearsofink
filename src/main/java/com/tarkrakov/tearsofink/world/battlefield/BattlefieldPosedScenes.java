@@ -57,7 +57,14 @@ public final class BattlefieldPosedScenes {
         AFTERMATH_SCATTER("aftermath_scatter", "Осколки сражения"),
         REAR_GUARD_FALLBACK("rear_guard_fallback", "Прикрытие отступления"),
         ISOLATED_LAST_STAND_SMALL("isolated_last_stand_small", "Одинокий заслон"),
-        MIXED_DEAD_GROUND("mixed_dead_ground", "Молчаливое поле");
+        MIXED_DEAD_GROUND("mixed_dead_ground", "Молчаливое поле"),
+        // D-132: append-only. IDs 0..33 / layouts 0..2 remain saved as before.
+        PALADIN_SOUL_SHIELD_WALL("paladin_soul_shield_wall", "Стена щитов Души"),
+        PALADIN_MERCY_HOLDOUT("paladin_mercy_holdout", "Последнее милосердие"),
+        PALADIN_BROKEN_HALO("paladin_broken_halo", "Сломанный круг"),
+        INK_HUNTER_SWEEP("ink_hunter_sweep", "Рывок Чернильных Охотников"),
+        INK_HUNTER_AMBUSH("ink_hunter_ambush", "Засада Чернильных Охотников"),
+        INK_HUNTER_LAST_TRACE("ink_hunter_last_trace", "Последний след Чернильного Охотника");
 
         private final String id, label;
         Scenario(String id, String label) { this.id = id; this.label = label; }

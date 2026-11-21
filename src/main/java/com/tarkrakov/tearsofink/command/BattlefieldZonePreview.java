@@ -13,6 +13,7 @@ import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Pose;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Prop;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Scenario;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldWeaponCatalog;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSoulShieldCatalog;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
@@ -280,6 +281,16 @@ public final class BattlefieldZonePreview {
             x0 = -0.32f; x1 = 0.32f;
             y0 = -0.07f; y1 = 0.32f;
             z0 = -0.32f; z1 = 0.32f;
+        } else if (BattlefieldSoulShieldCatalog.isShield(pose.prop())) {
+            // Same measured x1.5 bounds / lower-edge pivot as the client BER.
+            var soul = BattlefieldSoulShieldCatalog.fromProp(pose.prop());
+            float scale = BattlefieldSoulShieldCatalog.SCALE / 16f;
+            x0 = (soul.minX - soul.centerX()) * scale;
+            x1 = (soul.maxX - soul.centerX()) * scale;
+            y0 = 0f;
+            y1 = (soul.maxY - soul.minY) * scale;
+            z0 = (soul.minZ - soul.centerZ()) * scale;
+            z1 = (soul.maxZ - soul.centerZ()) * scale;
         } else {
             // The eight unmodified item-mesh sources sit diagonally in XY.
             // Contact is at the high diagonal: blade/head DOWN, grip UP.
