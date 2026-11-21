@@ -26,7 +26,7 @@ import java.util.List;
  * Тестовая Охота рядом с собой с заказанным охотником:
  * <pre>/tearsofink hunt test &lt;тип&gt; &lt;ранг&gt; &lt;оружие&gt; [второе|none] [цель|random] [особенность]</pre>
  * тип — spire | blood | ink; ранг — 0 (Новичок), 1 (Опытный), 2 (Легендарный);
- * оружие — имя предмета мода (blood_talvar, blood_dussak, hunter_greatsword, hunter_saber, spire_torturer_greatsword, spire_shadow_scimitar…);
+ * оружие — имя предмета мода (blood_talvar, blood_dussak, spire_torturer_greatsword, spire_shadow_scimitar…);
  * цель — имя существа из hunt_targets (zombie, pale_spearman…); особенность — none | swift | giant | split.
  * Идущая мировая Охота останавливается.
  */
@@ -56,7 +56,8 @@ public final class HuntTestCommand {
 		for (Item item : BuiltInRegistries.ITEM) {
 			var id = BuiltInRegistries.ITEM.getKey(item);
 			if (!id.getNamespace().equals(TearsOfInk.MOD_ID)) continue;
-			if (item instanceof HunterWeaponItem || com.tarkrakov.tearsofink.weapon.combat.Archetype.of(new ItemStack(item)) != null) out.add(id.getPath());
+			if (item instanceof com.tarkrakov.tearsofink.weapon.InkGreatswordItem
+					&& !LegacyHunterWeapons.isRetired(item)) out.add(id.getPath());
 		}
 		return out;
 	}
@@ -135,8 +136,10 @@ public final class HuntTestCommand {
 		var id = name.contains(":") ? net.minecraft.resources.ResourceLocation.tryParse(name) : TearsOfInk.id(name);
 		if (id == null) return null;
 		Item item = BuiltInRegistries.ITEM.get(id);
-		if (item == Items.AIR) return null;
-		if (item instanceof HunterWeaponItem w) return w.make(type, rank);
-		return new ItemStack(item);
+		if (item == Items.AIR || !(item instanceof com.tarkrakov.tearsofink.weapon.InkGreatswordItem)
+				|| LegacyHunterWeapons.isRetired(item)) return null;
+		ItemStack stack = new ItemStack(item);
+		com.tarkrakov.tearsofink.weapon.forge.Gear.setTier(stack, rank);
+		return stack;
 	}
 }
