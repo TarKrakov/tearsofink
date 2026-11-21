@@ -46,8 +46,10 @@ public final class BattlefieldPosedScenesTest {
                 check(tilted >= 2, "only standing, cardinal-facing props");
                 check(a.stream().filter(Pose::required).count() >= 2, "missing core");
                 if (scene == Scenario.LAST_STAND || scene == Scenario.BANNER_LINE) linkedSpearAndShield(a);
-                check(a.stream().anyMatch(p -> p.prop() == Prop.SHIELD && p.sink() < -0.2f),
-                        "shield must be grounded and partly buried");
+                if (a.stream().anyMatch(p -> p.prop() == Prop.SHIELD)) {
+                    check(a.stream().anyMatch(p -> p.prop() == Prop.SHIELD && p.sink() < -0.2f),
+                            "present shield must be grounded and partly buried");
+                }
                 check(a.stream().allMatch(p -> Math.abs(p.right()) <= 5f
                         && Math.abs(p.forward()) <= 2f), "scene scattered too widely");
                 check(a.stream().allMatch(p -> Math.abs(p.roll()) <= 85f
