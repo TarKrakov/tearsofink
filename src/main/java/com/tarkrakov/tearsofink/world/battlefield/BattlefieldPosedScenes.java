@@ -55,7 +55,7 @@ public final class BattlefieldPosedScenes {
                     new Pose(Prop.SHIELD, 0.28f, -0.18f * mirror, -0.36f,
                             (-26f + broken) * mirror, 12f, 27f * mirror, true),
                     new Pose(Prop.SPEAR, 0.75f, (0.74f + skew) * mirror, -0.10f,
-                            38f * mirror, 42f, -31f * mirror, false)
+                            38f * mirror, 42f, -31f * mirror, true)
             );
         };
     }
