@@ -161,6 +161,9 @@ public final class Hunt {
 		HuntTargets.init();
 		HuntDuels.init();
 		HuntContracts.init();
+		// Миграция только личных старых технических клинков при входе, без правки контейнеров.
+		net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
+				LegacyHunterWeapons.migrateInventory(handler.getPlayer()));
 		PayloadTypeRegistry.playS2C().register(Beam.TYPE, Beam.CODEC);
 		ServerTickEvents.END_SERVER_TICK.register(Hunt::tick);
 		ServerLifecycleEvents.SERVER_STOPPED.register(s -> {
@@ -291,8 +294,10 @@ public final class Hunt {
 		if (spec != null && spec.main() != null) {
 			arms = new ItemStack[]{spec.main(), spec.off() != null ? spec.off() : ItemStack.EMPTY};
 		}
-		a.main = arms[0];
-		a.off = arms[1];
+		a.main = LegacyHunterWeapons.migrate(arms[0].copy());
+		a.off = LegacyHunterWeapons.migrate(arms[1].copy());
+		com.tarkrakov.tearsofink.weapon.forge.Gear.setTier(a.main, a.rank);
+		if (!a.off.isEmpty()) com.tarkrakov.tearsofink.weapon.forge.Gear.setTier(a.off, a.rank);
 		a.weapon = (!a.off.isEmpty() && random.nextBoolean() ? a.off : a.main).copy(); // контракт помнит одно из двух
 		long now = lands.getServer().getTickCount();
 		a.end = now + HuntTuning.DURATION;
@@ -312,8 +317,8 @@ public final class Hunt {
 		a.rank = o.rank();
 		a.type = o.type();
 		a.prefix = o.prefix();
-		a.main = o.main().copy();
-		a.off = o.off().copy();
+		a.main = LegacyHunterWeapons.migrate(o.main().copy());
+		a.off = LegacyHunterWeapons.migrate(o.off().copy());
 		a.weapon = (!a.off.isEmpty() && lands.random.nextBoolean() ? a.off : a.main).copy();
 		a.x = x;
 		a.z = z;
@@ -410,20 +415,9 @@ public final class Hunt {
 	/** Оружие охотника: один меч / пара одинаковых / клинок + двуручник в левой (правило рук игрока). {правая, левая} */
 	static ItemStack[] loadout(HunterType type, int rank, RandomSource random) {
 		if (type == HunterType.BLOOD) return bloodLoadout(rank, random);
-		if (type == HunterType.SPIRE) return spireLoadout(rank, random);
-		HunterWeaponItem great = (HunterWeaponItem) ModItems.HUNTER_GREATSWORD, saber = (HunterWeaponItem) ModItems.HUNTER_SABER;
-		HunterWeaponItem kind = random.nextBoolean() ? great : saber;
-		ItemStack weapon = kind.make(type, rank), offWeapon = ItemStack.EMPTY;
-		int lw = 0;
-		for (int w : HuntTuning.LOADOUT_WEIGHT) lw += w;
-		int roll = random.nextInt(lw);
-		if (roll >= HuntTuning.LOADOUT_WEIGHT[0] + HuntTuning.LOADOUT_WEIGHT[1]) { // разные
-			weapon = saber.make(type, rank);
-			offWeapon = great.make(type, rank);
-		} else if (roll >= HuntTuning.LOADOUT_WEIGHT[0]) { // пара одинаковых
-			offWeapon = kind.make(type, rank);
-		}
-		return new ItemStack[]{weapon, offWeapon};
+		// TODO(D-107): Чернильным охотникам дать собственный охотничий арсенал,
+		// когда появятся авторские модели. Пока временно используется пул Шпиля.
+		return spireLoadout(rank, random);
 	}
 
 	/** Охотник Шпиля — оружие автора: Палач, Секира (двуручные), Скимитар, Кинжал (одноручные); ступень = ранг. */
@@ -460,13 +454,16 @@ public final class Hunt {
 		int r = random.nextInt(Math.max(1, total)), pick = 0;
 		while (pick < w.length - 1 && r >= w[pick]) r -= w[pick++];
 		ItemStack t = new ItemStack(ModItems.BLOOD_TALVAR), d = new ItemStack(ModItems.BLOOD_DUSSAK);
-		return switch (pick) {
+		ItemStack[] arms = switch (pick) {
 			case 0 -> new ItemStack[]{t, ItemStack.EMPTY};
 			case 1 -> new ItemStack[]{d, ItemStack.EMPTY};
 			case 2 -> random.nextBoolean() ? new ItemStack[]{t, d} : new ItemStack[]{d, t};
 			case 3 -> new ItemStack[]{t, t.copy()};
 			default -> new ItemStack[]{d, d.copy()};
 		};
+		com.tarkrakov.tearsofink.weapon.forge.Gear.setTier(arms[0], rank);
+		if (!arms[1].isEmpty()) com.tarkrakov.tearsofink.weapon.forge.Gear.setTier(arms[1], rank);
+		return arms;
 	}
 
 	static PreyPrefix pickPrefix(RandomSource random) {
@@ -945,8 +942,11 @@ public final class Hunt {
 		var item = BuiltInRegistries.ITEM.get(ResourceLocation.parse(tag.getString(C_KIND)));
 		int diff = tag.getInt(C_DIFF);
 		ItemStack out;
-		if (item instanceof HunterWeaponItem w) out = w.make(HunterType.byIndex(tag.getInt(C_LINE)), 0);
-		else if (item instanceof com.tarkrakov.tearsofink.weapon.InkGreatswordItem) out = new ItemStack(item); // настоящее оружие (Кровь, Шпиль)
+		if (item instanceof HunterWeaponItem) {
+			// Старый исполненный контракт: заменяем предмет, не меняя шанс и ступень награды.
+			out = new ItemStack(LegacyHunterWeapons.legacyTarget(HunterType.byIndex(tag.getInt(C_LINE)),
+					item == ModItems.HUNTER_GREATSWORD));
+		} else if (item instanceof com.tarkrakov.tearsofink.weapon.InkGreatswordItem) out = new ItemStack(item);
 		else return ItemStack.EMPTY;
 		// 16 ноя: добыча — Тусклое; со сложного — с шансом Контрастное. Рубрики — только в Купели
 		com.tarkrakov.tearsofink.weapon.forge.Gear.setTier(out, rewardTier(diff, java.util.concurrent.ThreadLocalRandom.current().nextFloat()));
