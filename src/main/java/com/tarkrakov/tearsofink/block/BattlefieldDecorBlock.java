@@ -1,5 +1,6 @@
 package com.tarkrakov.tearsofink.block;
 
+import com.mojang.serialization.MapCodec;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.block.Block;
@@ -15,6 +16,13 @@ import net.minecraft.world.level.block.state.StateDefinition;
  * the operator-only preview command place these blocks, not ItemEntities.
  */
 public final class BattlefieldDecorBlock extends HorizontalDirectionalBlock {
+    public static final MapCodec<BattlefieldDecorBlock> CODEC = simpleCodec(BattlefieldDecorBlock::new);
+
+    @Override
+    protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
+        return CODEC;
+    }
+
     public BattlefieldDecorBlock(BlockBehaviour.Properties properties) {
         super(properties);
         registerDefaultState(stateDefinition.any().setValue(FACING, Direction.NORTH));
