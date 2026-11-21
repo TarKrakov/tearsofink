@@ -6,6 +6,30 @@ import java.util.List;
 
 /** Tests the composition grammar without Minecraft or any artist resources. */
 public final class BattlefieldPosedScenesTest {
+    // Scene geometry, not only rotation: mandatory spear tip should come
+    // close enough to the slanted shield's upper-mid section to read as one
+    // event from the player's viewpoint. Formula matches Y -> Z -> X pivots.
+    private static double[] projected(Pose p, double height) {
+        double px = Math.toRadians(p.pitch()), rz = Math.toRadians(p.roll());
+        double yw = Math.toRadians(p.yaw());
+        double y = height * Math.cos(px), z = height * Math.sin(px);
+        double x = -y * Math.sin(rz);
+        return new double[]{x * Math.cos(yw) + z * Math.sin(yw),
+                -x * Math.sin(yw) + z * Math.cos(yw)};
+    }
+
+    private static void linkedSpearAndShield(List<Pose> poses) {
+        Pose shield = poses.stream().filter(p -> p.prop() == Prop.SHIELD && p.required())
+                .findFirst().orElseThrow();
+        Pose spear = poses.stream().filter(p -> p.prop() == Prop.SPEAR && p.required())
+                .findFirst().orElseThrow();
+        double[] a = projected(shield, 1.1);
+        double[] b = projected(spear, 1.6);
+        double dx = shield.right() + a[0] - (spear.right() + b[0]);
+        double dz = shield.forward() - a[1] - (spear.forward() - b[1]);
+        check(Math.hypot(dx, dz) < 0.9,
+                "Mandatory spear no longer meets tilted shield: " + Math.hypot(dx, dz));
+    }
     private static void check(boolean good, String reason) {
         if (!good) throw new AssertionError(reason);
     }
@@ -20,6 +44,7 @@ public final class BattlefieldPosedScenesTest {
                         (Math.abs(p.roll()) >= 10f || Math.abs(p.pitch()) >= 10f)).count();
                 check(tilted >= 2, "only standing, cardinal-facing props");
                 check(a.stream().filter(Pose::required).count() >= 2, "missing core");
+                linkedSpearAndShield(a);
                 check(a.stream().anyMatch(p -> p.prop() == Prop.SHIELD && p.sink() < -0.2f),
                         "shield must be grounded and partly buried");
                 check(a.stream().allMatch(p -> Math.abs(p.right()) <= 5f
