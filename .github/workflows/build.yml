@@ -49,6 +49,8 @@ jobs:
         run: node tools/blockbench/check_final_pale.js
       - name: validate authored armor BB models, texture names and item previews
         run: python3 tools/check_authored_armor.py
+      - name: validate visible pale owl wingbeats without movement changes
+        run: python3 tools/check_owl_flight.py
       - name: validate JABER two-level routing math
         run: |
           mkdir -p /tmp/toi-jaber-test
