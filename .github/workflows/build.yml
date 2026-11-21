@@ -26,6 +26,8 @@ jobs:
         run: python3 tools/check_advancement_icons.py
       - name: validate chest loot progression
         run: python3 tools/check_chest_loot.py
+      - name: validate hunter equipment, saved IDs and retired recipes
+        run: python3 tools/check_hunter_arsenal.py
       - name: validate personal slots, collectible diary and reserved lantern
         run: python3 tools/check_personal_lanterns.py
       - name: validate armor weights, progression and recipes
