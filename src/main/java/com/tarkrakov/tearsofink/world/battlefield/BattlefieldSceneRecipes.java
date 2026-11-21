@@ -31,7 +31,11 @@ public final class BattlefieldSceneRecipes {
     }
 
     public enum Prop {
-        SHIELD, SPEAR, CROSSBOW, BANNER
+        SHIELD, SPEAR, CROSSBOW, BANNER,
+        PALE_LONGSWORD, PALE_LINEAR_GREATSWORD,
+        BLOOD_TALVAR, BLOOD_DUSSAK,
+        SPIRE_TORTURER_GREATSWORD, SPIRE_ROARING_AXE,
+        SPIRE_SHADOW_SCIMITAR, SPIRE_RAPID_KNIFE
     }
 
     /**

@@ -1,0 +1,28 @@
+{
+  "variants": {
+    "source=0": {
+      "model": "tears-of-ink:block/battlefield_weapon_pale_longsword"
+    },
+    "source=1": {
+      "model": "tears-of-ink:block/battlefield_weapon_pale_linear_great"
+    },
+    "source=2": {
+      "model": "tears-of-ink:block/battlefield_weapon_blood_talvar"
+    },
+    "source=3": {
+      "model": "tears-of-ink:block/battlefield_weapon_blood_dussak"
+    },
+    "source=4": {
+      "model": "tears-of-ink:block/battlefield_weapon_spire_torturer_greatsword"
+    },
+    "source=5": {
+      "model": "tears-of-ink:block/battlefield_weapon_spire_roaring_axe"
+    },
+    "source=6": {
+      "model": "tears-of-ink:block/battlefield_weapon_spire_shadow_scimitar"
+    },
+    "source=7": {
+      "model": "tears-of-ink:block/battlefield_weapon_spire_rapid_knife"
+    }
+  }
+}
