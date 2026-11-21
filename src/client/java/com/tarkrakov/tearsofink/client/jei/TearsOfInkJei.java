@@ -96,8 +96,14 @@ public class TearsOfInkJei implements IModPlugin {
 
 	@Override
 	public void onRuntimeAvailable(IJeiRuntime runtime) {
-		// служебные предметы — не показывать
-		List<ItemStack> hidden = List.of(new ItemStack(ModItems.INK_BLOT));
+		// Служебные и выведенные из обращения предметы (ID остаются для сохранений).
+		List<ItemStack> hidden = List.of(
+				new ItemStack(ModItems.INK_BLOT),
+				new ItemStack(ModItems.HUNTER_GREATSWORD), new ItemStack(ModItems.HUNTER_SABER),
+				new ItemStack(ModItems.PALE_SWORD), new ItemStack(ModItems.PALE_GREATSWORD),
+				new ItemStack(ModItems.BLOOD_SWORD), new ItemStack(ModItems.BLOOD_GREATSWORD),
+				new ItemStack(ModItems.INK_SWORD), new ItemStack(ModItems.INK_GREATSWORD),
+				new ItemStack(ModItems.BLOOD_KATANA), new ItemStack(ModItems.BLOOD_OBSI_CLUB));
 		runtime.getIngredientManager().removeIngredientsAtRuntime(VanillaTypes.ITEM_STACK, hidden);
 	}
 
