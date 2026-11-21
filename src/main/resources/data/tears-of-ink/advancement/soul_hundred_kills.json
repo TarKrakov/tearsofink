@@ -2,7 +2,7 @@
   "parent": "tears-of-ink:soul_pilgrim",
   "display": {
     "icon": {
-      "id": "tears-of-ink:repel_shield"
+      "id": "tears-of-ink:icon_soul_hundred_kills"
     },
     "title": {
       "translate": "advancements.tears-of-ink.soul_hundred_kills.title"
