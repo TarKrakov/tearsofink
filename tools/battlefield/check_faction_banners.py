@@ -60,7 +60,7 @@ for faction, full_name, bare_name, art_texture, packed in [
             signature = "new Joint(" + ", ".join(jfloat(v) for v in j)
             signature += ", " + str(depth) + ", " + jfloat(phase) + ")"
             assert signature in section, (faction, name, "authored joint pivot", signature)
-        assert len(re.findall(r"new Joint\\(", section)) == len(joints), (faction, name, "joint count")
+        assert len(re.findall(r"new Joint\(", section)) == len(joints), (faction, name, "joint count")
         for i, cuboid in enumerate(model["elements"]):
             # Exact source bounds, ALL six UV faces and every bone ancestry:
             # a duplicated/recolored stand-in must fail this test.
