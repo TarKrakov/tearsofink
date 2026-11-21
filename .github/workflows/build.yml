@@ -55,6 +55,8 @@ jobs:
         run: python3 tools/battlefield/export_decor.py
       - name: validate authored battlefield banner UVs and untouched PNG
         run: python3 tools/battlefield/check_first_banner.py
+      - name: validate sourced hunter and Pale weapon meshes
+        run: python3 tools/battlefield/export_weapon_models.py --check
       - name: validate deterministic battlefield zone recipes
         run: |
           mkdir -p /tmp/toi-battlefield-zone-test

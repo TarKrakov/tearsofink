@@ -20,7 +20,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
  */
 public final class BattlefieldSceneBlock extends BaseEntityBlock {
     public static final MapCodec<BattlefieldSceneBlock> CODEC = simpleCodec(BattlefieldSceneBlock::new);
-    public static final IntegerProperty SCENE = IntegerProperty.create("scene", 0, 1);
+    public static final IntegerProperty SCENE = IntegerProperty.create("scene", 0, 13); // existing IDs 0/1 are preserved
     public static final IntegerProperty VARIANT = IntegerProperty.create("variant", 0, 7);
 
     public BattlefieldSceneBlock(BlockBehaviour.Properties properties) {

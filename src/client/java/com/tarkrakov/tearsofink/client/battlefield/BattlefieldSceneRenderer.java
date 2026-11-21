@@ -7,7 +7,9 @@ import com.tarkrakov.tearsofink.block.BattlefieldSceneBlockEntity;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Pose;
-import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Scene;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Scenario;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldWeaponCatalog;
+import com.tarkrakov.tearsofink.block.BattlefieldWeaponMeshBlock;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -37,8 +39,8 @@ public final class BattlefieldSceneRenderer implements BlockEntityRenderer<Battl
                        MultiBufferSource buffers, int light, int overlay) {
         BlockState root = entity.getBlockState();
         int sceneIndex = root.getValue(BattlefieldSceneBlock.SCENE);
-        if (sceneIndex < 0 || sceneIndex >= Scene.values().length) return;
-        List<Pose> poses = BattlefieldPosedScenes.plan(Scene.values()[sceneIndex],
+        if (sceneIndex < 0 || sceneIndex >= Scenario.values().length) return;
+        List<Pose> poses = BattlefieldPosedScenes.plan(Scenario.values()[sceneIndex],
                 root.getValue(BattlefieldSceneBlock.VARIANT));
 
         // Align the entire episode to the player's forward direction.
@@ -50,24 +52,36 @@ public final class BattlefieldSceneRenderer implements BlockEntityRenderer<Battl
         for (int i = 0; i < poses.size(); i++) {
             Pose p = poses.get(i);
             if (p.banner() || entity.offsetAt(i) == BattlefieldSceneBlockEntity.MISSING) continue;
-            Block block = switch (p.prop()) {
-                case SHIELD -> ModBlocks.BATTLEFIELD_SHIELD;
-                case SPEAR -> ModBlocks.BATTLEFIELD_SPEAR;
-                case CROSSBOW -> ModBlocks.BATTLEFIELD_CROSSBOW;
-                case BANNER -> throw new IllegalStateException("Animated flag is placed separately");
-            };
-
             stack.pushPose();
             stack.translate(0.5 + p.right(), entity.offsetAt(i) + p.sink(), 0.5 - p.forward());
-            // Pivot is at ground contact, not the model centre: the shield
-            // leans into soil, a spear crosses it, the crossbow lies fallen.
+            // Each physical prop is its own local scene pivot, not a cardinal
+            // blockstate rotation. Author's item geometry is baked, not remade.
             stack.mulPose(Axis.YP.rotationDegrees(p.yaw()));
             stack.mulPose(Axis.ZP.rotationDegrees(p.roll()));
             stack.mulPose(Axis.XP.rotationDegrees(p.pitch()));
-            stack.translate(-0.5, p.prop() == com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Prop.SHIELD ? 1 : 0, -0.5);
-            BlockState modelState = block.defaultBlockState()
-                    .setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH);
-            blocks.renderSingleBlock(modelState, stack, buffers, light, overlay);
+
+            if (BattlefieldWeaponCatalog.isWeapon(p.prop())) {
+                BattlefieldWeaponCatalog.Source mesh = BattlefieldWeaponCatalog.fromProp(p.prop());
+                // Original swords/axes run diagonally along positive X/Y in
+                // their item JSON. A shared 45° Z rotation stands the handle
+                // upright; all later rotations are authored scene poses.
+                stack.mulPose(Axis.ZP.rotationDegrees(45f));
+                stack.translate(-mesh.minX / 16f, -mesh.minY / 16f, -mesh.centerZ() / 16f);
+                blocks.renderSingleBlock(ModBlocks.BATTLEFIELD_WEAPON_MESH.defaultBlockState()
+                        .setValue(BattlefieldWeaponMeshBlock.SOURCE, mesh.ordinal()),
+                        stack, buffers, light, overlay);
+            } else {
+                Block block = switch (p.prop()) {
+                    case SHIELD -> ModBlocks.BATTLEFIELD_SHIELD;
+                    case SPEAR -> ModBlocks.BATTLEFIELD_SPEAR;
+                    case CROSSBOW -> ModBlocks.BATTLEFIELD_CROSSBOW;
+                    default -> throw new IllegalStateException("Banner placed as original block");
+                };
+                stack.translate(-0.5, p.prop() == com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Prop.SHIELD ? 1 : 0, -0.5);
+                BlockState modelState = block.defaultBlockState()
+                        .setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH);
+                blocks.renderSingleBlock(modelState, stack, buffers, light, overlay);
+            }
             stack.popPose();
         }
         stack.popPose();

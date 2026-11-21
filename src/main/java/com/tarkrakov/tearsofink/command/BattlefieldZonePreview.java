@@ -8,7 +8,8 @@ import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Pose;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Prop;
-import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Scene;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Scenario;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldWeaponCatalog;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
@@ -43,15 +44,17 @@ public final class BattlefieldZonePreview {
     private BattlefieldZonePreview() {}
 
     static LiteralArgumentBuilder<CommandSourceStack> literal() {
-        return Commands.literal("zone")
-                .then(Commands.literal("last_stand").executes(ctx -> preview(ctx, Scene.LAST_STAND)))
-                .then(Commands.literal("banner_line").executes(ctx -> preview(ctx, Scene.BANNER_LINE)));
+        var root = Commands.literal("zone");
+        for (Scenario scene : Scenario.values()) {
+            root.then(Commands.literal(scene.id()).executes(ctx -> preview(ctx, scene)));
+        }
+        return root;
     }
 
     private record Flag(BlockPos pos, BlockState state, Set<BlockPos> envelope) {}
     private record Layout(BlockPos root, BlockState state, int[] heights, List<Flag> flags, int visibleProps) {}
 
-    private static int preview(CommandContext<CommandSourceStack> context, Scene scene)
+    private static int preview(CommandContext<CommandSourceStack> context, Scenario scene)
             throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
         ServerLevel level = player.serverLevel();
@@ -106,7 +109,7 @@ public final class BattlefieldZonePreview {
     }
 
     private static Layout plan(ServerLevel level, BlockPos root, Direction axis,
-                               Scene scene, int variant, List<Pose> poses) {
+                               Scenario scene, int variant, List<Pose> poses) {
         int[] heights = new int[poses.size()];
         Arrays.fill(heights, BattlefieldSceneBlockEntity.MISSING);
         List<Flag> flags = new ArrayList<>();
@@ -243,11 +246,20 @@ public final class BattlefieldZonePreview {
             x0 = -0.07f; x1 = 0.07f;
             y0 = -0.07f; y1 = 1.60f;
             z0 = -0.04f; z1 = 0.04f;
-        } else {
+        } else if (pose.prop() == Prop.CROSSBOW) {
             x0 = -0.32f; x1 = 0.32f;
             y0 = -0.07f; y1 = 0.32f;
             z0 = -0.32f; z1 = 0.32f;
+        } else {
+            // The eight unmodified item-mesh sources sit diagonally in XY.
+            // Model-space Z+45° makes their low handle the local ground pivot.
+            BattlefieldWeaponCatalog.Source mesh = BattlefieldWeaponCatalog.fromProp(pose.prop());
+            x0 = mesh.minX; x1 = mesh.maxX;
+            y0 = mesh.minY; y1 = mesh.maxY;
+            z0 = mesh.minZ; z1 = mesh.maxZ;
         }
+        BattlefieldWeaponCatalog.Source mesh = BattlefieldWeaponCatalog.isWeapon(pose.prop())
+                ? BattlefieldWeaponCatalog.fromProp(pose.prop()) : null;
 
         double pitch = Math.toRadians(pose.pitch()), roll = Math.toRadians(pose.roll());
         double yaw = Math.toRadians(pose.yaw());
@@ -262,7 +274,17 @@ public final class BattlefieldZonePreview {
             for (float y : new float[]{y0, y1}) {
                 for (float z : new float[]{z0, z1}) {
                     // PoseStack order Y, Z, X (matrix applies X, then Z, then Y).
-                    double px = x, py = y * cx - z * sx, pz = y * sx + z * cx;
+                    // Normalize the authored XY handle corner, then bring
+                    // its diagonal blade upright before the arbitrary scene tilt.
+                    double lx = x, ly = y, lz = z;
+                    if (mesh != null) {
+                        double u = (x - mesh.minX) / 16d;
+                        double v = (y - mesh.minY) / 16d;
+                        lx = (u - v) * Math.sqrt(0.5d);
+                        ly = (u + v) * Math.sqrt(0.5d);
+                        lz = (z - mesh.centerZ()) / 16d;
+                    }
+                    double px = lx, py = ly * cx - lz * sx, pz = ly * sx + lz * cx;
                     double qx = px * cz - py * sz, qy = px * sz + py * cz;
                     double rx = qx * cy + pz * sy, rz = -qx * sy + pz * cy;
                     double lateral = pose.right() + rx;

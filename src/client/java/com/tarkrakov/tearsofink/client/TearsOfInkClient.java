@@ -190,6 +190,8 @@ public class TearsOfInkClient implements ClientModInitializer {
 				com.tarkrakov.tearsofink.client.blood.BloodPumpRenderer::new);
 		net.fabricmc.fabric.api.client.rendering.v1.BuiltinItemRendererRegistry.INSTANCE.register(
 				com.tarkrakov.tearsofink.block.ModBlocks.BLOOD_PUMP, new com.tarkrakov.tearsofink.client.blood.BloodPumpItemRenderer());
+		// Reuse the authored item sprites in block atlas; transparent pixels stay cut out.
+		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.BATTLEFIELD_WEAPON_MESH, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.DRYING_INK_PUDDLE, RenderType.cutout());
 		BlockRenderLayerMap.INSTANCE.putBlock(ModBlocks.VESTIBULE_GATE, RenderType.translucent());
 		ShieldIcons.init();
