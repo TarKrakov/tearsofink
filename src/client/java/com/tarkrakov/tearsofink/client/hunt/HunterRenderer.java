@@ -10,6 +10,8 @@ import net.minecraft.resources.ResourceLocation;
 public class HunterRenderer extends HumanoidMobRenderer<HunterEntity, HunterModel> {
 	public HunterRenderer(EntityRendererProvider.Context ctx) {
 		super(ctx, new HunterModel(ctx.bakeLayer(HunterModel.LAYER)), 0.5f);
+		// Реальные предметы охотника (включая обе руки) должны быть видны в F5 и мультиплеере.
+		this.addLayer(new net.minecraft.client.renderer.entity.layers.ItemInHandLayer<>(this, ctx.getItemInHandRenderer()));
 	}
 
 	@Override
