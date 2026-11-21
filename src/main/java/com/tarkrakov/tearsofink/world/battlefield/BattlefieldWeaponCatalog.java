@@ -101,7 +101,9 @@ public final class BattlefieldWeaponCatalog {
     public static boolean isWeapon(Prop prop) {
         return switch (prop) {
             case SHIELD, SPEAR, CROSSBOW, BANNER, BANNER_BARE,
-                    SOUL_RAM_SHIELD, SOUL_REPEL_SHIELD, SOUL_MERCY_SHIELD, SOUL_RADIANT_SHIELD -> false;
+                    SOUL_RAM_SHIELD, SOUL_REPEL_SHIELD, SOUL_MERCY_SHIELD, SOUL_RADIANT_SHIELD,
+                    PALADIN_BANNER, PALADIN_BANNER_BARE,
+                    HUNTER_BANNER, HUNTER_BANNER_BARE -> false;
             default -> true;
         };
     }

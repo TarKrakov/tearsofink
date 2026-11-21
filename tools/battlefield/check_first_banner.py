@@ -116,12 +116,15 @@ assert "battlefield_regular_standart_withoutbanner1.png" in renderer
 assert "BattlefieldBannerBlock.BARE" in renderer and "if (bare)" in renderer
 place=(ROOT/"src/main/java/com/tarkrakov/tearsofink/command/BattlefieldDecorCommands.java").read_text(encoding="utf-8")
 zone=(ROOT/"src/main/java/com/tarkrakov/tearsofink/command/BattlefieldZonePreview.java").read_text(encoding="utf-8")
-assert "BattlefieldBannerGeometry.footprint(facing)" in place and "BattlefieldBannerGeometry.footprint(facing)" in zone
+assert "BattlefieldFactionBannerGeometry.footprint(faction, bare, facing)" in place
+assert "BattlefieldFactionBannerGeometry.footprint(faction, bare, facing)" in zone
+shared_geometry=(ROOT/"src/main/java/com/tarkrakov/tearsofink/world/battlefield/BattlefieldFactionBannerGeometry.java").read_text(encoding="utf-8")
+assert "BattlefieldBannerGeometry.bareFootprint(facing)" in shared_geometry
+assert "BattlefieldBannerGeometry.footprint(facing)" in shared_geometry
 assert "for (int radius = 0; radius <= 4; radius++)" in place
 assert "literal(\"regular_standard\")" in place and "literal(\"regular_bare\")" in place
-assert "bare ? BattlefieldBannerGeometry.bareFootprint(facing)" in place
-assert "bare ? BattlefieldBannerGeometry.bareFootprint(facing)" in zone
-assert "scene.ordinal() >= 20 ? 2 : 1" in zone
+assert "BattlefieldBannerBlock.FACTION" in place and "BattlefieldBannerBlock.FACTION" in zone
+assert "scene.ordinal() >= 20 ? 3 : 1" in zone
 assert 'Commands.literal("preview")' in zone
 assert 'Commands.literal("place")' in zone
 assert 'Commands.literal("list")' in zone
