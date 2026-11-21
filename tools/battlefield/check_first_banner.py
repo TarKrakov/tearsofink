@@ -70,3 +70,17 @@ assert "getCounterClockWise()" in placement, "No rotated cloth footprint check"
 assert placement.count("level.setBlock(base, state, Block.UPDATE_CLIENTS)") == 1, "Unexpected writes in banner preview"
 assert "7x7 блоков" not in placement, "Old whole-area rejection returned"
 print("Battlefield banner placement: terrain-aware candidate search, no bulk clearing.")
+
+# First banner wind parameters: restrained increase without touching art.
+# Keep the pole fixed, six monotonically increasing cloth amplitudes and a
+# smooth 3–4 second wave. No new per-block/server tickers are necessary.
+wind = re.search(r"private static final float\[\] AMPLITUDE = \{([^}]+)\}", text)
+assert wind is not None, "Missing banner wind amplitudes"
+amplitudes = [float(m) for m in re.findall(r"([0-9]+(?:\.[0-9]+)?)f", wind.group(1))]
+assert len(amplitudes) == 6
+assert all(0.0 < amplitudes[i] < amplitudes[i + 1] for i in range(5))
+assert amplitudes[0] <= 0.025 and amplitudes[-1] <= 0.065, "Wave is too strong for the accepted pilot"
+cycle = re.search(r"Math\.PI \* 2d / ([0-9]+)d", text)
+assert cycle is not None and 65 <= int(cycle.group(1)) <= 80, "Cloth cycle outside gentle range"
+assert "drawBox(PARTS[0], stack.last(), consumer, packedLight, packedOverlay);" in text
+print("Banner wave: six restrained increasing amplitudes, no pole animation, gentle cycle.")

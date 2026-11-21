@@ -92,7 +92,8 @@ public final class BattlefieldBannerRenderer implements BlockEntityRenderer<Batt
     };
     // Cloth mesh seams (in Blockbench pixels) are -1, -8, -13, -19, -25, -30.
     private static final float[] JOINT_X = {-1f, -8f, -13f, -19f, -25f, -30f};
-    private static final float[] AMPLITUDE = {0.018f, 0.023f, 0.029f, 0.034f, 0.040f, 0.046f};
+    // Slightly stronger towards the free edge: author accepted the original wave, requested a little more life.
+    private static final float[] AMPLITUDE = {0.022f, 0.028f, 0.036f, 0.043f, 0.051f, 0.060f};
 
     public BattlefieldBannerRenderer(BlockEntityRendererProvider.Context context) {}
 
@@ -119,7 +120,7 @@ public final class BattlefieldBannerRenderer implements BlockEntityRenderer<Batt
             float x = JOINT_X[i] / 16f;
             float y = 51f / 16f;
             float z = 1f / 16f;
-            float angle = (float) Math.sin(time * (Math.PI * 2d / 75d) - i * 0.65d + positionPhase) * AMPLITUDE[i];
+            float angle = (float) Math.sin(time * (Math.PI * 2d / 70d) - i * 0.65d + positionPhase) * AMPLITUDE[i];
             stack.translate(x, y, z);
             stack.mulPose(Axis.YP.rotation(angle));
             stack.translate(-x, -y, -z);
