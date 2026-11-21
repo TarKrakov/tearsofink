@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.command;
 
 import com.tarkrakov.tearsofink.block.ModBlocks;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldBannerGeometry;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
@@ -77,8 +78,8 @@ public final class BattlefieldDecorCommands {
     }
 
     /**
-     * Place the authored 4-block-high banner like a real world decoration:
-     * find a solid ground anchor near the player and test the actual pole/cloth
+     * Place the authored 7-block-high regular standard on natural terrain:
+     * find a solid ground anchor near the player and test the actual rigid cuboid
      * footprint. No artificial flat 7x7 clearing, no vegetation removal, no
      * overwriting structures and no automatic worldgen in the preview command.
      *
@@ -120,8 +121,8 @@ public final class BattlefieldDecorCommands {
                         if (!level.setBlock(base, state, Block.UPDATE_CLIENTS)) continue;
                         BlockPos placed = base;
                         context.getSource().sendSuccess(
-                                () -> Component.literal("Первое знамя установлено на " + placed.toShortString()
-                                        + ". Рельеф и растения сохранены; полотно движется только на клиенте."),
+                                () -> Component.literal("Регулярный штандарт без полотна установлен на " + placed.toShortString()
+                                        + ". Рельеф и растения сохранены."),
                                 false);
                         return 1;
                     }
@@ -134,42 +135,19 @@ public final class BattlefieldDecorCommands {
         return 0;
     }
 
-    /**
-     * Source model first_flag.bbmodel: pole Y 0..64, cloth X -35..-1,
-     * Y 40..63, Z 0..1 (units /16). Rendering centers the pole in the
-     * anchor block, then rotates the cloth with FACING.
-     *
-     * Therefore the pole needs just one column of air, and the high cloth
-     * occupies two more columns on the counter-clockwise side. Low grass
-     * elsewhere (including beneath the cloth) is perfectly fine.
-     * Checking only that real footprint avoids the erroneous 7x7x5 veto.
-     */
+    /** Exact footprint for all 26 source cuboids, including the top ornament above block +6. */
     static boolean canPlaceBanner(ServerLevel level, BlockPos base, Direction facing) {
         if (base.getY() <= level.getMinBuildHeight()
-                || base.getY() + 4 >= level.getMaxBuildHeight()
                 || !level.getWorldBorder().isWithinBounds(base)
                 || !level.hasChunkAt(base)
                 || !level.getBlockState(base).isAir()
                 || !level.getBlockState(base.below()).isFaceSturdy(level, base.below(), Direction.UP)) {
             return false;
         }
-
-        // The pole spans four blocks, but only its anchor replaces a block.
-        // Leaves/solid buildings stop placement; harmless zero-collision
-        // vegetation higher up does not need to be cleared or destroyed.
-        for (int dy = 1; dy <= 3; dy++) {
-            if (hasSolidObstruction(level, base.above(dy))) return false;
-        }
-
-        // At the authored scale the cloth extends 35/16 from the centered
-        // pole, reaching only two *other* columns. The animation amplitudes
-        // are small enough that the wave stays inside those columns.
-        Direction clothSide = facing.getCounterClockWise();
-        for (int distance = 1; distance <= 2; distance++) {
-            BlockPos column = base.relative(clothSide, distance);
-            for (int dy = 2; dy <= 3; dy++) {
-                if (hasSolidObstruction(level, column.above(dy))) return false;
-            }
+        for (BlockPos offset : BattlefieldBannerGeometry.footprint(facing)) {
+            BlockPos pos = base.offset(offset);
+            if (pos.getY() < level.getMinBuildHeight() || pos.getY() >= level.getMaxBuildHeight()
+                    || hasSolidObstruction(level, pos)) return false;
         }
         return true;
     }

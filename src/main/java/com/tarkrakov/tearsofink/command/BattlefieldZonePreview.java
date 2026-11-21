@@ -6,6 +6,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.tarkrakov.tearsofink.block.BattlefieldSceneBlock;
 import com.tarkrakov.tearsofink.block.BattlefieldSceneBlockEntity;
 import com.tarkrakov.tearsofink.block.ModBlocks;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldBannerGeometry;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Pose;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Prop;
@@ -34,7 +35,7 @@ import java.util.Set;
 /**
  * D-123 visual composition preview: a single inert anchor renders arbitrary
  * ground-pivot rotations of existing baked, authored weapon models. The actual
- * two animated banners still use the approved original banner block.
+ * banner anchors continue using the existing banner block ID, now showing the regular standard.
  *
  * Important: NO worldgen, no server tick, no mass prop BlockEntities, no
  * destruction of terrain, no placement on roads or buildings. Failed required
@@ -193,10 +194,8 @@ public final class BattlefieldZonePreview {
 
     private static Set<BlockPos> bannerEnvelope(BlockPos base, Direction facing) {
         Set<BlockPos> cells = new HashSet<>();
-        for (int y = 0; y <= 3; y++) cells.add(base.above(y));
-        Direction clothSide = facing.getCounterClockWise();
-        for (int x = 1; x <= 2; x++) {
-            for (int y = 2; y <= 3; y++) cells.add(base.relative(clothSide, x).above(y));
+        for (BlockPos offset : BattlefieldBannerGeometry.footprint(facing)) {
+            cells.add(base.offset(offset));
         }
         return cells;
     }

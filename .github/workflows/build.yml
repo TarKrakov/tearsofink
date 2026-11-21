@@ -53,7 +53,7 @@ jobs:
         run: python3 tools/check_owl_flight.py
       - name: validate battlefield authored-bone decor and resource atlas
         run: python3 tools/battlefield/export_decor.py
-      - name: validate authored battlefield banner UVs and untouched PNG
+      - name: validate active regular standard UVs and untouched PNG
         run: python3 tools/battlefield/check_first_banner.py
       - name: validate sourced hunter and Pale weapon meshes
         run: python3 tools/battlefield/export_weapon_models.py --check
