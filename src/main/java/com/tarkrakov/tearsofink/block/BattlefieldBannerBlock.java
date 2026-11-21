@@ -15,6 +15,8 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.util.StringRepresentable;
 
 /**
  * Rare, non-colliding authored banner preview. One quiet block entity, no
@@ -24,11 +26,20 @@ public final class BattlefieldBannerBlock extends BaseEntityBlock {
     public static final MapCodec<BattlefieldBannerBlock> CODEC = simpleCodec(BattlefieldBannerBlock::new);
     // Missing property in older saves defaults to false: existing animated banner.
     public static final BooleanProperty BARE = BooleanProperty.create("bare");
+    /** Defaults to REGULAR in worlds saved before the faction property existed. */
+    public enum Faction implements StringRepresentable {
+        REGULAR("regular"), SOUL("soul"), HUNTER("hunter");
+        private final String id;
+        Faction(String id) { this.id = id; }
+        @Override public String getSerializedName() { return id; }
+    }
+    public static final EnumProperty<Faction> FACTION = EnumProperty.create("faction", Faction.class);
 
     public BattlefieldBannerBlock(BlockBehaviour.Properties properties) {
         super(properties);
         registerDefaultState(stateDefinition.any()
-                .setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH).setValue(BARE, false));
+                .setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH)
+                .setValue(BARE, false).setValue(FACTION, Faction.REGULAR));
     }
 
     @Override
@@ -63,6 +74,6 @@ public final class BattlefieldBannerBlock extends BaseEntityBlock {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(HorizontalDirectionalBlock.FACING, BARE);
+        builder.add(HorizontalDirectionalBlock.FACING, BARE, FACTION);
     }
 }

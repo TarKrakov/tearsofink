@@ -7,6 +7,7 @@ import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.block.BattlefieldBannerBlockEntity;
 import com.tarkrakov.tearsofink.block.BattlefieldBannerBlock;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldBannerGeometry;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldFactionBannerGeometry;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -22,6 +23,10 @@ public final class BattlefieldBannerRenderer implements BlockEntityRenderer<Batt
     private static final ResourceLocation BARE_TEXTURE =
             TearsOfInk.id("textures/block/battlefield_regular_standart_withoutbanner1.png");
     private static final float UV_SIZE = BattlefieldBannerGeometry.UV_SIZE;
+    private static final ResourceLocation SOUL_TEXTURE =
+            TearsOfInk.id("textures/block/battlefield_soul_flag1.png");
+    private static final ResourceLocation HUNTER_TEXTURE =
+            TearsOfInk.id("textures/block/battlefield_hunter_flag1.png");
 
     public BattlefieldBannerRenderer(BlockEntityRendererProvider.Context context) {}
 
@@ -30,6 +35,11 @@ public final class BattlefieldBannerRenderer implements BlockEntityRenderer<Batt
                        PoseStack stack, MultiBufferSource buffers, int packedLight, int packedOverlay) {
         if (banner.getLevel() == null) return;
         boolean bare = banner.getBlockState().getValue(BattlefieldBannerBlock.BARE);
+        var faction = banner.getBlockState().getValue(BattlefieldBannerBlock.FACTION);
+        if (faction != BattlefieldBannerBlock.Faction.REGULAR) {
+            renderFaction(banner, partialTick, stack, buffers, packedLight, packedOverlay, faction, bare);
+            return;
+        }
         VertexConsumer consumer = buffers.getBuffer(RenderType.entityCutoutNoCull(bare ? BARE_TEXTURE : TEXTURE));
         stack.pushPose();
         stack.translate(0.5, 0, 0.5);
@@ -67,6 +77,37 @@ public final class BattlefieldBannerRenderer implements BlockEntityRenderer<Batt
         stack.popPose();
     }
 
+    /** Uses real Blockbench joint ancestry: separate split cloth tails, rigid pole. */
+    private static void renderFaction(BattlefieldBannerBlockEntity banner, float partialTick,
+                                      PoseStack stack, MultiBufferSource buffers,
+                                      int packedLight, int packedOverlay,
+                                      BattlefieldBannerBlock.Faction faction, boolean bare) {
+        var model = BattlefieldFactionBannerGeometry.model(faction, bare);
+        var texture = faction == BattlefieldBannerBlock.Faction.SOUL ? SOUL_TEXTURE : HUNTER_TEXTURE;
+        VertexConsumer consumer = buffers.getBuffer(RenderType.entityCutoutNoCull(texture));
+        double time = banner.getLevel().getGameTime() + partialTick;
+        long hash = banner.getBlockPos().asLong();
+        double positionPhase = ((hash ^ (hash >>> 32)) & 1023L) * (Math.PI * 2d / 1024d);
+        double phase = time * (Math.PI * 2d / BattlefieldFactionBannerGeometry.WIND_CYCLE_TICKS) + positionPhase;
+        stack.pushPose();
+        stack.translate(.5, 0, .5);
+        stack.mulPose(Axis.YP.rotationDegrees(180f - banner.getBlockState()
+                .getValue(HorizontalDirectionalBlock.FACING).toYRot()));
+        for (var part : model.parts()) {
+            stack.pushPose();
+            for (int index : part.joints()) {
+                var j = model.joints()[index];
+                stack.translate(j.x()/16f, j.y()/16f, j.z()/16f);
+                stack.mulPose(Axis.YP.rotation(BattlefieldFactionBannerGeometry.windYaw(j, phase)));
+                stack.mulPose(Axis.ZP.rotation(BattlefieldFactionBannerGeometry.windRoll(j, phase)));
+                stack.translate(-j.x()/16f, -j.y()/16f, -j.z()/16f);
+            }
+            drawBox(part.cube(), stack.last(), consumer, packedLight, packedOverlay, model.uvSize());
+            stack.popPose();
+        }
+        stack.popPose();
+    }
+
     @Override
     public boolean shouldRenderOffScreen(BattlefieldBannerBlockEntity banner) {
         // Authored pole reaches Y=98/16; waving cloth exceeds the anchor AABB.
@@ -74,24 +115,28 @@ public final class BattlefieldBannerRenderer implements BlockEntityRenderer<Batt
     }
 
     private static void drawBox(BattlefieldBannerGeometry.Cuboid box, PoseStack.Pose pose, VertexConsumer out, int light, int overlay) {
+        drawBox(box, pose, out, light, overlay, UV_SIZE);
+    }
+    private static void drawBox(BattlefieldBannerGeometry.Cuboid box, PoseStack.Pose pose,
+                                VertexConsumer out, int light, int overlay, float uvSize) {
         float x0 = box.x0() / 16f, y0 = box.y0() / 16f, z0 = box.z0() / 16f;
         float x1 = box.x1() / 16f, y1 = box.y1() / 16f, z1 = box.z1() / 16f;
         float[][] u = box.uv();
         // Per-face UVs are read, without repacking, from the author's actual PNG atlas.
-        face(out, pose, light, overlay, u[0], 0, 0, -1, x1,y0,z0, x1,y1,z0, x0,y1,z0, x0,y0,z0); // north
-        face(out, pose, light, overlay, u[1], 1, 0, 0, x1,y0,z1, x1,y1,z1, x1,y1,z0, x1,y0,z0); // east
-        face(out, pose, light, overlay, u[2], 0, 0, 1, x0,y0,z1, x0,y1,z1, x1,y1,z1, x1,y0,z1); // south
-        face(out, pose, light, overlay, u[3], -1, 0, 0, x0,y0,z0, x0,y1,z0, x0,y1,z1, x0,y0,z1); // west
-        face(out, pose, light, overlay, u[4], 0, 1, 0, x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1); // up
-        face(out, pose, light, overlay, u[5], 0, -1, 0, x0,y0,z1, x1,y0,z1, x1,y0,z0, x0,y0,z0); // down
+        face(out, pose, light, overlay, uvSize, u[0], 0, 0, -1, x1,y0,z0, x1,y1,z0, x0,y1,z0, x0,y0,z0); // north
+        face(out, pose, light, overlay, uvSize, u[1], 1, 0, 0, x1,y0,z1, x1,y1,z1, x1,y1,z0, x1,y0,z0); // east
+        face(out, pose, light, overlay, uvSize, u[2], 0, 0, 1, x0,y0,z1, x0,y1,z1, x1,y1,z1, x1,y0,z1); // south
+        face(out, pose, light, overlay, uvSize, u[3], -1, 0, 0, x0,y0,z0, x0,y1,z0, x0,y1,z1, x0,y0,z1); // west
+        face(out, pose, light, overlay, uvSize, u[4], 0, 1, 0, x0,y1,z0, x1,y1,z0, x1,y1,z1, x0,y1,z1); // up
+        face(out, pose, light, overlay, uvSize, u[5], 0, -1, 0, x0,y0,z1, x1,y0,z1, x1,y0,z0, x0,y0,z0); // down
     }
 
     private static void face(VertexConsumer out, PoseStack.Pose pose, int light, int overlay,
-                             float[] uv, float nx, float ny, float nz,
+                             float uvSize, float[] uv, float nx, float ny, float nz,
                              float ax, float ay, float az, float bx, float by, float bz,
                              float cx, float cy, float cz, float dx, float dy, float dz) {
-        float u0 = uv[0] / UV_SIZE, v0 = uv[1] / UV_SIZE;
-        float u1 = uv[2] / UV_SIZE, v1 = uv[3] / UV_SIZE;
+        float u0 = uv[0] / uvSize, v0 = uv[1] / uvSize;
+        float u1 = uv[2] / uvSize, v1 = uv[3] / uvSize;
         vertex(out, pose, light, overlay, ax, ay, az, u0, v1, nx, ny, nz);
         vertex(out, pose, light, overlay, bx, by, bz, u0, v0, nx, ny, nz);
         vertex(out, pose, light, overlay, cx, cy, cz, u1, v0, nx, ny, nz);

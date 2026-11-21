@@ -3,6 +3,7 @@ package com.tarkrakov.tearsofink.command;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.block.BattlefieldBannerBlock;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldBannerGeometry;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldFactionBannerGeometry;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.minecraft.commands.CommandSourceStack;
@@ -27,11 +28,19 @@ public final class BattlefieldDecorCommands {
                         .then(Commands.literal("battlefield")
                                 .then(Commands.literal("preview").executes(BattlefieldDecorCommands::preview))
                                 .then(Commands.literal("banner")
-                                        .executes(ctx -> banner(ctx, false))
+                                        .executes(ctx -> banner(ctx, BattlefieldBannerBlock.Faction.REGULAR, false))
                                         .then(Commands.literal("regular_standard")
-                                                .executes(ctx -> banner(ctx, false)))
+                                                .executes(ctx -> banner(ctx, BattlefieldBannerBlock.Faction.REGULAR, false)))
                                         .then(Commands.literal("regular_bare")
-                                                .executes(ctx -> banner(ctx, true))))
+                                                .executes(ctx -> banner(ctx, BattlefieldBannerBlock.Faction.REGULAR, true)))
+                                        .then(Commands.literal("paladin_standard")
+                                                .executes(ctx -> banner(ctx, BattlefieldBannerBlock.Faction.SOUL, false)))
+                                        .then(Commands.literal("paladin_bare")
+                                                .executes(ctx -> banner(ctx, BattlefieldBannerBlock.Faction.SOUL, true)))
+                                        .then(Commands.literal("hunter_standard")
+                                                .executes(ctx -> banner(ctx, BattlefieldBannerBlock.Faction.HUNTER, false)))
+                                        .then(Commands.literal("hunter_bare")
+                                                .executes(ctx -> banner(ctx, BattlefieldBannerBlock.Faction.HUNTER, true))))
                                 .then(BattlefieldZonePreview.literal()))));
     }
 
@@ -92,7 +101,8 @@ public final class BattlefieldDecorCommands {
      * Keep this local-only preview search separate from the future deterministic
      * BattlefieldPlan / zone placement required by D-114–D-116.
      */
-    private static int banner(CommandContext<CommandSourceStack> context, boolean bare)
+    private static int banner(CommandContext<CommandSourceStack> context,
+                              BattlefieldBannerBlock.Faction faction, boolean bare)
             throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
         ServerLevel level = player.serverLevel();
@@ -120,15 +130,20 @@ public final class BattlefieldDecorCommands {
                     for (int turn = 0; turn < 4; turn++) {
                         Direction facing = preferredFacing;
                         for (int j = 0; j < turn; j++) facing = facing.getClockWise();
-                        if (!canPlaceBanner(level, base, facing, bare)) continue;
+                        if (!canPlaceBanner(level, base, facing, bare, faction)) continue;
 
                         var state = ModBlocks.BATTLEFIELD_BANNER.defaultBlockState()
                                 .setValue(HorizontalDirectionalBlock.FACING, facing)
-                                .setValue(BattlefieldBannerBlock.BARE, bare);
+                                .setValue(BattlefieldBannerBlock.BARE, bare)
+                                .setValue(BattlefieldBannerBlock.FACTION, faction);
                         if (!level.setBlock(base, state, Block.UPDATE_CLIENTS)) continue;
                         BlockPos placed = base;
                         context.getSource().sendSuccess(
-                                () -> Component.literal((bare ? "Регулярный штандарт без полотна" : "Регулярный штандарт с полотном")
+                                () -> Component.literal((switch (faction) {
+                                    case REGULAR -> "Регулярный штандарт";
+                                    case SOUL -> "Штандарт паладинов Угасающей Звезды";
+                                    case HUNTER -> "Штандарт Чернильных Охотников";
+                                }) + (bare ? " без полотна" : " с полотном")
                                         + " установлен на " + placed.toShortString()
                                         + ". Рельеф и растения сохранены."),
                                 false);
@@ -149,6 +164,11 @@ public final class BattlefieldDecorCommands {
     }
 
     static boolean canPlaceBanner(ServerLevel level, BlockPos base, Direction facing, boolean bare) {
+        return canPlaceBanner(level, base, facing, bare, BattlefieldBannerBlock.Faction.REGULAR);
+    }
+
+    static boolean canPlaceBanner(ServerLevel level, BlockPos base, Direction facing,
+                                  boolean bare, BattlefieldBannerBlock.Faction faction) {
         if (base.getY() <= level.getMinBuildHeight()
                 || !level.getWorldBorder().isWithinBounds(base)
                 || !level.hasChunkAt(base)
@@ -156,8 +176,7 @@ public final class BattlefieldDecorCommands {
                 || !level.getBlockState(base.below()).isFaceSturdy(level, base.below(), Direction.UP)) {
             return false;
         }
-        for (BlockPos offset : bare ? BattlefieldBannerGeometry.bareFootprint(facing)
-                : BattlefieldBannerGeometry.footprint(facing)) {
+        for (BlockPos offset : BattlefieldFactionBannerGeometry.footprint(faction, bare, facing)) {
             BlockPos pos = base.offset(offset);
             if (pos.getY() < level.getMinBuildHeight() || pos.getY() >= level.getMaxBuildHeight()
                     || hasSolidObstruction(level, pos)) return false;

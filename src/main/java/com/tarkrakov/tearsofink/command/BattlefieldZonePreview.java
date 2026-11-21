@@ -8,6 +8,7 @@ import com.tarkrakov.tearsofink.block.BattlefieldSceneBlock;
 import com.tarkrakov.tearsofink.block.BattlefieldSceneBlockEntity;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldBannerGeometry;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldFactionBannerGeometry;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Pose;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Prop;
@@ -194,7 +195,14 @@ public final class BattlefieldZonePreview {
         Direction side = axis.getClockWise();
         int[][] shifts = {{0, 0}, {1, 0}, {-1, 0}, {0, 1}, {0, -1}};
         Direction facing = axis.getOpposite();
-        boolean bare = pose.prop() == Prop.BANNER_BARE;
+        boolean bare = pose.prop() == Prop.BANNER_BARE
+                || pose.prop() == Prop.PALADIN_BANNER_BARE
+                || pose.prop() == Prop.HUNTER_BANNER_BARE;
+        BattlefieldBannerBlock.Faction faction = switch (pose.prop()) {
+            case PALADIN_BANNER, PALADIN_BANNER_BARE -> BattlefieldBannerBlock.Faction.SOUL;
+            case HUNTER_BANNER, HUNTER_BANNER_BARE -> BattlefieldBannerBlock.Faction.HUNTER;
+            default -> BattlefieldBannerBlock.Faction.REGULAR;
+        };
 
         for (int[] shift : shifts) {
             BlockPos column = center.relative(axis, shift[0]).relative(side, shift[1]);
@@ -202,8 +210,8 @@ public final class BattlefieldZonePreview {
             int y = surfaceY(level, column);
             BlockPos base = new BlockPos(column.getX(), y, column.getZ());
             if (Math.abs(y - root.getY()) > 3 || !naturalSupport(level, base)
-                    || !BattlefieldDecorCommands.canPlaceBanner(level, base, facing, bare)) continue;
-            Set<BlockPos> envelope = bannerEnvelope(base, facing, bare);
+                    || !BattlefieldDecorCommands.canPlaceBanner(level, base, facing, bare, faction)) continue;
+            Set<BlockPos> envelope = bannerEnvelope(base, facing, bare, faction);
             boolean overlap = false;
             for (BlockPos position : envelope) {
                 if (reserved.contains(position)) { overlap = true; break; }
@@ -211,15 +219,16 @@ public final class BattlefieldZonePreview {
             if (overlap) continue;
             return new Flag(base, ModBlocks.BATTLEFIELD_BANNER.defaultBlockState()
                     .setValue(HorizontalDirectionalBlock.FACING, facing)
-                    .setValue(BattlefieldBannerBlock.BARE, bare), envelope);
+                    .setValue(BattlefieldBannerBlock.BARE, bare)
+                .setValue(BattlefieldBannerBlock.FACTION, faction), envelope);
         }
         return null;
     }
 
-    private static Set<BlockPos> bannerEnvelope(BlockPos base, Direction facing, boolean bare) {
+    private static Set<BlockPos> bannerEnvelope(BlockPos base, Direction facing, boolean bare,
+                                               BattlefieldBannerBlock.Faction faction) {
         Set<BlockPos> cells = new HashSet<>();
-        for (BlockPos offset : bare ? BattlefieldBannerGeometry.bareFootprint(facing)
-                : BattlefieldBannerGeometry.footprint(facing)) {
+        for (BlockPos offset : BattlefieldFactionBannerGeometry.footprint(faction, bare, facing)) {
             cells.add(base.offset(offset));
         }
         return cells;
