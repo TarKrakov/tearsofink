@@ -9,6 +9,7 @@ import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Pose;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Scenario;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldWeaponCatalog;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSoulShieldCatalog;
 import com.tarkrakov.tearsofink.block.BattlefieldWeaponMeshBlock;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
@@ -62,7 +63,16 @@ public final class BattlefieldSceneRenderer implements BlockEntityRenderer<Battl
             stack.mulPose(Axis.ZP.rotationDegrees(p.roll()));
             stack.mulPose(Axis.XP.rotationDegrees(p.pitch()));
 
-            if (BattlefieldWeaponCatalog.isWeapon(p.prop())) {
+            if (BattlefieldSoulShieldCatalog.isShield(p.prop())) {
+                var soul = BattlefieldSoulShieldCatalog.fromProp(p.prop());
+                // Decorative copy only: never scale player's shield or combat.
+                float scale = BattlefieldSoulShieldCatalog.SCALE;
+                stack.scale(scale, scale, scale);
+                stack.translate(-soul.centerX() / 16f, -soul.minY / 16f, -soul.centerZ() / 16f);
+                blocks.renderSingleBlock(ModBlocks.BATTLEFIELD_WEAPON_MESH.defaultBlockState()
+                        .setValue(BattlefieldWeaponMeshBlock.SOURCE, soul.meshIndex()),
+                        stack, buffers, light, overlay);
+            } else if (BattlefieldWeaponCatalog.isWeapon(p.prop())) {
                 BattlefieldWeaponCatalog.Source mesh = BattlefieldWeaponCatalog.fromProp(p.prop());
                 // Verified from all eight authored meshes: grip at low X+Y,
                 // blade tip / axe head at HIGH X+Y. Pivot on the TIP, not the

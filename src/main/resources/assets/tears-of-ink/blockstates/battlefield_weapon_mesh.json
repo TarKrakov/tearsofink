@@ -23,6 +23,18 @@
     },
     "source=7": {
       "model": "tears-of-ink:block/battlefield_weapon_spire_rapid_knife"
+    },
+    "source=8": {
+      "model": "tears-of-ink:block/battlefield_soul_shield_ram"
+    },
+    "source=9": {
+      "model": "tears-of-ink:block/battlefield_soul_shield_repel"
+    },
+    "source=10": {
+      "model": "tears-of-ink:block/battlefield_soul_shield_mercy"
+    },
+    "source=11": {
+      "model": "tears-of-ink:block/battlefield_soul_shield_radiant"
     }
   }
 }
