@@ -14,6 +14,7 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 
 /**
  * Rare, non-colliding authored banner preview. One quiet block entity, no
@@ -21,10 +22,13 @@ import net.minecraft.world.level.block.state.StateDefinition;
  */
 public final class BattlefieldBannerBlock extends BaseEntityBlock {
     public static final MapCodec<BattlefieldBannerBlock> CODEC = simpleCodec(BattlefieldBannerBlock::new);
+    // Missing property in older saves defaults to false: existing animated banner.
+    public static final BooleanProperty BARE = BooleanProperty.create("bare");
 
     public BattlefieldBannerBlock(BlockBehaviour.Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH));
+        registerDefaultState(stateDefinition.any()
+                .setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH).setValue(BARE, false));
     }
 
     @Override
@@ -59,6 +63,6 @@ public final class BattlefieldBannerBlock extends BaseEntityBlock {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(HorizontalDirectionalBlock.FACING);
+        builder.add(HorizontalDirectionalBlock.FACING, BARE);
     }
 }

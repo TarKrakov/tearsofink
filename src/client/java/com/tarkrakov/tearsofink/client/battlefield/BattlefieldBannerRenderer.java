@@ -5,6 +5,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.block.BattlefieldBannerBlockEntity;
+import com.tarkrakov.tearsofink.block.BattlefieldBannerBlock;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldBannerGeometry;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.RenderType;
@@ -18,6 +19,8 @@ import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 public final class BattlefieldBannerRenderer implements BlockEntityRenderer<BattlefieldBannerBlockEntity> {
     private static final ResourceLocation TEXTURE =
             TearsOfInk.id("textures/block/battlefield_regular_standart1.png");
+    private static final ResourceLocation BARE_TEXTURE =
+            TearsOfInk.id("textures/block/battlefield_regular_standart_withoutbanner1.png");
     private static final float UV_SIZE = BattlefieldBannerGeometry.UV_SIZE;
 
     public BattlefieldBannerRenderer(BlockEntityRendererProvider.Context context) {}
@@ -26,7 +29,8 @@ public final class BattlefieldBannerRenderer implements BlockEntityRenderer<Batt
     public void render(BattlefieldBannerBlockEntity banner, float partialTick,
                        PoseStack stack, MultiBufferSource buffers, int packedLight, int packedOverlay) {
         if (banner.getLevel() == null) return;
-        VertexConsumer consumer = buffers.getBuffer(RenderType.entityCutoutNoCull(TEXTURE));
+        boolean bare = banner.getBlockState().getValue(BattlefieldBannerBlock.BARE);
+        VertexConsumer consumer = buffers.getBuffer(RenderType.entityCutoutNoCull(bare ? BARE_TEXTURE : TEXTURE));
         stack.pushPose();
         stack.translate(0.5, 0, 0.5);
         stack.mulPose(Axis.YP.rotationDegrees(180f - banner.getBlockState()
@@ -34,6 +38,11 @@ public final class BattlefieldBannerRenderer implements BlockEntityRenderer<Batt
         // Fixed pole / metal ornaments remain absolutely still.
         for (int index : BattlefieldBannerGeometry.POLE_PARTS) {
             drawBox(BattlefieldBannerGeometry.PARTS[index], stack.last(), consumer, packedLight, packedOverlay);
+        }
+
+        if (bare) {
+            stack.popPose();
+            return;
         }
 
         // The cloth hangs DOWN from the upper crossbar. Each descendant inherits

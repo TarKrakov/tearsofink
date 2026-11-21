@@ -242,6 +242,7 @@ public final class BattlefieldCompositionArchetypes {
                             74f*m, 81f, -8f*m, true),
                     at(Prop.CROSSBOW, -3.05f, -4.26f*m, -0.10f, -42f*m, 84f, 8f*m, false)
             );
+            default -> throw new IllegalArgumentException("D-131 scenes use BattlefieldHistoricalScenes: " + scenario);
         };
         if (!alternate) return composed;
 

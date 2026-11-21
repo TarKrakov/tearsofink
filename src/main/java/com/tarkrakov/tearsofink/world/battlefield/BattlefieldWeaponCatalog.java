@@ -100,7 +100,7 @@ public final class BattlefieldWeaponCatalog {
 
     public static boolean isWeapon(Prop prop) {
         return switch (prop) {
-            case SHIELD, SPEAR, CROSSBOW, BANNER -> false;
+            case SHIELD, SPEAR, CROSSBOW, BANNER, BANNER_BARE -> false;
             default -> true;
         };
     }

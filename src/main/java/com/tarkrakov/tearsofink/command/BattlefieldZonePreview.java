@@ -3,6 +3,7 @@ package com.tarkrakov.tearsofink.command;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.tarkrakov.tearsofink.block.BattlefieldBannerBlock;
 import com.tarkrakov.tearsofink.block.BattlefieldSceneBlock;
 import com.tarkrakov.tearsofink.block.BattlefieldSceneBlockEntity;
 import com.tarkrakov.tearsofink.block.ModBlocks;
@@ -47,14 +48,34 @@ public final class BattlefieldZonePreview {
 
     static LiteralArgumentBuilder<CommandSourceStack> literal() {
         var root = Commands.literal("zone");
+        // Existing direct syntax preserved. Explicit aliases are real manual
+        // placement commands, not fake client-only ghost previews.
+        root.then(Commands.literal("list").executes(ctx -> {
+            StringBuilder names = new StringBuilder("Сцены поля боя (операторские, ставят блоки):");
+            for (Scenario scene : Scenario.values()) names.append(" ").append(scene.id());
+            ctx.getSource().sendSuccess(() -> Component.literal(names.toString()), false);
+            return Scenario.values().length;
+        }));
         for (Scenario scene : Scenario.values()) {
-            root.then(Commands.literal(scene.id())
-                    .executes(ctx -> preview(ctx, scene, -1))
-                    .then(Commands.argument("variant", IntegerArgumentType.integer(0, 7))
-                            .executes(ctx -> preview(ctx, scene,
-                                    IntegerArgumentType.getInteger(ctx, "variant")))));
+            root.then(sceneCommand(scene));
         }
+        var preview = Commands.literal("preview");
+        var place = Commands.literal("place");
+        for (Scenario scene : Scenario.values()) {
+            preview.then(sceneCommand(scene));
+            place.then(sceneCommand(scene));
+        }
+        root.then(preview);
+        root.then(place);
         return root;
+    }
+
+    private static LiteralArgumentBuilder<CommandSourceStack> sceneCommand(Scenario scene) {
+        return Commands.literal(scene.id())
+                .executes(ctx -> preview(ctx, scene, -1))
+                .then(Commands.argument("variant", IntegerArgumentType.integer(0, 7))
+                        .executes(ctx -> preview(ctx, scene,
+                                IntegerArgumentType.getInteger(ctx, "variant"))));
     }
 
     private record Flag(BlockPos pos, BlockState state, Set<BlockPos> envelope) {}
@@ -161,7 +182,7 @@ public final class BattlefieldZonePreview {
                 .setValue(HorizontalDirectionalBlock.FACING, axis)
                 .setValue(BattlefieldSceneBlock.SCENE, scene.ordinal())
                 .setValue(BattlefieldSceneBlock.VARIANT, variant)
-                .setValue(BattlefieldSceneBlock.LAYOUT, 1);
+                .setValue(BattlefieldSceneBlock.LAYOUT, scene.ordinal() >= 20 ? 2 : 1);
         int rendered = (int) Arrays.stream(heights).filter(h -> h != BattlefieldSceneBlockEntity.MISSING).count();
         return new Layout(root, state, heights, flags, rendered);
     }
@@ -172,6 +193,7 @@ public final class BattlefieldZonePreview {
         Direction side = axis.getClockWise();
         int[][] shifts = {{0, 0}, {1, 0}, {-1, 0}, {0, 1}, {0, -1}};
         Direction facing = axis.getOpposite();
+        boolean bare = pose.prop() == Prop.BANNER_BARE;
 
         for (int[] shift : shifts) {
             BlockPos column = center.relative(axis, shift[0]).relative(side, shift[1]);
@@ -179,22 +201,24 @@ public final class BattlefieldZonePreview {
             int y = surfaceY(level, column);
             BlockPos base = new BlockPos(column.getX(), y, column.getZ());
             if (Math.abs(y - root.getY()) > 3 || !naturalSupport(level, base)
-                    || !BattlefieldDecorCommands.canPlaceBanner(level, base, facing)) continue;
-            Set<BlockPos> envelope = bannerEnvelope(base, facing);
+                    || !BattlefieldDecorCommands.canPlaceBanner(level, base, facing, bare)) continue;
+            Set<BlockPos> envelope = bannerEnvelope(base, facing, bare);
             boolean overlap = false;
             for (BlockPos position : envelope) {
                 if (reserved.contains(position)) { overlap = true; break; }
             }
             if (overlap) continue;
             return new Flag(base, ModBlocks.BATTLEFIELD_BANNER.defaultBlockState()
-                    .setValue(HorizontalDirectionalBlock.FACING, facing), envelope);
+                    .setValue(HorizontalDirectionalBlock.FACING, facing)
+                    .setValue(BattlefieldBannerBlock.BARE, bare), envelope);
         }
         return null;
     }
 
-    private static Set<BlockPos> bannerEnvelope(BlockPos base, Direction facing) {
+    private static Set<BlockPos> bannerEnvelope(BlockPos base, Direction facing, boolean bare) {
         Set<BlockPos> cells = new HashSet<>();
-        for (BlockPos offset : BattlefieldBannerGeometry.footprint(facing)) {
+        for (BlockPos offset : bare ? BattlefieldBannerGeometry.bareFootprint(facing)
+                : BattlefieldBannerGeometry.footprint(facing)) {
             cells.add(base.offset(offset));
         }
         return cells;

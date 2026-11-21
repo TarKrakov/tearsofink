@@ -42,7 +42,22 @@ public final class BattlefieldPosedScenes {
         AXE_BREACH("axe_breach", "Брешь между секирами"),
         BLADE_FAN("blade_fan", "Веер оставленных мечей"),
         CROSSBOW_CACHE("crossbow_cache", "Брошенное стрелковое гнездо"),
-        LONE_BLADE("lone_blade", "Одинокий большой клинок");
+        LONE_BLADE("lone_blade", "Одинокий большой клинок"),
+        // D-131: append new IDs only; original scene 0..19 / layouts 0 and 1 remain intact.
+        REGULAR_SQUAD_LINE_ANCHOR("regular_squad_line_anchor", "Рубеж регулярной армии"),
+        REGULAR_SQUAD_RALLY_POINT("regular_squad_rally_point", "Сбор у отрядного знамени"),
+        REGULAR_BARE_REMNANT("regular_bare_remnant", "Сорванное знамя Шпиля"),
+        PALADIN_HOLDOUT_ANCHOR("paladin_holdout_anchor", "Опорный рубеж паладинов (без флага)"),
+        PALADIN_BARE_RELIC("paladin_bare_relic", "След угасающей звезды (без флага)"),
+        HUNTER_STRIKE_MARK("hunter_strike_mark", "След удара охотников (без флага)"),
+        HUNTER_BARE_TRACE("hunter_bare_trace", "Последний след охотников (без флага)"),
+        LINE_COLLAPSE("line_collapse", "Обрушение линии"),
+        GRIND_CENTER("grind_center", "Узел ближнего боя"),
+        BREAKTHROUGH_LANE("breakthrough_lane", "Коридор прорыва"),
+        AFTERMATH_SCATTER("aftermath_scatter", "Осколки сражения"),
+        REAR_GUARD_FALLBACK("rear_guard_fallback", "Прикрытие отступления"),
+        ISOLATED_LAST_STAND_SMALL("isolated_last_stand_small", "Одинокий заслон"),
+        MIXED_DEAD_GROUND("mixed_dead_ground", "Молчаливое поле");
 
         private final String id, label;
         Scenario(String id, String label) { this.id = id; this.label = label; }
@@ -52,7 +67,7 @@ public final class BattlefieldPosedScenes {
 
     public record Pose(Prop prop, float forward, float right, float sink,
                        float yaw, float pitch, float roll, boolean required) {
-        public boolean banner() { return prop == Prop.BANNER; }
+        public boolean banner() { return prop == Prop.BANNER || prop == Prop.BANNER_BARE; }
     }
 
     /**
@@ -65,9 +80,11 @@ public final class BattlefieldPosedScenes {
         List<Pose>[] cached = (List<Pose>[]) new List<?>[Scenario.values().length * 8];
         for (Scenario scenario : Scenario.values()) {
             for (int variant = 0; variant < 8; variant++) {
-                List<Pose> source = layoutVersion == 0 && scenario.ordinal() < 14
-                        ? buildLegacyPlan(scenario, variant)
-                        : BattlefieldCompositionArchetypes.plan(scenario, variant);
+                List<Pose> source = scenario.ordinal() >= 20
+                        ? BattlefieldHistoricalScenes.plan(scenario, variant)
+                        : layoutVersion == 0 && scenario.ordinal() < 14
+                                ? buildLegacyPlan(scenario, variant)
+                                : BattlefieldCompositionArchetypes.plan(scenario, variant);
                 cached[scenario.ordinal() * 8 + variant] = source.stream().map(p -> {
                     if (!BattlefieldWeaponCatalog.isWeapon(p.prop())) return p;
                     var weapon = BattlefieldWeaponCatalog.fromProp(p.prop());
@@ -82,13 +99,16 @@ public final class BattlefieldPosedScenes {
 
     private static final List<Pose>[] LEGACY = buildCache(0);
     private static final List<Pose>[] CURRENT = buildCache(1);
+    // D-131 scene IDs 20..33 are new, but layout 2 is an explicit save marker.
+    // In the renderer all nonzero layouts use CURRENT; IDs 0..19 are immutable.
 
     public static List<Pose> plan(Scenario scene, int variant) {
         return plan(scene, variant, 1);
     }
 
     public static List<Pose> plan(Scenario scene, int variant, int layoutVersion) {
-        return (layoutVersion == 0 ? LEGACY : CURRENT)[scene.ordinal() * 8 + (variant & 7)];
+        return (layoutVersion == 0 && scene.ordinal() < 20 ? LEGACY : CURRENT)
+                [scene.ordinal() * 8 + (variant & 7)];
     }
 
     private static List<Pose> buildLegacyPlan(Scenario scene, int variant) {
@@ -281,9 +301,7 @@ public final class BattlefieldPosedScenes {
                     new Pose(Prop.CROSSBOW, 0.91f, 3.45f * mirror, -0.12f,
                             65f * mirror, 77f, -7f * mirror, false)
             );
-            case SHIELD_CRESCENT, KNIFE_SCATTER, AXE_BREACH,
-                 BLADE_FAN, CROSSBOW_CACHE, LONE_BLADE ->
-                    throw new IllegalArgumentException("No legacy scene: " + scene);
+            default -> throw new IllegalArgumentException("No legacy scene: " + scene);
         };
     }
 }

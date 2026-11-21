@@ -95,6 +95,9 @@ public final class BattlefieldBannerGeometry {
         new Cuboid(-13f, 72f, -4f, -11f, 74f, 2f, new float[][] {{59f, 77f, 61f, 79f}, {73f, 40f, 79f, 42f}, {61f, 77f, 63f, 79f}, {57f, 73f, 63f, 75f}, {30f, 72f, 32f, 78f}, {45f, 72f, 47f, 78f}})
     };
     private static final Map<Direction, List<BlockPos>> FOOTPRINTS = makeFootprints();
+    // The author's bare standard consists of the *same 26 UV-matched pole cuboids*
+    // as the complete model, with its own unmodified exported PNG.
+    private static final Map<Direction, List<BlockPos>> BARE_FOOTPRINTS = makeBareFootprints();
 
     private BattlefieldBannerGeometry() {}
 
@@ -109,6 +112,26 @@ public final class BattlefieldBannerGeometry {
         List<BlockPos> cells = FOOTPRINTS.get(facing);
         if (cells == null) throw new IllegalArgumentException("Horizontal facing required: " + facing);
         return cells;
+    }
+
+    /** Occupied volume of the authentic regular-army standard with no cloth. */
+    public static List<BlockPos> bareFootprint(Direction facing) {
+        List<BlockPos> cells = BARE_FOOTPRINTS.get(facing);
+        if (cells == null) throw new IllegalArgumentException("Horizontal facing required: " + facing);
+        return cells;
+    }
+
+    private static Map<Direction, List<BlockPos>> makeBareFootprints() {
+        Map<Direction, List<BlockPos>> result = new EnumMap<>(Direction.class);
+        for (Direction facing : new Direction[] {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST}) {
+            Set<BlockPos> cells = new HashSet<>();
+            for (int index : POLE_PARTS) {
+                Cuboid box = PARTS[index];
+                addCells(cells, facing, box.x0(), box.x1(), box.y0(), box.y1(), box.z0(), box.z1());
+            }
+            result.put(facing, List.copyOf(cells));
+        }
+        return Map.copyOf(result);
     }
 
     /**
