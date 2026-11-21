@@ -73,7 +73,11 @@ public final class BattlefieldWeaponCatalog {
             double upright = Math.cos(Math.toRadians(pitch))
                     * Math.cos(Math.toRadians(roll));
             float gripHeight = (float) (approximateLength() * Math.max(0.0d, upright));
-            return Math.max(requested, -Math.max(0.02f, gripHeight * 0.40f));
+            float depth = Math.max(0.02f, gripHeight * 0.40f);
+            // Very shallow angles represent discarded weapons; burying even
+            // a tenth of their length would visibly hide the handle.
+            if (upright < 0.30d) depth = Math.min(depth, 0.10f);
+            return Math.max(requested, -depth);
         }
         public float approximateLength() {
             return (float) (Math.hypot(maxX-minX, maxY-minY) / 16d);
