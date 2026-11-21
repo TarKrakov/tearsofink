@@ -42,11 +42,21 @@ public final class BattlefieldDecorCommands {
         for (int i = 0; i < blocks.length; i++) {
             BlockPos xz = origin.relative(side, (i - 1) * 3);
             int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, xz.getX(), xz.getZ());
-            BlockPos spot = new BlockPos(xz.getX(), y, xz.getZ());
+            BlockPos ground = new BlockPos(xz.getX(), y, xz.getZ());
+            // The doubled shield spans 2.5 blocks: bake it one block higher so
+            // its lower edge touches terrain without exceeding JSON model bounds.
+            boolean largeShield = blocks[i] == ModBlocks.BATTLEFIELD_SHIELD;
+            BlockPos spot = largeShield ? ground.above() : ground;
             if (!level.getWorldBorder().isWithinBounds(spot)
-                    || Math.abs(spot.getY() - player.getBlockY()) > 4
+                    || Math.abs(spot.getY() - player.getBlockY()) > 5
+                    || !level.getBlockState(ground).isAir()
                     || !level.getBlockState(spot).isAir()
-                    || !level.getBlockState(spot.below()).isFaceSturdy(level, spot.below(), Direction.UP)) {
+                    || !level.getBlockState(ground.below()).isFaceSturdy(level, ground.below(), Direction.UP)) {
+                continue;
+            }
+            // Avoid covering vegetation or structures with the tall shield.
+            if (largeShield && (!level.getBlockState(spot.above()).isAir()
+                    || !level.getBlockState(spot.above(2)).isAir())) {
                 continue;
             }
             var state = blocks[i].defaultBlockState().setValue(HorizontalDirectionalBlock.FACING, forward.getOpposite());

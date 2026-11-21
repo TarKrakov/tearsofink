@@ -2,19 +2,23 @@
   "variants": {
     "facing=north": {
       "model": "tears-of-ink:block/battlefield_shield",
-      "y": 0
+      "y": 0,
+      "x": 180
     },
     "facing=east": {
       "model": "tears-of-ink:block/battlefield_shield",
-      "y": 90
+      "y": 90,
+      "x": 180
     },
     "facing=south": {
       "model": "tears-of-ink:block/battlefield_shield",
-      "y": 180
+      "y": 180,
+      "x": 180
     },
     "facing=west": {
       "model": "tears-of-ink:block/battlefield_shield",
-      "y": 270
+      "y": 270,
+      "x": 180
     }
   }
 }

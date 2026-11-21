@@ -14,9 +14,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 ASSETS = ROOT / "src/main/resources/assets"
 SOURCES = (
-    ("spear", "blockbench/pale_soldier_spearman.bbmodel", "spear", "pale_spearman", 0.70, 3),
-    ("shield", "blockbench/pale_soldier_shieldman.bbmodel", "Shield", "pale_shieldbearer", 0.80, 2),
-    ("crossbow", "blockbench/pale_soldier_crossbowman.bbmodel", "crossbow", "pale_crossbowman", 1.0, 7),
+    # bottom_y is the exported (pre-flip) model minimum, in 1/16 block units.
+    # For flipped X=180 models: rendered Y becomes 16-preflipY. The large
+    # shield anchor is one block above terrain; its rendered range is 0..40
+    # from the ground (model space -16..24 relative to its anchor).
+    ("spear", "blockbench/pale_soldier_spearman.bbmodel", "spear", "pale_spearman", 0.70, 3, -1.0, False),
+    ("shield", "blockbench/pale_soldier_shieldman.bbmodel", "Shield", "pale_shieldbearer", 1.60, 2, -8.0, True),
+    ("crossbow", "blockbench/pale_soldier_crossbowman.bbmodel", "crossbow", "pale_crossbowman", 1.0, 7, 11.0, True),
 )
 
 
@@ -84,7 +88,7 @@ def rotated_cube(cube: dict) -> dict:
     return bounds
 
 
-def model(data: dict, bone: str, texture: str, scale: float, count: int) -> dict:
+def model(data: dict, bone: str, texture: str, scale: float, count: int, bottom_y: float) -> dict:
     cubes = subtree(data, bone)
     assert len(cubes) == count, f"Unexpected {bone} cube count {len(cubes)} != {count}"
     shapes = [rotated_cube(c) for c in cubes]
@@ -92,7 +96,7 @@ def model(data: dict, bone: str, texture: str, scale: float, count: int) -> dict
     upper = [max(s["to"][i] for s in shapes) for i in range(3)]
     shift = [
         8 - (lower[0] + upper[0]) * scale / 2,
-        2 - lower[1] * scale,
+        bottom_y - lower[1] * scale,
         8 - (lower[2] + upper[2]) * scale / 2,
     ]
     dims = [data["resolution"]["width"], data["resolution"]["height"]]
@@ -119,13 +123,14 @@ def model(data: dict, bone: str, texture: str, scale: float, count: int) -> dict
     return {"ambientocclusion": False, "textures": {"0": sprite, "particle": sprite}, "elements": elements}
 
 
-def blockstate(name: str) -> dict:
-    return {
-        "variants": {
-            f"facing={d}": {"model": f"tears-of-ink:block/battlefield_{name}", "y": i * 90}
-            for i, d in enumerate(("north", "east", "south", "west"))
-        }
-    }
+def blockstate(name: str, flip_x: bool) -> dict:
+    variants = {}
+    for i, d in enumerate(("north", "east", "south", "west")):
+        value = {"model": f"tears-of-ink:block/battlefield_{name}", "y": i * 90}
+        if flip_x:
+            value["x"] = 180  # rotate geometry AND UV; do not rebuild author texture
+        variants[f"facing={d}"] = value
+    return {"variants": variants}
 
 
 def main() -> None:
@@ -133,16 +138,16 @@ def main() -> None:
     parser.add_argument("--write", action="store_true", help="regenerate only derived block JSON files")
     args = parser.parse_args()
     outputs = {}
-    for name, path, bone, texture, scale, count in SOURCES:
+    for name, path, bone, texture, scale, count, bottom_y, flip_x in SOURCES:
         data = json.loads((ROOT / path).read_text(encoding="utf-8"))
-        outputs[ASSETS / f"tears-of-ink/models/block/battlefield_{name}.json"] = model(data, bone, texture, scale, count)
-        outputs[ASSETS / f"tears-of-ink/blockstates/battlefield_{name}.json"] = blockstate(name)
+        outputs[ASSETS / f"tears-of-ink/models/block/battlefield_{name}.json"] = model(data, bone, texture, scale, count, bottom_y)
+        outputs[ASSETS / f"tears-of-ink/blockstates/battlefield_{name}.json"] = blockstate(name, flip_x)
 
     atlas = {
         "sources": [
             {"type": "minecraft:single", "resource": f"tears-of-ink:entity/{texture}",
              "sprite": f"tears-of-ink:entity/{texture}"}
-            for _, _, _, texture, _, _ in SOURCES
+            for _, _, _, texture, _, _, _, _ in SOURCES
         ]
     }
     outputs[ASSETS / "minecraft/atlases/blocks.json"] = atlas
