@@ -5,6 +5,7 @@ import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Scenari
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Prop;
 
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * D-127: different battlefield EVENTS, not a 2x2 scatter of upright items.
@@ -51,7 +52,7 @@ public final class BattlefieldCompositionArchetypes {
         Prop strayBlade = alternate ? Prop.BLOOD_TALVAR : Prop.PALE_LONGSWORD;
         Prop heavyBlade = alternate ? Prop.PALE_LINEAR_GREATSWORD
                                     : Prop.SPIRE_TORTURER_GREATSWORD;
-        return switch (scenario) {
+        List<Pose> composed = switch (scenario) {
             // One readable focal point; a second ruined weapon is a trace,
             // not another symmetric post.
             case LAST_STAND -> List.of(
@@ -242,5 +243,26 @@ public final class BattlefieldCompositionArchetypes {
                     at(Prop.CROSSBOW, -3.05f, -4.26f*m, -0.10f, -42f*m, 84f, 8f*m, false)
             );
         };
+        if (!alternate) return composed;
+
+        // The second pose family changes the silhouette of a peripheral
+        // remnant (not the central story-bearing contact). This is a real
+        // displacement / different fall direction, not just another yaw.
+        // Kept bounded so the terrain planner can still search naturally.
+        int last = composed.size() - 1;
+        while (last >= 0 && composed.get(last).banner()) last--;
+        if (last < 0) return composed;
+        Pose p = composed.get(last);
+        float df = Math.abs(p.forward()) >= 2.9f
+                ? -Math.signum(p.forward()) * 0.34f
+                : (p.forward() >= 0f ? 0.46f : -0.46f);
+        float dr = Math.abs(p.right()) >= 4.9f
+                ? -Math.signum(p.right()) * 0.30f
+                : (p.right() >= 0f ? 0.38f : -0.38f);
+        List<Pose> changed = new ArrayList<>(composed);
+        changed.set(last, at(p.prop(), p.forward() + df, p.right() + dr,
+                p.sink(), p.yaw() + (p.yaw() > 0f ? -11f : 11f),
+                p.pitch(), p.roll(), p.required()));
+        return List.copyOf(changed);
     }
 }
