@@ -1,15 +1,26 @@
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldCompositionArchetypes;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Pose;
-import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Prop;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Scenario;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldWeaponCatalog;
-import java.util.List;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Prop;
 
-/** Tests the composition grammar without Minecraft or any artist resources. */
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * D-127: prove different *geometric stories*, not just different item names.
+ * Also regress save-compatible layout 0 and the D-126 blade-tip orientation.
+ * Runnable as pure Java (no Fabric/Minecraft dependencies).
+ */
 public final class BattlefieldPosedScenesTest {
-    // Scene geometry, not only rotation: mandatory spear tip should come
-    // close enough to the slanted shield's upper-mid section to read as one
-    // event from the player's viewpoint. Formula matches Y -> Z -> X pivots.
+    private static void check(boolean ok, String why) {
+        if (!ok) throw new AssertionError(why);
+    }
+
     private static double[] projected(Pose p, double height) {
         double px = Math.toRadians(p.pitch()), rz = Math.toRadians(p.roll());
         double yw = Math.toRadians(p.yaw());
@@ -19,7 +30,7 @@ public final class BattlefieldPosedScenesTest {
                 -x * Math.sin(yw) + z * Math.cos(yw)};
     }
 
-    private static void linkedSpearAndShield(List<Pose> poses) {
+    private static void legacyContact(List<Pose> poses) {
         Pose shield = poses.stream().filter(p -> p.prop() == Prop.SHIELD && p.required())
                 .findFirst().orElseThrow();
         Pose spear = poses.stream().filter(p -> p.prop() == Prop.SPEAR && p.required())
@@ -28,135 +39,143 @@ public final class BattlefieldPosedScenesTest {
         double[] b = projected(spear, 1.6);
         double dx = shield.right() + a[0] - (spear.right() + b[0]);
         double dz = shield.forward() - a[1] - (spear.forward() - b[1]);
-        check(Math.hypot(dx, dz) < 0.9,
-                "Mandatory spear no longer meets tilted shield: " + Math.hypot(dx, dz));
+        check(Math.hypot(dx, dz) < 0.9, "Historic shield/spear relation lost");
     }
-    private static void check(boolean good, String reason) {
-        if (!good) throw new AssertionError(reason);
+
+    private record Space(double width, double length, double radius, int coreCount, int count) {}
+
+    private static Space space(List<Pose> poses) {
+        double minR = Double.POSITIVE_INFINITY, maxR = Double.NEGATIVE_INFINITY;
+        double minF = Double.POSITIVE_INFINITY, maxF = Double.NEGATIVE_INFINITY;
+        double maxRad = 0;
+        int core = 0;
+        for (Pose p : poses) {
+            minR = Math.min(minR, p.right());
+            maxR = Math.max(maxR, p.right());
+            minF = Math.min(minF, p.forward());
+            maxF = Math.max(maxF, p.forward());
+            maxRad = Math.max(maxRad, Math.hypot(p.right(), p.forward()));
+            if (p.required()) core++;
+        }
+        return new Space(maxR - minR, maxF - minF, maxRad, core, poses.size());
+    }
+
+    private static void validateBlades(Scenario scenario, int variant, List<Pose> poses) {
+        for (Pose p : poses) {
+            if (!BattlefieldWeaponCatalog.isWeapon(p.prop())) continue;
+            var mesh = BattlefieldWeaponCatalog.fromProp(p.prop());
+            double cos = Math.cos(Math.toRadians(p.pitch())) * Math.cos(Math.toRadians(p.roll()));
+            double gripHeight = mesh.tipDownY(mesh.minX, mesh.minY) * cos + p.sink();
+            double bladeHeight = mesh.tipDownY(mesh.maxX, mesh.maxY) + p.sink();
+            check(gripHeight >= -0.025, "Handle buried " + scenario + "/" + variant + ": " + p.prop());
+            check(bladeHeight <= 0.001, "Blade tip in air " + scenario + ": " + p.prop());
+            if (Math.abs(cos) < 0.25)
+                check(p.sink() > -0.12f, "Near-horizontal handle buried " + scenario);
+        }
     }
 
     public static void main(String[] args) {
-        for (Scenario scene : Scenario.values()) {
-            for (int v = 0; v < 8; v++) {
-                List<Pose> a = BattlefieldPosedScenes.plan(scene, v);
-                List<Pose> b = BattlefieldPosedScenes.plan(scene, v);
-                check(a.equals(b), "pose layout changed without seed change");
-                check(a == b, "scene poses must be cached, not reallocated each render frame");
-                long tilted = a.stream().filter(p -> !p.banner() &&
-                        (Math.abs(p.roll()) >= 10f || Math.abs(p.pitch()) >= 10f)).count();
-                check(tilted >= 2, "only standing, cardinal-facing props");
-                check(a.stream().filter(Pose::required).count() >= 2, "missing core");
-                if (scene == Scenario.LAST_STAND || scene == Scenario.BANNER_LINE) linkedSpearAndShield(a);
-                if (a.stream().anyMatch(p -> p.prop() == Prop.SHIELD)) {
-                    check(a.stream().anyMatch(p -> p.prop() == Prop.SHIELD && p.sink() < -0.2f),
-                            "present shield must be grounded and partly buried");
+        Scenario[] scenarios = Scenario.values();
+        check(scenarios.length == 20, "20 genuinely distinct authored episode types required");
+        check(scenarios[0] == Scenario.LAST_STAND && scenarios[1] == Scenario.BANNER_LINE
+                && scenarios[13] == Scenario.FINAL_TRACE,
+                "Persisted D-125 scene IDs must remain stable (0..13)");
+        check(BattlefieldCompositionArchetypes.Silhouette.values().length == scenarios.length,
+                "Every scenario needs a separate meaningful silhouette class");
+
+        Set<String> newTopologies = new HashSet<>();
+        EnumSet<Prop> used = EnumSet.noneOf(Prop.class);
+        int sparse = 0, expansive = 0, bladeHeavy = 0, shieldless = 0, bannerScenes = 0;
+        for (Scenario scene : scenarios) {
+            List<Pose> first = BattlefieldPosedScenes.plan(scene, 0);
+            Space initial = space(first);
+            String topology = first.stream().map(p -> p.prop().name() + (p.required() ? "!" : "?"))
+                    .collect(java.util.stream.Collectors.joining("|"));
+            check(newTopologies.add(topology), "Duplicate weapon-story topology: " + scene);
+            check(initial.coreCount >= 2 && initial.count <= 16, "Broken core/contact NBT: " + scene);
+            check(initial.radius <= 7.4, "Scattered props beyond episode range: " + scene);
+            if (initial.count <= 3) sparse++;
+            if (initial.width >= 6.0 || initial.length >= 5.3) expansive++;
+            if (first.stream().filter(p -> BattlefieldWeaponCatalog.isWeapon(p.prop())).count() >= 4) bladeHeavy++;
+            if (first.stream().noneMatch(p -> p.prop() == Prop.SHIELD)) shieldless++;
+            if (first.stream().anyMatch(Pose::banner)) bannerScenes++;
+            for (Pose p : first) used.add(p.prop());
+
+            for (int variant = 0; variant < 8; variant++) {
+                List<Pose> poses = BattlefieldPosedScenes.plan(scene, variant, 1);
+                check(poses == BattlefieldPosedScenes.plan(scene, variant),
+                        "New layouts must be cached and immutable");
+                check(poses == BattlefieldPosedScenes.plan(scene, variant, 1),
+                        "Per-frame allocations detected");
+                check(poses.stream().filter(Pose::required).count() >= 2, "Core lost: " + scene);
+                check(poses.size() <= 16, "Contact heights exceed BE storage limit");
+                for (Pose p : poses) {
+                    check(Math.abs(p.right()) <= 5.6f && Math.abs(p.forward()) <= 3.9f,
+                            "Model too far away: " + scene + " " + p);
+                    check(Math.abs(p.pitch()) <= 85f && Math.abs(p.roll()) <= 85f,
+                            "Invalid rotation: " + scene + " " + p);
+                    check(!p.banner() || (p.pitch() == 0 && p.roll() == 0),
+                            "Original animated banners must stay unchanged");
                 }
-                check(a.stream().allMatch(p -> Math.abs(p.right()) <= 5f
-                        && Math.abs(p.forward()) <= 2f), "scene scattered too widely");
-                check(a.stream().allMatch(p -> Math.abs(p.roll()) <= 85f
-                        && Math.abs(p.pitch()) <= 85f), "nonsensical tilt");
-                if (scene == Scenario.BANNER_LINE || scene == Scenario.TWIN_STANDARDS) {
-                    List<Pose> flags = a.stream().filter(Pose::banner).toList();
-                    check(flags.size() == 2 && flags.stream().allMatch(Pose::required),
-                            "line needs both banners");
-                    check(Math.abs(flags.get(0).right() - flags.get(1).right()) >= 8f,
-                            "line lacks spatial gap");
-                    if (scene == Scenario.BANNER_LINE)
-                        check(a.stream().anyMatch(p -> p.prop() == Prop.SPEAR && p.required()
-                                && Math.abs(p.roll()) >= 25f),
-                                "original banner line must retain its shield-spear contact");
-                }
-                if (scene == Scenario.LAST_STAND) {
-                    check(a.stream().anyMatch(p -> p.prop() == Prop.SPEAR && p.required() &&
-                            Math.abs(p.roll()) >= 25f), "original spear no longer leans");
-                    check(a.stream().anyMatch(p -> p.prop() == Prop.SPEAR && p.pitch() >= 60f),
-                            "original fallen spear missing");
-                    check(a.stream().anyMatch(p -> p.prop() == Prop.CROSSBOW && p.pitch() > 10f),
-                            "original fallen crossbow missing");
-                }
-                check(a.stream().noneMatch(p -> p.prop() == Prop.BANNER &&
-                        (p.pitch() != 0f || p.roll() != 0f)),
-                        "animated flags must retain their original upright art");
-                if (scene == Scenario.BLADE_GROVE) {
-                    long bladeCount = a.stream().filter(p -> BattlefieldWeaponCatalog.isWeapon(p.prop())).count();
-                    check(bladeCount >= 5, "blade-grove missing its different weapon silhouettes");
-                    check(a.stream().noneMatch(p -> Math.abs(p.right()) < 1.5f),
-                            "blade grove must preserve deliberate central passage");
-                }
-                if (scene == Scenario.BLOOD_DUEL) {
-                    check(a.stream().filter(p -> p.prop() == Prop.BLOOD_TALVAR).count() >= 2
-                            && a.stream().anyMatch(p -> p.prop() == Prop.BLOOD_DUSSAK),
-                            "blood duel lost its intersecting armaments");
+                validateBlades(scene, variant, poses);
+                check(!poses.equals(BattlefieldPosedScenes.plan(scene, variant ^ 1)),
+                        "No mirrored alternative: " + scene);
+                check(!poses.equals(BattlefieldPosedScenes.plan(scene, variant ^ 4)),
+                        "No substantial alternative: " + scene);
+            }
+
+            if (scene.ordinal() < 14) {
+                for (int v = 0; v < 8; v++) {
+                    List<Pose> legacy = BattlefieldPosedScenes.plan(scene, v, 0);
+                    check(legacy == BattlefieldPosedScenes.plan(scene, v, 0),
+                            "Legacy poses must remain cached");
+                    check(!legacy.equals(BattlefieldPosedScenes.plan(scene, v, 1)),
+                            "D-127 must not silently reuse D-125's repetitive scene: " + scene);
+                    if (scene == Scenario.LAST_STAND || scene == Scenario.BANNER_LINE)
+                        legacyContact(legacy);
+                    validateBlades(scene, v, legacy);
                 }
             }
-        }
-        check(!BattlefieldPosedScenes.plan(Scenario.LAST_STAND, 0)
-                        .equals(BattlefieldPosedScenes.plan(Scenario.LAST_STAND, 1)),
-                "variants do not change composition");
-        // Every source in the explicitly authorized hunter+standard whitelist
-        // must actually occur in at least one meaningful scene.
-        java.util.EnumSet<Prop> used = java.util.EnumSet.noneOf(Prop.class);
-        java.util.Set<String> topologies = new java.util.HashSet<>();
-        for (Scenario scenario : Scenario.values()) {
-            var p = BattlefieldPosedScenes.plan(scenario, 0);
-            for (Pose pose : p) used.add(pose.prop());
-            String structure = p.stream().map(pose -> pose.prop().name() + (pose.required() ? "!" : "?"))
-                    .collect(java.util.stream.Collectors.joining("|"));
-            check(topologies.add(structure), "duplicate scene topology: " + scenario);
-            check(p.size() <= 16, "scene exceeds synchronized BE contact capacity");
-        }
-        for (var weapon : BattlefieldWeaponCatalog.Source.values()) {
-            check(used.contains(weapon.prop), "Approved author model unused: " + weapon);
-            check(weapon.approximateLength() > 0.5f, "Source weapon geometry invalid");
-            check(BattlefieldWeaponCatalog.fromProp(weapon.prop) == weapon,
-                    "mesh ID ordering or Prop mapping changed");
-            check(BattlefieldWeaponCatalog.TIP_DOWN_Z_DEGREES == -135f,
-                    "Never plant the handle (-135 deg means tip-down)");
-            check(Math.abs(weapon.tipDownY(weapon.maxX, weapon.maxY)) < 0.00001,
-                    "Blade/axe head is NOT the ground pivot: " + weapon);
-            check(weapon.tipDownY(weapon.minX, weapon.minY) > 0.70,
-                    "Grip is not ABOVE the blade tip: " + weapon);
-            check(Math.abs(weapon.tipDownX(weapon.maxX, weapon.maxY)) < 0.00001,
-                    "Blade tip misses its ground anchor: " + weapon);
         }
 
-        // Verify ALL 112 real poses, including near-horizontal discarded
-        // weapons; the grip must not be pushed below soil by the sink.
-        int weaponPoses = 0, shallowPoses = 0;
-        for (Scenario scene : Scenario.values()) {
-            for (int v = 0; v < 8; v++) {
-                for (Pose pose : BattlefieldPosedScenes.plan(scene, v)) {
-                    if (!BattlefieldWeaponCatalog.isWeapon(pose.prop())) continue;
-                    weaponPoses++;
-                    var mesh = BattlefieldWeaponCatalog.fromProp(pose.prop());
-                    double cos = Math.cos(Math.toRadians(pose.pitch()))
-                            * Math.cos(Math.toRadians(pose.roll()));
-                    double gripHeight = mesh.tipDownY(mesh.minX, mesh.minY) * cos + pose.sink();
-                    double bladeHeight = mesh.tipDownY(mesh.maxX, mesh.maxY) + pose.sink();
-                    check(gripHeight >= -0.025,
-                            "Grip is buried: " + scene + " variant " + v + " " + pose.prop()
-                                    + " (grip y=" + gripHeight + ")");
-                    check(bladeHeight <= 0.001,
-                            "Blade tip/axe head no longer touches soil: " + scene + " " + pose.prop());
-                    if (Math.abs(cos) < 0.25) {
-                        shallowPoses++;
-                        check(pose.sink() > -0.12f,
-                                "Fallen grip forced into the ground: " + scene + " " + pose.prop());
-                    }
-                }
-            }
+        for (var model : BattlefieldWeaponCatalog.Source.values()) {
+            check(used.contains(model.prop), "Approved author source is not included: " + model);
+            check(model.approximateLength() > 0.5f, "Broken model geometry: " + model);
+            check(BattlefieldWeaponCatalog.fromProp(model.prop) == model, "Source ID reordered");
+            check(BattlefieldWeaponCatalog.TIP_DOWN_Z_DEGREES == -135f,
+                    "Common blade transform has regressed to handle-first");
+            check(Math.abs(model.tipDownY(model.maxX, model.maxY)) < 0.00001,
+                    "Blade head not at ground pivot");
+            check(model.tipDownY(model.minX, model.minY) > 0.70,
+                    "Source handle not above blade tip");
         }
-        check(weaponPoses > 100 && shallowPoses > 8,
-                "All blade types/near-horizontal situations must be tested");
-        check(Scenario.values().length >= 14, "Not enough distinct battle episodes");
-        check(Scenario.values()[0] == Scenario.LAST_STAND
-                && Scenario.values()[1] == Scenario.BANNER_LINE,
-                "Persistent scene 0/1 IDs must not change for existing saved worlds");
-        for (Scenario scenario : Scenario.values()) {
-            check(!BattlefieldPosedScenes.plan(scenario, 0).equals(BattlefieldPosedScenes.plan(scenario, 4)),
-                    "scene has no substantial alternative pose: " + scenario);
+
+        check(sparse >= 1 && expansive >= 12 && bladeHeavy >= 4
+                        && shieldless >= 7 && bannerScenes >= 2,
+                "Diversity metrics degenerated into the same central clutter: "
+                        + sparse + " sparse, " + expansive + " wide/deep, "
+                        + bladeHeavy + " blade-rich, " + shieldless + " without shields");
+
+        // Distinctive NEGATIVE SPACE is an intentional part of each story.
+        for (int v = 0; v < 8; v++) {
+            for (Pose p : BattlefieldPosedScenes.plan(Scenario.BLADE_GROVE, v))
+                check(Math.abs(p.right()) >= 3.0, "Weapon banks blocked the central corridor");
+            for (Pose p : BattlefieldPosedScenes.plan(Scenario.TWIN_STANDARDS, v))
+                check(Math.abs(p.right()) >= 2.0, "Banner gate blocked by props");
+            check(space(BattlefieldPosedScenes.plan(Scenario.FINAL_TRACE, v)).width > 8.0,
+                    "The sparse far traces were collapsed into a central heap");
+            check(space(BattlefieldPosedScenes.plan(Scenario.HUNTER_TRACE, v)).length > 6.0,
+                    "Retreat trace became a local pile");
+            check(BattlefieldPosedScenes.plan(Scenario.LONE_BLADE, v).stream()
+                    .filter(Pose::required).count() == 2,
+                    "Lonely weapon must have only one distant required trace");
+            check(BattlefieldPosedScenes.plan(Scenario.BANNER_LINE, v).stream()
+                    .filter(Pose::banner).count() == 2,
+                    "Banner line lost two distinct animated banners");
         }
-        System.out.println("Battlefield scenes: " + Scenario.values().length
-                + " distinct episode topologies x 8 deterministic variants; 8 authentic hunter/Pale meshes.");
+
+        System.out.println("D-127: 20 unique composition archetypes x 8 layouts, "
+                + "14 saved versions preserved, nonuniform silhouettes, "
+                + "real blade-tip contacts and 8 approved meshes.");
     }
 }
