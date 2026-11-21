@@ -56,6 +56,16 @@ import com.tarkrakov.tearsofink.block.lantern.InkLanternBlock;
 
 /** Все блоки мода. */
 public final class ModBlocks {
+	// Testable static scenery: not items, no AI/BlockEntity, no collisions or drops.
+	// Reuses only the existing authored patrol spear, shield and crossbow art.
+	private static BlockBehaviour.Properties battlefieldDecorProps() {
+		return BlockBehaviour.Properties.of().mapColor(MapColor.COLOR_GRAY)
+				.strength(0.3f).noCollission().noOcclusion().noLootTable();
+	}
+	public static final Block BATTLEFIELD_SPEAR = registerNoItem("battlefield_spear", new BattlefieldDecorBlock(battlefieldDecorProps()));
+	public static final Block BATTLEFIELD_SHIELD = registerNoItem("battlefield_shield", new BattlefieldDecorBlock(battlefieldDecorProps()));
+	public static final Block BATTLEFIELD_CROSSBOW = registerNoItem("battlefield_crossbow", new BattlefieldDecorBlock(battlefieldDecorProps()));
+
 	/** Пепельная земля: верхний слой Чернильных пустошей (как трава, но мёртвая). */
 	public static final Block ASHEN_SOIL = register("ashen_soil", new ZoneSoilBlock(
 			BlockBehaviour.Properties.of()
