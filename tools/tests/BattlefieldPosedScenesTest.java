@@ -41,6 +41,7 @@ public final class BattlefieldPosedScenesTest {
                 List<Pose> a = BattlefieldPosedScenes.plan(scene, v);
                 List<Pose> b = BattlefieldPosedScenes.plan(scene, v);
                 check(a.equals(b), "pose layout changed without seed change");
+                check(a == b, "scene poses must be cached, not reallocated each render frame");
                 long tilted = a.stream().filter(p -> !p.banner() &&
                         (Math.abs(p.roll()) >= 10f || Math.abs(p.pitch()) >= 10f)).count();
                 check(tilted >= 2, "only standing, cardinal-facing props");
@@ -111,6 +112,9 @@ public final class BattlefieldPosedScenesTest {
                     "mesh ID ordering or Prop mapping changed");
         }
         check(Scenario.values().length >= 14, "Not enough distinct battle episodes");
+        check(Scenario.values()[0] == Scenario.LAST_STAND
+                && Scenario.values()[1] == Scenario.BANNER_LINE,
+                "Persistent scene 0/1 IDs must not change for existing saved worlds");
         for (Scenario scenario : Scenario.values()) {
             check(!BattlefieldPosedScenes.plan(scenario, 0).equals(BattlefieldPosedScenes.plan(scenario, 4)),
                     "scene has no substantial alternative pose: " + scenario);
