@@ -79,7 +79,7 @@ public final class BattlefieldDecorCommands {
 
     /**
      * Place the authored 7-block-high regular standard on natural terrain:
-     * find a solid ground anchor near the player and test the actual rigid cuboid
+     * find a solid ground anchor near the player and test the actual animated-cloth envelope
      * footprint. No artificial flat 7x7 clearing, no vegetation removal, no
      * overwriting structures and no automatic worldgen in the preview command.
      *
@@ -121,7 +121,7 @@ public final class BattlefieldDecorCommands {
                         if (!level.setBlock(base, state, Block.UPDATE_CLIENTS)) continue;
                         BlockPos placed = base;
                         context.getSource().sendSuccess(
-                                () -> Component.literal("Регулярный штандарт без полотна установлен на " + placed.toShortString()
+                                () -> Component.literal("Регулярный штандарт с полотном установлен на " + placed.toShortString()
                                         + ". Рельеф и растения сохранены."),
                                 false);
                         return 1;
@@ -135,7 +135,7 @@ public final class BattlefieldDecorCommands {
         return 0;
     }
 
-    /** Exact footprint for all 26 source cuboids, including the top ornament above block +6. */
+    /** Conservative footprint for all 31 source cuboids, including the five moving cloth sections. */
     static boolean canPlaceBanner(ServerLevel level, BlockPos base, Direction facing) {
         if (base.getY() <= level.getMinBuildHeight()
                 || !level.getWorldBorder().isWithinBounds(base)

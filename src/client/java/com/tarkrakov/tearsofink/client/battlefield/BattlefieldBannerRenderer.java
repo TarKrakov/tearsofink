@@ -13,12 +13,11 @@ import net.minecraft.client.renderer.blockentity.BlockEntityRendererProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 
-/** D-128: author's regular-army standard without cloth, replacing rejected first_flag.
- * A later vertically hanging cloth requires its own top-mounted hinge transforms.
+/** D-129: full authored regular-army standard, including vertical five-piece cloth.
  */
 public final class BattlefieldBannerRenderer implements BlockEntityRenderer<BattlefieldBannerBlockEntity> {
     private static final ResourceLocation TEXTURE =
-            TearsOfInk.id("textures/block/battlefield_regular_standart_withoutbanner1.png");
+            TearsOfInk.id("textures/block/battlefield_regular_standart1.png");
     private static final float UV_SIZE = BattlefieldBannerGeometry.UV_SIZE;
 
     public BattlefieldBannerRenderer(BlockEntityRendererProvider.Context context) {}
@@ -32,15 +31,36 @@ public final class BattlefieldBannerRenderer implements BlockEntityRenderer<Batt
         stack.translate(0.5, 0, 0.5);
         stack.mulPose(Axis.YP.rotationDegrees(180f - banner.getBlockState()
                 .getValue(HorizontalDirectionalBlock.FACING).toYRot()));
-        for (BattlefieldBannerGeometry.Cuboid box : BattlefieldBannerGeometry.PARTS) {
-            drawBox(box, stack.last(), consumer, packedLight, packedOverlay);
+        // Fixed pole / metal ornaments remain absolutely still.
+        for (int index : BattlefieldBannerGeometry.POLE_PARTS) {
+            drawBox(BattlefieldBannerGeometry.PARTS[index], stack.last(), consumer, packedLight, packedOverlay);
         }
+
+        // The cloth hangs DOWN from the upper crossbar. Each descendant inherits
+        // the previous segment's X bend around its actual TOP joint (not old sideways
+        // JOINT_X or Y yaw). World time only drives client visuals; no server tick.
+        double time = banner.getLevel().getGameTime() + partialTick;
+        long hash = banner.getBlockPos().asLong();
+        double positionPhase = ((hash ^ (hash >>> 32)) & 1023L) * (Math.PI * 2d / 1024d);
+        double phase = time * (Math.PI * 2d / BattlefieldBannerGeometry.WIND_CYCLE_TICKS) + positionPhase;
+        stack.pushPose();
+        for (int i = 0; i < BattlefieldBannerGeometry.CLOTH_PARTS.length; i++) {
+            float[] pivot = BattlefieldBannerGeometry.TOP_HINGES[i];
+            float angle = (float) (Math.sin(phase - i * BattlefieldBannerGeometry.WIND_PHASE_STEP)
+                    * BattlefieldBannerGeometry.WIND_AMPLITUDES[i]);
+            stack.translate(pivot[0] / 16f, pivot[1] / 16f, pivot[2] / 16f);
+            stack.mulPose(Axis.XP.rotation(angle));
+            stack.translate(-pivot[0] / 16f, -pivot[1] / 16f, -pivot[2] / 16f);
+            drawBox(BattlefieldBannerGeometry.PARTS[BattlefieldBannerGeometry.CLOTH_PARTS[i]],
+                    stack.last(), consumer, packedLight, packedOverlay);
+        }
+        stack.popPose();
         stack.popPose();
     }
 
     @Override
     public boolean shouldRenderOffScreen(BattlefieldBannerBlockEntity banner) {
-        // Authored tall pole reaches Y=98/16 (>6 blocks).
+        // Authored pole reaches Y=98/16; waving cloth exceeds the anchor AABB.
         return true;
     }
 
