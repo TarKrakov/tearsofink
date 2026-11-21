@@ -3,6 +3,7 @@ import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Pose;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Scenario;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldWeaponCatalog;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSoulShieldCatalog;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Prop;
 
 import java.util.ArrayList;
@@ -76,9 +77,9 @@ public final class BattlefieldPosedScenesTest {
 
     public static void main(String[] args) {
         Scenario[] scenarios = Scenario.values();
-        check(scenarios.length == 34, "20 persistent scenes + 14 new D-131 previews required");
+        check(scenarios.length == 40, "20 original + 14 D-131 + 6 D-132 scenes required");
         check(scenarios[0] == Scenario.LAST_STAND && scenarios[1] == Scenario.BANNER_LINE
-                && scenarios[13] == Scenario.FINAL_TRACE,
+                && scenarios[13] == Scenario.FINAL_TRACE && scenarios[33] == Scenario.MIXED_DEAD_GROUND,
                 "Persisted D-125 scene IDs must remain stable (0..13)");
         check(BattlefieldCompositionArchetypes.Silhouette.values().length == 20,
                 "Every scenario needs a separate meaningful silhouette class");
@@ -177,10 +178,23 @@ public final class BattlefieldPosedScenesTest {
 
         // D-131: separate banner-led and situation-led scenes, appended to all old IDs.
         int historicalBanner = 0, historicalBare = 0, historicalNoBanner = 0;
+        EnumSet<Prop> soulShieldsSeen = EnumSet.noneOf(Prop.class);
+        int dedicatedPaladinEpisodes = 0, dedicatedInkEpisodes = 0;
         Set<String> historicalTopologies = new HashSet<>();
         for (int sceneId = 20; sceneId < scenarios.length; sceneId++) {
             Scenario scene = scenarios[sceneId];
             List<Pose> p0 = BattlefieldPosedScenes.plan(scene, 0, 2);
+            if (sceneId >= 34 && sceneId <= 36) {
+                check(p0.stream().filter(p -> BattlefieldSoulShieldCatalog.isShield(p.prop()) && p.required()).count() >= 2,
+                        "New paladin scene needs real Soul shields in its core: " + scene);
+                dedicatedPaladinEpisodes++;
+            }
+            if (sceneId >= 37) {
+                check(p0.stream().noneMatch(p -> BattlefieldSoulShieldCatalog.isShield(p.prop())),
+                        "Historic Ink Hunters must not inherit Soul shields");
+                dedicatedInkEpisodes++;
+            }
+            for (Pose p : p0) if (BattlefieldSoulShieldCatalog.isShield(p.prop())) soulShieldsSeen.add(p.prop());
             String signature = p0.stream().map(p -> p.prop() + "/" + (p.required() ? "!" : "?"))
                     .collect(java.util.stream.Collectors.joining(";"));
             check(historicalTopologies.add(signature), "Duplicate new scene topology " + scene);
@@ -224,8 +238,17 @@ public final class BattlefieldPosedScenesTest {
             check(BattlefieldPosedScenes.plan(scene, 3, 0).equals(BattlefieldPosedScenes.plan(scene, 3, 2)),
                     "New scene IDs should not accidentally select old recipe content");
         }
-        check(historicalBanner == 2 && historicalBare == 1 && historicalNoBanner == 11,
+        check(historicalBanner == 2 && historicalBare == 1 && historicalNoBanner == 17
+                        && dedicatedPaladinEpisodes == 3 && dedicatedInkEpisodes == 3,
                 "Historical roster lost banner/no-banner balance");
+
+        for (var soul : BattlefieldSoulShieldCatalog.Source.values()) {
+            check(soulShieldsSeen.contains(soul.prop), "Unused existing Soul shield: " + soul);
+            check(soul.meshIndex() >= 8 && soul.meshIndex() <= 11, "Saved weapon mesh index reassigned");
+            check(soul.visibleHeight() > 2f && soul.visibleHeight() < 2.5f,
+                    "Soul shield decor not scaled to x1.5");
+            check(!BattlefieldWeaponCatalog.isWeapon(soul.prop), "Soul shield mistaken for blade");
+        }
 
         // First twenty scene IDs and layouts are still the same public contract.
         for (int id = 0; id < 20; id++) {
@@ -236,7 +259,8 @@ public final class BattlefieldPosedScenesTest {
             }
         }
 
-        System.out.println("D-131: 14 new episodes x 8 variants, 2 real full-banner scenes, "
+        System.out.println("D-132: 6 appended faction episodes x 8 variants, four real Soul shield meshes x1.5.");
+        System.out.println("D-131: 14 earlier episodes x 8 variants, 2 real full-banner scenes, "
                 + "1 author bare-standard scene, 11 situation-led scenes; old IDs/layouts preserved.");
         System.out.println("D-127: 20 unique composition archetypes x 8 layouts, "
                 + "14 saved versions preserved, nonuniform silhouettes, "

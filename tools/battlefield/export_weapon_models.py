@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 BASE = ROOT / "src/main/resources/assets/tears-of-ink"
 SOURCES = ["pale_longsword","pale_linear_great","blood_talvar","blood_dussak","spire_torturer_greatsword","spire_roaring_axe","spire_shadow_scimitar","spire_rapid_knife"]
 IDS = ["PALE_LONGSWORD","PALE_LINEAR_GREATSWORD","BLOOD_TALVAR","BLOOD_DUSSAK","SPIRE_TORTURER_GREATSWORD","SPIRE_ROARING_AXE","SPIRE_SHADOW_SCIMITAR","SPIRE_RAPID_KNIFE"]
+SOUL_SHIELDS = ["ram", "repel", "mercy", "radiant"]
 
 
 def model_for(name):
@@ -35,10 +36,15 @@ def model_for(name):
 
 
 def blockstates():
-    return {"variants": {
+    variants = {
         "source=" + str(i): {"model": "tears-of-ink:block/battlefield_weapon_" + name}
         for i, name in enumerate(SOURCES)
-    }}
+    }
+    variants.update({
+        "source=" + str(i + 8): {"model": "tears-of-ink:block/battlefield_soul_shield_" + name}
+        for i, name in enumerate(SOUL_SHIELDS)
+    })
+    return {"variants": variants}
 
 
 def main():
@@ -47,6 +53,14 @@ def main():
     args = parser.parse_args()
     payloads = {BASE / "models/block" / ("battlefield_weapon_" + name + ".json"): model_for(name)
                 for name in SOURCES}
+    # Block models inherit the actual complete 3D source without copying,
+    # reinterpreting or editing ANY of the artist's elements or UVs.
+    for name in SOUL_SHIELDS:
+        model_for("shield/" + name)  # Verify real 3D elements and source PNG.
+        payloads[BASE / "models/block" / ("battlefield_soul_shield_" + name + ".json")] = {
+            "ambientocclusion": False,
+            "parent": "tears-of-ink:item/shield/" + name,
+        }
     payloads[BASE / "blockstates/battlefield_weapon_mesh.json"] = blockstates()
     for path, expected in payloads.items():
         if args.check:
@@ -55,7 +69,7 @@ def main():
         else:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(json.dumps(expected, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"Verified {len(SOURCES)} unmodified authored meshes and original item textures.")
+    print(f"Verified {len(SOURCES)} original weapon meshes and {len(SOUL_SHIELDS)} original 3D Soul shields with their textures.")
 
 
 if __name__ == "__main__":
