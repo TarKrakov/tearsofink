@@ -1,0 +1,7 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "tears-of-ink:block/first_flag_texture"
+  },
+  "elements": []
+}

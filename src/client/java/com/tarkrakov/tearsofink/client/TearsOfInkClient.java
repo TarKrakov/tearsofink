@@ -174,6 +174,10 @@ public class TearsOfInkClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModMobs.PALE_SHIELDBEARER, com.tarkrakov.tearsofink.client.entity.PaleShieldbearerRenderer::new);
 		EntityRendererRegistry.register(ModMobs.PALE_CROSSBOWMAN, com.tarkrakov.tearsofink.client.entity.PaleCrossbowmanRenderer::new);
 		EntityRendererRegistry.register(ModMobs.PALE_BOLT, com.tarkrakov.tearsofink.client.entity.PaleBoltRenderer::new);
+		// Первое авторское знамя: анимация только у клиента, без server tick.
+		net.minecraft.client.renderer.blockentity.BlockEntityRenderers.register(
+				com.tarkrakov.tearsofink.block.lantern.ModBlockEntities.BATTLEFIELD_BANNER,
+				com.tarkrakov.tearsofink.client.battlefield.BattlefieldBannerRenderer::new);
 		// Кровосборник: помпа рисуется моделью с анимацией
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.blood.BloodPumpModel.LAYER,
 				com.tarkrakov.tearsofink.client.blood.BloodPumpModel::createBodyLayer);

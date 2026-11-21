@@ -23,7 +23,8 @@ public final class BattlefieldDecorCommands {
                 dispatcher.register(Commands.literal("tearsofink")
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.literal("battlefield")
-                                .then(Commands.literal("preview").executes(BattlefieldDecorCommands::preview)))));
+                                .then(Commands.literal("preview").executes(BattlefieldDecorCommands::preview))
+                                .then(Commands.literal("banner").executes(BattlefieldDecorCommands::banner)))));
     }
 
     private static int preview(CommandContext<CommandSourceStack> context)
@@ -72,5 +73,47 @@ public final class BattlefieldDecorCommands {
                         + (done < 3 ? " Остальные места заняты или неровные — перейдите на открытую площадку." : "")),
                 false);
         return count;
+    }
+
+    /** Preview one full-sized animated banner without overwriting existing scenery. */
+    private static int banner(CommandContext<CommandSourceStack> context)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = context.getSource().getPlayerOrException();
+        ServerLevel level = player.serverLevel();
+        Direction forward = player.getDirection();
+        BlockPos target = player.blockPosition().relative(forward, 5);
+        int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, target.getX(), target.getZ());
+        BlockPos base = new BlockPos(target.getX(), y, target.getZ());
+        boolean clear = level.getWorldBorder().isWithinBounds(base)
+                && y + 4 < level.getMaxBuildHeight()
+                && Math.abs(y - player.getBlockY()) <= 5
+                && level.getBlockState(base.below()).isFaceSturdy(level, base.below(), Direction.UP);
+        // This 4-block-high, 2.2-block-wide banner may extend far beyond its anchor.
+        // Do not place it near vegetation, player structures or in other props.
+        for (int dx = -3; clear && dx <= 3; dx++) {
+            for (int dz = -3; clear && dz <= 3; dz++) {
+                for (int dy = 0; dy <= 4; dy++) {
+                    if (!level.getBlockState(base.offset(dx, dy, dz)).isAir()) {
+                        clear = false;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!clear) {
+            context.getSource().sendFailure(Component.literal(
+                    "Для знамени нужна ровная открытая площадка: 7x7 блоков и 5 блоков высоты."));
+            return 0;
+        }
+        var state = ModBlocks.BATTLEFIELD_BANNER.defaultBlockState()
+                .setValue(HorizontalDirectionalBlock.FACING, forward.getOpposite());
+        if (!level.setBlock(base, state, Block.UPDATE_CLIENTS)) {
+            context.getSource().sendFailure(Component.literal("Не удалось поставить тестовое знамя."));
+            return 0;
+        }
+        context.getSource().sendSuccess(
+                () -> Component.literal("Первое знамя установлено на " + base.toShortString()
+                        + ". Анимация полотна работает только на клиенте."), false);
+        return 1;
     }
 }
