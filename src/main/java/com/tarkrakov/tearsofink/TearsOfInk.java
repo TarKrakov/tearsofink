@@ -82,6 +82,7 @@ public class TearsOfInk implements ModInitializer {
 		ModMobs.init();
 		WeaponAbilities.init();
 		ModCommands.init();
+		com.tarkrakov.tearsofink.command.BattlefieldDecorCommands.init();
 		com.tarkrakov.tearsofink.command.DebugCommands.init();
 		com.tarkrakov.tearsofink.command.StructureCommands.init();
 		com.tarkrakov.tearsofink.compat.jaber.JaberCompat.init();
