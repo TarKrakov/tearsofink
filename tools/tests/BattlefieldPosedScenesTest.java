@@ -76,17 +76,18 @@ public final class BattlefieldPosedScenesTest {
 
     public static void main(String[] args) {
         Scenario[] scenarios = Scenario.values();
-        check(scenarios.length == 20, "20 genuinely distinct authored episode types required");
+        check(scenarios.length == 34, "20 persistent scenes + 14 new D-131 previews required");
         check(scenarios[0] == Scenario.LAST_STAND && scenarios[1] == Scenario.BANNER_LINE
                 && scenarios[13] == Scenario.FINAL_TRACE,
                 "Persisted D-125 scene IDs must remain stable (0..13)");
-        check(BattlefieldCompositionArchetypes.Silhouette.values().length == scenarios.length,
+        check(BattlefieldCompositionArchetypes.Silhouette.values().length == 20,
                 "Every scenario needs a separate meaningful silhouette class");
 
         Set<String> newTopologies = new HashSet<>();
         EnumSet<Prop> used = EnumSet.noneOf(Prop.class);
         int sparse = 0, expansive = 0, bladeHeavy = 0, shieldless = 0, bannerScenes = 0;
         for (Scenario scene : scenarios) {
+            if (scene.ordinal() >= 20) continue; // D-127 family; historical family tested below.
             List<Pose> first = BattlefieldPosedScenes.plan(scene, 0);
             Space initial = space(first);
             String topology = first.stream().map(p -> p.prop().name() + (p.required() ? "!" : "?"))
@@ -174,6 +175,69 @@ public final class BattlefieldPosedScenesTest {
                     "Banner line lost two distinct animated banners");
         }
 
+        // D-131: separate banner-led and situation-led scenes, appended to all old IDs.
+        int historicalBanner = 0, historicalBare = 0, historicalNoBanner = 0;
+        Set<String> historicalTopologies = new HashSet<>();
+        for (int sceneId = 20; sceneId < scenarios.length; sceneId++) {
+            Scenario scene = scenarios[sceneId];
+            List<Pose> p0 = BattlefieldPosedScenes.plan(scene, 0, 2);
+            String signature = p0.stream().map(p -> p.prop() + "/" + (p.required() ? "!" : "?"))
+                    .collect(java.util.stream.Collectors.joining(";"));
+            check(historicalTopologies.add(signature), "Duplicate new scene topology " + scene);
+            long banners = p0.stream().filter(Pose::banner).count();
+            check(banners <= 1, "Generic flag spam " + scene);
+            if (scene == Scenario.REGULAR_SQUAD_LINE_ANCHOR
+                    || scene == Scenario.REGULAR_SQUAD_RALLY_POINT) {
+                check(banners == 1 && p0.stream().anyMatch(p -> p.prop() == Prop.BANNER && p.required()),
+                        "Regular squad scene missing the real full banner");
+                historicalBanner++;
+            } else if (scene == Scenario.REGULAR_BARE_REMNANT) {
+                check(banners == 1 && p0.stream().anyMatch(p -> p.prop() == Prop.BANNER_BARE && p.required()),
+                        "Regular aftermath missing the author's bare pole");
+                historicalBare++;
+            } else {
+                check(banners == 0, "Other factions cannot inherit a fake regular banner: " + scene);
+                historicalNoBanner++;
+            }
+            for (int variant = 0; variant < 8; variant++) {
+                List<Pose> plan = BattlefieldPosedScenes.plan(scene, variant, 2);
+                check(plan == BattlefieldPosedScenes.plan(scene, variant, 2)
+                                && plan == BattlefieldPosedScenes.plan(scene, variant),
+                        "D-131 plans must be cached, with explicit saved layout=2");
+                check(plan.size() <= 16 && plan.stream().filter(Pose::required).count() >= 2,
+                        "Unsafe scene NBT / missing required core: " + scene);
+                check(space(plan).radius <= 7.4, "D-131 scene escaped spatial bounds: " + scene);
+                for (Pose prop : plan) {
+                    check(Math.abs(prop.forward()) < 3.9 && Math.abs(prop.right()) < 5.6,
+                            "New scene exceeds terrain search bounds: " + scene + "/" + variant);
+                    check(Math.abs(prop.pitch()) <= 85 && Math.abs(prop.roll()) <= 85,
+                            "Invalid authored 3D tilt: " + scene);
+                    check(!prop.banner() || (prop.pitch() == 0 && prop.roll() == 0),
+                            "Banner must be an independent existing block");
+                }
+                validateBlades(scene, variant, plan);
+                check(!plan.equals(BattlefieldPosedScenes.plan(scene, variant ^ 1, 2)),
+                        "Missing mirrored new scene " + scene);
+                check(!plan.equals(BattlefieldPosedScenes.plan(scene, variant ^ 4, 2)),
+                        "Missing shifted fall variant " + scene);
+            }
+            check(BattlefieldPosedScenes.plan(scene, 3, 0).equals(BattlefieldPosedScenes.plan(scene, 3, 2)),
+                    "New scene IDs should not accidentally select old recipe content");
+        }
+        check(historicalBanner == 2 && historicalBare == 1 && historicalNoBanner == 11,
+                "Historical roster lost banner/no-banner balance");
+
+        // First twenty scene IDs and layouts are still the same public contract.
+        for (int id = 0; id < 20; id++) {
+            for (int v = 0; v < 8; v++) {
+                check(BattlefieldPosedScenes.plan(scenarios[id], v, 1)
+                        == BattlefieldPosedScenes.plan(scenarios[id], v, 2),
+                        "Layout 2 unexpectedly changed old saved preview " + id);
+            }
+        }
+
+        System.out.println("D-131: 14 new episodes x 8 variants, 2 real full-banner scenes, "
+                + "1 author bare-standard scene, 11 situation-led scenes; old IDs/layouts preserved.");
         System.out.println("D-127: 20 unique composition archetypes x 8 layouts, "
                 + "14 saved versions preserved, nonuniform silhouettes, "
                 + "real blade-tip contacts and 8 approved meshes.");
