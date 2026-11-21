@@ -74,7 +74,13 @@ public final class BattlefieldPosedScenes {
 
     public record Pose(Prop prop, float forward, float right, float sink,
                        float yaw, float pitch, float roll, boolean required) {
-        public boolean banner() { return prop == Prop.BANNER || prop == Prop.BANNER_BARE; }
+        public boolean banner() {
+            return switch (prop) {
+                case BANNER, BANNER_BARE, PALADIN_BANNER, PALADIN_BANNER_BARE,
+                        HUNTER_BANNER, HUNTER_BANNER_BARE -> true;
+                default -> false;
+            };
+        }
     }
 
     /**
@@ -92,6 +98,9 @@ public final class BattlefieldPosedScenes {
                         : layoutVersion == 0 && scenario.ordinal() < 14
                                 ? buildLegacyPlan(scenario, variant)
                                 : BattlefieldCompositionArchetypes.plan(scenario, variant);
+                if (layoutVersion == 3) {
+                    source = BattlefieldFactionScenes.withFactionBanners(scenario, variant, source);
+                }
                 cached[scenario.ordinal() * 8 + variant] = source.stream().map(p -> {
                     if (!BattlefieldWeaponCatalog.isWeapon(p.prop())) return p;
                     var weapon = BattlefieldWeaponCatalog.fromProp(p.prop());
@@ -106,6 +115,8 @@ public final class BattlefieldPosedScenes {
 
     private static final List<Pose>[] LEGACY = buildCache(0);
     private static final List<Pose>[] CURRENT = buildCache(1);
+    // New banner-aware layout 3 is opt-in. Original 0/1/2 remain exact.
+    private static final List<Pose>[] FACTIONAL = buildCache(3);
     // D-131 scene IDs 20..33 are new, but layout 2 is an explicit save marker.
     // In the renderer all nonzero layouts use CURRENT; IDs 0..19 are immutable.
 
@@ -114,8 +125,9 @@ public final class BattlefieldPosedScenes {
     }
 
     public static List<Pose> plan(Scenario scene, int variant, int layoutVersion) {
-        return (layoutVersion == 0 && scene.ordinal() < 20 ? LEGACY : CURRENT)
-                [scene.ordinal() * 8 + (variant & 7)];
+        List<Pose>[] source = layoutVersion == 3 ? FACTIONAL
+                : layoutVersion == 0 && scene.ordinal() < 20 ? LEGACY : CURRENT;
+        return source[scene.ordinal() * 8 + (variant & 7)];
     }
 
     private static List<Pose> buildLegacyPlan(Scenario scene, int variant) {

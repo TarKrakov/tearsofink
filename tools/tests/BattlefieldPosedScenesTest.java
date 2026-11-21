@@ -250,6 +250,38 @@ public final class BattlefieldPosedScenesTest {
             check(!BattlefieldWeaponCatalog.isWeapon(soul.prop), "Soul shield mistaken for blade");
         }
 
+        // D-133: four real faction flag roles, new layout=3 only. Older layout=2
+        // already exists in saved worlds: it MUST remain byte-for-byte identical.
+        int paladinStandards = 0, hunterStandards = 0, paladinBare = 0, hunterBare = 0;
+        for (int id = 20; id < scenarios.length; id++) {
+            Scenario s = scenarios[id];
+            for (int v = 0; v < 8; v++) {
+                List<Pose> old = BattlefieldPosedScenes.plan(s, v, 2);
+                List<Pose> now = BattlefieldPosedScenes.plan(s, v, 3);
+                check(now == BattlefieldPosedScenes.plan(s, v, 3), "layout=3 must be cached");
+                check(now.size() <= 16, "New faction banner overflows Contacts");
+                check(old.equals(now.subList(0, old.size())), "Old scene poses reordered: " + s);
+                for (Pose p : now) {
+                    if (p.prop() == Prop.PALADIN_BANNER) paladinStandards++;
+                    if (p.prop() == Prop.PALADIN_BANNER_BARE) paladinBare++;
+                    if (p.prop() == Prop.HUNTER_BANNER) hunterStandards++;
+                    if (p.prop() == Prop.HUNTER_BANNER_BARE) hunterBare++;
+                    if (p.banner()) check(p.pitch() == 0 && p.roll() == 0,
+                            "Independent authored banner must remain upright");
+                }
+                if (s == Scenario.PALADIN_HOLDOUT_ANCHOR ||
+                        s == Scenario.PALADIN_BARE_RELIC ||
+                        s == Scenario.HUNTER_STRIKE_MARK ||
+                        s == Scenario.HUNTER_BARE_TRACE)
+                    check(now.get(now.size()-1).required() && now.get(now.size()-1).banner(),
+                            "Flag must anchor its named formation scene: " + s);
+                if (s == Scenario.INK_HUNTER_LAST_TRACE)
+                    check(now.equals(old), "Lone trace should remain bannerless");
+            }
+        }
+        check(paladinStandards >= 8 && hunterStandards >= 8 && paladinBare >= 8 && hunterBare >= 8,
+                "Four actual faction banner roles must all be used in scene recipes");
+
         // First twenty scene IDs and layouts are still the same public contract.
         for (int id = 0; id < 20; id++) {
             for (int v = 0; v < 8; v++) {

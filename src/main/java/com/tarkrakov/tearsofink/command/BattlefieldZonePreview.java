@@ -109,7 +109,7 @@ public final class BattlefieldZonePreview {
                             ^ ((long) root.getZ() * 132897987541L) ^ scene.ordinal();
                     int variant = requestedVariant >= 0 ? requestedVariant
                             : (int) ((seed ^ seed >>> 29) & 7L);
-                    List<Pose> poses = BattlefieldPosedScenes.plan(scene, variant);
+                    List<Pose> poses = BattlefieldPosedScenes.plan(scene, variant, scene.ordinal() >= 20 ? 3 : 1);
 
                     // First retain the player's orientation, then try other
                     // axes to find a composition that fits without tree felling.
@@ -184,7 +184,7 @@ public final class BattlefieldZonePreview {
                 .setValue(HorizontalDirectionalBlock.FACING, axis)
                 .setValue(BattlefieldSceneBlock.SCENE, scene.ordinal())
                 .setValue(BattlefieldSceneBlock.VARIANT, variant)
-                .setValue(BattlefieldSceneBlock.LAYOUT, scene.ordinal() >= 20 ? 2 : 1);
+                .setValue(BattlefieldSceneBlock.LAYOUT, scene.ordinal() >= 20 ? 3 : 1);
         int rendered = (int) Arrays.stream(heights).filter(h -> h != BattlefieldSceneBlockEntity.MISSING).count();
         return new Layout(root, state, heights, flags, rendered);
     }
