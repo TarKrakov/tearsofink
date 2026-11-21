@@ -80,7 +80,7 @@ amplitudes = [float(m) for m in re.findall(r"([0-9]+(?:\.[0-9]+)?)f", wind.group
 assert len(amplitudes) == 6
 assert all(0.0 < amplitudes[i] < amplitudes[i + 1] for i in range(5))
 assert amplitudes[0] <= 0.025 and amplitudes[-1] <= 0.065, "Wave is too strong for the accepted pilot"
-cycle = re.search(r"Math\.PI \* 2d / ([0-9]+)d", text)
+cycle = re.search(r"Math\.sin\(time \* \(Math\.PI \* 2d / ([0-9]+)d\)", text)
 assert cycle is not None and 65 <= int(cycle.group(1)) <= 80, "Cloth cycle outside gentle range"
 assert "drawBox(PARTS[0], stack.last(), consumer, packedLight, packedOverlay);" in text
 print("Banner wave: six restrained increasing amplitudes, no pole animation, gentle cycle.")
