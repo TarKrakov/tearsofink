@@ -32,6 +32,9 @@ public final class BattlefieldPosedScenesTest {
                             "line needs both banners");
                     check(Math.abs(flags.get(0).right() - flags.get(1).right()) >= 8f,
                             "line lacks spatial gap");
+                    check(a.stream().anyMatch(p -> p.prop() == Prop.SPEAR && p.required()
+                            && Math.abs(p.roll()) >= 25f),
+                            "banner line requires spear that interacts with fallen shield");
                 } else {
                     check(a.stream().anyMatch(p -> p.prop() == Prop.SPEAR && p.required() &&
                             Math.abs(p.roll()) >= 25f), "spear does not lean toward shield");
