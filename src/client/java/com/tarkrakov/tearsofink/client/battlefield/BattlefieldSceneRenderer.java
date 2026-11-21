@@ -42,7 +42,8 @@ public final class BattlefieldSceneRenderer implements BlockEntityRenderer<Battl
         int sceneIndex = root.getValue(BattlefieldSceneBlock.SCENE);
         if (sceneIndex < 0 || sceneIndex >= SCENARIOS.length) return;
         List<Pose> poses = BattlefieldPosedScenes.plan(SCENARIOS[sceneIndex],
-                root.getValue(BattlefieldSceneBlock.VARIANT));
+                root.getValue(BattlefieldSceneBlock.VARIANT),
+                root.getValue(BattlefieldSceneBlock.LAYOUT));
 
         // Align the entire episode to the player's forward direction.
         Direction facing = root.getValue(HorizontalDirectionalBlock.FACING);

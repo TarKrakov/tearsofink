@@ -20,14 +20,17 @@ import net.minecraft.world.level.block.entity.BlockEntity;
  */
 public final class BattlefieldSceneBlock extends BaseEntityBlock {
     public static final MapCodec<BattlefieldSceneBlock> CODEC = simpleCodec(BattlefieldSceneBlock::new);
-    public static final IntegerProperty SCENE = IntegerProperty.create("scene", 0, 13); // existing IDs 0/1 are preserved
+    public static final IntegerProperty SCENE = IntegerProperty.create("scene", 0, 19); // existing IDs 0/1 are preserved
     public static final IntegerProperty VARIANT = IntegerProperty.create("variant", 0, 7);
+    // Old chunks have no "layout" property: Minecraft uses default 0.
+    // Never repurpose layout 0; all new scenes explicitly set layout 1.
+    public static final IntegerProperty LAYOUT = IntegerProperty.create("layout", 0, 1);
 
     public BattlefieldSceneBlock(BlockBehaviour.Properties properties) {
         super(properties);
         registerDefaultState(stateDefinition.any()
                 .setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH)
-                .setValue(SCENE, 0).setValue(VARIANT, 0));
+                .setValue(SCENE, 0).setValue(VARIANT, 0).setValue(LAYOUT, 0));
     }
 
     @Override
@@ -43,6 +46,6 @@ public final class BattlefieldSceneBlock extends BaseEntityBlock {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(HorizontalDirectionalBlock.FACING, SCENE, VARIANT);
+        builder.add(HorizontalDirectionalBlock.FACING, SCENE, VARIANT, LAYOUT);
     }
 }

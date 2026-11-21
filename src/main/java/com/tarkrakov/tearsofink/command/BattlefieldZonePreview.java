@@ -101,7 +101,7 @@ public final class BattlefieldZonePreview {
                         context.getSource().sendSuccess(
                                 () -> Component.literal("Пробная сцена «" + scene.label() + "»: "
                                         + count + " деталей у " + at.toShortString()
-                                        + ". Щит наклонён и утоплен, оружие имеет свободные 3D-позы. "
+                                        + ". Связанные предметы имеют разные силуэты и 3D-позы. "
                                         + "Это не генерация поля."), false);
                         return placed;
                     }
@@ -159,7 +159,8 @@ public final class BattlefieldZonePreview {
         BlockState state = ModBlocks.BATTLEFIELD_SCENE.defaultBlockState()
                 .setValue(HorizontalDirectionalBlock.FACING, axis)
                 .setValue(BattlefieldSceneBlock.SCENE, scene.ordinal())
-                .setValue(BattlefieldSceneBlock.VARIANT, variant);
+                .setValue(BattlefieldSceneBlock.VARIANT, variant)
+                .setValue(BattlefieldSceneBlock.LAYOUT, 1);
         int rendered = (int) Arrays.stream(heights).filter(h -> h != BattlefieldSceneBlockEntity.MISSING).count();
         return new Layout(root, state, heights, flags, rendered);
     }
