@@ -2,11 +2,13 @@ package com.tarkrakov.tearsofink.command;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.tarkrakov.tearsofink.block.BattlefieldSceneBlock;
+import com.tarkrakov.tearsofink.block.BattlefieldSceneBlockEntity;
 import com.tarkrakov.tearsofink.block.ModBlocks;
-import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Pose;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Prop;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Scene;
-import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Slot;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
@@ -22,17 +24,20 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 /**
- * D-122: non-destructive operator preview of TWO parametric battlefield zone
- * recipes. No generation, global seed quotas, mobs, ticks, new art or loot.
+ * D-123 visual composition preview: a single inert anchor renders arbitrary
+ * ground-pivot rotations of existing baked, authored weapon models. The actual
+ * two animated banners still use the approved original banner block.
  *
- * Required anchors are validated as a unit BEFORE any blocks are written.
- * Optional details can be skipped, but an incomplete core is never placed.
- * Terrain is sampled per prop and blocks are never removed/replaced.
+ * Important: NO worldgen, no server tick, no mass prop BlockEntities, no
+ * destruction of terrain, no placement on roads or buildings. Failed required
+ * anchors reject the WHOLE scene before world writes. These are explicitly
+ * hand-requested technical test recipes, not an approved final battlefield.
  */
 public final class BattlefieldZonePreview {
     private BattlefieldZonePreview() {}
@@ -43,10 +48,9 @@ public final class BattlefieldZonePreview {
                 .then(Commands.literal("banner_line").executes(ctx -> preview(ctx, Scene.BANNER_LINE)));
     }
 
-    private record Placement(Prop prop, BlockPos pos, BlockState state, Set<BlockPos> envelope) {}
+    private record Flag(BlockPos pos, BlockState state, Set<BlockPos> envelope) {}
+    private record Layout(BlockPos root, BlockState state, int[] heights, List<Flag> flags, int visibleProps) {}
 
-    // Root search is intentionally local to the operator preview. The final
-    // BattlefieldPlan must search and reserve large regions *before* worldgen.
     private static int preview(CommandContext<CommandSourceStack> context, Scene scene)
             throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
@@ -55,180 +59,269 @@ public final class BattlefieldZonePreview {
         Direction right = forward.getClockWise();
         BlockPos target = player.blockPosition().relative(forward, 8);
 
-        for (int radius = 0; radius <= 5; radius++) {
+        // Small local, non-destructive operator search. Terrain is sampled
+        // separately per prop; no "flat empty square" is required.
+        for (int radius = 0; radius <= 6; radius++) {
             for (int f = -radius; f <= radius; f++) {
                 for (int s = -radius; s <= radius; s++) {
                     if (Math.max(Math.abs(f), Math.abs(s)) != radius) continue;
-                    BlockPos root = target.relative(forward, f).relative(right, s);
-                    if (!level.hasChunkAt(root) || !level.getWorldBorder().isWithinBounds(root)) continue;
-                    int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, root.getX(), root.getZ());
+                    BlockPos column = target.relative(forward, f).relative(right, s);
+                    if (!validColumn(level, column)) continue;
+                    int y = surfaceY(level, column);
                     if (Math.abs(y - player.getBlockY()) > 5) continue;
+                    BlockPos root = new BlockPos(column.getX(), y, column.getZ());
+                    if (!freeSurface(level, root) || !naturalSupport(level, root)) continue;
 
-                    // Same level seed and candidate anchor -> same relationships.
-                    long seed = level.getSeed() ^ (root.getX() * 341873128712L)
-                            ^ (root.getZ() * 132897987541L) ^ scene.ordinal();
-                    List<Placement> plan = assemble(level, root, y, forward, right,
-                            BattlefieldSceneRecipes.plan(scene, seed));
-                    if (plan == null) continue;
+                    long seed = level.getSeed()
+                            ^ ((long) root.getX() * 341873128712L)
+                            ^ ((long) root.getZ() * 132897987541L) ^ scene.ordinal();
+                    int variant = (int) ((seed ^ seed >>> 29) & 7L);
+                    List<Pose> poses = BattlefieldPosedScenes.plan(scene, variant);
 
-                    int placed = commit(level, plan);
-                    if (placed == 0) continue;
-                    BlockPos location = root;
-                    int count = placed;
-                    context.getSource().sendSuccess(() -> Component.literal(
-                            "Пробная зона «" + scene.label() + "»: " + count
-                                    + " связанных декораций у " + location.toShortString()
-                                    + ". Рельеф и постройки не изменены; это ещё не генерация поля."),
-                            false);
-                    return placed;
+                    // First retain the player's orientation, then try other
+                    // axes to find a composition that fits without tree felling.
+                    for (int turn = 0; turn < 4; turn++) {
+                        Direction axis = forward;
+                        for (int j = 0; j < turn; j++) axis = axis.getClockWise();
+                        Layout layout = plan(level, root, axis, scene, variant, poses);
+                        if (layout == null) continue;
+                        int placed = commit(level, layout);
+                        if (placed == 0) continue;
+                        int count = placed;
+                        BlockPos at = root;
+                        context.getSource().sendSuccess(
+                                () -> Component.literal("Пробная сцена «" + scene.label() + "»: "
+                                        + count + " деталей у " + at.toShortString()
+                                        + ". Щит наклонён и утоплен, оружие имеет свободные 3D-позы. "
+                                        + "Это не генерация поля."), false);
+                        return placed;
+                    }
                 }
             }
         }
         context.getSource().sendFailure(Component.literal(
-                "Поблизости не удалось безопасно разместить все обязательные элементы зоны «"
-                        + scene.label() + "». Ничего не изменено; попробуйте участок без стен и густых деревьев."));
+                "Нет безопасного места для ВСЕХ обязательных элементов сцены «"
+                        + scene.label() + "». Рельеф и постройки не изменены."));
         return 0;
     }
 
-    private static List<Placement> assemble(ServerLevel level, BlockPos origin, int rootY,
-                                             Direction forward, Direction right, List<Slot> slots) {
-        List<Placement> planned = new ArrayList<>();
-        Set<BlockPos> occupied = new HashSet<>();
+    private static Layout plan(ServerLevel level, BlockPos root, Direction axis,
+                               Scene scene, int variant, List<Pose> poses) {
+        int[] heights = new int[poses.size()];
+        Arrays.fill(heights, BattlefieldSceneBlockEntity.MISSING);
+        List<Flag> flags = new ArrayList<>();
+        Set<BlockPos> reserved = new HashSet<>();
+        reserved.add(root);
 
-        // Required core must be resolved before spending space on optional props.
+        // A scene is committed only when all essential parts fit. Optional
+        // details can be absent without changing the underlying story.
         for (int pass = 0; pass < 2; pass++) {
-            boolean required = pass == 0;
-            for (Slot slot : slots) {
-                if (slot.required() != required) continue;
-                Placement selected = findSlot(level, origin, rootY, forward, right, slot, occupied);
-                if (selected == null) {
-                    if (required) return null;
-                    continue;
+            boolean mandatory = pass == 0;
+            for (int i = 0; i < poses.size(); i++) {
+                Pose pose = poses.get(i);
+                if (pose.required() != mandatory) continue;
+                if (pose.banner()) {
+                    Flag flag = findFlag(level, root, axis, pose, reserved);
+                    if (flag == null) {
+                        if (mandatory) return null;
+                        continue;
+                    }
+                    flags.add(flag);
+                    reserved.addAll(flag.envelope());
+                } else {
+                    BlockPos column = footprintColumn(root, axis, pose);
+                    if (!validColumn(level, column)) {
+                        if (mandatory) return null;
+                        continue;
+                    }
+                    int height = surfaceY(level, column);
+                    BlockPos surface = new BlockPos(column.getX(), height, column.getZ());
+                    if (Math.abs(height - root.getY()) > 3 || !freeSurface(level, surface)
+                            || !naturalSupport(level, surface)
+                            || !modelFits(level, root, pose, axis, height)) {
+                        if (mandatory) return null;
+                        continue;
+                    }
+                    heights[i] = height - root.getY();
                 }
-                planned.add(selected);
-                occupied.addAll(selected.envelope());
             }
         }
-        return planned;
+
+        BlockState state = ModBlocks.BATTLEFIELD_SCENE.defaultBlockState()
+                .setValue(HorizontalDirectionalBlock.FACING, axis)
+                .setValue(BattlefieldSceneBlock.SCENE, scene.ordinal())
+                .setValue(BattlefieldSceneBlock.VARIANT, variant);
+        int rendered = (int) Arrays.stream(heights).filter(h -> h != BattlefieldSceneBlockEntity.MISSING).count();
+        return new Layout(root, state, heights, flags, rendered);
     }
 
-    private static Placement findSlot(ServerLevel level, BlockPos origin, int rootY,
-                                      Direction forward, Direction right, Slot slot,
-                                      Set<BlockPos> occupied) {
-        // Small adaptive offsets keep every prop connected to its episode.
-        // They are not random standalone spawn locations.
-        int[][] offsets = {{0,0}, {1,0}, {-1,0}, {0,1}, {0,-1}};
-        Direction facing = forward.getOpposite();
-        for (int n = 0; n < slot.facingTurns(); n++) facing = facing.getClockWise();
+    private static Flag findFlag(ServerLevel level, BlockPos root, Direction axis,
+                                 Pose pose, Set<BlockPos> reserved) {
+        BlockPos center = footprintColumn(root, axis, pose);
+        Direction side = axis.getClockWise();
+        int[][] shifts = {{0, 0}, {1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+        Direction facing = axis.getOpposite();
 
-        for (int[] offset : offsets) {
-            BlockPos column = origin.relative(forward, slot.forward() + offset[0])
-                    .relative(right, slot.right() + offset[1]);
-            if (!level.hasChunkAt(column) || !level.getWorldBorder().isWithinBounds(column)) continue;
-            int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                    column.getX(), column.getZ());
-            if (Math.abs(y - rootY) > 3 || y < level.getMinBuildHeight() + 1
-                    || y + 5 >= level.getMaxBuildHeight()) continue;
-            BlockPos surface = new BlockPos(column.getX(), y, column.getZ());
-            if (!level.getBlockState(surface).isAir()
-                    || !level.getBlockState(surface.below()).isFaceSturdy(level, surface.below(), Direction.UP)
-                    || !isNaturalGround(level.getBlockState(surface.below()))) continue;
-
-            BlockPos anchor = slot.prop() == Prop.SHIELD ? surface.above() : surface;
-            if (!clearForProp(level, slot.prop(), surface, anchor, facing)) continue;
-            Set<BlockPos> envelope = envelope(slot.prop(), anchor, facing);
-            boolean overlaps = false;
-            for (BlockPos p : envelope) {
-                if (occupied.contains(p)) {
-                    overlaps = true;
-                    break;
-                }
+        for (int[] shift : shifts) {
+            BlockPos column = center.relative(axis, shift[0]).relative(side, shift[1]);
+            if (!validColumn(level, column)) continue;
+            int y = surfaceY(level, column);
+            BlockPos base = new BlockPos(column.getX(), y, column.getZ());
+            if (Math.abs(y - root.getY()) > 3 || !naturalSupport(level, base)
+                    || !BattlefieldDecorCommands.canPlaceBanner(level, base, facing)) continue;
+            Set<BlockPos> envelope = bannerEnvelope(base, facing);
+            boolean overlap = false;
+            for (BlockPos position : envelope) {
+                if (reserved.contains(position)) { overlap = true; break; }
             }
-            if (overlaps) continue;
-
-            Block block = switch (slot.prop()) {
-                case BANNER -> ModBlocks.BATTLEFIELD_BANNER;
-                case SHIELD -> ModBlocks.BATTLEFIELD_SHIELD;
-                case SPEAR -> ModBlocks.BATTLEFIELD_SPEAR;
-                case CROSSBOW -> ModBlocks.BATTLEFIELD_CROSSBOW;
-            };
-            BlockState state = block.defaultBlockState()
-                    .setValue(HorizontalDirectionalBlock.FACING, facing);
-            return new Placement(slot.prop(), anchor, state, envelope);
+            if (overlap) continue;
+            return new Flag(base, ModBlocks.BATTLEFIELD_BANNER.defaultBlockState()
+                    .setValue(HorizontalDirectionalBlock.FACING, facing), envelope);
         }
         return null;
     }
 
-    private static boolean isNaturalGround(BlockState state) {
-        // Preview must not plant monuments on a roadway, ruin floor,
-        // bridge or construction. Do not turn this whitelist into a global
-        // protected-area mechanism for the future worldgen planner.
-        return state.is(BlockTags.DIRT) || state.is(BlockTags.BASE_STONE_OVERWORLD)
-                || state.is(Blocks.GRAVEL) || state.is(Blocks.SAND)
-                || state.is(Blocks.RED_SAND) || state.is(Blocks.CLAY)
-                || state.is(ModBlocks.ASHEN_SOIL) || state.is(ModBlocks.BLOOD_SOIL)
-                || state.is(ModBlocks.TAR_SOIL) || state.is(ModBlocks.ASPHODELITE_ROCK)
-                || state.is(ModBlocks.ASH);
-    }
-
-    private static boolean clearForProp(ServerLevel level, Prop prop,
-                                        BlockPos surface, BlockPos anchor, Direction facing) {
-        if (prop == Prop.BANNER) {
-            return BattlefieldDecorCommands.canPlaceBanner(level, anchor, facing);
+    private static Set<BlockPos> bannerEnvelope(BlockPos base, Direction facing) {
+        Set<BlockPos> cells = new HashSet<>();
+        for (int y = 0; y <= 3; y++) cells.add(base.above(y));
+        Direction clothSide = facing.getCounterClockWise();
+        for (int x = 1; x <= 2; x++) {
+            for (int y = 2; y <= 3; y++) cells.add(base.relative(clothSide, x).above(y));
         }
-        // The existing static shield is offset one block upward and flipped;
-        // it occupies the actual ground level up to roughly 2.5 blocks.
-        if (!level.getBlockState(anchor).isAir()) return false;
-        if (prop == Prop.SHIELD) {
-            return !hasSolidObstacle(level, anchor.above())
-                    && !hasSolidObstacle(level, anchor.above(2));
+        return cells;
+    }
+
+    private static BlockPos footprintColumn(BlockPos root, Direction forward, Pose pose) {
+        Direction right = forward.getClockWise();
+        int x = Math.round(root.getX() + pose.forward() * forward.getStepX()
+                + pose.right() * right.getStepX());
+        int z = Math.round(root.getZ() + pose.forward() * forward.getStepZ()
+                + pose.right() * right.getStepZ());
+        return new BlockPos(x, root.getY(), z);
+    }
+
+    private static boolean validColumn(ServerLevel level, BlockPos pos) {
+        return level.hasChunkAt(pos) && level.getWorldBorder().isWithinBounds(pos);
+    }
+
+    private static int surfaceY(ServerLevel level, BlockPos column) {
+        return level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                column.getX(), column.getZ());
+    }
+
+    private static boolean freeSurface(ServerLevel level, BlockPos base) {
+        return validColumn(level, base) && level.getBlockState(base).isAir();
+    }
+
+    private static boolean naturalSupport(ServerLevel level, BlockPos base) {
+        BlockPos below = base.below();
+        if (!validColumn(level, below)) return false;
+        BlockState ground = level.getBlockState(below);
+        return ground.isFaceSturdy(level, below, Direction.UP)
+                && (ground.is(BlockTags.DIRT) || ground.is(BlockTags.BASE_STONE_OVERWORLD)
+                || ground.is(Blocks.GRAVEL) || ground.is(Blocks.SAND)
+                || ground.is(Blocks.RED_SAND) || ground.is(Blocks.CLAY)
+                || ground.is(ModBlocks.ASHEN_SOIL) || ground.is(ModBlocks.BLOOD_SOIL)
+                || ground.is(ModBlocks.TAR_SOIL) || ground.is(ModBlocks.ASPHODELITE_ROCK)
+                || ground.is(ModBlocks.ASH));
+    }
+
+    /**
+     * Conservative transform of the authored model's own visible dimensions,
+     * not a 7x7 clearing. The values account for D-113 shield X=180 plus
+     * its 1-block raised anchor. Check only exposed parts above the local
+     * support: intentional partial burial and rough natural ground are okay.
+     */
+    private static boolean modelFits(ServerLevel level, BlockPos root,
+                                     Pose pose, Direction axis, int surfaceY) {
+        float x0, x1, y0, y1, z0, z1;
+        if (pose.prop() == Prop.SHIELD) {
+            x0 = -0.30f; x1 = 0.30f;
+            y0 = 0f; y1 = 2.50f;
+            z0 = -0.75f; z1 = 0.75f;
+        } else if (pose.prop() == Prop.SPEAR) {
+            x0 = -0.07f; x1 = 0.07f;
+            y0 = -0.07f; y1 = 1.60f;
+            z0 = -0.04f; z1 = 0.04f;
+        } else {
+            x0 = -0.32f; x1 = 0.32f;
+            y0 = -0.07f; y1 = 0.32f;
+            z0 = -0.32f; z1 = 0.32f;
         }
-        // The spear rises ~1.6 blocks; the crossbow lies near the surface.
-        return !hasSolidObstacle(level, surface.above());
-    }
 
-    private static boolean hasSolidObstacle(ServerLevel level, BlockPos pos) {
-        return !level.hasChunkAt(pos) || !level.getWorldBorder().isWithinBounds(pos)
-                || !level.getBlockState(pos).getCollisionShape(level, pos).isEmpty();
-    }
-
-    private static Set<BlockPos> envelope(Prop prop, BlockPos anchor, Direction facing) {
-        Set<BlockPos> area = new HashSet<>();
-        if (prop == Prop.BANNER) {
-            for (int y = 0; y <= 3; y++) area.add(anchor.above(y));
-            // Reuse D-120's *real* authored cloth footprint, not a 7x7 volume.
-            Direction clothSide = facing.getCounterClockWise();
-            for (int x = 1; x <= 2; x++) {
-                for (int y = 2; y <= 3; y++) {
-                    area.add(anchor.relative(clothSide, x).above(y));
+        double pitch = Math.toRadians(pose.pitch()), roll = Math.toRadians(pose.roll());
+        double yaw = Math.toRadians(pose.yaw());
+        double cx = Math.cos(pitch), sx = Math.sin(pitch);
+        double cz = Math.cos(roll), sz = Math.sin(roll);
+        double cy = Math.cos(yaw), sy = Math.sin(yaw);
+        Direction right = axis.getClockWise();
+        double minX = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
+        double minZ = Double.POSITIVE_INFINITY, maxZ = Double.NEGATIVE_INFINITY;
+        for (float x : new float[]{x0, x1}) {
+            for (float y : new float[]{y0, y1}) {
+                for (float z : new float[]{z0, z1}) {
+                    // PoseStack order Y, Z, X (matrix applies X, then Z, then Y).
+                    double px = x, py = y * cx - z * sx, pz = y * sx + z * cx;
+                    double qx = px * cz - py * sz, qy = px * sz + py * cz;
+                    double rx = qx * cy + pz * sy, rz = -qx * sy + pz * cy;
+                    double lateral = pose.right() + rx;
+                    double ahead = pose.forward() - rz;
+                    double wx = root.getX() + 0.5 + lateral * right.getStepX() + ahead * axis.getStepX();
+                    double wz = root.getZ() + 0.5 + lateral * right.getStepZ() + ahead * axis.getStepZ();
+                    double wy = surfaceY + pose.sink() + qy;
+                    minX = Math.min(minX, wx); maxX = Math.max(maxX, wx);
+                    minY = Math.min(minY, wy); maxY = Math.max(maxY, wy);
+                    minZ = Math.min(minZ, wz); maxZ = Math.max(maxZ, wz);
                 }
             }
-        } else if (prop == Prop.SHIELD) {
-            area.add(anchor.below());
-            for (int y = 0; y <= 2; y++) area.add(anchor.above(y));
-        } else {
-            area.add(anchor);
-            area.add(anchor.above());
         }
-        return area;
+        int startY = Math.max(surfaceY + 1, (int) Math.floor(minY));
+        int endY = (int) Math.ceil(maxY) - 1;
+        if (endY < startY) return true;
+        for (int x = (int) Math.floor(minX); x < Math.ceil(maxX); x++) {
+            for (int z = (int) Math.floor(minZ); z < Math.ceil(maxZ); z++) {
+                for (int y = startY; y <= endY; y++) {
+                    BlockPos p = new BlockPos(x, y, z);
+                    if (!validColumn(level, p)
+                            || !level.getBlockState(p).getCollisionShape(level, p).isEmpty()) return false;
+                }
+            }
+        }
+        return true;
     }
 
-    private static int commit(ServerLevel level, List<Placement> plan) {
-        // Failure is exceptional on the single server thread, but rollback
-        // avoids leaving a half-built "story" if a placement ever fails.
-        List<Placement> written = new ArrayList<>();
-        for (Placement p : plan) {
-            if (!level.getBlockState(p.pos()).isAir()
-                    || !level.setBlock(p.pos(), p.state(), Block.UPDATE_CLIENTS)) {
-                for (Placement placed : written) {
-                    if (level.getBlockState(placed.pos()).is(placed.state().getBlock())) {
-                        level.setBlock(placed.pos(), Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
-                    }
-                }
+    private static int commit(ServerLevel level, Layout layout) {
+        List<BlockPos> written = new ArrayList<>();
+        BlockPos root = layout.root();
+        if (!freeSurface(level, root)
+                || !level.setBlock(root, layout.state(), Block.UPDATE_CLIENTS)) return 0;
+        written.add(root);
+        if (!(level.getBlockEntity(root) instanceof BattlefieldSceneBlockEntity entity)) {
+            rollback(level, written);
+            return 0;
+        }
+        entity.configure(layout.heights());
+        level.sendBlockUpdated(root, layout.state(), layout.state(), Block.UPDATE_CLIENTS);
+
+        for (Flag flag : layout.flags()) {
+            if (!freeSurface(level, flag.pos())
+                    || !level.setBlock(flag.pos(), flag.state(), Block.UPDATE_CLIENTS)) {
+                rollback(level, written);
                 return 0;
             }
-            written.add(p);
+            written.add(flag.pos());
         }
-        return written.size();
+        return layout.visibleProps() + layout.flags().size();
+    }
+
+    private static void rollback(ServerLevel level, List<BlockPos> written) {
+        for (int i = written.size() - 1; i >= 0; i--) {
+            BlockPos p = written.get(i);
+            Block block = level.getBlockState(p).getBlock();
+            if (block == ModBlocks.BATTLEFIELD_BANNER || block == ModBlocks.BATTLEFIELD_SCENE) {
+                level.setBlock(p, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+            }
+        }
     }
 }
