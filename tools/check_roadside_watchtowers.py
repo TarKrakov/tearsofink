@@ -9,12 +9,12 @@ camps = (root / "src/main/java/com/tarkrakov/tearsofink/entity/patrol/ForestCamp
 outposts = (root / "src/main/java/com/tarkrakov/tearsofink/entity/patrol/Outposts.java").read_text()
 
 def integer(name):
-    return int(re.search(r"public static final int " + name + r"\\s*=\\s*(\\d+)", layout).group(1))
+    return int(re.search(r"public static final int " + name + r"\s*=\s*(\d+)", layout).group(1))
 
 radius, core = integer("RADIUS"), integer("CORE_RADIUS")
 bridge = integer("BROKEN_BRIDGE_LEN")
 end = core - 4
-slots = [float(v) for v in re.search(r"OUTPOSTS = \\{([^}]+)\\}", layout).group(1).split(",")]
+slots = [float(v) for v in re.search(r"OUTPOSTS = \{([^}]+)\}", layout).group(1).split(",")]
 assert len(slots) == 2 and slots[0] < slots[1]
 inner, outer = [end + bridge + f * (radius - end - bridge) for f in slots]
 first, second = (radius + outer) / 2, (outer + inner) / 2
