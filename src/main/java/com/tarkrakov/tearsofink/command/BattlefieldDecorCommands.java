@@ -24,7 +24,8 @@ public final class BattlefieldDecorCommands {
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.literal("battlefield")
                                 .then(Commands.literal("preview").executes(BattlefieldDecorCommands::preview))
-                                .then(Commands.literal("banner").executes(BattlefieldDecorCommands::banner)))));
+                                .then(Commands.literal("banner").executes(BattlefieldDecorCommands::banner))
+                                .then(BattlefieldZonePreview.literal()))));
     }
 
     private static int preview(CommandContext<CommandSourceStack> context)
@@ -143,7 +144,7 @@ public final class BattlefieldDecorCommands {
      * elsewhere (including beneath the cloth) is perfectly fine.
      * Checking only that real footprint avoids the erroneous 7x7x5 veto.
      */
-    private static boolean canPlaceBanner(ServerLevel level, BlockPos base, Direction facing) {
+    static boolean canPlaceBanner(ServerLevel level, BlockPos base, Direction facing) {
         if (base.getY() <= level.getMinBuildHeight()
                 || base.getY() + 4 >= level.getMaxBuildHeight()
                 || !level.getWorldBorder().isWithinBounds(base)

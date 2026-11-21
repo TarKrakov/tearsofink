@@ -55,6 +55,11 @@ jobs:
         run: python3 tools/battlefield/export_decor.py
       - name: validate authored battlefield banner UVs and untouched PNG
         run: python3 tools/battlefield/check_first_banner.py
+      - name: validate deterministic battlefield zone recipes
+        run: |
+          mkdir -p /tmp/toi-battlefield-zone-test
+          javac -d /tmp/toi-battlefield-zone-test src/main/java/com/tarkrakov/tearsofink/world/battlefield/BattlefieldSceneRecipes.java tools/tests/BattlefieldSceneRecipesTest.java
+          java -cp /tmp/toi-battlefield-zone-test BattlefieldSceneRecipesTest
       - name: validate JABER two-level routing math
         run: |
           mkdir -p /tmp/toi-jaber-test
