@@ -3,6 +3,8 @@ package com.tarkrakov.tearsofink.command;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.block.BattlefieldBannerBlock;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldBannerGeometry;
+import com.tarkrakov.tearsofink.world.battlefield.BattlefieldMonumentGeometry;
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldFactionBannerGeometry;
 import com.mojang.brigadier.context.CommandContext;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -27,6 +29,9 @@ public final class BattlefieldDecorCommands {
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.literal("battlefield")
                                 .then(Commands.literal("preview").executes(BattlefieldDecorCommands::preview))
+                                .then(Commands.literal("monument")
+                                        .then(monumentCommand("linear", BattlefieldMonumentGeometry.Blade.LINEAR))
+                                        .then(monumentCommand("cleaving", BattlefieldMonumentGeometry.Blade.CLEAVING)))
                                 .then(Commands.literal("banner")
                                         .executes(ctx -> banner(ctx, BattlefieldBannerBlock.Faction.REGULAR, false))
                                         .then(Commands.literal("regular_standard")
@@ -42,6 +47,82 @@ public final class BattlefieldDecorCommands {
                                         .then(Commands.literal("hunter_bare")
                                                 .executes(ctx -> banner(ctx, BattlefieldBannerBlock.Faction.HUNTER, true))))
                                 .then(BattlefieldZonePreview.literal()))));
+    }
+
+
+    private static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> monumentCommand(
+            String id, BattlefieldMonumentGeometry.Blade blade) {
+        return Commands.literal(id)
+                .executes(ctx -> monument(ctx, blade, 0))
+                .then(Commands.argument("variant", IntegerArgumentType.integer(0, 7))
+                        .executes(ctx -> monument(ctx, blade, IntegerArgumentType.getInteger(ctx, "variant"))));
+    }
+
+    /** Non-destructive operator-only placement of a giant weapon on prepared natural ground. */
+    private static int monument(CommandContext<CommandSourceStack> context,
+                                BattlefieldMonumentGeometry.Blade blade, int variant)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer player = context.getSource().getPlayerOrException();
+        ServerLevel level = player.serverLevel();
+        Direction forward = player.getDirection(), side = forward.getClockWise();
+        BlockPos target = player.blockPosition().relative(forward, 14);
+        for (int radius = 0; radius <= 8; radius++) {
+            for (int df = -radius; df <= radius; df++) for (int ds = -radius; ds <= radius; ds++) {
+                if (Math.max(Math.abs(df), Math.abs(ds)) != radius) continue;
+                BlockPos xz = target.relative(forward, df).relative(side, ds);
+                if (!level.hasChunkAt(xz) || !level.getWorldBorder().isWithinBounds(xz)) continue;
+                int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, xz.getX(), xz.getZ());
+                if (Math.abs(y - player.getBlockY()) > 6) continue;
+                BlockPos base = new BlockPos(xz.getX(), y, xz.getZ());
+                for (int turn = 0; turn < 4; turn++) {
+                    Direction facing = forward.getOpposite();
+                    for (int k = 0; k < turn; k++) facing = facing.getClockWise();
+                    if (!canPlaceMonument(level, base, blade, variant, facing)) continue;
+                    var state = ModBlocks.BATTLEFIELD_MONUMENT.defaultBlockState()
+                            .setValue(HorizontalDirectionalBlock.FACING, facing)
+                            .setValue(com.tarkrakov.tearsofink.block.BattlefieldMonumentBlock.BLADE, blade.ordinal())
+                            .setValue(com.tarkrakov.tearsofink.block.BattlefieldMonumentBlock.VARIANT, variant);
+                    if (!level.setBlock(base, state, Block.UPDATE_CLIENTS)) continue;
+                    BlockPos placed = base;
+                    var style = BattlefieldMonumentGeometry.style(variant);
+                    context.getSource().sendSuccess(() -> Component.literal(
+                            "Монументальный " + blade.label + " установлен: " + placed.toShortString()
+                            + " (масштаб x" + style.scale() + ", наклон " + style.tilt()
+                            + "°, поворот " + style.yaw() + "°)."), false);
+                    return 1;
+                }
+            }
+        }
+        context.getSource().sendFailure(Component.literal(
+                "Для огромного клинка нет свободной площадки в загруженных чанках рядом. "
+                + "Строения и деревья сохранены; попробуйте открытую местность."));
+        return 0;
+    }
+
+    private static boolean canPlaceMonument(ServerLevel level, BlockPos base,
+                                            BattlefieldMonumentGeometry.Blade blade,
+                                            int variant, Direction facing) {
+        if (!level.getBlockState(base).isAir() ||
+                !level.getBlockState(base.below()).isFaceSturdy(level, base.below(), Direction.UP)) return false;
+        var below = level.getBlockState(base.below());
+        if (!(below.is(net.minecraft.tags.BlockTags.DIRT)
+                || below.is(net.minecraft.tags.BlockTags.BASE_STONE_OVERWORLD)
+                || below.is(net.minecraft.world.level.block.Blocks.GRAVEL)
+                || below.is(ModBlocks.ASHEN_SOIL) || below.is(ModBlocks.BLOOD_SOIL)
+                || below.is(ModBlocks.TAR_SOIL) || below.is(ModBlocks.ASPHODELITE_ROCK)
+                || below.is(ModBlocks.ASH))) return false;
+        var lands = com.tarkrakov.tearsofink.world.InkLandsLayout.of(level);
+        for (BlockPos delta : BattlefieldMonumentGeometry.occupiedCells(blade, variant, facing)) {
+            BlockPos pos = base.offset(delta);
+            if (!level.hasChunkAt(pos) || !level.getWorldBorder().isWithinBounds(pos)
+                    || pos.getY() < level.getMinBuildHeight()
+                    || pos.getY() >= level.getMaxBuildHeight()) return false;
+            if (lands != null && lands.nearRoad(pos.getX(), pos.getZ(), 12)) return false;
+            // Below-ground contact is intentional. Above-ground parts must not clip solid obstacles.
+            if (pos.getY() > base.getY() + 1
+                    && !level.getBlockState(pos).getCollisionShape(level, pos).isEmpty()) return false;
+        }
+        return true;
     }
 
     private static int preview(CommandContext<CommandSourceStack> context)

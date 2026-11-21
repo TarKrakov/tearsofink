@@ -1,0 +1,9 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "tears-of-ink:block/battlefield_scene"
+      }
+    }
+  ]
+}
