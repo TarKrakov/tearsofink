@@ -1,5 +1,6 @@
 package com.tarkrakov.tearsofink.command;
 
+import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.tarkrakov.tearsofink.block.BattlefieldSceneBlock;
@@ -46,7 +47,11 @@ public final class BattlefieldZonePreview {
     static LiteralArgumentBuilder<CommandSourceStack> literal() {
         var root = Commands.literal("zone");
         for (Scenario scene : Scenario.values()) {
-            root.then(Commands.literal(scene.id()).executes(ctx -> preview(ctx, scene)));
+            root.then(Commands.literal(scene.id())
+                    .executes(ctx -> preview(ctx, scene, -1))
+                    .then(Commands.argument("variant", IntegerArgumentType.integer(0, 7))
+                            .executes(ctx -> preview(ctx, scene,
+                                    IntegerArgumentType.getInteger(ctx, "variant")))));
         }
         return root;
     }
@@ -54,7 +59,7 @@ public final class BattlefieldZonePreview {
     private record Flag(BlockPos pos, BlockState state, Set<BlockPos> envelope) {}
     private record Layout(BlockPos root, BlockState state, int[] heights, List<Flag> flags, int visibleProps) {}
 
-    private static int preview(CommandContext<CommandSourceStack> context, Scenario scene)
+    private static int preview(CommandContext<CommandSourceStack> context, Scenario scene, int requestedVariant)
             throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
         ServerLevel level = player.serverLevel();
@@ -78,7 +83,8 @@ public final class BattlefieldZonePreview {
                     long seed = level.getSeed()
                             ^ ((long) root.getX() * 341873128712L)
                             ^ ((long) root.getZ() * 132897987541L) ^ scene.ordinal();
-                    int variant = (int) ((seed ^ seed >>> 29) & 7L);
+                    int variant = requestedVariant >= 0 ? requestedVariant
+                            : (int) ((seed ^ seed >>> 29) & 7L);
                     List<Pose> poses = BattlefieldPosedScenes.plan(scene, variant);
 
                     // First retain the player's orientation, then try other
