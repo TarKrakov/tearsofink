@@ -146,8 +146,13 @@ public class HunterEntity extends PathfinderMob implements com.tarkrakov.tearsof
 		int pieces = HuntTuning.GEAR_SLOTS[Math.min(rank, HuntTuning.GEAR_SLOTS.length - 1)][0];
 		getAttribute(Attributes.ARMOR).setBaseValue(pieces * HuntTuning.ARMOR_PER_PIECE); // броня на модели и защищает
 		baseDamage = HuntTuning.HUNTER_DAMAGE[rank] * (1 + (random.nextFloat() * 2 - 1) * HuntTuning.HUNTER_DAMAGE_SPREAD);
-		setItemSlot(EquipmentSlot.MAINHAND, main);
-		setItemSlot(EquipmentSlot.OFFHAND, off);
+		ItemStack realMain = LegacyHunterWeapons.migrate(main.copy());
+		ItemStack realOff = LegacyHunterWeapons.migrate(off.copy());
+		// Ранг NPC = ступень настоящего предмета; урон AI по-прежнему задаёт baseDamage.
+		com.tarkrakov.tearsofink.weapon.forge.Gear.setTier(realMain, rank);
+		if (!realOff.isEmpty()) com.tarkrakov.tearsofink.weapon.forge.Gear.setTier(realOff, rank);
+		setItemSlot(EquipmentSlot.MAINHAND, realMain);
+		setItemSlot(EquipmentSlot.OFFHAND, realOff);
 		setDropChance(EquipmentSlot.MAINHAND, 0);
 		setDropChance(EquipmentSlot.OFFHAND, 0);
 		setCustomName(Component.translatable("hunt.tears-of-ink.hunter_name",
