@@ -52,6 +52,11 @@ public final class ForestCamps extends SavedData {
     private static final int MIN_CAMP_GAP=110;
     // Denser grid uses a separate key namespace; never re-key persisted D-089 camps or guards.
     private static final long DENSE_GRID_NAMESPACE=0x4000000000000000L;
+    // Two dedicated roadside watchtowers per route, before the outer gate and between gates.
+    // Reserved keys never overlap the historical/dense cell grids, even in existing saves.
+    private static final long ROAD_TOWER_NAMESPACE=0x3000000000000000L;
+    private static final double[] ROAD_TOWER_ALONG_OFFSETS={0,-32,32,-64,64,-96,96};
+    private static final double[] ROAD_TOWER_SIDE_OFFSETS={24,29};
     private static final int[] COUNTS={463,230,242};
     private static final String[] ASSETS={"pale_watchtower_camp","pale_camp_fire","pale_camp_flat"};
     private static final Factory<ForestCamps> FACTORY=new Factory<>(ForestCamps::new,ForestCamps::load,null);
@@ -148,6 +153,9 @@ public final class ForestCamps extends SavedData {
             data.flames(level,c,now);
             if(nearest(level,c.center)<=WAKE*WAKE)data.garrison(level,c,canSpawn);
         }
+        // Prioritize the two authored roadside tower slots. This uses the same safe install()
+        // and SavedData as forest camps, never calls world generation or modifies the roads.
+        if(data.roadsideTower(level,layout,now,canSpawn))return;
         // One successful placement max per second. Stable candidates never reroll after a visit.
         for(ServerPlayer p:level.players()){
             if(!p.isAlive()||p.isSpectator())continue;
@@ -171,7 +179,7 @@ public final class ForestCamps extends SavedData {
                         ||layout.nearLake(site.getX(),site.getZ(),40)||layout.nearHerald(site.getX(),site.getZ(),64)
                         ||Ruins.nearStart(layout,site.getX(),site.getZ())||Sanctuary.near(layout,site.getX(),site.getZ(),48)
                         ||near(level,site,MIN_CAMP_GAP)||BarricadeGates.nearGate(level,site,64))continue;
-                    Camp c=data.install(level,layout,k,type,rot,site);
+                    Camp c=data.install(level,layout,k,type,rot,site,false);
                     if(c!=null){data.index(c);data.retry.remove(k);data.setDirty();
                         TearsOfInk.LOGGER.info("Installed forest camp {} at {}",ASSETS[type],c.center);
                         data.garrison(level,c,canSpawn);return;}
@@ -179,6 +187,62 @@ public final class ForestCamps extends SavedData {
             }
         }
     }
+    /** One tower between arrival and outer gate, one between the two gates. Never beyond the inner gate. */
+    static double roadsideTowerDistance(InkLandsLayout layout,int section){
+        if(section==0)return (InkLandsLayout.RADIUS+layout.outpostDistance(1))*.5;
+        if(section==1)return (layout.outpostDistance(1)+layout.outpostDistance(0))*.5;
+        throw new IllegalArgumentException("road tower section: "+section);
+    }
+    private static long roadsideTowerKey(int road,int section){
+        return ROAD_TOWER_NAMESPACE|((long)road<<8)|section;
+    }
+
+    /** Only already-loaded sites are inspected. Failure leaves a slot pending, not permanently lost. */
+    private boolean roadsideTower(ServerLevel level,InkLandsLayout layout,long now,boolean canSpawn){
+        for(int road=0;road<InkLandsLayout.ROADS;road++)for(int section=0;section<2;section++){
+            long k=roadsideTowerKey(road,section);
+            if(camps.containsKey(k)||now<retry.getOrDefault(k,0L))continue;
+            double along=roadsideTowerDistance(layout,section);
+            double[] anchor=layout.roadPoint(road,along);
+            // Keep the loop cheap when no player is approaching this section of the road.
+            BlockPos anchorPos=BlockPos.containing(anchor[0],0,anchor[1]);
+            if(nearest(level,anchorPos)>(INSTALL_RADIUS+108.0)*(INSTALL_RADIUS+108.0))continue;
+            retry.put(k,now+200);
+            int preferred=(road+section)%2==0?1:-1;
+            for(double shift:ROAD_TOWER_ALONG_OFFSETS){
+                double d=along+shift;
+                // No placement after the inner gate, near either gate or beyond the forest edge.
+                if(d<=layout.outpostDistance(0)+100
+                        ||Math.abs(d-layout.outpostDistance(1))<=100
+                        ||d>=InkLandsLayout.RADIUS-60)continue;
+                double[] center=layout.roadPoint(road,d),dir=layout.roadDirection(road,d);
+                for(double offset:ROAD_TOWER_SIDE_OFFSETS)for(int sign:new int[]{preferred,-preferred}){
+                    int x=(int)Math.round(center[0]-dir[1]*offset*sign);
+                    int z=(int)Math.round(center[1]+dir[0]*offset*sign);
+                    BlockPos site=new BlockPos(x,0,z);
+                    double dist=nearest(level,site);
+                    if(dist>INSTALL_RADIUS*INSTALL_RADIUS||dist<16*16
+                            ||!ModDimensions.chunksReady(level,site,20)
+                            ||layout.depthInside(x,z)<24
+                            ||layout.nearLake(x,z,40)||layout.nearHerald(x,z,64)
+                            ||Ruins.nearStart(layout,x,z)||Sanctuary.near(layout,x,z,48)
+                            ||near(level,site,MIN_CAMP_GAP)||BarricadeGates.nearGate(level,site,64))continue;
+                    // Guard the real, curved road rather than a straight-line guess.
+                    double[] hit=layout.roadNear(x,z,36);
+                    if(hit==null||(int)hit[0]!=road||hit[2]<18||hit[2]>35)continue;
+                    // Existing authored tower, existing loot/garrison/lantern system; no new art.
+                    Camp c=install(level,layout,k,0,Rotation.values()[(road+section)%4],site,true);
+                    if(c==null)continue;
+                    index(c);retry.remove(k);setDirty();
+                    TearsOfInk.LOGGER.info("Installed roadside watchtower, road {}, section {}, at {}",road,section,c.center);
+                    garrison(level,c,canSpawn);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private static boolean naturalTree(BlockState s){
         var id=BuiltInRegistries.BLOCK.getKey(s.getBlock());
         return s.is(BlockTags.LEAVES)||(id.getNamespace().equals("tears-of-ink")&&(id.getPath().endsWith("_log")||id.getPath().endsWith("_wood"))&&!id.getPath().startsWith("stripped_"));
@@ -206,7 +270,7 @@ public final class ForestCamps extends SavedData {
         List<Block> list=new ArrayList<>(List.of(Blocks.DIRT,Blocks.CAMPFIRE,Blocks.LAPIS_BLOCK,Blocks.GOLD_BLOCK));
         for(String p:PALETTE)list.add(BuiltInRegistries.BLOCK.get(TearsOfInk.id(p)));return list;
     }
-    private Camp install(ServerLevel level,InkLandsLayout layout,long key,int type,Rotation rot,BlockPos site){
+    private Camp install(ServerLevel level,InkLandsLayout layout,long key,int type,Rotation rot,BlockPos site,boolean roadside){
         var asset=level.getStructureManager().get(TearsOfInk.id(ASSETS[type]));
         if(asset.isEmpty())return null;StructureTemplate template=asset.get();var size=template.getSize();
         BlockPos pivot=new BlockPos(size.getX()/2,0,size.getZ()/2);
@@ -231,6 +295,9 @@ public final class ForestCamps extends SavedData {
         int minX=art.keySet().stream().mapToInt(BlockPos::getX).min().orElseThrow(),maxX=art.keySet().stream().mapToInt(BlockPos::getX).max().orElseThrow();
         int minZ=art.keySet().stream().mapToInt(BlockPos::getZ).min().orElseThrow(),maxZ=art.keySet().stream().mapToInt(BlockPos::getZ).max().orElseThrow();
         for(int x=minX;x<=maxX;x++)for(int z=minZ;z<=maxZ;z++){
+            // Roadside towers are additional sites: protect the entire real curved roadway,
+            // shoulders, lantern posts and bridge approaches before writing a single block.
+            if(roadside&&layout.nearRoad(x,z,7))return null;
             BlockPos p=new BlockPos(x,floor,z);int y=surface(level,x,z);
             if(y==Integer.MIN_VALUE||Math.abs(y-floor)>18||!level.getWorldBorder().isWithinBounds(p)
                     ||!level.getBiome(p.above()).is(ModBiomes.PALE_FOREST))return null;
