@@ -40,7 +40,40 @@ for i,(e,b) in enumerate(zip(active["elements"],blocks)):
 assert "CLOTH_PARTS = {24, 25, 26, 27, 28}" in geo
 assert "TOP_HINGES = {{0f, 72f, -2.5f}" in geo
 assert "256; sample++" in geo and "joint >= 0" in geo
-assert "WIND_AMPLITUDES = {0.030f, 0.043f, 0.055f, 0.073f, 0.091f}" in geo
+# D-130: check the real new front-biased wind curve against the *actual* author
+# model, not just the textual presence of an amplitude constant. Sample the same
+# nested top-hinge matrices as client/server through a full wind period.
+from math import cos, sin, pi
+def wind_array(name):
+    return [float(v) for v in re.findall(r"(-?\d+(?:\.\d+)?)f", geo.split(name + " = {",1)[1].split("}",1)[0])]
+base = wind_array("WIND_BASE_LEAN")
+outward = wind_array("WIND_OUTWARD_RANGE")
+assert len(base) == len(outward) == 5
+assert all(0 < lean < amp for lean,amp in zip(base,outward))
+assert outward[0] > 0.1 and sum(outward) > 0.4, "Forward billow is not strong enough"
+assert "Math.sin(phase - joint * WIND_PHASE_STEP)" in geo
+assert "windAngle(joint, phase)" in geo
+step = float(re.search(r"WIND_PHASE_STEP = ([0-9.]+)f", geo).group(1))
+hinges = [next(g["origin"] for g in active["groups"] if g["name"] == n)
+          for n in ("flag_root","flag1","flag2","flag3","flag4")]
+farthest_back = float("-inf")
+for sample in range(1024):
+    phase = 2 * pi * sample / 1024
+    for segment, part in enumerate(active["elements"][24:29]):
+        for y in (part["from"][1], part["to"][1]):
+            for z in (part["from"][2], part["to"][2]):
+                yy, zz = y, z
+                for joint in range(segment, -1, -1):
+                    w = 0.5 * (1 + sin(phase - joint * step))
+                    angle = base[joint] + outward[joint] * w * w
+                    py, pz = hinges[joint][1], hinges[joint][2]
+                    dy, dz = yy - py, zz - pz
+                    yy, zz = py + dy * cos(angle) - dz * sin(angle), pz + dy * sin(angle) + dz * cos(angle)
+                farthest_back = max(farthest_back, zz)
+shaft_back = active["elements"][0]["from"][2]  # pole begins at Z=-1.25
+assert farthest_back < shaft_back - 0.25, (
+    f"Cloth crosses its pole: closest Z={farthest_back}, pole starts Z={shaft_back}")
+print(f"D-130: 1024 sampled full-cloth wind poses avoid pole (max Z={farthest_back:.2f}px, pole Z={shaft_back:.2f}px).")
 png=(ROOT/"blockbench/regular_standart_1_texture.png").read_bytes()
 packed=(ROOT/"src/main/resources/assets/tears-of-ink/textures/block/battlefield_regular_standart1.png").read_bytes()
 assert png==packed and png.startswith(b"\x89PNG\r\n\x1a\n")
@@ -58,6 +91,8 @@ assert "BattlefieldBannerGeometry.POLE_PARTS" in renderer
 assert "BattlefieldBannerGeometry.CLOTH_PARTS" in renderer
 assert "Axis.XP.rotation(angle)" in renderer
 assert "BattlefieldBannerGeometry.TOP_HINGES[i]" in renderer
+assert "BattlefieldBannerGeometry.windAngle(i, phase)" in renderer
+assert "WIND_AMPLITUDES" not in renderer
 assert "first_flag_texture" not in renderer and "Axis.YP.rotation(angle)" not in renderer
 place=(ROOT/"src/main/java/com/tarkrakov/tearsofink/command/BattlefieldDecorCommands.java").read_text(encoding="utf-8")
 zone=(ROOT/"src/main/java/com/tarkrakov/tearsofink/command/BattlefieldZonePreview.java").read_text(encoding="utf-8")

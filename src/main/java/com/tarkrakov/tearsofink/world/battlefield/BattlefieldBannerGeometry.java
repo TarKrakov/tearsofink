@@ -19,7 +19,11 @@ public final class BattlefieldBannerGeometry {
     public static final float UV_SIZE = 128f; // BB texture uv_width=128; PNG is 256px.
     public static final float WIND_CYCLE_TICKS = 80f;
     public static final float WIND_PHASE_STEP = 0.65f;
-    public static final float[] WIND_AMPLITUDES = {0.030f, 0.043f, 0.055f, 0.073f, 0.091f};
+    // D-130: a steady *outward* lean keeps the vertical cloth clear of its own pole.
+    // The squared positive wind impulse creates a stronger forward billow and a
+    // gentle return that never folds backwards across the rigid shaft.
+    public static final float[] WIND_BASE_LEAN = {0.025f, 0.015f, 0.014f, 0.012f, 0.010f};
+    public static final float[] WIND_OUTWARD_RANGE = {0.115f, 0.070f, 0.080f, 0.090f, 0.100f};
     public static final float[][] TOP_HINGES = {{0f, 72f, -2.5f}, {0f, 62f, -2.5f}, {0f, 51f, -2.5f}, {0f, 40f, -2.5f}, {0f, 33f, -2.5f}}; // world-space model pixels
     public static final int[] POLE_PARTS = {0, 1, 2, 3, 4, 29, 30, 5, 6, 7, 8, 9, 11, 12, 13, 10, 16, 17, 14, 15, 18, 21, 22, 19, 20, 23};
     public static final int[] CLOTH_PARTS = {24, 25, 26, 27, 28};
@@ -94,6 +98,12 @@ public final class BattlefieldBannerGeometry {
 
     private BattlefieldBannerGeometry() {}
 
+    /** Shared wind angle for renderer and server-side swept envelope. */
+    public static float windAngle(int joint, double phase) {
+        double wind = (1d + Math.sin(phase - joint * WIND_PHASE_STEP)) * 0.5d;
+        return WIND_BASE_LEAN[joint] + WIND_OUTWARD_RANGE[joint] * (float) (wind * wind);
+    }
+
     /** Cached occupied cells for placement, including a swept wind envelope. */
     public static List<BlockPos> footprint(Direction facing) {
         List<BlockPos> cells = FOOTPRINTS.get(facing);
@@ -125,7 +135,7 @@ public final class BattlefieldBannerGeometry {
                             double yy = y, zz = z;
                             for (int joint = i; joint >= 0; joint--) {
                                 float[] pivot = TOP_HINGES[joint];
-                                double angle = Math.sin(phase - joint * WIND_PHASE_STEP) * WIND_AMPLITUDES[joint];
+                                double angle = windAngle(joint, phase);
                                 double c = Math.cos(angle), sn = Math.sin(angle);
                                 double dy = yy - pivot[1], dz = zz - pivot[2];
                                 yy = pivot[1] + dy * c - dz * sn;

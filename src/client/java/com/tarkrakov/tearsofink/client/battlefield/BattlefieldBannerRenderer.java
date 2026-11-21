@@ -46,8 +46,8 @@ public final class BattlefieldBannerRenderer implements BlockEntityRenderer<Batt
         stack.pushPose();
         for (int i = 0; i < BattlefieldBannerGeometry.CLOTH_PARTS.length; i++) {
             float[] pivot = BattlefieldBannerGeometry.TOP_HINGES[i];
-            float angle = (float) (Math.sin(phase - i * BattlefieldBannerGeometry.WIND_PHASE_STEP)
-                    * BattlefieldBannerGeometry.WIND_AMPLITUDES[i]);
+            // Same asymmetric, pole-safe curve as the server's placement sweep.
+            float angle = BattlefieldBannerGeometry.windAngle(i, phase);
             stack.translate(pivot[0] / 16f, pivot[1] / 16f, pivot[2] / 16f);
             stack.mulPose(Axis.XP.rotation(angle));
             stack.translate(-pivot[0] / 16f, -pivot[1] / 16f, -pivot[2] / 16f);
