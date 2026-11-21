@@ -33,8 +33,8 @@ public final class BattlefieldPosedScenes {
                     new Pose(Prop.SHIELD, 0f, 0f, -0.29f,
                             (18f + broken) * mirror, -9f, -19f * mirror, true),
                     // Leaning spear top reaches the shield: a genuine relationship.
-                    new Pose(Prop.SPEAR, 0.48f, (-0.66f + skew) * mirror, -0.10f,
-                            -31f * mirror, 24f, -31f * mirror, true),
+                    new Pose(Prop.SPEAR, 0.48f, (-0.54f + skew) * mirror, -0.10f,
+                            -10f * mirror, 24f, -31f * mirror, true),
                     // A second spear lies at a steep angle across the line.
                     new Pose(Prop.SPEAR, -0.72f, 1.22f * mirror, -0.15f,
                             56f * mirror, 69f, 13f * mirror, false),
@@ -55,7 +55,7 @@ public final class BattlefieldPosedScenes {
                     new Pose(Prop.SHIELD, 0.28f, -0.18f * mirror, -0.36f,
                             (-26f + broken) * mirror, 12f, 27f * mirror, true),
                     new Pose(Prop.SPEAR, 0.75f, (0.74f + skew) * mirror, -0.10f,
-                            38f * mirror, 42f, -31f * mirror, true)
+                            -30f * mirror, 42f, 31f * mirror, true)
             );
         };
     }
