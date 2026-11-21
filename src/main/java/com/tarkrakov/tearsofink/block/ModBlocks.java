@@ -66,6 +66,8 @@ public final class ModBlocks {
 	public static final Block BATTLEFIELD_SHIELD = registerNoItem("battlefield_shield", new BattlefieldDecorBlock(battlefieldDecorProps()));
 	public static final Block BATTLEFIELD_CROSSBOW = registerNoItem("battlefield_crossbow", new BattlefieldDecorBlock(battlefieldDecorProps()));
 	public static final Block BATTLEFIELD_BANNER = registerNoItem("battlefield_banner", new BattlefieldBannerBlock(battlefieldDecorProps()));
+	// One invisible, non-ticking scene anchor for posed *preview* compositions.
+	public static final Block BATTLEFIELD_SCENE = registerNoItem("battlefield_scene", new BattlefieldSceneBlock(battlefieldDecorProps()));
 
 	/** Пепельная земля: верхний слой Чернильных пустошей (как трава, но мёртвая). */
 	public static final Block ASHEN_SOIL = register("ashen_soil", new ZoneSoilBlock(

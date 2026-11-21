@@ -60,6 +60,11 @@ jobs:
           mkdir -p /tmp/toi-battlefield-zone-test
           javac -d /tmp/toi-battlefield-zone-test src/main/java/com/tarkrakov/tearsofink/world/battlefield/BattlefieldSceneRecipes.java tools/tests/BattlefieldSceneRecipesTest.java
           java -cp /tmp/toi-battlefield-zone-test BattlefieldSceneRecipesTest
+      - name: validate authored posed scenes and arbitrary ground pivots
+        run: |
+          mkdir -p /tmp/toi-battlefield-poses-test
+          javac -d /tmp/toi-battlefield-poses-test src/main/java/com/tarkrakov/tearsofink/world/battlefield/BattlefieldSceneRecipes.java src/main/java/com/tarkrakov/tearsofink/world/battlefield/BattlefieldPosedScenes.java tools/tests/BattlefieldPosedScenesTest.java
+          java -cp /tmp/toi-battlefield-poses-test BattlefieldPosedScenesTest
       - name: validate JABER two-level routing math
         run: |
           mkdir -p /tmp/toi-jaber-test

@@ -7,6 +7,10 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
 public final class ModBlockEntities {
+	public static final BlockEntityType<com.tarkrakov.tearsofink.block.BattlefieldSceneBlockEntity> BATTLEFIELD_SCENE = Registry.register(
+			BuiltInRegistries.BLOCK_ENTITY_TYPE, TearsOfInk.id("battlefield_scene"),
+			BlockEntityType.Builder.of(com.tarkrakov.tearsofink.block.BattlefieldSceneBlockEntity::new, ModBlocks.BATTLEFIELD_SCENE).build(null));
+
 	public static final BlockEntityType<com.tarkrakov.tearsofink.block.BattlefieldBannerBlockEntity> BATTLEFIELD_BANNER = Registry.register(
 			BuiltInRegistries.BLOCK_ENTITY_TYPE, TearsOfInk.id("battlefield_banner"),
 			BlockEntityType.Builder.of(com.tarkrakov.tearsofink.block.BattlefieldBannerBlockEntity::new, ModBlocks.BATTLEFIELD_BANNER).build(null));
