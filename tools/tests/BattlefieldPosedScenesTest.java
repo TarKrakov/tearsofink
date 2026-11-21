@@ -110,7 +110,44 @@ public final class BattlefieldPosedScenesTest {
             check(weapon.approximateLength() > 0.5f, "Source weapon geometry invalid");
             check(BattlefieldWeaponCatalog.fromProp(weapon.prop) == weapon,
                     "mesh ID ordering or Prop mapping changed");
+            check(BattlefieldWeaponCatalog.TIP_DOWN_Z_DEGREES == -135f,
+                    "Never plant the handle (-135 deg means tip-down)");
+            check(Math.abs(weapon.tipDownY(weapon.maxX, weapon.maxY)) < 0.00001,
+                    "Blade/axe head is NOT the ground pivot: " + weapon);
+            check(weapon.tipDownY(weapon.minX, weapon.minY) > 0.70,
+                    "Grip is not ABOVE the blade tip: " + weapon);
+            check(Math.abs(weapon.tipDownX(weapon.maxX, weapon.maxY)) < 0.00001,
+                    "Blade tip misses its ground anchor: " + weapon);
         }
+
+        // Verify ALL 112 real poses, including near-horizontal discarded
+        // weapons; the grip must not be pushed below soil by the sink.
+        int weaponPoses = 0, shallowPoses = 0;
+        for (Scenario scene : Scenario.values()) {
+            for (int v = 0; v < 8; v++) {
+                for (Pose pose : BattlefieldPosedScenes.plan(scene, v)) {
+                    if (!BattlefieldWeaponCatalog.isWeapon(pose.prop())) continue;
+                    weaponPoses++;
+                    var mesh = BattlefieldWeaponCatalog.fromProp(pose.prop());
+                    double cos = Math.cos(Math.toRadians(pose.pitch()))
+                            * Math.cos(Math.toRadians(pose.roll()));
+                    double gripHeight = mesh.tipDownY(mesh.minX, mesh.minY) * cos + pose.sink();
+                    double bladeHeight = mesh.tipDownY(mesh.maxX, mesh.maxY) + pose.sink();
+                    check(gripHeight >= -0.025,
+                            "Grip is buried: " + scene + " variant " + v + " " + pose.prop()
+                                    + " (grip y=" + gripHeight + ")");
+                    check(bladeHeight <= 0.001,
+                            "Blade tip/axe head no longer touches soil: " + scene + " " + pose.prop());
+                    if (Math.abs(cos) < 0.25) {
+                        shallowPoses++;
+                        check(pose.sink() > -0.12f,
+                                "Fallen grip forced into the ground: " + scene + " " + pose.prop());
+                    }
+                }
+            }
+        }
+        check(weaponPoses > 100 && shallowPoses > 8,
+                "All blade types/near-horizontal situations must be tested");
         check(Scenario.values().length >= 14, "Not enough distinct battle episodes");
         check(Scenario.values()[0] == Scenario.LAST_STAND
                 && Scenario.values()[1] == Scenario.BANNER_LINE,

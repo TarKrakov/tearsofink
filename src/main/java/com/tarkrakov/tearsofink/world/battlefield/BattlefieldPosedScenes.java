@@ -57,7 +57,17 @@ public final class BattlefieldPosedScenes {
         List<Pose>[] cached = (List<Pose>[]) new List<?>[Scenario.values().length * 8];
         for (Scenario scenario : Scenario.values()) {
             for (int variant = 0; variant < 8; variant++) {
-                cached[scenario.ordinal() * 8 + variant] = buildPlan(scenario, variant);
+                // Correct every approved sword/knife/axe pose at load time:
+                // tip/head is the ground contact, while shallow fallen blades
+                // keep their grip visible rather than burying it.
+                cached[scenario.ordinal() * 8 + variant] = buildPlan(scenario, variant)
+                        .stream().map(p -> {
+                            if (!BattlefieldWeaponCatalog.isWeapon(p.prop())) return p;
+                            var source = BattlefieldWeaponCatalog.fromProp(p.prop());
+                            return new Pose(p.prop(), p.forward(), p.right(),
+                                    source.groundSink(p.sink(), p.pitch(), p.roll()),
+                                    p.yaw(), p.pitch(), p.roll(), p.required());
+                        }).toList();
             }
         }
         return cached;

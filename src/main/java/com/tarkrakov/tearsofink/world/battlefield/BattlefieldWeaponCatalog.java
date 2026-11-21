@@ -12,6 +12,13 @@ import com.tarkrakov.tearsofink.world.battlefield.BattlefieldSceneRecipes.Prop;
 public final class BattlefieldWeaponCatalog {
     private BattlefieldWeaponCatalog() {}
 
+    // In ALL eight source item meshes the guard/grip sits at the low X+Y
+    // diagonal and the blade tip / axe head at the high diagonal.
+    // Previously we wrongly pivoted on the grip and used +45 degrees.
+    // Keep this angle shared with the client renderer and geometry check.
+    public static final float TIP_DOWN_Z_DEGREES = -135f;
+    private static final double SQRT_HALF = Math.sqrt(0.5d);
+
     public enum Source {
         PALE_LONGSWORD(Prop.PALE_LONGSWORD, "pale_longsword", 0.500f, 13.000f, 0.500f, 13.000f, 8.000f, 9.000f),
         PALE_LINEAR_GREATSWORD(Prop.PALE_LINEAR_GREATSWORD, "pale_linear_great", 6.500f, 20.500f, 0.500f, 14.500f, 7.000f, 8.500f),
@@ -35,8 +42,39 @@ public final class BattlefieldWeaponCatalog {
             this.minZ = minZ; this.maxZ = maxZ;
         }
 
-        /** Renderer pivots at the authored handle-side low corner. */
+        /** Original item-space dimensions are in pixels, not blocks. */
         public float centerZ() { return (minZ + maxZ) / 2f; }
+
+        /**
+         * Contact is the end OPPOSITE the grip. The baked renderer translates
+         * by the high diagonal (maxX, maxY), then rotates -135° around Z.
+         * Using the same exact transform here prevents the server's terrain
+         * validation from disagreeing with the client model.
+         */
+        public double tipDownX(double sourceX, double sourceY) {
+            double u = (sourceX - maxX) / 16d;
+            double v = (sourceY - maxY) / 16d;
+            return (v - u) * SQRT_HALF;
+        }
+
+        public double tipDownY(double sourceX, double sourceY) {
+            double u = (sourceX - maxX) / 16d;
+            double v = (sourceY - maxY) / 16d;
+            return -(u + v) * SQRT_HALF;
+        }
+
+        /**
+         * Near-horizontal discarded weapons should REST on the terrain,
+         * not push the hilt through it. For upright/sunken blades preserve
+         * the scene's requested depth as long as the grip is visible.
+         * Called once when the 112 immutable scene recipes are cached.
+         */
+        public float groundSink(float requested, float pitch, float roll) {
+            double upright = Math.cos(Math.toRadians(pitch))
+                    * Math.cos(Math.toRadians(roll));
+            float gripHeight = (float) (approximateLength() * Math.max(0.0d, upright));
+            return Math.max(requested, -Math.max(0.02f, gripHeight * 0.40f));
+        }
         public float approximateLength() {
             return (float) (Math.hypot(maxX-minX, maxY-minY) / 16d);
         }

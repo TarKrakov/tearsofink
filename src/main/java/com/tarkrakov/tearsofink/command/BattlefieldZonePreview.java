@@ -258,7 +258,8 @@ public final class BattlefieldZonePreview {
             z0 = -0.32f; z1 = 0.32f;
         } else {
             // The eight unmodified item-mesh sources sit diagonally in XY.
-            // Model-space Z+45° makes their low handle the local ground pivot.
+            // Contact is at the high diagonal: blade/head DOWN, grip UP.
+            // See the same -135° Z normalization in BattlefieldSceneRenderer.
             BattlefieldWeaponCatalog.Source mesh = BattlefieldWeaponCatalog.fromProp(pose.prop());
             x0 = mesh.minX; x1 = mesh.maxX;
             y0 = mesh.minY; y1 = mesh.maxY;
@@ -280,14 +281,13 @@ public final class BattlefieldZonePreview {
             for (float y : new float[]{y0, y1}) {
                 for (float z : new float[]{z0, z1}) {
                     // PoseStack order Y, Z, X (matrix applies X, then Z, then Y).
-                    // Normalize the authored XY handle corner, then bring
-                    // its diagonal blade upright before the arbitrary scene tilt.
+                    // Match the renderer's high-end pivot and -135° Z exactly:
+                    // source low diagonal = grip in the AIR, high = blade
+                    // tip / axe head in the GROUND.
                     double lx = x, ly = y, lz = z;
                     if (mesh != null) {
-                        double u = (x - mesh.minX) / 16d;
-                        double v = (y - mesh.minY) / 16d;
-                        lx = (u - v) * Math.sqrt(0.5d);
-                        ly = (u + v) * Math.sqrt(0.5d);
+                        lx = mesh.tipDownX(x, y);
+                        ly = mesh.tipDownY(x, y);
                         lz = (z - mesh.centerZ()) / 16d;
                     }
                     double px = lx, py = ly * cx - lz * sx, pz = ly * sx + lz * cx;

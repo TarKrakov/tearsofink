@@ -63,11 +63,12 @@ public final class BattlefieldSceneRenderer implements BlockEntityRenderer<Battl
 
             if (BattlefieldWeaponCatalog.isWeapon(p.prop())) {
                 BattlefieldWeaponCatalog.Source mesh = BattlefieldWeaponCatalog.fromProp(p.prop());
-                // Original swords/axes run diagonally along positive X/Y in
-                // their item JSON. A shared 45° Z rotation stands the handle
-                // upright; all later rotations are authored scene poses.
-                stack.mulPose(Axis.ZP.rotationDegrees(45f));
-                stack.translate(-mesh.minX / 16f, -mesh.minY / 16f, -mesh.centerZ() / 16f);
+                // Verified from all eight authored meshes: grip at low X+Y,
+                // blade tip / axe head at HIGH X+Y. Pivot on the TIP, not the
+                // handle. A -135° Z correction puts the hilt above the ground
+                // for embedded weapons, or beside the blade for fallen ones.
+                stack.mulPose(Axis.ZP.rotationDegrees(BattlefieldWeaponCatalog.TIP_DOWN_Z_DEGREES));
+                stack.translate(-mesh.maxX / 16f, -mesh.maxY / 16f, -mesh.centerZ() / 16f);
                 blocks.renderSingleBlock(ModBlocks.BATTLEFIELD_WEAPON_MESH.defaultBlockState()
                         .setValue(BattlefieldWeaponMeshBlock.SOURCE, mesh.ordinal()),
                         stack, buffers, light, overlay);
