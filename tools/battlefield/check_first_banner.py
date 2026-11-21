@@ -37,6 +37,24 @@ for i,(e,b) in enumerate(zip(active["elements"],blocks)):
     for face in ("north","east","south","west","up","down"):
         expected.extend(e["faces"][face]["uv"])
     assert actual==expected, f"Cube {i} differs from author original"
+# D-131: the second authored regular standard is intentionally flagless.
+# It shares EXACTLY the 26 pole shapes/UVs with the main authored standard.
+# No retexture, repack or invented stand-in art is permitted.
+assert len(bare["elements"]) == 26
+assert bare["textures"][0]["uv_width"] == 128
+pole = [active["elements"][i] for i in ordered["pole"]]
+assert len(pole) == 26
+def cube_fingerprint(e):
+    return (tuple(e["from"]),tuple(e["to"]),tuple(tuple(e["faces"][f]["uv"])
+            for f in ("north","east","south","west","up","down")))
+assert sorted(map(cube_fingerprint,bare["elements"])) == sorted(map(cube_fingerprint,pole)), (
+    "Bare regular standard differs from existing authored pole, cannot share geometry")
+bare_png=(ROOT/"blockbench/regular_standart_1_withoutbanner_texture.png").read_bytes()
+bare_pack=(ROOT/"src/main/resources/assets/tears-of-ink/textures/block/battlefield_regular_standart_withoutbanner1.png").read_bytes()
+assert bare_png == bare_pack and bare_png.startswith(b"\x89PNG\r\n\x1a\n")
+assert struct.unpack(">II",bare_png[16:24]) == (256,256)
+assert "bareFootprint(Direction facing)" in geo
+assert "BARE_FOOTPRINTS" in geo
 assert "CLOTH_PARTS = {24, 25, 26, 27, 28}" in geo
 assert "TOP_HINGES = {{0f, 72f, -2.5f}" in geo
 assert "256; sample++" in geo and "joint >= 0" in geo
@@ -94,10 +112,19 @@ assert "BattlefieldBannerGeometry.TOP_HINGES[i]" in renderer
 assert "BattlefieldBannerGeometry.windAngle(i, phase)" in renderer
 assert "WIND_AMPLITUDES" not in renderer
 assert "first_flag_texture" not in renderer and "Axis.YP.rotation(angle)" not in renderer
+assert "battlefield_regular_standart_withoutbanner1.png" in renderer
+assert "BattlefieldBannerBlock.BARE" in renderer and "if (bare)" in renderer
 place=(ROOT/"src/main/java/com/tarkrakov/tearsofink/command/BattlefieldDecorCommands.java").read_text(encoding="utf-8")
 zone=(ROOT/"src/main/java/com/tarkrakov/tearsofink/command/BattlefieldZonePreview.java").read_text(encoding="utf-8")
 assert "BattlefieldBannerGeometry.footprint(facing)" in place and "BattlefieldBannerGeometry.footprint(facing)" in zone
 assert "for (int radius = 0; radius <= 4; radius++)" in place
+assert "literal(\"regular_standard\")" in place and "literal(\"regular_bare\")" in place
+assert "bare ? BattlefieldBannerGeometry.bareFootprint(facing)" in place
+assert "bare ? BattlefieldBannerGeometry.bareFootprint(facing)" in zone
+assert "scene.ordinal() >= 20 ? 2 : 1" in zone
+assert 'Commands.literal("preview")' in zone
+assert 'Commands.literal("place")' in zone
+assert 'Commands.literal("list")' in zone
 assert "isFaceSturdy(level, base.below(), Direction.UP)" in place
 assert "getCollisionShape(level, pos).isEmpty()" in place
 print("D-129: all 31 source cubes/UVs, 5 true top-hinges, exact author PNG and sweep-safe placement verified.")
