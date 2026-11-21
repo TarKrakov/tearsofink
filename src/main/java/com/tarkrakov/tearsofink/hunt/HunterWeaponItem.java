@@ -12,8 +12,8 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.component.CustomModelData;
 
 /**
- * Оружие охотников: линия (Шпиль / Кровь / Чернила) и ступень (Тусклое / Контрастное / Рубрики) хранятся в самом предмете.
- * Удары — от архетипа (двуручник — Палачи, клинок — Скимитары). Своей абилки на R пока нет.
+ * Legacy hunter_* только ради совместимости старых миров (D-107).
+ * Новые охотники и награды используют настоящие предметы игрока, не этот класс.
  */
 public class HunterWeaponItem extends InkGreatswordItem {
 	public static final int TIERS = 3;
