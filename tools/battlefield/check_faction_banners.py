@@ -33,15 +33,45 @@ for faction, full_name, bare_name, art_texture, packed in [
         assert len(model["elements"]) == expected, (faction, name, "cube count")
         section = JAVA.split(f"private static final Model {faction}_{name} =", 1)[1].split("});", 1)[0]
         assert len(re.findall(r"new Part\(", section)) == expected, (faction, name, "export count")
-        for cuboid in model["elements"]:
-            # Exact source float bounds and all six original per-face UVs.
-            vals = cuboid["from"] + cuboid["to"]
-            def jfloat(v):
-                return format(float(v), ".12g") + "f"
-            b = ", ".join(jfloat(v) for v in vals)
-            assert "new BattlefieldBannerGeometry.Cuboid(" + b + "," in section, (faction, name, "bounds", b)
-            assert all(len(cuboid["faces"][direction]["uv"]) == 4
-                       for direction in ["north", "east", "south", "west", "up", "down"])
+        # Rebuild the joint-path index from the real Blockbench hierarchy.
+        groups = {g["uuid"]: g for g in model["groups"]}
+        by_uuid = {e["uuid"]: i for i, e in enumerate(model["elements"])}
+        paths, joints, joints_by_uuid = {}, [], {}
+        def traverse(item, parents):
+            if isinstance(item, str):
+                assert item in by_uuid, (faction, name, "orphaned cube")
+                paths[by_uuid[item]] = tuple(parents)
+                return
+            g = groups[item["uuid"]]
+            moved = parents
+            if g["name"].startswith("flag") and g["name"] != "flag_main":
+                if g["uuid"] not in joints_by_uuid:
+                    joints_by_uuid[g["uuid"]] = len(joints)
+                    joints.append((g["origin"], len(parents), round((g["origin"][1] - 65) / 70, 5)))
+                moved = (*parents, joints_by_uuid[g["uuid"]])
+            for child in item.get("children", []):
+                traverse(child, moved)
+        for top in model["outliner"]:
+            traverse(top, ())
+        assert len(paths) == expected
+        def jfloat(v):
+            return format(float(v), ".12g") + "f"
+        for j, depth, phase in joints:
+            signature = "new Joint(" + ", ".join(jfloat(v) for v in j)
+            signature += ", " + str(depth) + ", " + jfloat(phase) + ")"
+            assert signature in section, (faction, name, "authored joint pivot", signature)
+        assert len(re.findall(r"new Joint\\(", section)) == len(joints), (faction, name, "joint count")
+        for i, cuboid in enumerate(model["elements"]):
+            # Exact source bounds, ALL six UV faces and every bone ancestry:
+            # a duplicated/recolored stand-in must fail this test.
+            bounds = ", ".join(jfloat(v) for v in cuboid["from"] + cuboid["to"])
+            faces = ["north", "east", "south", "west", "up", "down"]
+            uv = ", ".join("{" + ", ".join(jfloat(v) for v in cuboid["faces"][face]["uv"]) + "}"
+                           for face in faces)
+            path_ids = ", ".join(str(i) for i in paths[i])
+            signature = "new BattlefieldBannerGeometry.Cuboid(" + bounds
+            signature += ", new float[][]{" + uv + "}), new int[]{" + path_ids + "})"
+            assert signature in section, (faction, name, "author cubes/UV/joint path", i)
         assert all(not element.get("rotation", {}).get("angle") for element in model["elements"])
     pole_cubes = {
         (tuple(e["from"]),tuple(e["to"]),
