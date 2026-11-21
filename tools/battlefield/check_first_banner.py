@@ -40,7 +40,7 @@ for i,(e,b) in enumerate(zip(active["elements"],blocks)):
 assert "CLOTH_PARTS = {24, 25, 26, 27, 28}" in geo
 assert "TOP_HINGES = {{0f, 72f, -2.5f}" in geo
 assert "256; sample++" in geo and "joint >= 0" in geo
-assert "WIND_AMPLITUDES = {0.03f, 0.043f, 0.055f, 0.073f, 0.091f}" in geo
+assert "WIND_AMPLITUDES = {0.030f, 0.043f, 0.055f, 0.073f, 0.091f}" in geo
 png=(ROOT/"blockbench/regular_standart_1_texture.png").read_bytes()
 packed=(ROOT/"src/main/resources/assets/tears-of-ink/textures/block/battlefield_regular_standart1.png").read_bytes()
 assert png==packed and png.startswith(b"\x89PNG\r\n\x1a\n")
