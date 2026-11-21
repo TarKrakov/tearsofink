@@ -28,6 +28,7 @@ import java.util.List;
  * 90/45-degree blockstate angles. No retexture, duplicated mesh or server tick.
  */
 public final class BattlefieldSceneRenderer implements BlockEntityRenderer<BattlefieldSceneBlockEntity> {
+    private static final Scenario[] SCENARIOS = Scenario.values();
     private final BlockRenderDispatcher blocks;
 
     public BattlefieldSceneRenderer(BlockEntityRendererProvider.Context context) {
@@ -39,8 +40,8 @@ public final class BattlefieldSceneRenderer implements BlockEntityRenderer<Battl
                        MultiBufferSource buffers, int light, int overlay) {
         BlockState root = entity.getBlockState();
         int sceneIndex = root.getValue(BattlefieldSceneBlock.SCENE);
-        if (sceneIndex < 0 || sceneIndex >= Scenario.values().length) return;
-        List<Pose> poses = BattlefieldPosedScenes.plan(Scenario.values()[sceneIndex],
+        if (sceneIndex < 0 || sceneIndex >= SCENARIOS.length) return;
+        List<Pose> poses = BattlefieldPosedScenes.plan(SCENARIOS[sceneIndex],
                 root.getValue(BattlefieldSceneBlock.VARIANT));
 
         // Align the entire episode to the player's forward direction.
