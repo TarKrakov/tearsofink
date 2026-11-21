@@ -36,7 +36,13 @@ public final class BattlefieldPosedScenes {
         FALLEN_EDGE("fallen_edge", "Поваленный рубеж"),
         TWIN_STANDARDS("twin_standards", "Рваная знамённая дуга"),
         CROSS_FIRE("cross_fire", "След перекрёстной стрельбы"),
-        FINAL_TRACE("final_trace", "Далёкие следы боя");
+        FINAL_TRACE("final_trace", "Далёкие следы боя"),
+        SHIELD_CRESCENT("shield_crescent", "Разорванный полумесяц щитов"),
+        KNIFE_SCATTER("knife_scatter", "Рассыпанные короткие клинки"),
+        AXE_BREACH("axe_breach", "Брешь между секирами"),
+        BLADE_FAN("blade_fan", "Веер оставленных мечей"),
+        CROSSBOW_CACHE("crossbow_cache", "Брошенное стрелковое гнездо"),
+        LONE_BLADE("lone_blade", "Одинокий большой клинок");
 
         private final String id, label;
         Scenario(String id, String label) { this.id = id; this.label = label; }
@@ -49,37 +55,43 @@ public final class BattlefieldPosedScenes {
         public boolean banner() { return prop == Prop.BANNER; }
     }
 
-    // Poses are immutable, and generating a new List/Pose per render frame
-    // causes needless allocation. All 14x8 scene layouts are built just once.
-    // Keeping the old 0/1 IDs and all eight variants stable preserves saves.
+    /**
+     * Version 0: EXACT original geometry of D-125 for existing save blocks.
+     * Version 1: revised archetypes. An absent layout blockstate property in
+     * old chunks resolves to 0, so existing scenes don't change positions.
+     */
     @SuppressWarnings("unchecked")
-    private static List<Pose>[] buildCache() {
+    private static List<Pose>[] buildCache(int layoutVersion) {
         List<Pose>[] cached = (List<Pose>[]) new List<?>[Scenario.values().length * 8];
         for (Scenario scenario : Scenario.values()) {
             for (int variant = 0; variant < 8; variant++) {
-                // Correct every approved sword/knife/axe pose at load time:
-                // tip/head is the ground contact, while shallow fallen blades
-                // keep their grip visible rather than burying it.
-                cached[scenario.ordinal() * 8 + variant] = buildPlan(scenario, variant)
-                        .stream().map(p -> {
-                            if (!BattlefieldWeaponCatalog.isWeapon(p.prop())) return p;
-                            var source = BattlefieldWeaponCatalog.fromProp(p.prop());
-                            return new Pose(p.prop(), p.forward(), p.right(),
-                                    source.groundSink(p.sink(), p.pitch(), p.roll()),
-                                    p.yaw(), p.pitch(), p.roll(), p.required());
-                        }).toList();
+                List<Pose> source = layoutVersion == 0 && scenario.ordinal() < 14
+                        ? buildLegacyPlan(scenario, variant)
+                        : BattlefieldCompositionArchetypes.plan(scenario, variant);
+                cached[scenario.ordinal() * 8 + variant] = source.stream().map(p -> {
+                    if (!BattlefieldWeaponCatalog.isWeapon(p.prop())) return p;
+                    var weapon = BattlefieldWeaponCatalog.fromProp(p.prop());
+                    return new Pose(p.prop(), p.forward(), p.right(),
+                            weapon.groundSink(p.sink(), p.pitch(), p.roll()),
+                            p.yaw(), p.pitch(), p.roll(), p.required());
+                }).toList();
             }
         }
         return cached;
     }
 
-    private static final List<Pose>[] CACHE = buildCache();
+    private static final List<Pose>[] LEGACY = buildCache(0);
+    private static final List<Pose>[] CURRENT = buildCache(1);
 
     public static List<Pose> plan(Scenario scene, int variant) {
-        return CACHE[scene.ordinal() * 8 + (variant & 7)];
+        return plan(scene, variant, 1);
     }
 
-    private static List<Pose> buildPlan(Scenario scene, int variant) {
+    public static List<Pose> plan(Scenario scene, int variant, int layoutVersion) {
+        return (layoutVersion == 0 ? LEGACY : CURRENT)[scene.ordinal() * 8 + (variant & 7)];
+    }
+
+    private static List<Pose> buildLegacyPlan(Scenario scene, int variant) {
         int mirror = (variant & 1) == 0 ? 1 : -1;
         float skew = (variant & 2) == 0 ? -0.16f : 0.16f;
         float broken = (variant & 4) == 0 ? -4f : 4f;
@@ -269,6 +281,9 @@ public final class BattlefieldPosedScenes {
                     new Pose(Prop.CROSSBOW, 0.91f, 3.45f * mirror, -0.12f,
                             65f * mirror, 77f, -7f * mirror, false)
             );
+            case SHIELD_CRESCENT, KNIFE_SCATTER, AXE_BREACH,
+                 BLADE_FAN, CROSSBOW_CACHE, LONE_BLADE ->
+                    throw new IllegalArgumentException("No legacy scene: " + scene);
         };
     }
 }
