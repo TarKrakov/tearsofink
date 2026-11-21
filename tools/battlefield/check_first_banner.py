@@ -57,3 +57,16 @@ assert struct.unpack(">II", source[16:24]) == (128, 128), "Authored texture size
 assert PACK_PNG.read_bytes() == source, "Author texture was altered in the runtime copy"
 assert "BlockEntityRenderer" in text and "getGameTime()" in text
 print("First battlefield banner: seven authored cubes, six correct pivots, UVs and PNG match.")
+
+
+# Prevent regression to the user's rejected all-air 7x7x5 placement rule.
+placement = (ROOT / "src/main/java/com/tarkrakov/tearsofink/command/BattlefieldDecorCommands.java").read_text(encoding="utf-8")
+assert 'for (int radius = 0; radius <= 4; radius++)' in placement, "Banner preview must search nearby terrain"
+assert "getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES" in placement, "Missing terrain height sampling"
+assert "getBlockState(base).isAir()" in placement, "Unsafe replacement at banner anchor"
+assert "isFaceSturdy(level, base.below(), Direction.UP)" in placement, "Banner needs solid support"
+assert "hasSolidObstruction" in placement and "getCollisionShape(level, pos).isEmpty()" in placement, "No actual model footprint checks"
+assert "getCounterClockWise()" in placement, "No rotated cloth footprint check"
+assert placement.count("level.setBlock(base, state, Block.UPDATE_CLIENTS)") == 1, "Unexpected writes in banner preview"
+assert "7x7 блоков" not in placement, "Old whole-area rejection returned"
+print("Battlefield banner placement: terrain-aware candidate search, no bulk clearing.")
