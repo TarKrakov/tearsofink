@@ -35,9 +35,15 @@ def model_for(name):
     return {"ambientocclusion": False, "textures": src["textures"], "elements": src["elements"]}
 
 
+def aged_model(name):
+    source = model_for(name)
+    return {"ambientocclusion": False, "parent": "tears-of-ink:block/battlefield_weapon_" + name,
+            "textures": {slot: token + "_aged" for slot, token in source["textures"].items()}}
+
+
 def blockstates():
     variants = {
-        "source=" + str(i): {"model": "tears-of-ink:block/battlefield_weapon_" + name}
+        "source=" + str(i): {"model": "tears-of-ink:block/battlefield_weapon_" + name + "_aged"}
         for i, name in enumerate(SOURCES)
     }
     variants.update({
@@ -53,6 +59,8 @@ def main():
     args = parser.parse_args()
     payloads = {BASE / "models/block" / ("battlefield_weapon_" + name + ".json"): model_for(name)
                 for name in SOURCES}
+    payloads.update({BASE / "models/block" / ("battlefield_weapon_" + name + "_aged.json"): aged_model(name)
+                     for name in SOURCES})
     # Block models inherit the actual complete 3D source without copying,
     # reinterpreting or editing ANY of the artist's elements or UVs.
     for name in SOUL_SHIELDS:
@@ -60,6 +68,7 @@ def main():
         payloads[BASE / "models/block" / ("battlefield_soul_shield_" + name + ".json")] = {
             "ambientocclusion": False,
             "parent": "tears-of-ink:item/shield/" + name,
+            "textures": {slot: token + "_aged" for slot, token in model_for("shield/" + name)["textures"].items()},
         }
     payloads[BASE / "blockstates/battlefield_weapon_mesh.json"] = blockstates()
     for path, expected in payloads.items():

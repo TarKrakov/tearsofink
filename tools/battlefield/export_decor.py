@@ -126,7 +126,7 @@ def model(data: dict, bone: str, texture: str, scale: float, count: int, bottom_
 def blockstate(name: str, flip_x: bool) -> dict:
     variants = {}
     for i, d in enumerate(("north", "east", "south", "west")):
-        value = {"model": f"tears-of-ink:block/battlefield_{name}", "y": i * 90}
+        value = {"model": f"tears-of-ink:block/battlefield_{name}_aged", "y": i * 90}
         if flip_x:
             value["x"] = 180  # rotate geometry AND UV; do not rebuild author texture
         variants[f"facing={d}"] = value
@@ -142,11 +142,21 @@ def main() -> None:
         data = json.loads((ROOT / path).read_text(encoding="utf-8"))
         outputs[ASSETS / f"tears-of-ink/models/block/battlefield_{name}.json"] = model(data, bone, texture, scale, count, bottom_y)
         outputs[ASSETS / f"tears-of-ink/blockstates/battlefield_{name}.json"] = blockstate(name, flip_x)
+        sprite = f"tears-of-ink:entity/{texture}_aged"
+        outputs[ASSETS / f"tears-of-ink/models/block/battlefield_{name}_aged.json"] = {
+            "ambientocclusion": False,
+            "parent": f"tears-of-ink:block/battlefield_{name}",
+            "textures": {"0": sprite, "particle": sprite},
+        }
 
     atlas = {
         "sources": [
             {"type": "minecraft:single", "resource": f"tears-of-ink:entity/{texture}",
              "sprite": f"tears-of-ink:entity/{texture}"}
+            for _, _, _, texture, _, _, _, _ in SOURCES
+        ] + [
+            {"type": "minecraft:single", "resource": f"tears-of-ink:entity/{texture}_aged",
+             "sprite": f"tears-of-ink:entity/{texture}_aged"}
             for _, _, _, texture, _, _, _, _ in SOURCES
         ]
     }

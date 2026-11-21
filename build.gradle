@@ -141,3 +141,28 @@ publishing {
 tasks.matching { it.name == 'runServer' }.configureEach {
 	standardInput = System.in
 }
+
+// Generated derivative textures for battlefield props; all authored originals remain immutable.
+def battlefieldAgedResources = layout.buildDirectory.dir('generated/battlefield-aged-resources')
+tasks.register('generateBattlefieldAgedResources', Exec) {
+    def authoredTextures = file('src/main/resources/assets/tears-of-ink/textures')
+    inputs.file('tools/battlefield/GenerateAgedTextures.java')
+    inputs.files(fileTree(authoredTextures) {
+        include 'item/pale_longsword.png', 'item/pale_linear_greatsword.png',
+                'item/blood_talvar.png', 'item/blood_dussak.png',
+                'item/spire_torturer_greatsword.png', 'item/spire_roaring_axe.png',
+                'item/spire_shadow_scimitar.png', 'item/spire_rapid_knife.png',
+                'item/ram_shield.png', 'item/repel_shield.png',
+                'item/mercy_shield.png', 'item/radiant_shield.png',
+                'entity/pale_spearman.png', 'entity/pale_shieldbearer.png',
+                'entity/pale_crossbowman.png'
+    })
+    outputs.dir(battlefieldAgedResources)
+    commandLine new File(System.getProperty('java.home'), 'bin/java').absolutePath,
+            file('tools/battlefield/GenerateAgedTextures.java').absolutePath,
+            authoredTextures.absolutePath, battlefieldAgedResources.get().asFile.absolutePath
+}
+processResources {
+    dependsOn tasks.named('generateBattlefieldAgedResources')
+    from(battlefieldAgedResources)
+}
