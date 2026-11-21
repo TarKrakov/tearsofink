@@ -49,7 +49,27 @@ public final class BattlefieldPosedScenes {
         public boolean banner() { return prop == Prop.BANNER; }
     }
 
+    // Poses are immutable, and generating a new List/Pose per render frame
+    // causes needless allocation. All 14x8 scene layouts are built just once.
+    // Keeping the old 0/1 IDs and all eight variants stable preserves saves.
+    @SuppressWarnings("unchecked")
+    private static List<Pose>[] buildCache() {
+        List<Pose>[] cached = (List<Pose>[]) new List<?>[Scenario.values().length * 8];
+        for (Scenario scenario : Scenario.values()) {
+            for (int variant = 0; variant < 8; variant++) {
+                cached[scenario.ordinal() * 8 + variant] = buildPlan(scenario, variant);
+            }
+        }
+        return cached;
+    }
+
+    private static final List<Pose>[] CACHE = buildCache();
+
     public static List<Pose> plan(Scenario scene, int variant) {
+        return CACHE[scene.ordinal() * 8 + (variant & 7)];
+    }
+
+    private static List<Pose> buildPlan(Scenario scene, int variant) {
         int mirror = (variant & 1) == 0 ? 1 : -1;
         float skew = (variant & 2) == 0 ? -0.16f : 0.16f;
         float broken = (variant & 4) == 0 ? -4f : 4f;
