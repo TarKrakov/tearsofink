@@ -35,7 +35,7 @@ names = [name for name, _ in parts]
 assert names == ["pole", "cloth_root", "cloth1", "cloth2", "cloth3", "cloth4", "cloth5"], names
 text = RENDER.read_text(encoding="utf-8")
 table = text.split("private static final Box[] PARTS = {", 1)[1].split("};", 1)[0]
-blocks = re.findall(r"new Box\((.*?)\)\s*[,}]", table, flags=re.S)
+blocks = re.findall(r"new Box\((.*?)\)", table, flags=re.S)
 assert len(blocks) == len(parts), f"Expected 7 boxes; found {len(blocks)}"
 
 for i, ((name, cube), block) in enumerate(zip(parts, blocks)):
