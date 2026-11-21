@@ -136,42 +136,33 @@ public final class ModCreativeTab {
 						output.accept(ModBlocks.INK_FOUNTAIN);
 						output.accept(ModItems.HAND_LANTERN);
 						output.accept(ModItems.BRIGHT_HAND_LANTERN);
+						// Щиты Души и пролог.
 						output.accept(ModItems.RAM_SHIELD);
 						output.accept(ModItems.RADIANT_SHIELD);
 						output.accept(ModItems.MERCY_SHIELD);
+						output.accept(ModItems.REPEL_SHIELD);
 						output.accept(ModItems.WORN_RAM_SHIELD);
 						output.accept(ModItems.WORN_MERCY_SHIELD);
 						output.accept(ModItems.DIM_SCIMITAR);
-						output.accept(ModItems.REPEL_SHIELD);
+						// Шпиль — настоящее охотничье оружие.
 						output.accept(ModItems.WAVE_GREATSWORD);
 						output.accept(ModItems.CLEAVE_GREATSWORD);
 						output.accept(ModItems.ROARING_AXE);
 						output.accept(ModItems.RAPID_KNIFE);
+						// Кровь — настоящее охотничье оружие.
+						output.accept(ModItems.BLOOD_TALVAR);
+						output.accept(ModItems.BLOOD_DUSSAK);
+						// Девять обычных клинков: Бледнолесье, Кроволесье, Чернолесье.
 						output.accept(ModItems.PALE_MISERICORDE);
-						output.accept(ModItems.PALE_SWORD);
 						output.accept(ModItems.PALE_LONGSWORD);
-						output.accept(ModItems.PALE_GREATSWORD);
 						output.accept(ModItems.PALE_LINEAR_GREATSWORD);
-						output.accept(ModItems.BLOOD_SWORD);
-						output.accept(ModItems.BLOOD_GREATSWORD);
 						output.accept(ModItems.BLOOD_KATAR);
 						output.accept(ModItems.BLOOD_PATA);
 						output.accept(ModItems.BLOOD_CURVED_GREATSWORD);
-						output.accept(ModItems.INK_SWORD);
-						output.accept(ModItems.INK_GREATSWORD);
 						output.accept(ModItems.INK_SEAX);
 						output.accept(ModItems.INK_FALCHION);
 						output.accept(ModItems.INK_KRIEGSMESSER);
-						output.accept(ModItems.BLOOD_KATANA);
-						output.accept(ModItems.BLOOD_OBSI_CLUB);
-						output.accept(ModItems.BLOOD_TALVAR);
-						output.accept(ModItems.BLOOD_DUSSAK);
-						for (var line : com.tarkrakov.tearsofink.hunt.HunterType.values()) {
-							for (int tier = 0; tier < com.tarkrakov.tearsofink.hunt.HunterWeaponItem.TIERS; tier++) {
-								output.accept(((com.tarkrakov.tearsofink.hunt.HunterWeaponItem) ModItems.HUNTER_GREATSWORD).make(line, tier));
-								output.accept(((com.tarkrakov.tearsofink.hunt.HunterWeaponItem) ModItems.HUNTER_SABER).make(line, tier));
-							}
-						}
+						// Старая шестёрка, hunter_* и неиспользуемые blood_katana/obsi_club остаются лишь ради сохранений.
 						ModArmor.items().forEach(output::accept);
 						output.accept(ModItems.ATONEMENT);
 						output.accept(ModItems.CATERPILLAR_SPAWN_EGG);
