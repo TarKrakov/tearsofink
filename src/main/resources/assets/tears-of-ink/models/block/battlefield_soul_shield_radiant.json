@@ -1,4 +1,8 @@
 {
   "ambientocclusion": false,
-  "parent": "tears-of-ink:item/shield/radiant"
+  "parent": "tears-of-ink:item/shield/radiant",
+  "textures": {
+    "1": "tears-of-ink:item/radiant_shield_aged",
+    "particle": "tears-of-ink:item/radiant_shield_aged"
+  }
 }

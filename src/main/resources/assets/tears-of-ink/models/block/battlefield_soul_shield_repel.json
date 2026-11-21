@@ -1,4 +1,8 @@
 {
   "ambientocclusion": false,
-  "parent": "tears-of-ink:item/shield/repel"
+  "parent": "tears-of-ink:item/shield/repel",
+  "textures": {
+    "1": "tears-of-ink:item/repel_shield_aged",
+    "particle": "tears-of-ink:item/repel_shield_aged"
+  }
 }

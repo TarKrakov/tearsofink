@@ -1,19 +1,19 @@
 {
   "variants": {
     "facing=north": {
-      "model": "tears-of-ink:block/battlefield_spear",
+      "model": "tears-of-ink:block/battlefield_spear_aged",
       "y": 0
     },
     "facing=east": {
-      "model": "tears-of-ink:block/battlefield_spear",
+      "model": "tears-of-ink:block/battlefield_spear_aged",
       "y": 90
     },
     "facing=south": {
-      "model": "tears-of-ink:block/battlefield_spear",
+      "model": "tears-of-ink:block/battlefield_spear_aged",
       "y": 180
     },
     "facing=west": {
-      "model": "tears-of-ink:block/battlefield_spear",
+      "model": "tears-of-ink:block/battlefield_spear_aged",
       "y": 270
     }
   }

@@ -1,28 +1,28 @@
 {
   "variants": {
     "source=0": {
-      "model": "tears-of-ink:block/battlefield_weapon_pale_longsword"
+      "model": "tears-of-ink:block/battlefield_weapon_pale_longsword_aged"
     },
     "source=1": {
-      "model": "tears-of-ink:block/battlefield_weapon_pale_linear_great"
+      "model": "tears-of-ink:block/battlefield_weapon_pale_linear_great_aged"
     },
     "source=2": {
-      "model": "tears-of-ink:block/battlefield_weapon_blood_talvar"
+      "model": "tears-of-ink:block/battlefield_weapon_blood_talvar_aged"
     },
     "source=3": {
-      "model": "tears-of-ink:block/battlefield_weapon_blood_dussak"
+      "model": "tears-of-ink:block/battlefield_weapon_blood_dussak_aged"
     },
     "source=4": {
-      "model": "tears-of-ink:block/battlefield_weapon_spire_torturer_greatsword"
+      "model": "tears-of-ink:block/battlefield_weapon_spire_torturer_greatsword_aged"
     },
     "source=5": {
-      "model": "tears-of-ink:block/battlefield_weapon_spire_roaring_axe"
+      "model": "tears-of-ink:block/battlefield_weapon_spire_roaring_axe_aged"
     },
     "source=6": {
-      "model": "tears-of-ink:block/battlefield_weapon_spire_shadow_scimitar"
+      "model": "tears-of-ink:block/battlefield_weapon_spire_shadow_scimitar_aged"
     },
     "source=7": {
-      "model": "tears-of-ink:block/battlefield_weapon_spire_rapid_knife"
+      "model": "tears-of-ink:block/battlefield_weapon_spire_rapid_knife_aged"
     },
     "source=8": {
       "model": "tears-of-ink:block/battlefield_soul_shield_ram"

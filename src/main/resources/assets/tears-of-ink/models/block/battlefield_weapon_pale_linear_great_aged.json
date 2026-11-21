@@ -1,0 +1,8 @@
+{
+  "ambientocclusion": false,
+  "parent": "tears-of-ink:block/battlefield_weapon_pale_linear_great",
+  "textures": {
+    "0": "tears-of-ink:item/pale_linear_greatsword_aged",
+    "particle": "tears-of-ink:item/pale_linear_greatsword_aged"
+  }
+}

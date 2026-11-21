@@ -1,22 +1,22 @@
 {
   "variants": {
     "facing=north": {
-      "model": "tears-of-ink:block/battlefield_shield",
+      "model": "tears-of-ink:block/battlefield_shield_aged",
       "y": 0,
       "x": 180
     },
     "facing=east": {
-      "model": "tears-of-ink:block/battlefield_shield",
+      "model": "tears-of-ink:block/battlefield_shield_aged",
       "y": 90,
       "x": 180
     },
     "facing=south": {
-      "model": "tears-of-ink:block/battlefield_shield",
+      "model": "tears-of-ink:block/battlefield_shield_aged",
       "y": 180,
       "x": 180
     },
     "facing=west": {
-      "model": "tears-of-ink:block/battlefield_shield",
+      "model": "tears-of-ink:block/battlefield_shield_aged",
       "y": 270,
       "x": 180
     }

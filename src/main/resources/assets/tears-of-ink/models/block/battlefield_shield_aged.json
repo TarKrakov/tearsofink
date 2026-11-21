@@ -1,0 +1,8 @@
+{
+  "ambientocclusion": false,
+  "parent": "tears-of-ink:block/battlefield_shield",
+  "textures": {
+    "0": "tears-of-ink:entity/pale_shieldbearer_aged",
+    "particle": "tears-of-ink:entity/pale_shieldbearer_aged"
+  }
+}

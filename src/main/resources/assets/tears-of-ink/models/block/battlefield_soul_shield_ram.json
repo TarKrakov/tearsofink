@@ -1,4 +1,8 @@
 {
   "ambientocclusion": false,
-  "parent": "tears-of-ink:item/shield/ram"
+  "parent": "tears-of-ink:item/shield/ram",
+  "textures": {
+    "1": "tears-of-ink:item/ram_shield_aged",
+    "particle": "tears-of-ink:item/ram_shield_aged"
+  }
 }

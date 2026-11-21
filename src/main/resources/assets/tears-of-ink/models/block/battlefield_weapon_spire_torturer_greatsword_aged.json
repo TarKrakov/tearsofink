@@ -1,0 +1,8 @@
+{
+  "ambientocclusion": false,
+  "parent": "tears-of-ink:block/battlefield_weapon_spire_torturer_greatsword",
+  "textures": {
+    "0": "tears-of-ink:item/spire_torturer_greatsword_aged",
+    "particle": "tears-of-ink:item/spire_torturer_greatsword_aged"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "ambientocclusion": false,
+  "parent": "tears-of-ink:block/battlefield_weapon_spire_rapid_knife",
+  "textures": {
+    "0": "tears-of-ink:item/spire_rapid_knife_aged",
+    "particle": "tears-of-ink:item/spire_rapid_knife_aged"
+  }
+}

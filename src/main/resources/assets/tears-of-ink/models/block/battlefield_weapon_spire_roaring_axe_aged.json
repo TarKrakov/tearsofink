@@ -1,0 +1,8 @@
+{
+  "ambientocclusion": false,
+  "parent": "tears-of-ink:block/battlefield_weapon_spire_roaring_axe",
+  "textures": {
+    "2": "tears-of-ink:item/spire_roaring_axe_aged",
+    "particle": "tears-of-ink:item/spire_roaring_axe_aged"
+  }
+}

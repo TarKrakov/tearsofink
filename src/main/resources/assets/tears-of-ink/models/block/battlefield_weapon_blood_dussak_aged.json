@@ -1,0 +1,8 @@
+{
+  "ambientocclusion": false,
+  "parent": "tears-of-ink:block/battlefield_weapon_blood_dussak",
+  "textures": {
+    "0": "tears-of-ink:item/blood_dussak_aged",
+    "particle": "tears-of-ink:item/blood_dussak_aged"
+  }
+}

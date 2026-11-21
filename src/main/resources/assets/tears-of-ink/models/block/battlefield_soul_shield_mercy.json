@@ -1,4 +1,8 @@
 {
   "ambientocclusion": false,
-  "parent": "tears-of-ink:item/shield/mercy"
+  "parent": "tears-of-ink:item/shield/mercy",
+  "textures": {
+    "1": "tears-of-ink:item/mercy_shield_aged",
+    "particle": "tears-of-ink:item/mercy_shield_aged"
+  }
 }
