@@ -41,7 +41,7 @@ public final class BattlefieldDiscovery {
                     BattlefieldWorldPlan plan = BattlefieldWorldPlan.of(layout);
                     if (plan != null) for (var field : plan.fields()) {
                         if (field.distance(player.getBlockX(), player.getBlockZ()) < 210
-                                && BattlefieldInstallations.stamped(level, field, field.x(), field.z())) {
+                                && BattlefieldInstallations.fieldReady(level, field)) {
                             state = new FieldSync(field.x(), field.z(), field.seed(), true);
                             break;
                         }
