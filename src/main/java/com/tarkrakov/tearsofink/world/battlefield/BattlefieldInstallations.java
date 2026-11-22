@@ -298,6 +298,14 @@ public final class BattlefieldInstallations extends SavedData {
                 } else if (slot.kind() == BattlefieldWorldPlan.Kind.RELIC) {
                     made = BattlefieldRelicPlacement.place(level, rootXZ, slot.facing(),
                             slot.blade(), slot.variant());
+                    // Dense weapon beds should not vanish solely because the
+                    // natural ground is too jagged. First prefer real terrain;
+                    // only after that fails, make a smaller local earthwork.
+                    if (!made && !playerUnderfoot(level, slot.x(), slot.z(), 16)
+                            && BattlefieldSitePreparation.prepare(level, field, slot)) {
+                        made = BattlefieldRelicPlacement.place(level, rootXZ, slot.facing(),
+                                slot.blade(), slot.variant());
+                    }
                 } else {
                     made = BattlefieldZonePreview.placePlanned(level, rootXZ,
                             slot.facing(), slot.scene(), slot.variant());
