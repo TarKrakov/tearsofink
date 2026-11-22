@@ -26,13 +26,13 @@ public final class BattlefieldMemoryMoteParticle extends TextureSheetParticle {
         super(level, x, y, z);
         pickSprite(sprites); // two author sprites for varied silhouettes
         phase = random.nextFloat() * Mth.TWO_PI;
-        quadSize = Mth.nextFloat(random, .055f, .16f);
-        lifetime = Mth.nextInt(random, 65, 125);
+        quadSize = Mth.nextFloat(random, .080f, .19f);
+        lifetime = Mth.nextInt(random, 150, 230);
         brightness = Mth.nextFloat(random, .58f, .9f);
         // Not a shower from overhead: an immediate upward departure from soil,
         // then a faint sideways wobble, breaking up before reaching the sky.
         xd = xSpeed;
-        yd = Math.max(.009d, ySpeed);
+        yd = Math.max(.040d, ySpeed);
         zd = zSpeed;
         gravity = 0f;
         hasPhysics = false;
@@ -49,10 +49,10 @@ public final class BattlefieldMemoryMoteParticle extends TextureSheetParticle {
         float ageRatio = (float) age / lifetime;
         xd += Math.sin(phase + age * .10f) * .00016d;
         zd += Math.cos(phase + age * .083f) * .00016d;
-        yd = Math.min(.041d, yd + .000085d);
+        yd = Math.min(.095d, yd + .00011d);
         // A soft entrance, short suspension and gradual dissolution, plus
         // field-edge attenuation if the particle drifts across the boundary.
-        float fade = Math.min(1f, ageRatio / .16f)
+        float fade = Math.min(1f, ageRatio / .12f)
                 * Mth.clamp((1f - ageRatio) / .48f, 0f, 1f);
         float field = BattlefieldClarity.opennessAt(x, z);
         alpha = brightness * fade * field;

@@ -19,6 +19,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
  */
 public final class BattlefieldMemoryMotes {
     private static final int ATTEMPTS_PER_TICK = 6;
+    private static final double VISIBLE_RADIUS = 44d;
     private BattlefieldMemoryMotes() {}
 
     public static void tick(Minecraft mc) {
@@ -28,14 +29,14 @@ public final class BattlefieldMemoryMotes {
             return;
         // Prepare the updraft on the VISIBLE side of the boundary even when
         // the player is still just outside; prevents an abrupt empty strip.
-        if (!BattlefieldClarity.nearField(player.getX(), player.getZ(), 25d))
+        if (!BattlefieldClarity.nearField(player.getX(), player.getZ(), VISIBLE_RADIUS + 3d))
             return;
 
         RandomSource rng = level.random;
         BlockPos.MutableBlockPos probe = new BlockPos.MutableBlockPos();
         for (int i = 0; i < ATTEMPTS_PER_TICK; i++) {
             double angle = rng.nextDouble() * (Math.PI * 2d);
-            double radius = 2d + Math.sqrt(rng.nextDouble()) * 22d;
+            double radius = 2d + Math.sqrt(rng.nextDouble()) * VISIBLE_RADIUS;
             int x = (int) Math.floor(player.getX() + Math.cos(angle) * radius);
             int z = (int) Math.floor(player.getZ() + Math.sin(angle) * radius);
             float field = BattlefieldClarity.opennessAt(x + .5d, z + .5d);
@@ -46,7 +47,7 @@ public final class BattlefieldMemoryMotes {
             if (!level.hasChunkAt(probe)
                     || !level.getBiome(probe).is(ModBiomes.PALE_FOREST)) continue;
             int surfaceY = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-            if (Math.abs(surfaceY - player.getY()) > 12d
+            if (Math.abs(surfaceY - player.getY()) > 18d
                     || surfaceY <= level.getMinBuildHeight() + 1) continue;
             probe.set(x, surfaceY - 1, z);
             var floor = level.getBlockState(probe);
@@ -60,10 +61,10 @@ public final class BattlefieldMemoryMotes {
             double px = x + .16d + rng.nextDouble() * .68d;
             double pz = z + .16d + rng.nextDouble() * .68d;
             double py = surfaceY + .045d + rng.nextDouble() * .14d;
-            level.addParticle(ModParticles.BATTLEFIELD_MEMORY_MOTE,
+            level.addAlwaysVisibleParticle(ModParticles.BATTLEFIELD_MEMORY_MOTE, true,
                     px, py, pz,
                     (rng.nextDouble() - .5d) * .012d,
-                    .012d + rng.nextDouble() * .016d,
+                    .040d + rng.nextDouble() * .030d,
                     (rng.nextDouble() - .5d) * .012d);
         }
     }
