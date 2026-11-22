@@ -48,11 +48,17 @@ public final class BattlefieldEnvironment {
         double approach = field.approach(x, z);
         // Every eligible new chunk gains a buried proof block, not just
         // the exact slot column (where deep ash could hide that proof).
-        boolean planned = (x & 15) == 8 && (z & 15) == 8
-                && (fieldValue > .28 || approach > .35);
+        boolean atChunkProof = (x & 15) == 8 && (z & 15) == 8;
+        boolean planned = atChunkProof && (fieldValue > .28 || approach > .35);
         if (field.x() == x && field.z() == z) planned = true;
-        if (!planned) for (var slot : field.placements()) {
-            if (slot.x() == x && slot.z() == z) { planned = true; break; }
+        for (var slot : field.placements()) {
+            int sx = x - slot.x(), sz = z - slot.z();
+            // The sculptor may need land in a neighboring chunk beyond the
+            // irregular field edge. Stamp ALL involved virgin chunks in
+            // worldgen before any server-side landscape changes.
+            if (atChunkProof && sx * sx + sz * sz < 25 * 25) planned = true;
+            if (sx == 0 && sz == 0) planned = true;
+            if (planned) break;
         }
         if (fieldValue < .10 && approach < .15 && !planned) return false;
         // Never decorate the road, its shoulders, temple approach or a building.
