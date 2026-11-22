@@ -74,6 +74,7 @@ public final class ModBlocks {
 	public static final Block BATTLEFIELD_MONUMENT = registerNoItem("battlefield_monument", new BattlefieldMonumentBlock(battlefieldDecorProps()));
 	// Placed by NEW chunk decoration only; never given as an item.
 	public static final Block BATTLEFIELD_FIELD_MARKER = registerNoItem("battlefield_field_marker", new BattlefieldFieldMarkerBlock(battlefieldDecorProps()));
+    public static final Block BATTLEFIELD_RELIC_PATCH = registerNoItem("battlefield_relic_patch", new BattlefieldRelicPatchBlock(battlefieldDecorProps()));
 
 	/** Пепельная земля: верхний слой Чернильных пустошей (как трава, но мёртвая). */
 	public static final Block ASHEN_SOIL = register("ashen_soil", new ZoneSoilBlock(

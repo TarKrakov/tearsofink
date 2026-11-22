@@ -7,6 +7,11 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 
 public final class ModBlockEntities {
+    public static final BlockEntityType<com.tarkrakov.tearsofink.block.BattlefieldRelicPatchBlockEntity> BATTLEFIELD_RELIC_PATCH = Registry.register(
+            BuiltInRegistries.BLOCK_ENTITY_TYPE, TearsOfInk.id("battlefield_relic_patch"),
+            BlockEntityType.Builder.of(com.tarkrakov.tearsofink.block.BattlefieldRelicPatchBlockEntity::new,
+                    ModBlocks.BATTLEFIELD_RELIC_PATCH).build(null));
+
 	public static final BlockEntityType<com.tarkrakov.tearsofink.block.BattlefieldMonumentBlockEntity> BATTLEFIELD_MONUMENT = Registry.register(
 			BuiltInRegistries.BLOCK_ENTITY_TYPE, TearsOfInk.id("battlefield_monument"),
 			BlockEntityType.Builder.of(com.tarkrakov.tearsofink.block.BattlefieldMonumentBlockEntity::new,

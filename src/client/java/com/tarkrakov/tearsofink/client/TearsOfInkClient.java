@@ -192,6 +192,9 @@ public class TearsOfInkClient implements ClientModInitializer {
 		net.minecraft.client.renderer.blockentity.BlockEntityRenderers.register(
 				com.tarkrakov.tearsofink.block.lantern.ModBlockEntities.BATTLEFIELD_MONUMENT,
 				com.tarkrakov.tearsofink.client.battlefield.BattlefieldMonumentRenderer::new);
+        net.minecraft.client.renderer.blockentity.BlockEntityRenderers.register(
+                com.tarkrakov.tearsofink.block.lantern.ModBlockEntities.BATTLEFIELD_RELIC_PATCH,
+                com.tarkrakov.tearsofink.client.battlefield.BattlefieldRelicPatchRenderer::new);
 		// Кровосборник: помпа рисуется моделью с анимацией
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.blood.BloodPumpModel.LAYER,
 				com.tarkrakov.tearsofink.client.blood.BloodPumpModel::createBodyLayer);
