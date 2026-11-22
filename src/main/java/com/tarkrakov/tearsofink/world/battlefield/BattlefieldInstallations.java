@@ -32,6 +32,7 @@ public final class BattlefieldInstallations extends SavedData {
     private static final Factory<BattlefieldInstallations> FACTORY =
             new Factory<>(BattlefieldInstallations::new, BattlefieldInstallations::load, null);
     private final Set<Long> attempted = new HashSet<>();
+    private final Set<Long> cleanedChunks = new HashSet<>();
     private long nextTry;
     // Retry transiently blocked sites; only actual placed scenes are stored in SavedData.
     private final Map<Long, Long> blockedUntil = new HashMap<>();
@@ -41,11 +42,13 @@ public final class BattlefieldInstallations extends SavedData {
     private static BattlefieldInstallations load(CompoundTag nbt, HolderLookup.Provider registries) {
         BattlefieldInstallations data = new BattlefieldInstallations();
         for (long key : nbt.getLongArray("PlacedOrSkipped")) data.attempted.add(key);
+        for (long key : nbt.getLongArray("CleanedChunks")) data.cleanedChunks.add(key);
         return data;
     }
 
     @Override public CompoundTag save(CompoundTag nbt, HolderLookup.Provider registries) {
         nbt.putLongArray("PlacedOrSkipped", attempted.stream().mapToLong(Long::longValue).toArray());
+        nbt.putLongArray("CleanedChunks", cleanedChunks.stream().mapToLong(Long::longValue).toArray());
         return nbt;
     }
 
@@ -152,6 +155,31 @@ public final class BattlefieldInstallations extends SavedData {
             if (!playerApproaching(level, field)) continue;
             // A full, new-generation center is mandatory even for peripheral traces.
             if (!fieldReady(level, field)) continue;
+            // New area, or old field that retained generation fallout. Small
+            // per-tick cleaning budget; never scan structures or older chunks.
+            int cleanedThisTick = 0;
+            for (ServerPlayer player : level.players()) {
+                int pxc = player.getBlockX() >> 4, pzc = player.getBlockZ() >> 4;
+                for (int dx = -3; dx <= 3 && cleanedThisTick < 2; dx++)
+                    for (int dz = -3; dz <= 3 && cleanedThisTick < 2; dz++) {
+                        int ccx = pxc + dx, ccz = pzc + dz;
+                        long k = net.minecraft.world.level.ChunkPos.asLong(ccx, ccz);
+                        if (cleanedChunks.contains(k)) continue;
+                        int mx = ccx * 16 + 8, mz = ccz * 16 + 8;
+                        if (field.openness(mx, mz) < .20
+                                && field.approach(mx, mz) < .32) continue;
+                        if (!stamped(level, field, mx, mz)) continue;
+                        if (level.getChunkSource().getChunkNow(ccx, ccz) == null) continue;
+                        // Do not mistake freshly dropped player items for terrain fallout.
+                        if (playerUnderfoot(level, mx, mz, 13)) continue;
+                        BattlefieldGroundCleanup.cleanChunk(level, field, ccx, ccz);
+                        cleanedChunks.add(k);
+                        cleanedThisTick++;
+                        setDirty();
+                    }
+                if (cleanedThisTick >= 2) break;
+            }
+
             for (BattlefieldWorldPlan.Placement slot : field.placements()) {
                 if (budget <= 0) return;
                 long id = key(field.index(), slot.id());
@@ -198,6 +226,12 @@ public final class BattlefieldInstallations extends SavedData {
                 if (made) {
                     attempted.add(id);
                     setDirty();
+                    if (slot.kind() != BattlefieldWorldPlan.Kind.RELIC) {
+                        int sy = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                                slot.x(), slot.z());
+                        BattlefieldGroundCleanup.clearAfterScene(level,
+                                new BlockPos(slot.x(), sy, slot.z()), 18);
+                    }
                     TearsOfInk.LOGGER.info("[battlefield] placed {} {} @ {},{} (field {}, seed {})",
                             slot.kind(), slot.scene() == null ? slot.blade() : slot.scene().id(),
                             slot.x(), slot.z(), field.index(), field.seed());
