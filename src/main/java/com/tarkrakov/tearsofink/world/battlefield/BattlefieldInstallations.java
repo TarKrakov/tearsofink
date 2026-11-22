@@ -158,7 +158,8 @@ public final class BattlefieldInstallations extends SavedData {
                 if (attempted.contains(id) || blockedUntil.getOrDefault(id, 0L) > now) continue;
                 BlockPos rootXZ = new BlockPos(slot.x(), 0, slot.z());
                 if (!ModDimensions.chunksReady(level, rootXZ, 22)) continue;
-                if (playerUnderfoot(level, slot.x(), slot.z())) continue;
+                if (playerUnderfoot(level, slot.x(), slot.z(),
+                        slot.kind() == BattlefieldWorldPlan.Kind.RELIC ? 9 : 19)) continue;
                 // Recover safely after a power loss between the world write and
                 // the SavedData flush. Never place a second overlapping anchor.
                 if (hasAnchor(level, slot.x(), slot.z())) {
@@ -174,7 +175,8 @@ public final class BattlefieldInstallations extends SavedData {
                     blockedUntil.put(id, now + 200L);
                     continue;
                 }
-                if (!BattlefieldSitePreparation.prepare(level, field, slot)) {
+                if (slot.kind() != BattlefieldWorldPlan.Kind.RELIC
+                        && !BattlefieldSitePreparation.prepare(level, field, slot)) {
                     blockedUntil.put(id, now + 200L);
                     continue;
                 }
@@ -183,6 +185,9 @@ public final class BattlefieldInstallations extends SavedData {
                     var blade = BattlefieldMonumentGeometry.Blade.values()[slot.blade()];
                     made = BattlefieldDecorCommands.placePlannedMonument(level, rootXZ, slot.facing(),
                             blade, slot.variant(), slot.tableau());
+                } else if (slot.kind() == BattlefieldWorldPlan.Kind.RELIC) {
+                    made = BattlefieldRelicPlacement.place(level, rootXZ, slot.facing(),
+                            slot.blade(), slot.variant());
                 } else {
                     made = BattlefieldZonePreview.placePlanned(level, rootXZ,
                             slot.facing(), slot.scene(), slot.variant());
@@ -217,7 +222,8 @@ public final class BattlefieldInstallations extends SavedData {
             for (int y = top + 3; y >= top - 5 && y >= level.getMinBuildHeight(); y--) {
                 var state = chunk.getBlockState(new BlockPos(px, y, pz));
                 if (state.is(ModBlocks.BATTLEFIELD_SCENE)
-                        || state.is(ModBlocks.BATTLEFIELD_MONUMENT)) return true;
+                        || state.is(ModBlocks.BATTLEFIELD_MONUMENT)
+                        || state.is(ModBlocks.BATTLEFIELD_RELIC_PATCH)) return true;
             }
         }
         return false;
@@ -232,9 +238,9 @@ public final class BattlefieldInstallations extends SavedData {
         return false;
     }
 
-    private static boolean playerUnderfoot(ServerLevel level, int x, int z) {
+    private static boolean playerUnderfoot(ServerLevel level, int x, int z, int radius) {
         for (ServerPlayer player : level.players()) {
-            if (Math.abs(player.getX() - x) < 19 && Math.abs(player.getZ() - z) < 19) return true;
+            if (Math.abs(player.getX() - x) < radius && Math.abs(player.getZ() - z) < radius) return true;
         }
         return false;
     }

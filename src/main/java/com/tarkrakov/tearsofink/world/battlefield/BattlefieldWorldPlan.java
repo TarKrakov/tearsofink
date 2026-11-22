@@ -30,7 +30,7 @@ public final class BattlefieldWorldPlan {
     public static final int RESERVATION = 105;
     private static final int GUIDE_LENGTH = 125;
 
-    public enum Kind { MONUMENT, SCENE, TRACE }
+    public enum Kind { MONUMENT, SCENE, TRACE, RELIC }
     public record Placement(int id, Kind kind, int x, int z, Direction facing,
                             BattlefieldPosedScenes.Scenario scene, int variant, int blade, boolean tableau) {}
 
@@ -83,7 +83,7 @@ public final class BattlefieldWorldPlan {
             if (openness(px, pz) < .32) return 0;
             for (Placement slot : placements) {
                 int dx = px - slot.x(), dz = pz - slot.z();
-                int halo = slot.kind() == Kind.MONUMENT ? 19 : 14;
+                int halo = slot.kind() == Kind.MONUMENT ? 19 : slot.kind() == Kind.RELIC ? 6 : 14;
                 if (dx * dx + dz * dz < halo * halo) return 0;
             }
             int result = 0;
@@ -262,7 +262,55 @@ public final class BattlefieldWorldPlan {
             placements.add(new Placement(placements.size(), Kind.TRACE, x, z, axis,
                     traces[i], Math.floorMod(field.hash(x, z, 101), 8), -1, false));
         }
+        // D-137: append new slot IDs AFTER the original 27. A patch is a
+        // SINGLE inert anchor for 7..19 individual ancient weapons. Do not
+        // pack all arms into the flag tableaux; leave wide quiet corridors.
+        relicBeds(field, placements);
         return List.copyOf(placements);
+    }
+
+    private static void relicBeds(Field field, List<Placement> placements) {
+        // Position is forward/right relative to the road-facing battle axis.
+        // Each area has its own "density grammar", not equal random scattering.
+        int[][] areas = {
+                {-42, -24, 5, 0}, // regular wall / blade grove
+                {-14,  -8, 8, 2}, // fought-over central ground
+                { 35, -18, 5, 1}, // collapse and discarded gear
+                {-33,  35, 5, 0}, // rear of the first battle line
+                { 27,  35, 4, 4}, // hunter traces; lighter density
+                { -4, -41, 5, 3}, // Soul defenders' shields
+                { 25,   6, 4, 2}  // between lines, shattered front
+        };
+        for (int area = 0; area < areas.length; area++) {
+            var group = areas[area];
+            int done = 0;
+            for (int attempt = 0; attempt < group[2] * 24 && done < group[2]; attempt++) {
+                int roll = field.hash(area * 101 + attempt, area * 137 - attempt, 0xB17);
+                double a = (roll & 0xffff) * (Math.PI * 2 / 65536d);
+                double radius = 5 + ((roll >>> 16) & 255) / 255d * 23;
+                double forward = group[0] + Math.cos(a) * radius;
+                double right = group[1] + Math.sin(a) * radius;
+                int x = field.x + (int) Math.round(field.inwardX * forward - field.inwardZ * right);
+                int z = field.z + (int) Math.round(field.inwardZ * forward + field.inwardX * right);
+                if (field.openness(x, z) < .40) continue;
+                boolean crowded = false;
+                for (Placement p : placements) {
+                    double min = switch (p.kind()) {
+                        case MONUMENT -> 22d;
+                        case SCENE -> 11d;
+                        case TRACE -> 9d;
+                        case RELIC -> 13d;
+                    };
+                    if ((long)(x - p.x()) * (x - p.x()) + (long)(z - p.z()) * (z - p.z())
+                            < min * min) { crowded = true; break; }
+                }
+                if (crowded) continue;
+                int variant = (roll >>> 11) & 7;
+                placements.add(new Placement(placements.size(), Kind.RELIC, x, z, field.axis(),
+                        null, variant, group[3], false));
+                done++;
+            }
+        }
     }
 
     private static void monument(List<Placement> out, Field f, int forward, int right, int blade, boolean tableau) {

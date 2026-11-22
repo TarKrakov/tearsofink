@@ -133,7 +133,8 @@ public final class BattlefieldSitePreparation {
             // Do not disturb the core of another episode, even if their fringes
             // nearly touch. Terrain remains natural between the close clusters.
             boolean otherCore = false;
-            for (var other : field.placements()) if (other.id() != slot.id()) {
+            for (var other : field.placements()) if (other.id() != slot.id()
+                    && other.kind() != BattlefieldWorldPlan.Kind.RELIC) {
                 int ox = px - other.x(), oz = pz - other.z();
                 if (ox*ox + oz*oz < 6*6) { otherCore = true; break; }
             }
