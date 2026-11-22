@@ -251,14 +251,38 @@ assert "BattlefieldClarity.opennessAt(x + .5d, z + .5d)" in motes
 assert "if (!level.hasChunkAt(probe)" in motes
 assert "ModBiomes.PALE_FOREST" in motes
 assert "ATTEMPTS_PER_TICK = 6" in motes
-assert "level.addParticle(ModParticles.BATTLEFIELD_MEMORY_MOTE" in motes
+assert "level.addAlwaysVisibleParticle(ModParticles.BATTLEFIELD_MEMORY_MOTE, true" in motes
 assert "BattlefieldClarity.opennessAt(x, z)" in mote
 assert "LightTexture.FULL_BRIGHT" in mote
-assert "65, 125" in mote
+assert "150, 230" in mote
 assert mote_atlas["textures"] == ["tears-of-ink:tear_glint_0", "tears-of-ink:tear_glint_1"]
 for coverage in (0, .1, .25, .5, .75, 1):
     assert abs((1 - coverage) + coverage - 1) < 1e-9
 print("D-142: biome white ash preserved, smooth crossed densities, client-only rising motes, no new texture.")
 
 assert 'public static boolean nearField(' in clarity
-assert 'BattlefieldClarity.nearField(player.getX(), player.getZ(), 25d)' in motes
+assert 'BattlefieldClarity.nearField(player.getX(), player.getZ(), VISIBLE_RADIUS + 3d)' in motes
+
+# D-143: rising particles cross more of the visible battlefield, while
+# naturally appearing animals/monsters cannot colonize the burial ground.
+fauna = read(base + "world/battlefield/BattlefieldFaunaBoundary.java")
+owl = read(base + "entity/PaleOwlEncounters.java")
+deer = read(base + "entity/PaleDeerEncounters.java")
+deer_ai = read(base + "entity/PaleDeerEntity.java")
+natural = read(base + "mixin/NaturalSpawnerMixin.java")
+assert "VISIBLE_RADIUS = 44d" in motes
+assert ".040d + rng.nextDouble() * .030d" in motes
+assert "Math.min(.095d, yd + .00011d)" in mote
+assert "BattlefieldFaunaBoundary.init()" in init
+assert "public static boolean inside(" in fauna
+assert "BattlefieldWorldPlan.of(" in fauna and "field.openness(" in fauna
+assert "getChunkNow(" in fauna and "safeOutside(" in fauna
+assert "mob.teleportTo(" in fauna and "mob.hasCustomName()" in fauna
+assert "mob instanceof PaleOwlEntity || mob instanceof PaleDeerEntity" in fauna
+assert "mob instanceof CaterpillarEntity" in fauna
+assert "MobCategory.CREATURE" in fauna and "MobCategory.AMBIENT" in fauna
+assert "PaleStriderEntity" in natural and "BattlefieldFaunaBoundary.inside(" in natural
+assert "BattlefieldFaunaBoundary.inside(" in owl
+assert deer.count("BattlefieldFaunaBoundary.inside(") >= 2
+assert "BattlefieldFaunaBoundary.inside(" in deer_ai
+print("D-143: far/high rising motes, wild fauna-free field, protected striders and saved animals.")
