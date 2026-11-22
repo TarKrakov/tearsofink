@@ -82,7 +82,7 @@ public final class BattlefieldMonumentGeometry {
             for (int width = -2; width <= 2; width++) {
                 for (int depth = -1; depth <= 1; depth++) {
                     // Perpendicular to source diagonal; enlarged width covers crossguard.
-                    double lateral = width * p.scale() * .10d;
+                    double lateral = width * .10d;
                     double dz = depth * p.scale() * .04d;
                     double[] world = point(blade, variant, facing,
                             sx + lateral * 11.3137085d, sy - lateral * 11.3137085d,
