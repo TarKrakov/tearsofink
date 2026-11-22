@@ -29,7 +29,7 @@ ruins = read(base + "world/ruins/RuinStructure.java")
 # Plan must be picked only after the frozen temple network is ready.
 assert 'layout.templeNetwork() == null' in source
 assert 'temples.overlapsPath' in source and 'temples.temples()' in source
-assert 'layout.nearRoad' in source and 'layout.nearLake' in source and 'layout.nearHerald' in source
+assert 'layout.roadNear' in source and 'layout.nearLake' in source and 'layout.nearHerald' in source
 assert 'public boolean reserved(' in source
 assert 'BattlefieldWorldPlan.of(layout)' in camps and 'BattlefieldWorldPlan.of(layout)' in ruins
 assert 'BattlefieldTreeFilter.init()' in init
