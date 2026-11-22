@@ -38,7 +38,7 @@ public final class BattlefieldSitePreparation {
 
     private static boolean natural(BlockState s) {
         if (s.hasBlockEntity() || !s.getFluidState().isEmpty()) return false;
-        return s.isAir() || nativeSoil(s) || s.is(ModBlocks.PALE_LOG)
+        return s.isAir() || nativeSoil(s) || s.is(ModBlocks.BATTLEFIELD_FIELD_MARKER) || s.is(ModBlocks.PALE_LOG)
                 || s.is(ModBlocks.PALE_WOOD) || s.is(ModBlocks.PALE_LEAVES)
                 || s.is(ModBlocks.PALE_GRASS) || s.is(ModBlocks.TALL_PALE_GRASS)
                 || s.is(ModBlocks.PALE_SAPLING) || s.is(ModBlocks.TEARBLOOM)
@@ -155,7 +155,21 @@ public final class BattlefieldSitePreparation {
                 if (column.floor() < h || !nativeSoil(level.getBlockState(pos)))
                     level.setBlock(pos, ModBlocks.ASPHODELITE_ROCK.defaultBlockState(), 2);
             }
-            level.setBlock(probe.set(x, h, z), ModBlocks.ASHEN_SOIL.defaultBlockState(), 2);
+            // The scar is still part of the old landscape: retain sparse
+            // exposed rock instead of painting each zone with one flat tile.
+            boolean rough = (field.hash(x, z, 0x71AA) & 7) == 0;
+            level.setBlock(probe.set(x, h, z), rough
+                    ? ModBlocks.ASPHODELITE_ROCK.defaultBlockState()
+                    : ModBlocks.ASHEN_SOIL.defaultBlockState(), 2);
+        }
+        // Restore durable provenance after cutting away an old high marker
+        // column; it is essential for fog and idempotent retries after reload.
+        int underY = target - 3;
+        if (underY > level.getMinBuildHeight()) {
+            var below = probe.set(cx, underY, cz);
+            if (nativeSoil(level.getBlockState(below))) {
+                level.setBlock(below, ModBlocks.BATTLEFIELD_FIELD_MARKER.defaultBlockState(), 2);
+            }
         }
         return true;
     }
