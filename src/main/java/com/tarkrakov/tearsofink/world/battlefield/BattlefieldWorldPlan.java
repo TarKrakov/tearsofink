@@ -268,6 +268,11 @@ public final class BattlefieldWorldPlan {
         relicBeds(field, placements);
         // Append-only. All D-135/D-137 saved slot IDs and poses are unchanged.
         projectileBeds(field, placements);
+        // Three restrained, faction-specific fallen-standard episodes.
+        // Append new IDs after every existing weapon and projectile bed.
+        scene(placements, field, -58, -32, BattlefieldPosedScenes.Scenario.REGULAR_BARE_REMNANT);
+        scene(placements, field, -12, -61, BattlefieldPosedScenes.Scenario.PALADIN_BARE_RELIC);
+        scene(placements, field, 61, 20, BattlefieldPosedScenes.Scenario.HUNTER_BARE_TRACE);
         return List.copyOf(placements);
     }
 
