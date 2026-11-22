@@ -88,14 +88,19 @@ public final class BattlefieldEnvironment {
                 changed = true;
             }
         }
-        // An inert marker proves NEW worldgen occurred here. It is concealed
-        // two blocks underground; old chunks can never acquire it retroactively.
+        // Stamp ONLY freshly generated sites, well below the loose falling ash.
+        // Never excavate a void under an ash layer or write over buildings.
         if (planned) {
-            BlockPos mark = pos.set(x, ground - 2, z).immutable();
-            BlockState under = level.getBlockState(mark);
-            if (base(under) && !under.hasBlockEntity() && under.getFluidState().isEmpty()) {
-                level.setBlock(mark, ModBlocks.BATTLEFIELD_FIELD_MARKER.defaultBlockState(), 2);
-                changed = true;
+            for (int depth = 4; depth <= 10; depth++) {
+                BlockPos mark = pos.set(x, ground - depth, z).immutable();
+                BlockState under = level.getBlockState(mark);
+                if ((under.is(ModBlocks.ASPHODELITE_ROCK)
+                        || under.is(BlockTags.BASE_STONE_OVERWORLD))
+                        && !under.hasBlockEntity() && under.getFluidState().isEmpty()) {
+                    level.setBlock(mark, ModBlocks.BATTLEFIELD_FIELD_MARKER.defaultBlockState(), 2);
+                    changed = true;
+                    break;
+                }
             }
         }
         return changed;

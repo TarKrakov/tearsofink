@@ -46,6 +46,7 @@ public final class BattlefieldDecorCommands {
                                                 .executes(ctx -> banner(ctx, BattlefieldBannerBlock.Faction.HUNTER, false)))
                                         .then(Commands.literal("hunter_bare")
                                                 .executes(ctx -> banner(ctx, BattlefieldBannerBlock.Faction.HUNTER, true))))
+                                .then(BattlefieldWorldCommands.literal())
                                 .then(BattlefieldZonePreview.literal()))));
     }
 
