@@ -42,27 +42,30 @@ public final class BattlefieldGroundCleanup {
         if (chunk == null) return;
         for (int dx = 0; dx < 16; dx++) for (int dz = 0; dz < 16; dz++) {
             int x = cx * 16 + dx, z = cz * 16 + dz;
-            if (field.openness(x, z) < .34 && field.approach(x,z) < .40) continue;
-            int top = chunk.getHeight(Heightmap.Types.WORLD_SURFACE, dx, dz);
-            // Floating surface plants and isolated clods only. No deep cave
-            // excavation and no general surface flattening.
-            for (int y = top; y >= Math.max(level.getMinBuildHeight() + 2, top - 8); y--) {
-                BlockPos block = new BlockPos(x, y, z);
-                var state = chunk.getBlockState(block);
-                if (state.isAir()) continue;
-                var below = chunk.getBlockState(block.below());
-                if (nativePlant(state) && below.getCollisionShape(level, block.below()).isEmpty()) {
-                    level.setBlock(block, Blocks.AIR.defaultBlockState(),
-                            Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
-                } else if (nativeLoose(state) && below.isAir()
-                        && !hasSideSupport(level, block)) {
-                    level.setBlock(block, Blocks.AIR.defaultBlockState(),
-                            Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
-                }
-            }
+            if (field.openness(x, z) < .34 && field.approach(x, z) < .40) continue;
+            pruneSurface(level, chunk, x, z);
         }
         clearDroppedPlants(level, new AABB(cx * 16, level.getMinBuildHeight(), cz * 16,
                 cx * 16 + 16, level.getMaxBuildHeight(), cz * 16 + 16));
+    }
+
+    /** Cleans the highest exposed strata, not underground cave floors. */
+    private static void pruneSurface(ServerLevel level,
+                                     net.minecraft.world.level.chunk.LevelChunk chunk, int x, int z) {
+        int top = chunk.getHeight(Heightmap.Types.WORLD_SURFACE, x & 15, z & 15);
+        for (int y = top; y >= Math.max(level.getMinBuildHeight() + 2, top - 8); y--) {
+            BlockPos block = new BlockPos(x, y, z);
+            var state = chunk.getBlockState(block);
+            if (state.isAir()) continue;
+            var below = chunk.getBlockState(block.below());
+            if (nativePlant(state) && below.getCollisionShape(level, block.below()).isEmpty()) {
+                level.setBlock(block, Blocks.AIR.defaultBlockState(),
+                        Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
+            } else if (nativeLoose(state) && below.isAir() && !hasSideSupport(level, block)) {
+                level.setBlock(block, Blocks.AIR.defaultBlockState(),
+                        Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
+            }
+        }
     }
 
     private static boolean hasSideSupport(ServerLevel level, BlockPos pos) {
@@ -82,6 +85,14 @@ public final class BattlefieldGroundCleanup {
     }
 
     public static void clearAfterScene(ServerLevel level, BlockPos origin, int radius) {
+        // The original chunk may have been cleaned BEFORE a later scene's
+        // earthwork. Rescan only its local natural surface once after the scene.
+        for (int dx = -radius; dx <= radius; dx++) for (int dz = -radius; dz <= radius; dz++) {
+            if (dx*dx + dz*dz > radius*radius) continue;
+            int x = origin.getX()+dx, z = origin.getZ()+dz;
+            var chunk = level.getChunkSource().getChunkNow(x >> 4, z >> 4);
+            if (chunk != null) pruneSurface(level, chunk, x, z);
+        }
         clearDroppedPlants(level, new AABB(origin.getX() - radius, origin.getY() - 28,
                 origin.getZ() - radius, origin.getX() + radius + 1,
                 origin.getY() + 45, origin.getZ() + radius + 1));

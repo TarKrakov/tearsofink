@@ -316,11 +316,13 @@ public final class BattlefieldInstallations extends SavedData {
                 if (made) {
                     attempted.add(id);
                     setDirty();
-                    if (slot.kind() != BattlefieldWorldPlan.Kind.RELIC) {
+                    if (slot.kind() != BattlefieldWorldPlan.Kind.RELIC
+                            || !playerUnderfoot(level, slot.x(), slot.z(), 13)) {
                         int sy = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                                 slot.x(), slot.z());
                         BattlefieldGroundCleanup.clearAfterScene(level,
-                                new BlockPos(slot.x(), sy, slot.z()), 18);
+                                new BlockPos(slot.x(), sy, slot.z()),
+                                slot.kind() == BattlefieldWorldPlan.Kind.RELIC ? 11 : 18);
                     }
                     TearsOfInk.LOGGER.info("[battlefield] placed {} {} @ {},{} (field {}, seed {})",
                             slot.kind(), slot.scene() == null ? slot.blade() : slot.scene().id(),
