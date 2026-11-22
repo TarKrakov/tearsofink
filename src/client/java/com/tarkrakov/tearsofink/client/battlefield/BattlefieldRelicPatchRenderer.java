@@ -6,6 +6,7 @@ import com.mojang.math.Axis;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.block.BattlefieldRelicPatchBlock;
 import com.tarkrakov.tearsofink.block.BattlefieldRelicPatchBlockEntity;
+import com.tarkrakov.tearsofink.client.battlefield.BattlefieldBannerRenderer;
 import com.tarkrakov.tearsofink.block.BattlefieldWeaponMeshBlock;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldRelicRecipes;
@@ -48,6 +49,13 @@ public final class BattlefieldRelicPatchRenderer implements BlockEntityRenderer<
             stack.mulPose(Axis.YP.rotationDegrees(p.yaw()));
             stack.mulPose(Axis.ZP.rotationDegrees(p.roll()));
             stack.mulPose(Axis.XP.rotationDegrees(p.pitch()));
+            if (p.pole()) {
+                // Reuse exact existing authored bare rigs and face UVs; no
+                // banner block entity, animation, ItemDisplay or server tick.
+                BattlefieldBannerRenderer.renderBareRelic(p.mesh(), stack, buffers, light, overlay);
+                stack.popPose();
+                continue;
+            }
             if (p.projectile()) {
                 drawProjectile(stack.last(), buffers, p.mesh() == 12, light, overlay);
                 stack.popPose();

@@ -12,6 +12,8 @@ public final class BattlefieldRelicRecipes {
                         float yaw, float pitch, float roll) {
         public boolean shield() { return mesh >= 8 && mesh < 12; }
         public boolean projectile() { return mesh == 12 || mesh == 13; }
+        /** Real authored bare standards, rendered without an individual banner BE. */
+        public boolean pole() { return mesh >= 14 && mesh <= 16; }
     }
     private BattlefieldRelicRecipes() {}
     private static long mix(long n) {
@@ -40,6 +42,40 @@ public final class BattlefieldRelicRecipes {
             default -> 7 + (variant & 3);
         };
         List<Relic> result = new ArrayList<>(count);
+        if (style >= 8) {
+            // Three actual author-drawn BARE rigs (Spire, Soul, Ink Hunters),
+            // not the animated banner block. One existing inert relic-patch
+            // anchor represents 2..3 tilted, variably buried wooden standards.
+            int mesh = 14 + style - 8;
+            int poles = 2 + (variant & 1);
+            float fullHeight = switch (mesh) {
+                case 14 -> 6.125f;
+                case 15 -> 6.0f;
+                default -> 6.6875f;
+            };
+            for (int i = 0; i < poles; i++) {
+                double a = 2d * Math.PI * unit(seed + i * 19L + 1);
+                double distance = 1.4 + 3.3 * Math.sqrt(unit(seed + i * 19L + 2));
+                float forward = (float) (Math.cos(a) * distance);
+                float right = (float) (Math.sin(a) * distance);
+                float yaw = (float) (unit(seed + i * 19L + 3) * 360 - 180);
+                float pitch = (float) (28 + unit(seed + i * 19L + 4) * 40);
+                float roll = (float) (unit(seed + i * 19L + 5) * 68 - 34);
+                // From conspicuously planted to half submerged to almost
+                // entirely sunk, with the ornate top just above the soil.
+                float burial = switch ((i + variant) & 3) {
+                    case 0 -> .18f;
+                    case 1 -> .50f;
+                    case 2 -> .73f;
+                    default -> .88f;
+                };
+                float vertical = fullHeight * (float) (Math.cos(Math.toRadians(pitch))
+                        * Math.cos(Math.toRadians(roll)));
+                float sink = -vertical * burial;
+                result.add(new Relic(mesh, forward, right, sink, yaw, pitch, roll));
+            }
+            return List.copyOf(result);
+        }
         if (style >= 5) {
             // Original styles 0..4 stay deterministic for saved Contacts arrays.
             // New styles reuse a single inert anchor for an entire volley.

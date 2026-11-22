@@ -122,6 +122,34 @@ public final class BattlefieldBannerRenderer implements BlockEntityRenderer<Batt
         stack.popPose();
     }
 
+    /**
+     * Static buried standards: called only by the existing inert relic-patch
+     * renderer. Uses the SAME model cubes, textures and UV as normal BARE
+     * banners, without an extra BE, animation or client-side joint updates.
+     * PoseStack already has the ground contact, burying, yaw and both tilts.
+     */
+    public static void renderBareRelic(int mesh, PoseStack stack,
+                                       MultiBufferSource buffers, int light, int overlay) {
+        if (mesh == 14) {
+            VertexConsumer consumer = buffers.getBuffer(RenderType.entityCutoutNoCull(BARE_TEXTURE));
+            for (int index : BattlefieldBannerGeometry.POLE_PARTS) {
+                drawBox(BattlefieldBannerGeometry.PARTS[index], stack.last(), consumer, light, overlay);
+            }
+            return;
+        }
+        BattlefieldBannerBlock.Faction faction = switch (mesh) {
+            case 15 -> BattlefieldBannerBlock.Faction.SOUL;
+            case 16 -> BattlefieldBannerBlock.Faction.HUNTER;
+            default -> throw new IllegalArgumentException("Not a bare standard mesh: " + mesh);
+        };
+        VertexConsumer consumer = buffers.getBuffer(RenderType.entityCutoutNoCull(
+                faction == BattlefieldBannerBlock.Faction.SOUL ? SOUL_TEXTURE : HUNTER_TEXTURE));
+        var model = BattlefieldFactionBannerGeometry.model(faction, true);
+        for (var part : model.parts()) {
+            drawBox(part.cube(), stack.last(), consumer, light, overlay, model.uvSize());
+        }
+    }
+
     @Override
     public boolean shouldRenderOffScreen(BattlefieldBannerBlockEntity banner) {
         // Authored pole reaches Y=98/16; waving cloth exceeds the anchor AABB.
