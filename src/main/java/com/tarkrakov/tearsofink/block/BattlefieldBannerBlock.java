@@ -16,6 +16,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.util.StringRepresentable;
 
 /**
@@ -34,12 +35,19 @@ public final class BattlefieldBannerBlock extends BaseEntityBlock {
         @Override public String getSerializedName() { return id; }
     }
     public static final EnumProperty<Faction> FACTION = EnumProperty.create("faction", Faction.class);
+    /** 0 is the unchanged saved-world upright stance; 1..7 are fallen poles. */
+    public static final IntegerProperty LEAN = IntegerProperty.create("lean", 0, 7);
+    private static final float[] LEAN_X = {0f, 36f,-41f, 27f,-39f, 46f,-31f, 34f};
+    private static final float[] LEAN_Z = {0f,-27f, 22f, 37f,-25f,-18f, 40f,-35f};
+    public static float leanX(int value) { return LEAN_X[value]; }
+    public static float leanZ(int value) { return LEAN_Z[value]; }
 
     public BattlefieldBannerBlock(BlockBehaviour.Properties properties) {
         super(properties);
         registerDefaultState(stateDefinition.any()
                 .setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH)
-                .setValue(BARE, false).setValue(FACTION, Faction.REGULAR));
+                .setValue(BARE, false).setValue(FACTION, Faction.REGULAR)
+                .setValue(LEAN, 0));
     }
 
     @Override
@@ -74,6 +82,6 @@ public final class BattlefieldBannerBlock extends BaseEntityBlock {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(HorizontalDirectionalBlock.FACING, BARE, FACTION);
+        builder.add(HorizontalDirectionalBlock.FACING, BARE, FACTION, LEAN);
     }
 }
