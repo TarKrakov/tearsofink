@@ -26,7 +26,9 @@ public final class BattlefieldMemoryMotes {
         var player = mc.player;
         if (level == null || player == null || mc.isPaused() || !ModDimensions.isLands(level))
             return;
-        if (BattlefieldClarity.opennessAt(player.getX(), player.getZ()) < .025f)
+        // Prepare the updraft on the VISIBLE side of the boundary even when
+        // the player is still just outside; prevents an abrupt empty strip.
+        if (!BattlefieldClarity.nearField(player.getX(), player.getZ(), 25d))
             return;
 
         RandomSource rng = level.random;

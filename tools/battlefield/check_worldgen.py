@@ -259,3 +259,6 @@ assert mote_atlas["textures"] == ["tears-of-ink:tear_glint_0", "tears-of-ink:tea
 for coverage in (0, .1, .25, .5, .75, 1):
     assert abs((1 - coverage) + coverage - 1) < 1e-9
 print("D-142: biome white ash preserved, smooth crossed densities, client-only rising motes, no new texture.")
+
+assert 'public static boolean nearField(' in clarity
+assert 'BattlefieldClarity.nearField(player.getX(), player.getZ(), 25d)' in motes

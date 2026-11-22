@@ -68,6 +68,12 @@ public final class BattlefieldClarity {
         return coverage * Math.min(1f, (open - .57f) * 6f);
     }
 
+    /** Prewarm emerging soil motes just BEFORE the player reaches the edge. */
+    public static boolean nearField(double x, double z, double margin) {
+        return enabled && Math.abs(x - cx) <= 79d + margin
+                && Math.abs(z - cz) <= 70d + margin;
+    }
+
     public static float particleMultiplier(double x, double z) {
         // A rare residual wisp inside, a natural fog wall at the outside edge.
         float openness = opennessAt(x, z);
