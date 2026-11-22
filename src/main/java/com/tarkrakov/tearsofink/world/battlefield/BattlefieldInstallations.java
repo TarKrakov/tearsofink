@@ -52,13 +52,32 @@ public final class BattlefieldInstallations extends SavedData {
             InkLandsLayout layout = InkLandsLayout.of(level);
             BattlefieldWorldPlan plan = BattlefieldWorldPlan.of(layout);
             if (plan == null || plan.fields().isEmpty()) return;
-            level.getDataStorage().computeIfAbsent(FACTORY, "toi_battlefield_installations_v1")
+            level.getDataStorage().computeIfAbsent(FACTORY, "toi_battlefield_installations_v2")
                     .installNearby(level, plan);
         });
     }
 
-    /** Explicitly no level.getChunk() and no synchronous block-generation access. */
+    /**
+     * New worldgen puts a stone-deep marker below the natural column. The first
+     * release wrote it only if the stone happened to be at depths 4..10:
+     * deep ash, caves and uneven ground could therefore create the clearing but
+     * leave no marker. Detect that released terrain using its distinctive
+     * ASHEN_PATH scar pattern, away from main roads, WITHOUT touching any blocks.
+     *
+     * This also safely upgrades already-generated v1 battlefields. Unlike a
+     * blanket retrogen pass, an old unmodified chunk never has those scars.
+     */
     public static boolean stamped(ServerLevel level, int x, int z) {
+        var plan = BattlefieldWorldPlan.of(InkLandsLayout.of(level));
+        if (plan == null) return false;
+        for (var field : plan.fields()) {
+            if (field.distance(x, z) <= 205)
+                return stamped(level, field, x, z);
+        }
+        return false;
+    }
+
+    public static boolean stamped(ServerLevel level, BattlefieldWorldPlan.Field field, int x, int z) {
         var chunk = level.getChunkSource().getChunkNow(x >> 4, z >> 4);
         if (chunk == null) return false;
         int top = Math.min(level.getMaxBuildHeight() - 1,
@@ -67,6 +86,19 @@ public final class BattlefieldInstallations extends SavedData {
         for (int y = top; y >= low; y--) {
             if (chunk.getBlockState(new BlockPos(x, y, z)).is(ModBlocks.BATTLEFIELD_FIELD_MARKER))
                 return true;
+        }
+        // Only authentic field scars count. A road's ASHEN_PATH cannot unlock
+        // generation on a previously explored patch because the approach
+        // predicate excludes the roadway itself.
+        int markers = 0;
+        for (int dx = 0; dx < 16; dx += 2) for (int dz = 0; dz < 16; dz += 2) {
+            int px = (x & ~15) + dx, pz = (z & ~15) + dz;
+            if (field.openness(px, pz) < .35 && field.approach(px, pz) < .24) continue;
+            int y = chunk.getHeight(Heightmap.Types.WORLD_SURFACE, dx, dz) - 1;
+            if (y < level.getMinBuildHeight()) continue;
+            if (chunk.getBlockState(new BlockPos(px, y, pz)).is(ModBlocks.ASHEN_PATH)) {
+                if (++markers >= 3) return true;
+            }
         }
         return false;
     }
@@ -83,7 +115,7 @@ public final class BattlefieldInstallations extends SavedData {
         for (BattlefieldWorldPlan.Field field : plan.fields()) {
             if (!playerApproaching(level, field)) continue;
             // A full, new-generation center is mandatory even for peripheral traces.
-            if (!stamped(level, field.x(), field.z())) continue;
+            if (!stamped(level, field, field.x(), field.z())) continue;
             for (BattlefieldWorldPlan.Placement slot : field.placements()) {
                 if (budget <= 0) return;
                 long id = key(field.index(), slot.id());
@@ -100,7 +132,7 @@ public final class BattlefieldInstallations extends SavedData {
                 }
                 // Individual stamps prevent the new field from spilling into
                 // previously explored roadside chunks in an existing save.
-                if (!stamped(level, slot.x(), slot.z())) {
+                if (!stamped(level, field, slot.x(), slot.z())) {
                     attempted.add(id);
                     setDirty();
                     continue;
