@@ -41,7 +41,12 @@ public final class BattlefieldAccessRoutes {
             {  0, 0, -16,-44},
             {  0, 0,  39,-35},
             { 43, 0,  44, 44},
-            {-33,38, -52,-23}
+            {-33,38, -52,-23},
+            // The direct ascent brushes the giant blade at (36,29).
+            // Append-only alternative branch bypasses that monument without
+            // invalidating already saved IDs for links 0..7.
+            { 43, 0,  61, 18},
+            { 61,18,  44, 44}
     };
 
     /** A deterministic quiet corridor for real foot traffic, not more sword beds. */

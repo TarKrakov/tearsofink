@@ -141,14 +141,14 @@ links = []
 for line in re.findall(r"\{\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\}", match.group(1)):
     a,b,c,d = map(int, line)
     links.append(((a,b),(c,d)))
-assert len(links) == 8
+assert len(links) == 10
 seen = {(-74,0)}
 for _ in range(len(links)):
     for a,b in links:
         if a in seen: seen.add(b)
         if b in seen: seen.add(a)
 assert all(a in seen and b in seen for a,b in links)
-assert (44,44) in seen and (-52,-23) in seen
+assert (44,44) in seen and (-52,-23) in seen and (61,18) in seen
 assert 'JOINED' not in access  # NBT state is owned by the SavedData installer
 assert 'JoinedTerrain' in installation and 'BattlefieldAccessRoutes.prepare' in installation
 assert 'provenBattlefieldCorridor' in access
@@ -157,4 +157,4 @@ assert 'layout.roadNear' in access and 'temples.overlapsPath' in access
 assert 'Block.UPDATE_SUPPRESS_DROPS' in access
 assert 'связующие переходы' in world_commands
 
-print("D-137: append-only dense weapon beds, local fog-particle suppression, debris cleanup, 8 linked terrain routes.")
+print("D-137: append-only dense weapon beds, local fog-particle suppression, debris cleanup, 10 connected terrain links.")
