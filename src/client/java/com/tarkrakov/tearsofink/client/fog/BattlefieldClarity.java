@@ -34,6 +34,40 @@ public final class BattlefieldClarity {
         return (float) Math.max(0, Math.min(1, (boundary - Math.hypot(u, v)) / .24));
     }
 
+    /**
+     * Stable seed-dependent islands of drifting wisps, not uniformly
+     * scattered particles. At most a few small 6-8 block pockets in the
+     * exposed field; position-only, no ticks or per-chunk persistent data.
+     */
+    public static float wispPatchAt(double x, double z) {
+        float open = opennessAt(x, z);
+        if (!enabled || open < .57f) return 0f;
+        final int cellSize = 20;
+        int cellX = (int) Math.floor((x - cx) / cellSize);
+        int cellZ = (int) Math.floor((z - cz) / cellSize);
+        float coverage = 0f;
+        for (int i = -1; i <= 1; i++) for (int j = -1; j <= 1; j++) {
+            int ix = cellX + i, iz = cellZ + j;
+            long hash = seed ^ (ix * 341873128712L) ^ (iz * 132897987541L);
+            hash ^= hash >>> 30;
+            hash *= 0xbf58476d1ce4e5b9L;
+            hash ^= hash >>> 27;
+            hash *= 0x94d049bb133111ebL;
+            hash ^= hash >>> 31;
+            if ((hash & 7L) >= 3L) continue;
+            double ox = ((hash >>> 4) & 255L) / 255d;
+            double oz = ((hash >>> 12) & 255L) / 255d;
+            double centerX = cx + (ix + .18 + .64 * ox) * cellSize;
+            double centerZ = cz + (iz + .18 + .64 * oz) * cellSize;
+            double radius = 5.2 + ((hash >>> 20) & 255L) / 255d * 2.7;
+            double dist = Math.hypot(x - centerX, z - centerZ);
+            if (dist >= radius) continue;
+            float t = (float) (1d - dist / radius);
+            coverage = Math.max(coverage, t * t * (3f - 2f * t));
+        }
+        return coverage * Math.min(1f, (open - .57f) * 6f);
+    }
+
     public static float particleMultiplier(double x, double z) {
         // A rare residual wisp inside, a natural fog wall at the outside edge.
         float openness = opennessAt(x, z);

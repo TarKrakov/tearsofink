@@ -2,6 +2,8 @@ package com.tarkrakov.tearsofink.client.fog;
 
 import com.tarkrakov.tearsofink.particle.ModParticles;
 import com.tarkrakov.tearsofink.world.ModBiomes;
+import com.tarkrakov.tearsofink.world.ModDimensions;
+import com.tarkrakov.tearsofink.client.particle.FogBankParticle;
 import net.minecraft.core.Holder;
 import net.minecraft.world.level.biome.Biome;
 import net.minecraft.client.Minecraft;
@@ -70,28 +72,39 @@ public final class FogBankSpawner {
 					x + random.nextDouble(), y, z + random.nextDouble(), tint[0], tint[1], tint[2]);
 		}
 
-        // Only in the discovered battlefield: a sparse, paper-thin mist
-        // practically touching the local block collision surface. The outer
-        // Pale Forest keeps its full billowing fog bank density.
-        if (level.getGameTime() % 3 != 0
-                || BattlefieldClarity.opennessAt(player.getX(), player.getZ()) < .32f) return;
-        double angle = random.nextDouble() * Math.PI * 2;
-        double dist = 2 + random.nextDouble() * 22;
-        int gx = (int) Math.floor(player.getX() + Math.cos(angle) * dist);
-        int gz = (int) Math.floor(player.getZ() + Math.sin(angle) * dist);
-        if (BattlefieldClarity.opennessAt(gx + .5, gz + .5) < .48f) return;
-        pos.set(gx, player.getBlockY(), gz);
-        if (!InkFog.isInk(level, pos)) return;
-        int gy = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, gx, gz);
-        BlockPos base = new BlockPos(gx, gy - 1, gz);
-        var support = level.getBlockState(base);
-        var shape = support.getCollisionShape(level, base);
-        if (shape.isEmpty() || !support.getFluidState().isEmpty()
-                || !support.isFaceSturdy(level, base, Direction.UP)) return;
-        double surface = base.getY() + shape.max(Direction.Axis.Y) + .035d;
-        // -2 flags the static ground plane in FogBankParticle.Provider.
-        level.addAlwaysVisibleParticle(ModParticles.FOG_BANK, true,
-                gx + .5d, surface, gz + .5d, -2d, 0d, 0d);
+        // Unlike the forest's huge fog banks, the battlefield gets a
+        // handful of seed-stable thin, RAGGED pockets. Their wisp sprites
+        // drift about half a block and hover just above the broken earth.
+        // Do not rely on the nearly invisible 0.035-high flat old quad:
+        // seen edge-on it has essentially zero silhouette/opacity.
+        if (!ModDimensions.isLands(level) || level.getGameTime() % 4 != 0) return;
+        if (BattlefieldClarity.opennessAt(player.getX(), player.getZ()) < .40f) return;
+        for (int attempt = 0; attempt < 5; attempt++) {
+            double angle = random.nextDouble() * Math.PI * 2d;
+            double distance = 3d + Math.sqrt(random.nextDouble()) * 30d;
+            int gx = (int) Math.floor(player.getX() + Math.cos(angle) * distance);
+            int gz = (int) Math.floor(player.getZ() + Math.sin(angle) * distance);
+            double coverage = BattlefieldClarity.wispPatchAt(gx + .5d, gz + .5d);
+            if (coverage < .12 || random.nextDouble() >= coverage) continue;
+            pos.set(gx, player.getBlockY(), gz);
+            if (!level.hasChunkAt(pos)) continue;
+            int height = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, gx, gz);
+            if (height <= level.getMinBuildHeight() + 2) continue;
+            BlockPos supportPos = new BlockPos(gx, height - 1, gz);
+            var support = level.getBlockState(supportPos);
+            if (!support.getFluidState().isEmpty()
+                    || !support.isFaceSturdy(level, supportPos, Direction.UP)) continue;
+            var shape = support.getCollisionShape(level, supportPos);
+            if (shape.isEmpty()) continue;
+            double top = supportPos.getY() + shape.max(Direction.Axis.Y);
+            double px = gx + .15d + random.nextDouble() * .7d;
+            double pz = gz + .15d + random.nextDouble() * .7d;
+            double py = top + .26d + random.nextDouble() * .55d;
+            if (LanternClarity.inBubble(px, py, pz, 2)) continue;
+            if (!level.getBlockState(new BlockPos(gx, height, gz)).isAir()) continue;
+            level.addAlwaysVisibleParticle(ModParticles.FOG_BANK, true,
+                    px, py, pz, FogBankParticle.FIELD_WISP_SENTINEL, 0d, 0d);
+        }
 
 	}
 }

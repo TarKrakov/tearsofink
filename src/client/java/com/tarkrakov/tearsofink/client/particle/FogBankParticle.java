@@ -40,8 +40,9 @@ public class FogBankParticle extends TextureSheetParticle {
 	private boolean nearLantern = false;
 	/** Клуб стены тумана на краю: плотнее, ближе не растворяется так сильно. */
 	private boolean wall;
-    /** Low, client-only layer using the existing fog-bank sprites. */
-    private boolean groundMist;
+    /** Only the field's sparse airborne remnants, not its enormous forest banks. */
+    public static final double FIELD_WISP_SENTINEL = -3d;
+    private boolean fieldWisp;
 
 	protected FogBankParticle(ClientLevel level, double x, double y, double z, SpriteSet sprites) {
 		super(level, x, y, z);
@@ -57,12 +58,17 @@ public class FogBankParticle extends TextureSheetParticle {
 		this.alpha = 0f;
 	}
 
-	private void configureGroundMist() {
-        groundMist = true;
-        quadSize = Mth.nextFloat(random, 1.1f, 2.0f);
-        lifetime = Mth.nextInt(random, 105, 170);
-        xd = yd = zd = 0;
-        setColor(.89f, .91f, .95f);
+    private void configureFieldWisp() {
+        fieldWisp = true;
+        // Small, torn, slow-moving wisps. Existing fog-bank atlas only;
+        // no custom sprite art, model, block or simulated weather system.
+        quadSize = Mth.nextFloat(random, 1.3f, 2.2f);
+        lifetime = Mth.nextInt(random, 125, 200);
+        xd = (random.nextDouble() - .5d) * .012d;
+        yd = .001d + random.nextDouble() * .002d;
+        zd = (random.nextDouble() - .5d) * .012d;
+        setColor(.84f, .86f, .90f);
+        roll = oRoll = (random.nextFloat() - .5f) * .6f;
     }
 
     @Override
@@ -82,8 +88,13 @@ public class FogBankParticle extends TextureSheetParticle {
 
 	@Override
 	public void render(VertexConsumer buffer, Camera camera, float partialTick) {
-        if (groundMist) {
-            renderGroundMist(buffer, camera, partialTick);
+        if (fieldWisp) {
+            // Intentionally NOT multiplied by the dense-bank suppressor.
+            // Ordinary large fog still clears inside the battlefield.
+            float baseAlpha = alpha;
+            alpha = baseAlpha * .38f;
+            super.render(buffer, camera, partialTick);
+            alpha = baseAlpha;
             return;
         }
 		// Чем ближе клуб к камере, тем он прозрачнее — чтобы не упираться в туман лицом.
@@ -103,31 +114,6 @@ public class FogBankParticle extends TextureSheetParticle {
 		super.render(buffer, camera, partialTick);
 		this.alpha = baseAlpha;
 	}
-
-	private void renderGroundMist(VertexConsumer buffer, Camera camera, float partialTick) {
-        Vec3 cam = camera.getPosition();
-        float px = (float) (Mth.lerp(partialTick, xo, x) - cam.x);
-        float py = (float) (Mth.lerp(partialTick, yo, y) - cam.y);
-        float pz = (float) (Mth.lerp(partialTick, zo, z) - cam.z);
-        float r = quadSize;
-        int alpha8 = Mth.clamp(Math.round(alpha * .14f * 255f), 0, 255);
-        if (alpha8 == 0) return;
-        int light = getLightColor(partialTick);
-        // A paper-thin double-sided veil just above the actual block surface.
-        groundVertex(buffer,px-r,py,pz-r,getU0(),getV0(),light,alpha8);
-        groundVertex(buffer,px-r,py,pz+r,getU0(),getV1(),light,alpha8);
-        groundVertex(buffer,px+r,py,pz+r,getU1(),getV1(),light,alpha8);
-        groundVertex(buffer,px+r,py,pz-r,getU1(),getV0(),light,alpha8);
-        groundVertex(buffer,px+r,py,pz-r,getU1(),getV0(),light,alpha8);
-        groundVertex(buffer,px+r,py,pz+r,getU1(),getV1(),light,alpha8);
-        groundVertex(buffer,px-r,py,pz+r,getU0(),getV1(),light,alpha8);
-        groundVertex(buffer,px-r,py,pz-r,getU0(),getV0(),light,alpha8);
-    }
-
-    private static void groundVertex(VertexConsumer buffer, float x,float y,float z,
-                                     float u,float v,int light,int alpha) {
-        buffer.addVertex(x,y,z).setUv(u,v).setColor(228,232,242,alpha).setLight(light);
-    }
 
     @Override
     public ParticleRenderType getRenderType() {
@@ -165,10 +151,10 @@ public class FogBankParticle extends TextureSheetParticle {
 		public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z,
 									   double xd, double yd, double zd) {
 			FogBankParticle particle = new FogBankParticle(level, x, y, z, this.sprites);
-            // Sentinel distinguishes the still, ground-hugging geometry
-            // from ordinary drifting fog; no new registered particle.
-            if (xd == -2d) {
-                particle.configureGroundMist();
+            // A dedicated visual variant of the EXISTING client particle.
+            // Regular fog-bank RGB tint inputs remain unchanged.
+            if (xd == FIELD_WISP_SENTINEL) {
+                particle.configureFieldWisp();
                 return particle;
             }
 			// xd/yd/zd здесь — не скорость, а оттенок клуба (см. FogBankSpawner)

@@ -181,10 +181,17 @@ assert '.setValue(LEAN, 0)' in banner_block
 assert 'if (bare && lean != 0)' in banner_renderer
 assert 'tiltedPoleFits(' in banner_preview
 assert '.setValue(BattlefieldBannerBlock.LEAN, lean)' in banner_preview
-assert 'configureGroundMist()' in bank_particle
-assert 'renderGroundMist(' in bank_particle and 'getU0()' in bank_particle
-assert 'BattlefieldClarity.opennessAt(' in bank_spawner
-assert 'shape.max(Direction.Axis.Y) + .035d' in bank_spawner
+# D-141 supersedes the near-invisible 0.035-block ground-sheet experiment.
+# Dense forest banks remain untouched, while sparse wisps use their sprites.
+assert 'configureFieldWisp()' in bank_particle
+assert 'FIELD_WISP_SENTINEL' in bank_particle and 'if (fieldWisp)' in bank_particle
+assert 'super.render(buffer, camera, partialTick)' in bank_particle
+assert 'BattlefieldClarity.wispPatchAt(' in bank_spawner
+assert 'public static float wispPatchAt(' in clarity
+assert 'shape.max(Direction.Axis.Y)' in bank_spawner
+assert 'level.hasChunkAt(pos)' in bank_spawner
+assert 'if (!ModDimensions.isLands(level)' in bank_spawner
+assert 'LanternClarity.inBubble(px, py, pz, 2)' in bank_spawner
 print("D-138: append-only bolt/arrow patches, tilted bare flags, thin client ground fog.")
 
 # D-140: the previous three scene-based fallen standards were hard to place
