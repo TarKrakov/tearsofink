@@ -40,7 +40,6 @@ public final class BattlefieldGroundCleanup {
     public static void cleanChunk(ServerLevel level, BattlefieldWorldPlan.Field field, int cx, int cz) {
         var chunk = level.getChunkSource().getChunkNow(cx, cz);
         if (chunk == null) return;
-        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
         for (int dx = 0; dx < 16; dx++) for (int dz = 0; dz < 16; dz++) {
             int x = cx * 16 + dx, z = cz * 16 + dz;
             if (field.openness(x, z) < .34 && field.approach(x,z) < .40) continue;
@@ -48,10 +47,10 @@ public final class BattlefieldGroundCleanup {
             // Floating surface plants and isolated clods only. No deep cave
             // excavation and no general surface flattening.
             for (int y = top; y >= Math.max(level.getMinBuildHeight() + 2, top - 8); y--) {
-                var block = pos.set(x, y, z);
+                BlockPos block = new BlockPos(x, y, z);
                 var state = chunk.getBlockState(block);
                 if (state.isAir()) continue;
-                var below = chunk.getBlockState(pos.set(x, y - 1, z));
+                var below = chunk.getBlockState(block.below());
                 if (nativePlant(state) && below.getCollisionShape(level, block.below()).isEmpty()) {
                     level.setBlock(block, Blocks.AIR.defaultBlockState(),
                             Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
