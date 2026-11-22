@@ -40,6 +40,8 @@ public class FogBankParticle extends TextureSheetParticle {
 	private boolean nearLantern = false;
 	/** Клуб стены тумана на краю: плотнее, ближе не растворяется так сильно. */
 	private boolean wall;
+    /** Low, client-only layer using the existing fog-bank sprites. */
+    private boolean groundMist;
 
 	protected FogBankParticle(ClientLevel level, double x, double y, double z, SpriteSet sprites) {
 		super(level, x, y, z);
@@ -56,7 +58,16 @@ public class FogBankParticle extends TextureSheetParticle {
 	}
 
 	@Override
-	public void tick() {
+	private void configureGroundMist() {
+        groundMist = true;
+        quadSize = Mth.nextFloat(random, 1.1f, 2.0f);
+        lifetime = Mth.nextInt(random, 105, 170);
+        xd = yd = zd = 0;
+        setColor(.89f, .91f, .95f);
+    }
+
+    @Override
+    public void tick() {
 		super.tick();
 		this.xd *= 1.0; // без затухания скорости — плавный дрейф
 		this.zd *= 1.0;
@@ -72,6 +83,10 @@ public class FogBankParticle extends TextureSheetParticle {
 
 	@Override
 	public void render(VertexConsumer buffer, Camera camera, float partialTick) {
+        if (groundMist) {
+            renderGroundMist(buffer, camera, partialTick);
+            return;
+        }
 		// Чем ближе клуб к камере, тем он прозрачнее — чтобы не упираться в туман лицом.
 		Vec3 cam = camera.getPosition();
 		double dx = Mth.lerp(partialTick, this.xo, this.x) - cam.x;
@@ -91,7 +106,33 @@ public class FogBankParticle extends TextureSheetParticle {
 	}
 
 	@Override
-	public ParticleRenderType getRenderType() {
+	private void renderGroundMist(VertexConsumer buffer, Camera camera, float partialTick) {
+        Vec3 cam = camera.getPosition();
+        float px = (float) (Mth.lerp(partialTick, xo, x) - cam.x);
+        float py = (float) (Mth.lerp(partialTick, yo, y) - cam.y);
+        float pz = (float) (Mth.lerp(partialTick, zo, z) - cam.z);
+        float r = quadSize;
+        int alpha8 = Mth.clamp(Math.round(alpha * .14f * 255f), 0, 255);
+        if (alpha8 == 0) return;
+        int light = getLightColor(partialTick);
+        // A paper-thin double-sided veil just above the actual block surface.
+        groundVertex(buffer,px-r,py,pz-r,getU0(),getV0(),light,alpha8);
+        groundVertex(buffer,px-r,py,pz+r,getU0(),getV1(),light,alpha8);
+        groundVertex(buffer,px+r,py,pz+r,getU1(),getV1(),light,alpha8);
+        groundVertex(buffer,px+r,py,pz-r,getU1(),getV0(),light,alpha8);
+        groundVertex(buffer,px+r,py,pz-r,getU1(),getV0(),light,alpha8);
+        groundVertex(buffer,px+r,py,pz+r,getU1(),getV1(),light,alpha8);
+        groundVertex(buffer,px-r,py,pz+r,getU0(),getV1(),light,alpha8);
+        groundVertex(buffer,px-r,py,pz-r,getU0(),getV0(),light,alpha8);
+    }
+
+    private static void groundVertex(VertexConsumer buffer, float x,float y,float z,
+                                     float u,float v,int light,int alpha) {
+        buffer.addVertex(x,y,z).setUv(u,v).setColor(228,232,242,alpha).setLight(light);
+    }
+
+    @Override
+    public ParticleRenderType getRenderType() {
 		return ParticleRenderType.PARTICLE_SHEET_TRANSLUCENT;
 	}
 
@@ -126,6 +167,12 @@ public class FogBankParticle extends TextureSheetParticle {
 		public Particle createParticle(SimpleParticleType type, ClientLevel level, double x, double y, double z,
 									   double xd, double yd, double zd) {
 			FogBankParticle particle = new FogBankParticle(level, x, y, z, this.sprites);
+            // Sentinel distinguishes the still, ground-hugging geometry
+            // from ordinary drifting fog; no new registered particle.
+            if (xd == -2d) {
+                particle.configureGroundMist();
+                return particle;
+            }
 			// xd/yd/zd здесь — не скорость, а оттенок клуба (см. FogBankSpawner)
 			if (xd > 0 || yd > 0 || zd > 0) particle.setColor((float) xd, (float) yd, (float) zd);
 			return particle;
