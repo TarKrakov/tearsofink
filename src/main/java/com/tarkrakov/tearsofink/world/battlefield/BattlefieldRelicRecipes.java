@@ -10,7 +10,8 @@ import java.util.List;
 public final class BattlefieldRelicRecipes {
     public record Relic(int mesh, float forward, float right, float sink,
                         float yaw, float pitch, float roll) {
-        public boolean shield() { return mesh >= 8; }
+        public boolean shield() { return mesh >= 8 && mesh < 12; }
+        public boolean projectile() { return mesh == 12 || mesh == 13; }
     }
     private BattlefieldRelicRecipes() {}
     private static long mix(long n) {
@@ -33,9 +34,29 @@ public final class BattlefieldRelicRecipes {
             case 1 -> 10 + (variant & 3);
             case 2 -> 16 + (variant & 3);
             case 3 -> 12 + (variant & 3);
+            case 5 -> 17 + (variant & 3);
+            case 6 -> 14 + (variant & 3);
+            case 7 -> 19 + (variant & 3);
             default -> 7 + (variant & 3);
         };
         List<Relic> result = new ArrayList<>(count);
+        if (style >= 5) {
+            // Original styles 0..4 stay deterministic for saved Contacts arrays.
+            // New styles reuse a single inert anchor for an entire volley.
+            for (int i = 0; i < count; i++) {
+                double angle = 2 * Math.PI * unit(seed + i * 13L + 1);
+                double distance = 1.0 + 5.6 * Math.sqrt(unit(seed + i * 13L + 2));
+                float forward = (float) (Math.cos(angle) * distance);
+                float right = (float) (Math.sin(angle) * distance * (style == 5 ? .48 : 1.0));
+                int mesh = style == 5 ? 12 : style == 6 ? 13
+                        : (unit(seed + i * 13L + 3) < .55 ? 12 : 13);
+                float yaw = (float) (unit(seed + i * 13L + 4) * 300 - 150);
+                float pitch = (float) (7 + unit(seed + i * 13L + 5) * 71);
+                float roll = (float) (unit(seed + i * 13L + 6) * 38 - 19);
+                result.add(new Relic(mesh, forward, right, -.14f, yaw, pitch, roll));
+            }
+            return List.copyOf(result);
+        }
         for (int i = 0; i < count; i++) {
             double angle = 2 * Math.PI * unit(seed + i * 11L + 1);
             double distance = 1.7 + 7.0 * Math.sqrt(unit(seed + i * 11L + 2));
