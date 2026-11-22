@@ -84,8 +84,9 @@ public final class BattlefieldSitePreparation {
                                   BattlefieldWorldPlan.Placement slot) {
         int cx = slot.x(), cz = slot.z();
         int inner = slot.kind() == BattlefieldWorldPlan.Kind.MONUMENT ? 10
-                : slot.kind() == BattlefieldWorldPlan.Kind.TRACE ? 6 : 9;
-        int outer = inner + 4;
+                : slot.kind() == BattlefieldWorldPlan.Kind.TRACE ? 6
+                : slot.kind() == BattlefieldWorldPlan.Kind.RELIC ? 7 : 9;
+        int outer = inner + (slot.kind() == BattlefieldWorldPlan.Kind.RELIC ? 3 : 4);
         var layout = InkLandsLayout.of(level);
         if (layout == null) return false;
 
@@ -129,7 +130,7 @@ public final class BattlefieldSitePreparation {
 
             long chunk = chunkKey(px, pz);
             if (!verified.computeIfAbsent(chunk,
-                    key -> BattlefieldInstallations.stamped(level, field, px, pz))) return false;
+                    key -> BattlefieldInstallations.provenBattlefieldCorridor(level, field, px, pz))) return false;
 
             // Do not disturb the core of another episode, even if their fringes
             // nearly touch. Terrain remains natural between the close clusters.

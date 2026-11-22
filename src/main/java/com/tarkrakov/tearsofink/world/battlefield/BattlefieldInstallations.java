@@ -246,7 +246,7 @@ public final class BattlefieldInstallations extends SavedData {
                         int mx = ccx * 16 + 8, mz = ccz * 16 + 8;
                         if (field.openness(mx, mz) < .20
                                 && field.approach(mx, mz) < .32) continue;
-                        if (!stamped(level, field, mx, mz)) continue;
+                        if (!provenBattlefieldCorridor(level, field, mx, mz)) continue;
                         if (level.getChunkSource().getChunkNow(ccx, ccz) == null) continue;
                         // Do not mistake freshly dropped player items for terrain fallout.
                         if (playerUnderfoot(level, mx, mz, 13)) continue;
@@ -279,7 +279,7 @@ public final class BattlefieldInstallations extends SavedData {
                 }
                 // Individual stamps prevent the new field from spilling into
                 // previously explored roadside chunks in an existing save.
-                if (!stamped(level, field, slot.x(), slot.z())) {
+                if (!provenBattlefieldCorridor(level, field, slot.x(), slot.z())) {
                     // Old chunk or not-yet-proven site: NEVER retrogen over
                     // other saves, but don't permanently discard the episode.
                     blockedUntil.put(id, now + 200L);
