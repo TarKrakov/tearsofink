@@ -37,8 +37,8 @@ public final class BattlefieldSitePreparation {
     }
 
     private static boolean natural(BlockState s) {
-        if (s.hasBlockEntity() || !s.getFluidState().isEmpty()) return false;
-        return s.isAir() || nativeSoil(s) || s.is(ModBlocks.BATTLEFIELD_FIELD_MARKER) || s.is(ModBlocks.PALE_LOG)
+        if (s.hasBlockEntity() || (!s.getFluidState().isEmpty() && !s.is(Blocks.WATER))) return false;
+        return s.isAir() || s.is(Blocks.WATER) || nativeSoil(s) || s.is(ModBlocks.BATTLEFIELD_FIELD_MARKER) || s.is(ModBlocks.PALE_LOG)
                 || s.is(ModBlocks.PALE_WOOD) || s.is(ModBlocks.PALE_LEAVES)
                 || s.is(ModBlocks.PALE_GRASS) || s.is(ModBlocks.TALL_PALE_GRASS)
                 || s.is(ModBlocks.PALE_SAPLING) || s.is(ModBlocks.TEARBLOOM)
@@ -103,9 +103,16 @@ public final class BattlefieldSitePreparation {
             int px = cx+dx, pz = cz+dz;
             var pos = new BlockPos(px, target, pz);
             if (!level.getWorldBorder().isWithinBounds(pos)
-                    || level.getChunkSource().getChunkNow(px >> 4, pz >> 4) == null
-                    || layout.roadNear(px, pz, slot.kind() == BattlefieldWorldPlan.Kind.TRACE ? 5 : 11) != null)
+                    || level.getChunkSource().getChunkNow(px >> 4, pz >> 4) == null)
                 return false;
+            if (layout.roadNear(px, pz,
+                    slot.kind() == BattlefieldWorldPlan.Kind.TRACE ? 5 : 11) != null) {
+                // A roadside clue must remain close enough to be discovered in
+                // the normal forest fog, WITHOUT altering the highway verge.
+                // Only its feathered outer edge is omitted near the road.
+                if (slot.kind() == BattlefieldWorldPlan.Kind.TRACE && distance > inner - 1) continue;
+                return false;
+            }
             var temples = layout.templeNetwork();
             if (temples != null && temples.overlapsPath(px, pz, 7)) return false;
 
