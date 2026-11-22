@@ -146,6 +146,16 @@ public final class BattlefieldInstallations extends SavedData {
         return count;
     }
 
+    public static int placedCount(ServerLevel level, BattlefieldWorldPlan.Field field,
+                                  BattlefieldWorldPlan.Kind kind) {
+        var saved = level.getDataStorage().computeIfAbsent(FACTORY, "toi_battlefield_installations_v3");
+        int count = 0;
+        for (var slot : field.placements()) {
+            if (slot.kind() == kind && saved.attempted.contains(key(field.index(), slot.id()))) count++;
+        }
+        return count;
+    }
+
     private static long routeKey(int field, int link, int part) {
         return 0x1000_0000_0000_0000L | ((long) field << 40) | ((long) link << 20) | part;
     }

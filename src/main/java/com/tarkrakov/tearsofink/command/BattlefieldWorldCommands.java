@@ -48,14 +48,28 @@ public final class BattlefieldWorldCommands {
         if (level == null || field == null) return locate(source);
         boolean loaded = level.getChunkSource().getChunkNow(field.x() >> 4, field.z() >> 4) != null;
         boolean generated = loaded && BattlefieldInstallations.fieldReady(level, field);
-        int count = BattlefieldInstallations.placedCount(level, field);
+        int historical = 0, scattered = 0;
+        for (var slot : field.placements()) {
+            if (slot.kind() == com.tarkrakov.tearsofink.world.battlefield.BattlefieldWorldPlan.Kind.RELIC) scattered++;
+            else historical++;
+        }
+        int historyPlaced = BattlefieldInstallations.placedCount(level, field,
+                com.tarkrakov.tearsofink.world.battlefield.BattlefieldWorldPlan.Kind.MONUMENT)
+                + BattlefieldInstallations.placedCount(level, field,
+                com.tarkrakov.tearsofink.world.battlefield.BattlefieldWorldPlan.Kind.SCENE)
+                + BattlefieldInstallations.placedCount(level, field,
+                com.tarkrakov.tearsofink.world.battlefield.BattlefieldWorldPlan.Kind.TRACE);
+        int relicPlaced = BattlefieldInstallations.placedCount(level, field,
+                com.tarkrakov.tearsofink.world.battlefield.BattlefieldWorldPlan.Kind.RELIC);
         int pathsBuilt = BattlefieldInstallations.routeCount(level, field);
+        int historicalTotal = historical, relicTotal = scattered;
         source.sendSuccess(() -> Component.literal("Поле " + field.x() + "," + field.z()
                 + ": центральный чанк " + (loaded ? "загружен" : "не загружен")
                 + "; доказательство генерации: " + (generated ? "найдено" : loaded ? "отсутствует" : "неизвестно")
-                + "; композиции: " + count + "/" + field.placements().size()
-                + "; связующие участки: " + pathsBuilt + "/" + BattlefieldInstallations.routeTotal()
-                + ". Остальные размещаются только в безопасных загруженных чанках."), false);
+                + "; сюжетные композиции: " + historyPlaced + "/" + historicalTotal
+                + "; россыпи оружия: " + relicPlaced + "/" + relicTotal
+                + "; связующие переходы: " + pathsBuilt + "/" + BattlefieldInstallations.routeTotal()
+                + ". Незавершённое догружается в безопасных чанках."), false);
         return 1;
     }
 
