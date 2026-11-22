@@ -61,6 +61,15 @@ public final class BattlefieldAccessRoutes {
         return s.is(ModBlocks.ASHEN_SOIL) || s.is(ModBlocks.ASHEN_PATH)
                 || s.is(ModBlocks.ASPHODELITE_ROCK) || s.is(ModBlocks.ASH)
                 || s.is(ModBlocks.PALE_ORE) || s.is(ModBlocks.ASPHODELITE_ORE)
+                || s.is(ModBlocks.DEEPSLATE_ASPHODELITE_ORE)
+                || s.is(ModBlocks.ASPHODELITE_COAL_ORE)
+                || s.is(ModBlocks.ASPHODELITE_IRON_ORE)
+                || s.is(ModBlocks.ASPHODELITE_COPPER_ORE)
+                || s.is(ModBlocks.ASPHODELITE_GOLD_ORE)
+                || s.is(ModBlocks.ASPHODELITE_REDSTONE_ORE)
+                || s.is(ModBlocks.ASPHODELITE_LAPIS_ORE)
+                || s.is(ModBlocks.ASPHODELITE_DIAMOND_ORE)
+                || s.is(ModBlocks.ASPHODELITE_EMERALD_ORE)
                 || s.is(BlockTags.BASE_STONE_OVERWORLD)
                 || s.is(BlockTags.DIRT) || s.is(Blocks.GRAVEL) || s.is(Blocks.CLAY);
     }
@@ -132,14 +141,21 @@ public final class BattlefieldAccessRoutes {
                 BlockPos anchor = new BlockPos(x, target, z);
                 if (level.getChunkSource().getChunkNow(x >> 4, z >> 4) == null
                         || !level.getWorldBorder().isWithinBounds(anchor)) return false;
+                // Earthworks never reshape ground beneath a visiting player.
+                // Retry once they have walked further into the battlefield.
+                for (var player : level.players()) {
+                    if (Math.abs(player.getX() - x) < 12
+                            && Math.abs(player.getZ() - z) < 12) return false;
+                }
                 if (layout.roadNear(x, z, 8) != null) return false;
                 var temples = layout.templeNetwork();
                 if (temples != null && temples.overlapsPath(x, z, 7)) return false;
                 // Never cut through flags, giant swords or posed relic scenes.
                 boolean closeToArt = false;
-                for (var slot : field.placements()) if (slot.kind() != BattlefieldWorldPlan.Kind.RELIC) {
+                for (var slot : field.placements()) {
                     int dx = x - slot.x(), dz = z - slot.z();
-                    int clearance = slot.kind() == BattlefieldWorldPlan.Kind.MONUMENT ? 12 : 6;
+                    int clearance = slot.kind() == BattlefieldWorldPlan.Kind.MONUMENT ? 12
+                            : slot.kind() == BattlefieldWorldPlan.Kind.RELIC ? 5 : 6;
                     if (dx*dx + dz*dz < clearance*clearance) {
                         closeToArt = true; break;
                     }
