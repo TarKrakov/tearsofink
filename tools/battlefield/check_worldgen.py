@@ -105,14 +105,13 @@ mod_blocks = read(base + "block/ModBlocks.java")
 mod_entities = read(base + "block/lantern/ModBlockEntities.java")
 assert 'battlefield_relic_patch' in mod_blocks and 'BATTLEFIELD_RELIC_PATCH' in mod_entities
 assert 'BATTLEFIELD_RELIC_PATCH' in ui
-assert 'BattlefieldWeaponCatalog.Source.values()' in relic_placement
+assert 'BattlefieldRelicRecipes.generate(base, style, variant)' in relic_placement
 assert 'getChunkNow' in relic_placement
 assert 'public java.util.List<' in relic_entity and 'cached' in relic_entity
 assert 'entity.poses()' in relic_renderer and 'BATTLEFIELD_WEAPON_MESH' in relic_renderer
 assert 'BattlefieldSoulShieldCatalog.SCALE' in relic_renderer
 assert 'case 2 -> 16 +' in relic_recipes
 assert 'case 0 -> 14 +' in relic_recipes
-assert 'source' not in ""  # no new authored source texture for these aged mesh proxies
 
 # D-137: the inner battlefield sheds almost all fog particles by THEIR own
 # position; forest outside retains original particle density.
@@ -136,10 +135,10 @@ assert 'Block.UPDATE_SUPPRESS_DROPS' in terrain
 # Connected terrain: all 8 route links join the roadward entry to the main
 # field and far upper bank without rerolling historical scene positions.
 access = read(base + "world/battlefield/BattlefieldAccessRoutes.java")
-match = re.search(r"private static final int\\[\\]\\[\\] LINKS = \\{(.*?)\\};", access, re.S)
+match = re.search(r"private static final int\[\]\[\] LINKS = \{(.*?)\};", access, re.S)
 assert match is not None
 links = []
-for line in re.findall(r"\\{\\s*(-?\\d+)\\s*,\\s*(-?\\d+)\\s*,\\s*(-?\\d+)\\s*,\\s*(-?\\d+)\\s*\\}", match.group(1)):
+for line in re.findall(r"\{\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+)\s*\}", match.group(1)):
     a,b,c,d = map(int, line)
     links.append(((a,b),(c,d)))
 assert len(links) == 8
