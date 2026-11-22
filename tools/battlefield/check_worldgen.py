@@ -186,3 +186,31 @@ assert 'renderGroundMist(' in bank_particle and 'getU0()' in bank_particle
 assert 'BattlefieldClarity.opennessAt(' in bank_spawner
 assert 'shape.max(Direction.Axis.Y) + .035d' in bank_spawner
 print("D-138: append-only bolt/arrow patches, tilted bare flags, thin client ground fog.")
+
+# D-140: the previous three scene-based fallen standards were hard to place
+# and can be falsely counted if an unrelated adjacent scene exists. The new
+# decoration is independent, faction-authentic, heavily tilted and actually
+# rendered as several buried meshes per ONE inert existing relic BE.
+assert 'barePoleBeds(field, placements)' in source
+assert source.index('barePoleBeds(field, placements)') > source.rindex('scene(placements, field')
+assert source.index('barePoleBeds(field, placements)') > source.index('projectileBeds(field, placements)')
+assert 'slot.blade() >= 8' in installation
+assert 'hasBarePoleAnchor(level, slot)' in installation
+assert 'slot.blade() < 8' in installation # no new mass-earthworks for poles
+assert 'style >= 8 ? 2 :' in relic_placement
+assert 'barePoleFits(' in relic_placement
+assert 'case 14 -> 6.125f;' in relic_recipes
+assert 'case 15 -> 6.0f;' in relic_recipes
+assert 'case 0 -> .18f;' in relic_recipes
+assert 'case 1 -> .50f;' in relic_recipes
+assert 'case 2 -> .73f;' in relic_recipes
+assert 'default -> .88f;' in relic_recipes
+assert 'public boolean pole()' in relic_recipes
+assert 'p.pole()' in relic_renderer
+assert 'BattlefieldBannerRenderer.renderBareRelic' in relic_renderer
+assert 'renderBareRelic(int mesh' in banner_renderer
+assert 'BattlefieldFactionBannerGeometry.model(faction, true)' in banner_renderer
+assert 'POLE_PARTS' in banner_renderer
+assert 'IntegerProperty.create("style", 0, 10)' in read(base + "block/BattlefieldRelicPatchBlock.java")
+assert 'вкопанные древки' in world_commands
+print("D-140: append-only inert buried author-pole groups, safe terrain and exact faction rigs.")
