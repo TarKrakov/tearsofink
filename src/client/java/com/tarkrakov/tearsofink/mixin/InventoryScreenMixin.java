@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.client.mixin;
 
 import com.tarkrakov.tearsofink.prologue.PersonalSlots;
 import com.tarkrakov.tearsofink.prologue.PrologueItems;
+import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.EffectRenderingInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -23,6 +24,7 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
 
     @Inject(method = "renderBg", at = @At("TAIL"))
     private void tearsofink$personalPanel(GuiGraphics graphics, float partial, int mouseX, int mouseY, CallbackInfo ci) {
+        if (minecraft == null || minecraft.level == null || !ModDimensions.isLands(minecraft.level)) return;
         int x = leftPos + PersonalSlots.PANEL_X, y = topPos + PersonalSlots.PANEL_Y;
         graphics.fill(x, y, x + PersonalSlots.PANEL_WIDTH, y + PersonalSlots.PANEL_HEIGHT, 0xD927222C);
         graphics.fill(x, y, x + PersonalSlots.PANEL_WIDTH, y + 1, 0xFFAC9272);
@@ -42,6 +44,7 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
     /** The personal panel must not be mistaken for an outside-inventory drop zone. */
     @Inject(method = "hasClickedOutside", at = @At("HEAD"), cancellable = true)
     private void tearsofink$panelIsInside(double x, double y, int left, int top, int button, CallbackInfoReturnable<Boolean> cir) {
+        if (minecraft == null || minecraft.level == null || !ModDimensions.isLands(minecraft.level)) return;
         if (x >= left + PersonalSlots.PANEL_X && x < left + PersonalSlots.PANEL_X + PersonalSlots.PANEL_WIDTH
                 && y >= top + PersonalSlots.PANEL_Y && y < top + PersonalSlots.PANEL_Y + PersonalSlots.PANEL_HEIGHT)
             cir.setReturnValue(false);
@@ -50,6 +53,7 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
     /** Right-click the bound Diary slot with an empty cursor to read in place. */
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void tearsofink$openDiary(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
+        if (minecraft == null || minecraft.level == null || !ModDimensions.isLands(minecraft.level)) return;
         if (button != 1 || !menu.getCarried().isEmpty() || !menu.slots.get(PersonalSlots.INVENTORY_MENU_START).hasItem())
             return;
         if (mouseX >= leftPos + PersonalSlots.SLOT_X && mouseX < leftPos + PersonalSlots.SLOT_X + 18

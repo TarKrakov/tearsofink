@@ -10,6 +10,10 @@ import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.world.level.Level;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +21,8 @@ import java.util.List;
 /**
  * Three personal, one-item inventory slots backed by a persistent player attachment.
  * Normal container packets synchronize the three slots; no client-authoritative item moves.
- * The mirror is accessible outside the Lands so players can return to the adventure.
+ * The visible panel belongs to the Ink Lands. Outside it, the mirror is returned
+ * to the vanilla inventory without discarding its persistent stack data.
  */
 public final class PersonalSlots {
     public static final int DIARY = 0, MIRROR = 1, KEY = 2, COUNT = 3;
@@ -36,7 +41,41 @@ public final class PersonalSlots {
             .persistent(Codec.BOOL).copyOnDeath().initializer(() -> false)
             .buildAndRegister(TearsOfInk.id("personal_items_migrated"));
 
+    /** Detect actual dimension changes, not routine mirror use. Weak keys avoid retaining
+     * old player instances after disconnects and respawns. */
+    private static final Map<ServerPlayer, ResourceKey<Level>> LAST_WORLD = new WeakHashMap<>();
+
     private PersonalSlots() {}
+
+    /** Called once a second on the server, after item-use teleportation is complete.
+     * Outside the Lands the mirror moves to ordinary inventory, so no hidden slot traps it.
+     * A full inventory retains the exact original stack and retries when space opens. */
+    public static void syncMirrorLocation(ServerPlayer player) {
+        ResourceKey<Level> world = player.level().dimension();
+        ResourceKey<Level> previous = LAST_WORLD.put(player, world);
+        var inv = player.getInventory();
+        if (ModDimensions.isLands(player.level())) {
+            if (world.equals(previous) || holds(player, MIRROR)) return;
+            // Restore the dedicated slot only on entering the Lands. Never steal
+            // the mirror from a player's hand while they are actively using it.
+            for (int i = 0; i < inv.getContainerSize(); i++) {
+                ItemStack stack = inv.getItem(i);
+                if (!stack.is(ModItems.DIM_MIRROR) || stack.getCount() != 1) continue;
+                put(player, MIRROR, stack);
+                inv.setItem(i, ItemStack.EMPTY);
+                inv.setChanged();
+                return;
+            }
+        } else {
+            ItemStack mirror = get(player, MIRROR);
+            if (!mirror.is(ModItems.DIM_MIRROR)) return;
+            // Only remove the saved stack after inventory insertion succeeded.
+            if (inv.add(mirror.copy())) {
+                put(player, MIRROR, ItemStack.EMPTY);
+                inv.setChanged();
+            }
+        }
+    }
 
     /** One-time, server-side migration of starter gifts when arriving in the Lands.
      * Existing characters keep exact item stacks; repeated visits do not steal from the hotbar. */
@@ -67,8 +106,9 @@ public final class PersonalSlots {
     }
 
     public static boolean available(Player player, int index) {
-        // Never trap the travel mirror in another dimension.
-        return index == MIRROR || ModDimensions.isLands(player.level());
+        // All three panel slots are usable only inside the Ink Lands.
+        // Outside, syncMirrorLocation exposes the mirror in vanilla inventory.
+        return index >= 0 && index < COUNT && ModDimensions.isLands(player.level());
     }
 
     public static ItemStack get(Player player, int index) {

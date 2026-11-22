@@ -24,6 +24,9 @@ public abstract class InventoryMenuMixin extends AbstractContainerMenu {
         for (int index = 0; index < PersonalSlots.COUNT; index++) {
             final int which = index;
             addSlot(new Slot(container, index, PersonalSlots.SLOT_X, PersonalSlots.SLOT_Y + PersonalSlots.SLOT_STEP * index) {
+                @Override public boolean isActive() {
+                    return PersonalSlots.available(owner, which);
+                }
                 @Override public boolean mayPlace(ItemStack stack) {
                     return stack.getCount() == 1 && PersonalSlots.available(owner, which)
                             && PersonalSlots.accepts(which, stack);

@@ -154,6 +154,7 @@ public final class DiaryEntries {
 			if (tick % 20 != 0) return;
 			boolean discover = tick % INVENTORY_CHECK_TICKS == 0;
 			for (ServerPlayer p : server.getPlayerList().getPlayers()) {
+				PersonalSlots.syncMirrorLocation(p);
 				if (discover) checkGuidance(p);
 				FateProgress.refresh(p, false);
 			}
