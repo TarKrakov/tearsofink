@@ -46,7 +46,11 @@ public final class BattlefieldEnvironment {
                                    BlockPos.MutableBlockPos pos, int x, int z) {
         double fieldValue = field.openness(x, z);
         double approach = field.approach(x, z);
-        boolean planned = field.x() == x && field.z() == z;
+        // Every eligible new chunk gains a buried proof block, not just
+        // the exact slot column (where deep ash could hide that proof).
+        boolean planned = (x & 15) == 8 && (z & 15) == 8
+                && (fieldValue > .28 || approach > .35);
+        if (field.x() == x && field.z() == z) planned = true;
         if (!planned) for (var slot : field.placements()) {
             if (slot.x() == x && slot.z() == z) { planned = true; break; }
         }
@@ -61,6 +65,33 @@ public final class BattlefieldEnvironment {
         int hash = field.hash(x, z, 0xED06);
         double wear = Math.max(fieldValue, approach * .58);
         boolean changed = false;
+        // Battlefield land tells its OWN history: uneven blast craters,
+        // trenches and broken rims, created during virgin chunk generation.
+        int scar = field.scar(x, z);
+        if (scar > 0 && (soil.is(ModBlocks.ASHEN_SOIL) || soil.is(ModBlocks.ASPHODELITE_ROCK)
+                || soil.is(ModBlocks.ASH) || soil.is(ModBlocks.ASHEN_PATH))) {
+            int bottom = Math.max(level.getMinBuildHeight() + 2, ground - scar);
+            boolean nativeColumn = true;
+            for (int y = bottom; y <= ground; y++) {
+                if (!base(level.getBlockState(pos.set(x, y, z)))) {
+                    nativeColumn = false; break;
+                }
+            }
+            if (nativeColumn) {
+                for (int y = ground; y > bottom; y--) {
+                    level.setBlock(pos.set(x, y, z), Blocks.AIR.defaultBlockState(), 2);
+                }
+                level.setBlock(pos.set(x, bottom, z), ModBlocks.ASPHODELITE_ROCK.defaultBlockState(), 2);
+                ground = bottom;
+                soil = level.getBlockState(pos.set(x, ground, z));
+                changed = true;
+            }
+        } else if (scar < 0 && level.getBlockState(pos.set(x, ground + 1, z)).isAir()) {
+            level.setBlock(pos.set(x, ground + 1, z), ModBlocks.ASPHODELITE_ROCK.defaultBlockState(), 2);
+            ground++;
+            soil = level.getBlockState(pos.set(x, ground, z));
+            changed = true;
+        }
         // Material changes are small irregular scars on the existing surface,
         // not a new flat layer. Preserve the exact local natural height.
         if (soil.is(ModBlocks.ASHEN_SOIL) || soil.is(Blocks.GRASS_BLOCK)) {

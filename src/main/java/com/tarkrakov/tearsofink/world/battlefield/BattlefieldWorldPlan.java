@@ -72,6 +72,51 @@ public final class BattlefieldWorldPlan {
             return Math.max(openness(px, pz), approach(px, pz) * .54);
         }
 
+
+        /**
+         * Own ruts, blast-like depressions and eroded rims, generated on NEW
+         * terrain only. Seed-locked, no full-disk flattening. Reserve a generous
+         * halo for all real posed scenes and titan weapons.
+         * Positive = pit depth, negative = low broken rim.
+         */
+        public int scar(int px, int pz) {
+            if (openness(px, pz) < .32) return 0;
+            for (Placement slot : placements) {
+                int dx = px - slot.x(), dz = pz - slot.z();
+                int halo = slot.kind() == Kind.MONUMENT ? 19 : 14;
+                if (dx * dx + dz * dz < halo * halo) return 0;
+            }
+            int result = 0;
+            for (int i = 0; i < 16; i++) {
+                long h = mix(seed + i * 0x9E3779B97F4A7C15L);
+                int cx = x + (int) Math.floorMod(h, 135) - 67;
+                int cz = z + (int) Math.floorMod(h >>> 16, 125) - 62;
+                double radius = 5.0 + Math.floorMod(h >>> 32, 10);
+                double rx = (px - cx) * (1.0 + (h & 3) * .09);
+                double rz = (pz - cz) * (1.0 + ((h >>> 2) & 3) * .08);
+                double d = Math.hypot(rx, rz);
+                double ragged = radius * (1 + .12 * Math.sin(Math.atan2(rz,rx) * 5 + i));
+                if (d < ragged) {
+                    int depth = (int) Math.ceil((ragged - d) / ragged
+                            * (3 + Math.floorMod(h >>> 40, 4)));
+                    result = Math.max(result, depth);
+                } else if (d < ragged + 2 && (hash(px, pz, 0xAC00 + i) & 3) == 0) {
+                    result = Math.min(result, -1);
+                }
+            }
+            // Two narrow diagonal tears, interrupted by the scene reservations.
+            for (int i = 0; i < 2; i++) {
+                double fx = px - x + (i == 0 ? 26 : -33);
+                double fz = pz - z + (i == 0 ? 35 : -27);
+                double along = (fx + fz * .63) / 1.18;
+                double side = (fz - fx * .63) / 1.18;
+                if (Math.abs(along) < 29 && Math.abs(side) < 3.5
+                        && Math.abs(Math.sin(along * .19 + i) * 1.2 + side) < 2.6)
+                    result = Math.max(result, 2 + ((hash(px, pz, 0x7900 + i) >>> 1) & 1));
+            }
+            return result;
+        }
+
         /** No random state: a column's weathered-ground pattern survives reload/order. */
         public int hash(int px, int pz, int salt) {
             long h = seed ^ (px * 341873128712L) ^ (pz * 132897987541L) ^ (salt * 42317861L);
