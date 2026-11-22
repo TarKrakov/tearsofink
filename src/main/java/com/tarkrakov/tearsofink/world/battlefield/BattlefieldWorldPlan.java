@@ -273,6 +273,9 @@ public final class BattlefieldWorldPlan {
         scene(placements, field, -58, -32, BattlefieldPosedScenes.Scenario.REGULAR_BARE_REMNANT);
         scene(placements, field, -12, -61, BattlefieldPosedScenes.Scenario.PALADIN_BARE_RELIC);
         scene(placements, field, 61, 20, BattlefieldPosedScenes.Scenario.HUNTER_BARE_TRACE);
+        // D-140: independent, low-cost buried standards. Keep every original
+        // slot and all three earlier bare episodes at their saved IDs.
+        barePoleBeds(field, placements);
         return List.copyOf(placements);
     }
 
@@ -363,6 +366,58 @@ public final class BattlefieldWorldPlan {
                 placements.add(new Placement(placements.size(), Kind.RELIC, x, z, field.axis(),
                         null, (roll >>> 10) & 7, area[2], false));
                 placed++;
+            }
+        }
+    }
+
+    /**
+     * Sparse groups of genuinely bare author-drawn standards, sunk into
+     * different pieces of earth rather than vertical scenic banner blocks.
+     * Their independent patch anchors are installed even when a full faction
+     * scene cannot pass its more demanding flag-envelope placement checks.
+     * Never assign new IDs until ALL former slots have already been appended.
+     */
+    private static void barePoleBeds(Field field, List<Placement> placements) {
+        // forward, right, patch style, max patch anchors. The historical
+        // armies fought together: these are traces of a broken allied line.
+        int[][] zones = {
+                {-43, -24, 8, 2},  // regular-army broken line
+                {-37,  36, 8, 1},  // regular fallback
+                { -6, -41, 9, 2},  // Soul shield holdout
+                { 39, -29, 9, 1},  // Soul rearward loss
+                { 37,  34,10, 2},  // Ink Hunters' old flank
+                {  8,  47,10, 1}   // scattered hunter remnants
+        };
+        for (int zone = 0; zone < zones.length; zone++) {
+            int[] spec = zones[zone];
+            int made = 0;
+            for (int attempt = 0; attempt < 96 && made < spec[3]; attempt++) {
+                int roll = field.hash(zone * 151 + attempt * 3, zone * 193 - attempt, 0xB4A2);
+                double angle = (roll & 65535) * (Math.PI * 2 / 65536d);
+                double distance = 2d + ((roll >>> 16) & 255) / 255d * 17d;
+                double forward = spec[0] + Math.cos(angle) * distance;
+                double right = spec[1] + Math.sin(angle) * distance;
+                int x = field.x + (int) Math.round(field.inwardX * forward - field.inwardZ * right);
+                int z = field.z + (int) Math.round(field.inwardZ * forward + field.inwardX * right);
+                if (field.openness(x, z) < .50
+                        || BattlefieldAccessRoutes.nearCorridor(field, x, z, 4)) continue;
+                boolean occupied = false;
+                for (Placement other : placements) {
+                    double gap = switch (other.kind()) {
+                        case MONUMENT -> 17d;
+                        case SCENE, TRACE -> 10d;
+                        case RELIC -> other.blade() >= 8 ? 12d : 8d;
+                    };
+                    if ((long)(x - other.x()) * (x - other.x())
+                            + (long)(z - other.z()) * (z - other.z()) < gap * gap) {
+                        occupied = true;
+                        break;
+                    }
+                }
+                if (occupied) continue;
+                placements.add(new Placement(placements.size(), Kind.RELIC, x, z, field.axis(),
+                        null, (roll >>> 9) & 7, spec[2], false));
+                made++;
             }
         }
     }

@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.world.battlefield;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.block.ModBlocks;
+import com.tarkrakov.tearsofink.block.BattlefieldRelicPatchBlock;
 import com.tarkrakov.tearsofink.command.BattlefieldDecorCommands;
 import com.tarkrakov.tearsofink.command.BattlefieldZonePreview;
 import com.tarkrakov.tearsofink.world.InkLandsLayout;
@@ -283,7 +284,9 @@ public final class BattlefieldInstallations extends SavedData {
                         slot.kind() == BattlefieldWorldPlan.Kind.RELIC ? 9 : 19)) continue;
                 // Recover safely after a power loss between the world write and
                 // the SavedData flush. Never place a second overlapping anchor.
-                if (hasAnchor(level, slot.x(), slot.z())) {
+                if (slot.kind() == BattlefieldWorldPlan.Kind.RELIC && slot.blade() >= 8
+                        ? hasBarePoleAnchor(level, slot)
+                        : hasAnchor(level, slot.x(), slot.z())) {
                     attempted.add(id);
                     setDirty();
                     continue;
@@ -312,7 +315,8 @@ public final class BattlefieldInstallations extends SavedData {
                     // Dense weapon beds should not vanish solely because the
                     // natural ground is too jagged. First prefer real terrain;
                     // only after that fails, make a smaller local earthwork.
-                    if (!made && !playerUnderfoot(level, slot.x(), slot.z(), 16)
+                    if (!made && slot.blade() < 8
+                            && !playerUnderfoot(level, slot.x(), slot.z(), 16)
                             && BattlefieldSitePreparation.prepare(level, field, slot)) {
                         made = BattlefieldRelicPlacement.place(level, rootXZ, slot.facing(),
                                 slot.blade(), slot.variant());
@@ -347,6 +351,29 @@ public final class BattlefieldInstallations extends SavedData {
                 }
             }
         }
+    }
+
+    /**
+     * The previous generic ±4 check could mark a NEW bare-pole slot as
+     * placed merely because an old weapon patch sat nearby. Match its
+     * specific style and variant instead, including after a save crash.
+     */
+    private static boolean hasBarePoleAnchor(ServerLevel level, BattlefieldWorldPlan.Placement slot) {
+        for (int dx = -4; dx <= 4; dx++) for (int dz = -4; dz <= 4; dz++) {
+            int x = slot.x() + dx, z = slot.z() + dz;
+            var chunk = level.getChunkSource().getChunkNow(x >> 4, z >> 4);
+            if (chunk == null) continue;
+            int top = Math.min(level.getMaxBuildHeight() - 1,
+                    chunk.getHeight(Heightmap.Types.WORLD_SURFACE, x & 15, z & 15));
+            for (int y = top + 3; y >= top - 5 && y >= level.getMinBuildHeight(); y--) {
+                var state = chunk.getBlockState(new BlockPos(x, y, z));
+                if (state.is(ModBlocks.BATTLEFIELD_RELIC_PATCH)
+                        && state.getValue(BattlefieldRelicPatchBlock.STYLE) == slot.blade()
+                        && state.getValue(BattlefieldRelicPatchBlock.VARIANT) == slot.variant())
+                    return true;
+            }
+        }
+        return false;
     }
 
     private static boolean hasAnchor(ServerLevel level, int x, int z) {

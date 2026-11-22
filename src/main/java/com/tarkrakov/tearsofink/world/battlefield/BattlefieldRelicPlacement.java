@@ -56,9 +56,12 @@ public final class BattlefieldRelicPlacement {
                             || !(below.is(ModBlocks.ASHEN_SOIL) || below.is(ModBlocks.ASPHODELITE_ROCK)
                             || below.is(ModBlocks.ASHEN_PATH) || below.is(ModBlocks.ASH)
                             || below.is(BlockTags.DIRT) || below.is(BlockTags.BASE_STONE_OVERWORLD))) continue;
+                    if (style >= 8 && !barePoleFits(level, at, h, facing, pose)) continue;
                     heights[i] = h - groundY; good++;
                 }
-                if (good < Math.max(4, poses.size() / 2)) continue;
+                // Buried standard patches have just 2..3 author-made meshes;
+                // preserve the former 4+ minimum for all old weapon/bolt beds.
+                if (good < (style >= 8 ? 2 : Math.max(4, poses.size() / 2))) continue;
                 var state = ModBlocks.BATTLEFIELD_RELIC_PATCH.defaultBlockState()
                         .setValue(HorizontalDirectionalBlock.FACING, facing)
                         .setValue(BattlefieldRelicPatchBlock.STYLE, style)
@@ -73,5 +76,37 @@ public final class BattlefieldRelicPlacement {
                         Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
             }
         return false;
+    }
+
+    /**
+     * No forced neighbor loads and no collision removal. Sample the exposed
+     * tilted pole along its true Y -> X/Z direction after Y/Z/X rotations.
+     * The buried section may intersect natural earth; above ground cannot
+     * intersect solid terrain or players' builds.
+     */
+    private static boolean barePoleFits(ServerLevel level, BlockPos planted, int surfaceY,
+                                        Direction facing, BattlefieldRelicRecipes.Relic pose) {
+        double pitch = Math.toRadians(pose.pitch()), roll = Math.toRadians(pose.roll());
+        double yaw = Math.toRadians(pose.yaw());
+        double outerYaw = Math.toRadians(180f - facing.toYRot());
+        double sinP = Math.sin(pitch), cosP = Math.cos(pitch);
+        double sinR = Math.sin(roll), cosR = Math.cos(roll);
+        double sx = -cosP * sinR, sy = cosP * cosR, sz = sinP;
+        double lx = sx * Math.cos(yaw) + sz * Math.sin(yaw);
+        double lz = -sx * Math.sin(yaw) + sz * Math.cos(yaw);
+        double dx = lx * Math.cos(outerYaw) + lz * Math.sin(outerYaw);
+        double dz = -lx * Math.sin(outerYaw) + lz * Math.cos(outerYaw);
+        for (int sample = 1; sample <= 14; sample++) {
+            double t = sample * .47d;
+            double y = surfaceY + pose.sink() + sy * t;
+            if (y < surfaceY + .1d) continue; // deliberately sunk in soil
+            BlockPos column = BlockPos.containing(planted.getX() + .5d + dx * t, y,
+                    planted.getZ() + .5d + dz * t);
+            if (level.getChunkSource().getChunkNow(column.getX() >> 4, column.getZ() >> 4) == null
+                    || !level.getWorldBorder().isWithinBounds(column)
+                    || !level.getBlockState(column).getCollisionShape(level, column).isEmpty())
+                return false;
+        }
+        return true;
     }
 }

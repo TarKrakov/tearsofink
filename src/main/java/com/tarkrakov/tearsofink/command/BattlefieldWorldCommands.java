@@ -48,11 +48,12 @@ public final class BattlefieldWorldCommands {
         if (level == null || field == null) return locate(source);
         boolean loaded = level.getChunkSource().getChunkNow(field.x() >> 4, field.z() >> 4) != null;
         boolean generated = loaded && BattlefieldInstallations.fieldReady(level, field);
-        int historical = 0, scattered = 0, projectiles = 0, fallen = 0;
+        int historical = 0, scattered = 0, projectiles = 0, fallen = 0, buriedPoles = 0;
         for (var slot : field.placements()) {
             if (slot.id() < 27) historical++;
             else if (slot.kind() == BattlefieldWorldPlan.Kind.RELIC) {
-                if (slot.blade() >= 5) projectiles++;
+                if (slot.blade() >= 8) buriedPoles++;
+                else if (slot.blade() >= 5) projectiles++;
                 else scattered++;
             } else fallen++;
         }
@@ -61,18 +62,23 @@ public final class BattlefieldWorldCommands {
         int relicPlaced = BattlefieldInstallations.placedCount(level, field,
                 slot -> slot.kind() == BattlefieldWorldPlan.Kind.RELIC && slot.blade() < 5);
         int projectilePlaced = BattlefieldInstallations.placedCount(level, field,
-                slot -> slot.kind() == BattlefieldWorldPlan.Kind.RELIC && slot.blade() >= 5);
+                slot -> slot.kind() == BattlefieldWorldPlan.Kind.RELIC
+                        && slot.blade() >= 5 && slot.blade() <= 7);
+        int buriedPolePlaced = BattlefieldInstallations.placedCount(level, field,
+                slot -> slot.kind() == BattlefieldWorldPlan.Kind.RELIC && slot.blade() >= 8);
         int fallenPlaced = BattlefieldInstallations.placedCount(level, field,
                 slot -> slot.id() >= 27 && slot.kind() == BattlefieldWorldPlan.Kind.SCENE);
         int pathsBuilt = BattlefieldInstallations.routeCount(level, field);
-        int historicalTotal = historical, relicTotal = scattered, projectileTotal = projectiles, fallenTotal = fallen;
+        int historicalTotal = historical, relicTotal = scattered, projectileTotal = projectiles,
+                fallenTotal = fallen, buriedPoleTotal = buriedPoles;
         source.sendSuccess(() -> Component.literal("Поле " + field.x() + "," + field.z()
                 + ": центральный чанк " + (loaded ? "загружен" : "не загружен")
                 + "; доказательство генерации: " + (generated ? "найдено" : loaded ? "отсутствует" : "неизвестно")
                 + "; сюжетные композиции: " + historyPlaced + "/" + historicalTotal
                 + "; россыпи оружия: " + relicPlaced + "/" + relicTotal
                 + "; болты/стрелы: " + projectilePlaced + "/" + projectileTotal
-                + "; наклонённые древки: " + fallenPlaced + "/" + fallenTotal
+                + "; сценовые древки: " + fallenPlaced + "/" + fallenTotal
+                + "; вкопанные древки: " + buriedPolePlaced + "/" + buriedPoleTotal
                 + "; связующие переходы: " + pathsBuilt + "/" + BattlefieldInstallations.routeTotal()
                 + ". Незавершённое догружается в безопасных чанках."), false);
         return 1;
