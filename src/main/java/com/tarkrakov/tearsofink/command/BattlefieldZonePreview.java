@@ -146,21 +146,29 @@ public final class BattlefieldZonePreview {
     public static boolean placePlanned(ServerLevel level, BlockPos rootXZ, Direction axis,
                                        Scenario scene, int variant) {
         if (variant < 0 || variant > 7 || !validColumn(level, rootXZ)) return false;
-        List<Pose> poses = BattlefieldPosedScenes.plan(scene, variant, 3);
-        for (int radius = 0; radius <= 3; radius++) {
+        // D-136: a ravine or scarred patch must not erase a historical episode
+        // simply because the first 3x3 natural supports differ in height.
+        // Look for a nearby unchanged piece of ground in THIS newly generated
+        // owner's chunk, varying pose and orientation, without terrain writes.
+        for (int radius = 0; radius <= 7; radius++) {
             for (int forward = -radius; forward <= radius; forward++) {
                 for (int right = -radius; right <= radius; right++) {
-                    if (Math.max(Math.abs(forward), Math.abs(right)) != radius) continue;
+                    if (Math.max(Math.abs(forward), Math.abs(right)) != radius
+                            || radius > 3 && ((forward + right) & 1) != 0) continue;
                     BlockPos xz = rootXZ.relative(axis, forward).relative(axis.getClockWise(), right);
-                    // A new slot's anchor must remain in its own new, worldgen-stamped chunk.
                     if ((xz.getX() >> 4) != (rootXZ.getX() >> 4)
                             || (xz.getZ() >> 4) != (rootXZ.getZ() >> 4)
                             || !validColumn(level, xz)) continue;
                     int y = surfaceY(level, xz);
                     BlockPos root = new BlockPos(xz.getX(), y, xz.getZ());
                     if (!freeSurface(level, root) || !naturalSupport(level, root)) continue;
-                    Layout layout = plan(level, root, axis, scene, variant, poses);
-                    if (layout != null && commit(level, layout) > 0) return true;
+                    for (int attempt = 0; attempt < 4; attempt++) {
+                        int v = (variant + (attempt / 2) * 3) & 7;
+                        Direction facing = attempt % 2 == 0 ? axis : axis.getClockWise();
+                        List<Pose> poses = BattlefieldPosedScenes.plan(scene, v, 3);
+                        Layout layout = plan(level, root, facing, scene, v, poses);
+                        if (layout != null && commit(level, layout) > 0) return true;
+                    }
                 }
             }
         }
