@@ -14,6 +14,21 @@ import java.util.Arrays;
 public final class BattlefieldRelicPatchBlockEntity extends BlockEntity {
     public static final int MISSING = -9999;
     private int[] contacts = new int[0];
+    private transient java.util.List<com.tarkrakov.tearsofink.world.battlefield.BattlefieldRelicRecipes.Relic> cached;
+    private int cachedStyle = -1, cachedVariant = -1;
+
+    /** Static world-space art, built ONCE per anchor rather than every rendered frame. */
+    public java.util.List<com.tarkrakov.tearsofink.world.battlefield.BattlefieldRelicRecipes.Relic> poses() {
+        int style = getBlockState().getValue(BattlefieldRelicPatchBlock.STYLE);
+        int variant = getBlockState().getValue(BattlefieldRelicPatchBlock.VARIANT);
+        if (cached == null || style != cachedStyle || variant != cachedVariant) {
+            cached = com.tarkrakov.tearsofink.world.battlefield.BattlefieldRelicRecipes.generate(
+                    getBlockPos(), style, variant);
+            cachedStyle = style;
+            cachedVariant = variant;
+        }
+        return cached;
+    }
 
     public BattlefieldRelicPatchBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.BATTLEFIELD_RELIC_PATCH, pos, state);

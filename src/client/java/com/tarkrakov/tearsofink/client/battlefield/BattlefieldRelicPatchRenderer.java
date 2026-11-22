@@ -24,9 +24,7 @@ public final class BattlefieldRelicPatchRenderer implements BlockEntityRenderer<
     @Override public void render(BattlefieldRelicPatchBlockEntity entity, float partial,
                                  PoseStack stack, MultiBufferSource buffers, int light, int overlay) {
         var state = entity.getBlockState();
-        var poses = BattlefieldRelicRecipes.generate(entity.getBlockPos(),
-                state.getValue(BattlefieldRelicPatchBlock.STYLE),
-                state.getValue(BattlefieldRelicPatchBlock.VARIANT));
+        var poses = entity.poses();
         var direction = state.getValue(HorizontalDirectionalBlock.FACING);
         stack.pushPose();
         stack.translate(.5d, 0, .5d);
