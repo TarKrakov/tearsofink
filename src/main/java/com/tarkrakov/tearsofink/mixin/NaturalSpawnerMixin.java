@@ -23,6 +23,14 @@ public abstract class NaturalSpawnerMixin {
 	@Inject(method = "isValidPositionForMob", at = @At("HEAD"), cancellable = true)
 	private static void tearsofink$noSpawnInTemples(ServerLevel level, Mob mob, double distance,
 													CallbackInfoReturnable<Boolean> cir) {
+        // The natural-spawn path includes vanilla creatures and caterpillars.
+        // Explicit/quest entities are not created through this validation.
+        if (com.tarkrakov.tearsofink.world.battlefield.BattlefieldFaunaBoundary.inside(
+                level, mob.getX(), mob.getZ())
+                && !(mob instanceof com.tarkrakov.tearsofink.entity.PaleStriderEntity)) {
+            cir.setReturnValue(false);
+            return;
+        }
 		if (com.tarkrakov.tearsofink.world.sanctuary.Sanctuary.inside(level, mob.getX(), mob.getZ())) {
 			cir.setReturnValue(false);
 		}

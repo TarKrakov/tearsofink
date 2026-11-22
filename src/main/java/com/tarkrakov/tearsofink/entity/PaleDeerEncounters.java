@@ -80,6 +80,8 @@ final class PaleDeerEncounters {
         return layout.depthInside(at.getX(),at.getZ())>10
                 && !layout.nearRoad(at.getX(),at.getZ(),4)
                 && !Sanctuary.near(layout,at.getX(),at.getZ(),6)
+                && !com.tarkrakov.tearsofink.world.battlefield.BattlefieldFaunaBoundary.inside(
+                        level, at.getX() + .5d, at.getZ() + .5d)
                 && farFromPlayers(level,Vec3.atBottomCenterOf(at));
     }
     private static void attempt(ServerLevel level,ServerPlayer player) {
@@ -183,6 +185,8 @@ final class PaleDeerEncounters {
             AABB box=new AABB(p.x-WIDTH/2,p.y,p.z-WIDTH/2,p.x+WIDTH/2,p.y+HEIGHT,p.z+WIDTH/2);
             if (!LoadedFaunaTerrain.free(level,null,box)
                     || !level.getBiome(at).is(ModBiomes.PALE_FOREST)
+                    || com.tarkrakov.tearsofink.world.battlefield.BattlefieldFaunaBoundary.inside(
+                            level, at.getX() + .5d, at.getZ() + .5d)
                     || !level.getFluidState(at).isEmpty() || !level.getFluidState(at.below()).isEmpty()) continue;
             var below=level.getBlockState(at.below());
             if (spawn && !below.is(ModBlocks.ASHEN_SOIL)) continue;

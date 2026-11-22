@@ -86,6 +86,7 @@ public class TearsOfInk implements ModInitializer {
 		com.tarkrakov.tearsofink.command.BattlefieldDecorCommands.init();
 		com.tarkrakov.tearsofink.world.battlefield.BattlefieldInstallations.init();
 		com.tarkrakov.tearsofink.world.battlefield.BattlefieldDiscovery.init();
+        com.tarkrakov.tearsofink.world.battlefield.BattlefieldFaunaBoundary.init();
 		com.tarkrakov.tearsofink.command.DebugCommands.init();
 		com.tarkrakov.tearsofink.command.StructureCommands.init();
 		com.tarkrakov.tearsofink.compat.jaber.JaberCompat.init();

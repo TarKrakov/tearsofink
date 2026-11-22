@@ -374,7 +374,9 @@ public final class PaleDeerEntity extends PathfinderMob {
                 var node=path.getNode(n);
                 BlockPos p=new BlockPos(node.x,node.y,node.z);
                 if (!LoadedFaunaTerrain.loaded(level,new AABB(p),2)
-                        || !level.getBiome(p).is(com.tarkrakov.tearsofink.world.ModBiomes.PALE_FOREST)) { safe=false; break; }
+                        || !level.getBiome(p).is(com.tarkrakov.tearsofink.world.ModBiomes.PALE_FOREST)
+                        || com.tarkrakov.tearsofink.world.battlefield.BattlefieldFaunaBoundary.inside(
+                                level, p.getX() + .5d, p.getZ() + .5d)) { safe=false; break; }
             }
             if (safe && getNavigation().moveTo(path,(running?RUN:WALK)*individualTempo())) {
                 routeGoal=target; return true;

@@ -51,7 +51,9 @@ final class PaleOwlEncounters {
 
     private static boolean paleAt(ServerLevel level, BlockPos pos) {
         return LoadedFaunaTerrain.loaded(level, new AABB(pos), 2)
-                && level.getBiome(pos).is(ModBiomes.PALE_FOREST);
+                && level.getBiome(pos).is(ModBiomes.PALE_FOREST)
+                && !com.tarkrakov.tearsofink.world.battlefield.BattlefieldFaunaBoundary.inside(
+                        level, pos.getX() + .5d, pos.getZ() + .5d);
     }
 
     private static int count(ServerLevel level, Vec3 point, int radius) {
