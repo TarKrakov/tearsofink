@@ -178,6 +178,7 @@ public final class ForestCamps extends SavedData {
                         ||layout.depthInside(site.getX(),site.getZ())<24||layout.nearRoad(site.getX(),site.getZ(),40)
                         ||layout.nearLake(site.getX(),site.getZ(),40)||layout.nearHerald(site.getX(),site.getZ(),64)
                         ||Ruins.nearStart(layout,site.getX(),site.getZ())||Sanctuary.near(layout,site.getX(),site.getZ(),48)
+                        ||(com.tarkrakov.tearsofink.world.battlefield.BattlefieldWorldPlan.of(layout)!=null&&com.tarkrakov.tearsofink.world.battlefield.BattlefieldWorldPlan.of(layout).reserved(site.getX(),site.getZ(),24))
                         ||near(level,site,MIN_CAMP_GAP)||BarricadeGates.nearGate(level,site,64))continue;
                     Camp c=data.install(level,layout,k,type,rot,site,false);
                     if(c!=null){data.index(c);data.retry.remove(k);data.setDirty();
@@ -226,6 +227,7 @@ public final class ForestCamps extends SavedData {
                             ||layout.depthInside(x,z)<24
                             ||layout.nearLake(x,z,40)||layout.nearHerald(x,z,64)
                             ||Ruins.nearStart(layout,x,z)||Sanctuary.near(layout,x,z,48)
+                            ||(com.tarkrakov.tearsofink.world.battlefield.BattlefieldWorldPlan.of(layout)!=null&&com.tarkrakov.tearsofink.world.battlefield.BattlefieldWorldPlan.of(layout).reserved(x,z,24))
                             ||near(level,site,MIN_CAMP_GAP)||BarricadeGates.nearGate(level,site,64))continue;
                     // Guard the real, curved road rather than a straight-line guess.
                     double[] hit=layout.roadNear(x,z,36);

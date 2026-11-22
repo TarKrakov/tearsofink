@@ -33,6 +33,10 @@
       "margin": 4
     },
     {
+      "type": "tears-of-ink:away_from_battlefield",
+      "margin": 0
+    },
+    {
       "type": "tears-of-ink:away_from_herald",
       "radius": 25
     },

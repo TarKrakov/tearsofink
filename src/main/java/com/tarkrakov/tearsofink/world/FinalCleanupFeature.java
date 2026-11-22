@@ -50,6 +50,10 @@ public class FinalCleanupFeature extends Feature<NoneFeatureConfiguration> {
 		BlockState air = Blocks.AIR.defaultBlockState();
 		BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 		boolean changed = false;
+		var battlefield = com.tarkrakov.tearsofink.world.battlefield.BattlefieldWorldPlan.of(layout);
+		java.util.List<com.tarkrakov.tearsofink.world.battlefield.BattlefieldWorldPlan.Field> nearFields = battlefield == null
+				? java.util.List.of() : battlefield.fields().stream().filter(field ->
+				Math.abs(field.x() - (minX + 8)) < 168 && Math.abs(field.z() - (minZ + 8)) < 168).toList();
 		// Трясинник растёт только у Озера — дальше его не ищем
 		boolean nearLake = layout.nearLake(minX + 8, minZ + 8, InkLandsLayout.LAKE_ZONE_RADIUS + 24);
 
@@ -65,6 +69,12 @@ public class FinalCleanupFeature extends Feature<NoneFeatureConfiguration> {
 						level.setBlock(pos.set(x, y, z), air, 2);
 						changed = true;
 					}
+				}
+
+				// ----- Древнее поле боя (only on NEW chunks, after tree placement) -----
+				for (var field : nearFields) {
+					if (com.tarkrakov.tearsofink.world.battlefield.BattlefieldEnvironment
+							.decorate(level, layout, field, pos, x, z)) changed = true;
 				}
 
 				// ----- просвет над дорогой -----

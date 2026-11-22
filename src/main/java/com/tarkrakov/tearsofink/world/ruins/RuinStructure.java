@@ -154,6 +154,9 @@ public class RuinStructure extends Structure {
 			if (side != null) { x = side[0]; z = side[1]; monumentByRoad = true; }
 		}
 		if (!kind.equals("temple") && Ruins.nearLegacyTemple(layout, x, z)) return null;
+		var battlefieldPlan = com.tarkrakov.tearsofink.world.battlefield.BattlefieldWorldPlan.of(layout);
+		if (!kind.equals("temple") && battlefieldPlan != null
+				&& battlefieldPlan.reserved(x, z, half + 12)) return null;
 		if (!kind.equals("temple") && !monumentByRoad && !Ruins.clear(layout, x, z, half)) return null;
 		if (monumentByRoad && (layout.roadNear(x, z, half - InkLandsLayout.ROAD_HALF_WIDTH + 1) != null
 				|| layout.nearLake(x, z, Ruins.LAKE_GAP) || layout.nearHerald(x, z, Ruins.HERALD_GAP))) return null;
