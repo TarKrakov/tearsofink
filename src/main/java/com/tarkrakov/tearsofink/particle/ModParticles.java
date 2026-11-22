@@ -20,6 +20,12 @@ public final class ModParticles {
 	public static final SimpleParticleType SALVATION_STAR = Registry.register(
 			BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id("salvation_star"), FabricParticleTypes.simple());
 
+    /**
+     * D-142: white souls rising from an ancient battlefield in place of
+     * the Pale Forest's naturally falling white_ash. Existing sprite atlas.
+     */
+    public static final SimpleParticleType BATTLEFIELD_MEMORY_MOTE = simple("battlefield_memory_mote");
+
 	/** Холодные искорки вокруг Слёзницы. */
 	public static final SimpleParticleType TEAR_GLINT = Registry.register(
 			BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id("tear_glint"), FabricParticleTypes.simple());

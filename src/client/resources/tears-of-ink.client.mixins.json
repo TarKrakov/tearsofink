@@ -5,6 +5,8 @@
   "client": [
     "DimensionSpecialEffectsMixin",
     "FogRendererMixin",
+    "BattlefieldParticleAccess",
+    "BattlefieldWhiteAshMixin",
     "PaleForestMusicMixin",
     "AudioMixerSoundMixin",
     "LevelRendererMixin",
