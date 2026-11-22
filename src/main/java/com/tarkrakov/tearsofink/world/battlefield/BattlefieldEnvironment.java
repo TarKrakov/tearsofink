@@ -46,7 +46,11 @@ public final class BattlefieldEnvironment {
                                    BlockPos.MutableBlockPos pos, int x, int z) {
         double fieldValue = field.openness(x, z);
         double approach = field.approach(x, z);
-        if (fieldValue < .10 && approach < .15) return false;
+        boolean planned = field.x() == x && field.z() == z;
+        if (!planned) for (var slot : field.placements()) {
+            if (slot.x() == x && slot.z() == z) { planned = true; break; }
+        }
+        if (fieldValue < .10 && approach < .15 && !planned) return false;
         // Never decorate the road, its shoulders, temple approach or a building.
         if (layout.roadNear(x, z, 9) != null) return false;
         var network = layout.templeNetwork();
@@ -86,7 +90,7 @@ public final class BattlefieldEnvironment {
         }
         // An inert marker proves NEW worldgen occurred here. It is concealed
         // two blocks underground; old chunks can never acquire it retroactively.
-        if (field.x() == x && field.z() == z) {
+        if (planned) {
             BlockPos mark = pos.set(x, ground - 2, z).immutable();
             BlockState under = level.getBlockState(mark);
             if (base(under) && !under.hasBlockEntity() && under.getFluidState().isEmpty()) {

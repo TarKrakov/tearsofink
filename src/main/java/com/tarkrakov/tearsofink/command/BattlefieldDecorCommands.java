@@ -115,6 +115,43 @@ public final class BattlefieldDecorCommands {
         return 0;
     }
 
+    /** Shared automation/preview placement. No chunk loads, no destructive writes. */
+    public static boolean placePlannedMonument(ServerLevel level, BlockPos rootXZ, Direction facing,
+                                              BattlefieldMonumentGeometry.Blade blade,
+                                              int variant, boolean tableau) {
+        if (!level.hasChunkAt(rootXZ)) return false;
+        for (int radius = 0; radius <= 3; radius++) {
+            for (int f = -radius; f <= radius; f++) for (int r = -radius; r <= radius; r++) {
+                if (Math.max(Math.abs(f), Math.abs(r)) != radius) continue;
+                BlockPos xz = rootXZ.relative(facing, f).relative(facing.getClockWise(), r);
+                if (!level.hasChunkAt(xz) || (xz.getX() >> 4) != (rootXZ.getX() >> 4)
+                        || (xz.getZ() >> 4) != (rootXZ.getZ() >> 4)) continue;
+                int y = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, xz.getX(), xz.getZ());
+                BlockPos base = new BlockPos(xz.getX(), y, xz.getZ());
+                if (!canPlaceMonument(level, base, blade, variant, facing)) continue;
+                int[] contacts = tableau ? tableauContacts(level, base, facing, blade, variant) : new int[0];
+                if (contacts == null) continue;
+                var state = ModBlocks.BATTLEFIELD_MONUMENT.defaultBlockState()
+                        .setValue(HorizontalDirectionalBlock.FACING, facing)
+                        .setValue(com.tarkrakov.tearsofink.block.BattlefieldMonumentBlock.BLADE, blade.ordinal())
+                        .setValue(com.tarkrakov.tearsofink.block.BattlefieldMonumentBlock.VARIANT, variant)
+                        .setValue(com.tarkrakov.tearsofink.block.BattlefieldMonumentBlock.TABLEAU, tableau);
+                if (!level.setBlock(base, state, Block.UPDATE_CLIENTS)) continue;
+                if (tableau) {
+                    if (level.getBlockEntity(base) instanceof com.tarkrakov.tearsofink.block.BattlefieldMonumentBlockEntity entity) {
+                        entity.configure(contacts);
+                        level.sendBlockUpdated(base, state, state, Block.UPDATE_CLIENTS);
+                    } else {
+                        level.setBlock(base, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+                        continue;
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** Find natural ground contacts for the small relics without overwriting anything. */
     private static int[] tableauContacts(ServerLevel level, BlockPos base, Direction facing,
                                          BattlefieldMonumentGeometry.Blade blade, int variant) {
