@@ -25,8 +25,8 @@ import java.util.Set;
  * prepares virgin chunks and stamps private ground markers. Old visited chunks
  * do not contain those markers and can NEVER be retroactively populated here.
  *
- * One immutable episode per id, persisted BEFORE subsequent attempts, so
- * relog/order/reload do not duplicate blocks or reshuffle narrative roles.
+ * Only SUCCESSFUL episodes are saved by id. Blocked positions retry after
+ * a bounded delay; relog/order/reload cannot duplicate committed anchors.
  */
 public final class BattlefieldInstallations extends SavedData {
     private static final Factory<BattlefieldInstallations> FACTORY =
@@ -129,6 +129,14 @@ public final class BattlefieldInstallations extends SavedData {
             if (stamped(level, field, x, z) && ++marked >= 2) return true;
         }
         return false;
+    }
+
+    public static int placedCount(ServerLevel level, BattlefieldWorldPlan.Field field) {
+        var saved = level.getDataStorage().computeIfAbsent(FACTORY, "toi_battlefield_installations_v3");
+        int count = 0;
+        for (var slot : field.placements()) if (saved.attempted.contains(key(field.index(), slot.id())))
+            count++;
+        return count;
     }
 
     private static long key(int field, int placement) {

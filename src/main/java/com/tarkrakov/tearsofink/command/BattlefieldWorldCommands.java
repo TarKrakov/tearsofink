@@ -47,11 +47,13 @@ public final class BattlefieldWorldCommands {
         var field = first(source);
         if (level == null || field == null) return locate(source);
         boolean loaded = level.getChunkSource().getChunkNow(field.x() >> 4, field.z() >> 4) != null;
-        boolean generated = loaded && BattlefieldInstallations.stamped(level, field.x(), field.z());
+        boolean generated = loaded && BattlefieldInstallations.fieldReady(level, field);
+        int count = BattlefieldInstallations.placedCount(level, field);
         source.sendSuccess(() -> Component.literal("Поле " + field.x() + "," + field.z()
                 + ": центральный чанк " + (loaded ? "загружен" : "не загружен")
-                + "; отметка новой генерации: " + (generated ? "найдена" : loaded ? "отсутствует" : "неизвестно")
-                + ". Автоматические сцены размещаются только после генерации поверхности."), false);
+                + "; доказательство генерации: " + (generated ? "найдено" : loaded ? "отсутствует" : "неизвестно")
+                + "; композиции: " + count + "/" + field.placements().size()
+                + ". Заблокированные природным рельефом места будут подготовлены и повторно проверены."), false);
         return 1;
     }
 
