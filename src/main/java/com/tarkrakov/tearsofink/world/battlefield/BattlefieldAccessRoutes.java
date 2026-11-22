@@ -178,7 +178,7 @@ public final class BattlefieldAccessRoutes {
                 if (closeToArt) continue;
                 long chunkKey = net.minecraft.world.level.ChunkPos.asLong(x >> 4, z >> 4);
                 if (!provenChunks.computeIfAbsent(chunkKey,
-                        key -> BattlefieldInstallations.stamped(level, field,
+                        key -> BattlefieldInstallations.provenBattlefieldCorridor(level, field,
                                 (x & ~15) + 8, (z & ~15) + 8))) return false;
                 int naturalY = floor(level, x, z);
                 if (naturalY == Integer.MIN_VALUE

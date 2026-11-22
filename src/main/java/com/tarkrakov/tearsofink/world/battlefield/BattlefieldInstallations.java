@@ -138,6 +138,29 @@ public final class BattlefieldInstallations extends SavedData {
         return false;
     }
 
+    /**
+     * Bridge a natural river section from the first D-135 field that had NO
+     * subterranean marker in its wet columns. This is NOT generic retrogen:
+     * only the heart of a proven battlefield, surrounded by at least TWO
+     * other proven chunks, may qualify. The route's own preflight still rejects
+     * all non-natural/player blocks before any edits.
+     */
+    public static boolean provenBattlefieldCorridor(ServerLevel level,
+                                                     BattlefieldWorldPlan.Field field,
+                                                     int x, int z) {
+        if (stamped(level, field, x, z)) return true;
+        if (field.openness(x, z) < .55
+                || level.getChunkSource().getChunkNow(x >> 4, z >> 4) == null
+                || !fieldReady(level, field)) return false;
+        int cx = x >> 4, cz = z >> 4, evidence = 0;
+        for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++) {
+            if (dx == 0 && dz == 0) continue;
+            int nx = ((cx + dx) << 4) + 8, nz = ((cz + dz) << 4) + 8;
+            if (stamped(level, field, nx, nz) && ++evidence >= 2) return true;
+        }
+        return false;
+    }
+
     public static int placedCount(ServerLevel level, BattlefieldWorldPlan.Field field) {
         var saved = level.getDataStorage().computeIfAbsent(FACTORY, "toi_battlefield_installations_v3");
         int count = 0;
