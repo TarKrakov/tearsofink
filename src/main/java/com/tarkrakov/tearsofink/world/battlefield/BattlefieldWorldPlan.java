@@ -150,6 +150,12 @@ public final class BattlefieldWorldPlan {
                 if (distSq(x, z, temple.x(), temple.z()) < 170 * 170) return false;
             }
             if (temples.overlapsPath(x, z, RESERVATION + 10)) return false;
+        } else {
+            // Layout v1 has no frozen TempleNetwork. The historical temples are
+            // still deterministic and must retain the same protection.
+            for (int[] temple : Ruins.templePoints(layout)) {
+                if (distSq(x, z, temple[0], temple[1]) < 170 * 170) return false;
+            }
         }
         return true;
     }
