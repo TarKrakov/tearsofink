@@ -45,6 +45,13 @@ public final class BattlefieldBannerRenderer implements BlockEntityRenderer<Batt
         stack.translate(0.5, 0, 0.5);
         stack.mulPose(Axis.YP.rotationDegrees(180f - banner.getBlockState()
                 .getValue(HorizontalDirectionalBlock.FACING).toYRot()));
+        // Transform the ENTIRE original pole rig around its planted foot.
+        // Saved banners have lean=0, so all existing animation stays identical.
+        int lean = banner.getBlockState().getValue(BattlefieldBannerBlock.LEAN);
+        if (bare && lean != 0) {
+            stack.mulPose(Axis.ZP.rotationDegrees(BattlefieldBannerBlock.leanZ(lean)));
+            stack.mulPose(Axis.XP.rotationDegrees(BattlefieldBannerBlock.leanX(lean)));
+        }
         // Fixed pole / metal ornaments remain absolutely still.
         for (int index : BattlefieldBannerGeometry.POLE_PARTS) {
             drawBox(BattlefieldBannerGeometry.PARTS[index], stack.last(), consumer, packedLight, packedOverlay);
@@ -93,6 +100,13 @@ public final class BattlefieldBannerRenderer implements BlockEntityRenderer<Batt
         stack.translate(.5, 0, .5);
         stack.mulPose(Axis.YP.rotationDegrees(180f - banner.getBlockState()
                 .getValue(HorizontalDirectionalBlock.FACING).toYRot()));
+        // Transform the ENTIRE original pole rig around its planted foot.
+        // Saved banners have lean=0, so all existing animation stays identical.
+        int lean = banner.getBlockState().getValue(BattlefieldBannerBlock.LEAN);
+        if (bare && lean != 0) {
+            stack.mulPose(Axis.ZP.rotationDegrees(BattlefieldBannerBlock.leanZ(lean)));
+            stack.mulPose(Axis.XP.rotationDegrees(BattlefieldBannerBlock.leanX(lean)));
+        }
         for (var part : model.parts()) {
             stack.pushPose();
             for (int index : part.joints()) {
