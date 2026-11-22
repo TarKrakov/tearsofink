@@ -79,6 +79,12 @@ public class TearsOfInkClient implements ClientModInitializer {
 		// Душа и Чернила: полоски и надпись при входе/выходе
 		ClientPlayNetworking.registerGlobalReceiver(InkSyncPayload.TYPE, (payload, context) -> context.client().execute(() -> InkHud.receive(payload)));
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> InkHud.reset());
+		ClientPlayNetworking.registerGlobalReceiver(
+				com.tarkrakov.tearsofink.world.battlefield.BattlefieldDiscovery.FieldSync.TYPE,
+				(payload, context) -> context.client().execute(
+						() -> com.tarkrakov.tearsofink.client.fog.BattlefieldClarity.receive(payload)));
+		ClientPlayConnectionEvents.DISCONNECT.register(
+				(handler, client) -> com.tarkrakov.tearsofink.client.fog.BattlefieldClarity.reset());
 		HudRenderCallback.EVENT.register(InkHud::render);
 		com.tarkrakov.tearsofink.client.hud.FateHud.init();
 		ClientPlayNetworking.registerGlobalReceiver(SkillPayloads.NotEnough.TYPE, (payload, context) -> context.client().execute(() -> InkHud.pulse(payload.soul())));

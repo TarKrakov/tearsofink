@@ -51,6 +51,7 @@ public final class InkFog {
 	private static float fullEndTarget = FOG_END_PALE;
 	/** Видимость от фонарей (мировых и ручного), плавно догоняет нужную. */
 	private static float clearEnd = 0f;
+	private static float battlefieldClarity = 0f;
 	/** Как быстро туман расступается у фонаря (доля в секунду). */
 	public static final float CLEAR_SMOOTHING_PER_SECOND = 1.5f;
 	private static float target = 0f;
@@ -68,6 +69,7 @@ public final class InkFog {
 		ClientLevel level = Minecraft.getInstance().level;
 		if (level == null) {
 			strength = target = 0f;
+			com.tarkrakov.tearsofink.client.fog.BattlefieldClarity.reset();
 			return;
 		}
 		if (now - lastSampleNanos > SAMPLE_INTERVAL_NANOS) {
@@ -95,6 +97,8 @@ public final class InkFog {
 		if (fullEnd < fullEndTarget) fullEnd = Math.min(fullEndTarget, fullEnd + endStep);
 		else if (fullEnd > fullEndTarget) fullEnd = Math.max(fullEndTarget, fullEnd - endStep);
 
+		battlefieldClarity = com.tarkrakov.tearsofink.client.fog.BattlefieldClarity.tick(
+				level, camera.getPosition(), dt);
 		float step = dt * SMOOTHING_PER_SECOND;
 		if (strength < target) strength = Math.min(target, strength + step);
 		else if (strength > target) strength = Math.max(target, strength - step);
@@ -117,7 +121,9 @@ public final class InkFog {
 
 	/** Дальность видимости для данной силы тумана: плавно от ванильной до нашей. */
 	public static float fogEnd(float vanillaEnd, float renderDistance) {
-		float clear = clearEnd * (1f - edgeFactor); // в стене тумана фонари не помогают
+		float clear = Math.max(clearEnd * (1f - edgeFactor),
+				78f * battlefieldClarity * (1f - edgeFactor));
+		// A finite, local widening inside the generated battle; no globally clearer Pale Forest.
 		float full = Math.min(renderDistance, Math.max(fullEnd, clear));
 		if (vanillaEnd <= full) return vanillaEnd;
 		// Экспоненциальная интерполяция: туман на глаз сгущается равномерно.
