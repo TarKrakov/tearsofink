@@ -64,6 +64,9 @@ assert 'PALE_LINEAR_GREATSWORD' in geo and 'SPIRE_TORTURER_GREATSWORD' in geo
 assert "TIP_DOWN_Z_DEGREES" in (ROOT / "src/client/java/com/tarkrakov/tearsofink/client/battlefield/BattlefieldMonumentRenderer.java").read_text()
 command = (ROOT / "src/main/java/com/tarkrakov/tearsofink/command/BattlefieldDecorCommands.java").read_text()
 assert 'monumentCommand("linear"' in command and 'monumentCommand("cleaving"' in command
+assert 'Commands.literal("tableau")' in command and "tableauContacts" in command
+assert 'public static Relic[] tableau' in geo and "groundSink(sink, pitch, roll)" in geo
+assert 'Contacts' in (ROOT / "src/main/java/com/tarkrakov/tearsofink/block/BattlefieldMonumentBlockEntity.java").read_text()
 assert (A / "blockstates/battlefield_monument.json").is_file()
 assert "generateBattlefieldAgedResources" in (ROOT / "build.gradle").read_text()
 print("Validated 15 aged atlases, all source UV inheritance, 2 giant meshes and 8 safe poses.")
