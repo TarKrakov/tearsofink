@@ -295,7 +295,7 @@ public final class BattlefieldZonePreview {
                 || ground.is(Blocks.RED_SAND) || ground.is(Blocks.CLAY)
                 || ground.is(ModBlocks.ASHEN_SOIL) || ground.is(ModBlocks.BLOOD_SOIL)
                 || ground.is(ModBlocks.TAR_SOIL) || ground.is(ModBlocks.ASPHODELITE_ROCK)
-                || ground.is(ModBlocks.ASH));
+                || ground.is(ModBlocks.ASH) || ground.is(ModBlocks.ASHEN_PATH));
     }
 
     /**

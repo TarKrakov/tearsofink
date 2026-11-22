@@ -179,7 +179,7 @@ public final class BattlefieldDecorCommands {
                     || ground.is(net.minecraft.tags.BlockTags.BASE_STONE_OVERWORLD)
                     || ground.is(ModBlocks.ASHEN_SOIL) || ground.is(ModBlocks.BLOOD_SOIL)
                     || ground.is(ModBlocks.TAR_SOIL) || ground.is(ModBlocks.ASPHODELITE_ROCK)
-                    || ground.is(ModBlocks.ASH))
+                    || ground.is(ModBlocks.ASH) || ground.is(ModBlocks.ASHEN_PATH))
                     && level.getBlockState(at.above()).getCollisionShape(level, at.above()).isEmpty();
             if (!good) {
                 if (relic.required()) return null;
@@ -201,7 +201,7 @@ public final class BattlefieldDecorCommands {
                 || below.is(net.minecraft.world.level.block.Blocks.GRAVEL)
                 || below.is(ModBlocks.ASHEN_SOIL) || below.is(ModBlocks.BLOOD_SOIL)
                 || below.is(ModBlocks.TAR_SOIL) || below.is(ModBlocks.ASPHODELITE_ROCK)
-                || below.is(ModBlocks.ASH))) return false;
+                || below.is(ModBlocks.ASH) || below.is(ModBlocks.ASHEN_PATH))) return false;
         var lands = com.tarkrakov.tearsofink.world.InkLandsLayout.of(level);
         for (BlockPos delta : BattlefieldMonumentGeometry.occupiedCells(blade, variant, facing)) {
             BlockPos pos = base.offset(delta);

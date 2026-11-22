@@ -91,7 +91,7 @@ public final class BattlefieldEnvironment {
         // Stamp ONLY freshly generated sites, well below the loose falling ash.
         // Never excavate a void under an ash layer or write over buildings.
         if (planned) {
-            for (int depth = 4; depth <= 10; depth++) {
+            for (int depth = 4; depth <= 48 && ground - depth > level.getMinBuildHeight(); depth++) {
                 BlockPos mark = pos.set(x, ground - depth, z).immutable();
                 BlockState under = level.getBlockState(mark);
                 if ((under.is(ModBlocks.ASPHODELITE_ROCK)
