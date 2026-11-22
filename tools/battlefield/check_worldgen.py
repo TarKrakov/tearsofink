@@ -221,3 +221,41 @@ assert 'POLE_PARTS' in banner_renderer
 assert 'IntegerProperty.create("style", 0, 10)' in read(base + "block/BattlefieldRelicPatchBlock.java")
 assert 'вкопанные древки' in world_commands
 print("D-140: append-only inert buried author-pole groups, safe terrain and exact faction rigs.")
+
+# D-142: Vanilla biome white_ash must remain unchanged OUTSIDE a confirmed
+# battlefield. One client-only mask cross-fades it to rising memory orbs,
+# with no new author art, server entities, chunks or saved IDs.
+import json
+pale = json.loads(read("src/main/resources/data/tears-of-ink/worldgen/biome/pale_forest.json"))
+ash = pale["effects"]["particle"]
+assert ash["options"]["type"] == "minecraft:white_ash" and ash["probability"] == 0.04
+ash_mixin = read("src/client/java/com/tarkrakov/tearsofink/client/mixin/BattlefieldWhiteAshMixin.java")
+access = read("src/client/java/com/tarkrakov/tearsofink/client/mixin/BattlefieldParticleAccess.java")
+mote = read("src/client/java/com/tarkrakov/tearsofink/client/particle/BattlefieldMemoryMoteParticle.java")
+motes = read("src/client/java/com/tarkrakov/tearsofink/client/battlefield/BattlefieldMemoryMotes.java")
+particle_registry = read(base + "particle/ModParticles.java")
+mixins_cfg = json.loads(read("src/client/resources/tears-of-ink.client.mixins.json"))
+mote_atlas = json.loads(read("src/main/resources/assets/tears-of-ink/particles/battlefield_memory_mote.json"))
+assert "ParticleTypes.WHITE_ASH" in ash_mixin
+assert 'method = "createParticle(' in ash_mixin
+assert 'method = "tickParticle(' in ash_mixin
+assert "access.toi$setAlpha(1f - field)" in ash_mixin
+assert 'BattlefieldClarity.opennessAt(x, z)' in ash_mixin
+assert '@Accessor("alpha")' in access
+assert "BattlefieldWhiteAshMixin" in mixins_cfg["client"]
+assert "BattlefieldParticleAccess" in mixins_cfg["client"]
+assert "BATTLEFIELD_MEMORY_MOTE" in particle_registry
+assert "BattlefieldMemoryMoteParticle.Provider::new" in ui
+assert "ClientTickEvents.END_CLIENT_TICK.register(BattlefieldMemoryMotes::tick)" in ui
+assert "BattlefieldClarity.opennessAt(x + .5d, z + .5d)" in motes
+assert "if (!level.hasChunkAt(probe)" in motes
+assert "ModBiomes.PALE_FOREST" in motes
+assert "ATTEMPTS_PER_TICK = 6" in motes
+assert "level.addParticle(ModParticles.BATTLEFIELD_MEMORY_MOTE" in motes
+assert "BattlefieldClarity.opennessAt(x, z)" in mote
+assert "LightTexture.FULL_BRIGHT" in mote
+assert "65, 125" in mote
+assert mote_atlas["textures"] == ["tears-of-ink:tear_glint_0", "tears-of-ink:tear_glint_1"]
+for coverage in (0, .1, .25, .5, .75, 1):
+    assert abs((1 - coverage) + coverage - 1) < 1e-9
+print("D-142: biome white ash preserved, smooth crossed densities, client-only rising motes, no new texture.")
