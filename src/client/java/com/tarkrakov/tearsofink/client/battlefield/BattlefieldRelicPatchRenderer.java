@@ -83,18 +83,24 @@ public final class BattlefieldRelicPatchRenderer implements BlockEntityRenderer<
             float z = plane == 0 ? 0f : half;
             // Cross-plane of the existing arrow entity atlas: shaft in the
             // upper 16x5 pixels, with the tip buried in the surface.
-            quad(out, pose, light, overlay, -x,0,-z, x,0,z, x,length,z, -x,length,-z);
-            quad(out, pose, light, overlay, x,0,z, -x,0,-z, -x,length,-z, x,length,z);
+            quad(out, pose, light, overlay, -x,0,-z, x,0,z, x,length,z, -x,length,-z, !bolt);
+            quad(out, pose, light, overlay, x,0,z, -x,0,-z, -x,length,-z, x,length,z, !bolt);
         }
     }
 
     private static void quad(VertexConsumer out, PoseStack.Pose pose, int light, int overlay,
                              float ax,float ay,float az, float bx,float by,float bz,
-                             float cx,float cy,float cz, float dx,float dy,float dz) {
-        vertex(out, pose, light, overlay, ax,ay,az,0f,.15625f);
-        vertex(out, pose, light, overlay, bx,by,bz,0f,0f);
-        vertex(out, pose, light, overlay, cx,cy,cz,.5f,0f);
-        vertex(out, pose, light, overlay, dx,dy,dz,.5f,.15625f);
+                             float cx,float cy,float cz, float dx,float dy,float dz,
+                             boolean invertArrowLength) {
+        // Vanilla arrow's tip is at the opposite U end from the already
+        // accepted Pale Bolt. Reverse only arrow UVs, never geometry or poses.
+        // Both newly placed and existing saved projectile patches update.
+        float footU = invertArrowLength ? .5f : 0f;
+        float tailU = invertArrowLength ? 0f : .5f;
+        vertex(out, pose, light, overlay, ax,ay,az,footU,.15625f);
+        vertex(out, pose, light, overlay, bx,by,bz,footU,0f);
+        vertex(out, pose, light, overlay, cx,cy,cz,tailU,0f);
+        vertex(out, pose, light, overlay, dx,dy,dz,tailU,.15625f);
     }
 
     private static void vertex(VertexConsumer out, PoseStack.Pose pose, int light, int overlay,

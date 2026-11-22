@@ -78,11 +78,23 @@ for faction, full_name, bare_name, art_texture, packed in [
          tuple(tuple(e["faces"][f]["uv"]) for f in ("north","east","south","west","up","down")))
         for e in full["elements"]
     }
-    assert all(
-        (tuple(e["from"]),tuple(e["to"]),
-         tuple(tuple(e["faces"][f]["uv"]) for f in ("north","east","south","west","up","down"))) in pole_cubes
-        for e in bare["elements"]
-    ), (faction, "bare flag not the same authored staff")
+    # Soul's latest authored FULL model moves five decorative pole-cap
+    # cuboids +0.5 in Z, while the separately authored BARE model remains
+    # unchanged. Respect both sources; do not edit the original bare bbmodel.
+    # Their actual shaft, bannerless decorations and UV must still match,
+    # allowing ONLY these five measured full-model changes.
+    def signature(e):
+        return (tuple(e["from"]),tuple(e["to"]),
+                tuple(tuple(e["faces"][f]["uv"]) for f in ("north","east","south","west","up","down")))
+    missing = [e for e in bare["elements"] if signature(e) not in pole_cubes]
+    if faction == "SOUL":
+        assert len(missing) == 5, (faction, "unexpected full/bare differences")
+        for e in missing:
+            shifted = dict(e, **{"from": [e["from"][0],e["from"][1],e["from"][2]+0.5],
+                                  "to": [e["to"][0],e["to"][1],e["to"][2]+0.5]})
+            assert signature(shifted) in pole_cubes, (faction, "unexpected cap changes")
+    else:
+        assert not missing, (faction, "bare flag not the same authored staff")
     src = (ROOT / "blockbench" / art_texture).read_bytes()
     out = (ROOT / "src/main/resources/assets/tears-of-ink/textures/block" / packed).read_bytes()
     assert src == out and src.startswith(b"\x89PNG\r\n\x1a\n"), (faction, "PNG changed")

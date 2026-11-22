@@ -69,9 +69,9 @@ public final class BattlefieldFactionBannerGeometry {
             // 12 cube
             new Part(new BattlefieldBannerGeometry.Cuboid(-2f, 79f, -2f, 2f, 84f, 2f, new float[][]{{20f, 40f, 24f, 45f}, {24f, 40f, 28f, 45f}, {28f, 40f, 32f, 45f}, {32f, 40f, 36f, 45f}, {17f, 22f, 21f, 26f}, {22f, 45f, 26f, 49f}}), new int[]{}),
             // 13 cube
-            new Part(new BattlefieldBannerGeometry.Cuboid(-0.5f, 84f, -1.25f, 0.5f, 96f, 0.25f, new float[][]{{38f, 40f, 39f, 52f}, {36f, 40f, 37.5f, 52f}, {34f, 45f, 35f, 57f}, {20f, 45f, 21.5f, 57f}, {22f, 52f, 23f, 53.5f}, {52f, 22f, 53f, 23.5f}}), new int[]{}),
+            new Part(new BattlefieldBannerGeometry.Cuboid(-0.5f, 84f, -0.75f, 0.5f, 96f, 0.75f, new float[][]{{38f, 40f, 39f, 52f}, {36f, 40f, 37.5f, 52f}, {34f, 45f, 35f, 57f}, {20f, 45f, 21.5f, 57f}, {22f, 52f, 23f, 53.5f}, {52f, 22f, 53f, 23.5f}}), new int[]{}),
             // 14 cube
-            new Part(new BattlefieldBannerGeometry.Cuboid(-5f, 90.5f, -1f, 5f, 91.5f, 0f, new float[][]{{46f, 18f, 56f, 19f}, {23f, 52f, 24f, 53f}, {46f, 19f, 56f, 20f}, {24f, 52f, 25f, 53f}, {48f, 32f, 58f, 33f}, {48f, 33f, 58f, 34f}}), new int[]{}),
+            new Part(new BattlefieldBannerGeometry.Cuboid(-5f, 90.5f, -0.5f, 5f, 91.5f, 0.5f, new float[][]{{46f, 18f, 56f, 19f}, {23f, 52f, 24f, 53f}, {46f, 19f, 56f, 20f}, {24f, 52f, 25f, 53f}, {48f, 32f, 58f, 33f}, {48f, 33f, 58f, 34f}}), new int[]{}),
             // 15 cube
             new Part(new BattlefieldBannerGeometry.Cuboid(-2f, 48f, -2f, 2f, 53f, 2f, new float[][]{{40f, 32f, 44f, 37f}, {40f, 37f, 44f, 42f}, {42f, 0f, 46f, 5f}, {42f, 5f, 46f, 10f}, {26f, 45f, 30f, 49f}, {30f, 45f, 34f, 49f}}), new int[]{}),
             // 16 cube
@@ -85,11 +85,11 @@ public final class BattlefieldFactionBannerGeometry {
             // 20 cube
             new Part(new BattlefieldBannerGeometry.Cuboid(2f, 50f, -1f, 6f, 51f, 1f, new float[][]{{50f, 25f, 54f, 26f}, {51f, 28f, 53f, 29f}, {50f, 26f, 54f, 27f}, {51f, 29f, 53f, 30f}, {26f, 49f, 30f, 51f}, {30f, 49f, 34f, 51f}}), new int[]{}),
             // 21 cube
-            new Part(new BattlefieldBannerGeometry.Cuboid(-4f, 89f, -0.75f, -3f, 93f, -0.25f, new float[][]{{21f, 22f, 22f, 26f}, {30f, 51f, 30.5f, 55f}, {50f, 27f, 51f, 31f}, {31f, 51f, 31.5f, 55f}, {25f, 52f, 26f, 52.5f}, {26f, 52f, 27f, 52.5f}}), new int[]{}),
+            new Part(new BattlefieldBannerGeometry.Cuboid(-4f, 89f, -0.25f, -3f, 93f, 0.25f, new float[][]{{21f, 22f, 22f, 26f}, {30f, 51f, 30.5f, 55f}, {50f, 27f, 51f, 31f}, {31f, 51f, 31.5f, 55f}, {25f, 52f, 26f, 52.5f}, {26f, 52f, 27f, 52.5f}}), new int[]{}),
             // 22 cube
-            new Part(new BattlefieldBannerGeometry.Cuboid(3f, 89f, -0.75f, 4f, 93f, -0.25f, new float[][]{{48f, 50f, 49f, 54f}, {32f, 51f, 32.5f, 55f}, {49f, 50f, 50f, 54f}, {33f, 51f, 33.5f, 55f}, {27f, 52f, 28f, 52.5f}, {28f, 52f, 29f, 52.5f}}), new int[]{}),
+            new Part(new BattlefieldBannerGeometry.Cuboid(3f, 89f, -0.25f, 4f, 93f, 0.25f, new float[][]{{48f, 50f, 49f, 54f}, {32f, 51f, 32.5f, 55f}, {49f, 50f, 50f, 54f}, {33f, 51f, 33.5f, 55f}, {27f, 52f, 28f, 52.5f}, {28f, 52f, 29f, 52.5f}}), new int[]{}),
             // 23 cube
-            new Part(new BattlefieldBannerGeometry.Cuboid(-2f, 94f, -0.75f, 2f, 95f, -0.25f, new float[][]{{50f, 31f, 54f, 32f}, {29f, 52f, 29.5f, 53f}, {50f, 50f, 54f, 51f}, {36f, 52f, 36.5f, 53f}, {51f, 30f, 55f, 30.5f}, {44f, 51f, 48f, 51.5f}}), new int[]{})
+            new Part(new BattlefieldBannerGeometry.Cuboid(-2f, 94f, -0.25f, 2f, 95f, 0.25f, new float[][]{{50f, 31f, 54f, 32f}, {29f, 52f, 29.5f, 53f}, {50f, 50f, 54f, 51f}, {36f, 52f, 36.5f, 53f}, {51f, 30f, 55f, 30.5f}, {44f, 51f, 48f, 51.5f}}), new int[]{})
     });
 
     /** blockbench/battlefield_soul_flag_withoutbannet1.bbmodel : 13 exact cuboids, 0 authored cloth joints. */
