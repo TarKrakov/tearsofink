@@ -61,6 +61,8 @@ jobs:
         run: python3 tools/battlefield/check_faction_banners.py
       - name: validate aged battlefield proxy models and titan sword pose limits
         run: python3 tools/battlefield/check_aged_monuments.py
+      - name: validate automatic battlefield terrain and scene generation
+        run: python3 tools/battlefield/check_worldgen.py
       - name: validate deterministic battlefield zone recipes
         run: |
           mkdir -p /tmp/toi-battlefield-zone-test
