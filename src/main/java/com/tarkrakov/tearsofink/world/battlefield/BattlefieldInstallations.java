@@ -91,6 +91,13 @@ public final class BattlefieldInstallations extends SavedData {
                 BlockPos rootXZ = new BlockPos(slot.x(), 0, slot.z());
                 if (!ModDimensions.chunksReady(level, rootXZ, 22)) continue;
                 if (playerUnderfoot(level, slot.x(), slot.z())) continue;
+                // Recover safely after a power loss between the world write and
+                // the SavedData flush. Never place a second overlapping anchor.
+                if (hasAnchor(level, slot.x(), slot.z())) {
+                    attempted.add(id);
+                    setDirty();
+                    continue;
+                }
                 // Individual stamps prevent the new field from spilling into
                 // previously explored roadside chunks in an existing save.
                 if (!stamped(level, slot.x(), slot.z())) {
@@ -122,6 +129,22 @@ public final class BattlefieldInstallations extends SavedData {
                 }
             }
         }
+    }
+
+    private static boolean hasAnchor(ServerLevel level, int x, int z) {
+        for (int dx = -4; dx <= 4; dx++) for (int dz = -4; dz <= 4; dz++) {
+            int px = x + dx, pz = z + dz;
+            var chunk = level.getChunkSource().getChunkNow(px >> 4, pz >> 4);
+            if (chunk == null) continue;
+            int top = Math.min(level.getMaxBuildHeight() - 1,
+                    chunk.getHeight(Heightmap.Types.WORLD_SURFACE, px & 15, pz & 15));
+            for (int y = top + 3; y >= top - 5 && y >= level.getMinBuildHeight(); y--) {
+                var state = chunk.getBlockState(new BlockPos(px, y, pz));
+                if (state.is(ModBlocks.BATTLEFIELD_SCENE)
+                        || state.is(ModBlocks.BATTLEFIELD_MONUMENT)) return true;
+            }
+        }
+        return false;
     }
 
     private static boolean playerApproaching(ServerLevel level, BattlefieldWorldPlan.Field field) {

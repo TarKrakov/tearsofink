@@ -33,6 +33,12 @@ public final class BattlefieldTreeFilter extends PlacementFilter {
         BattlefieldWorldPlan plan = BattlefieldWorldPlan.of(layout);
         if (plan == null) return true;
         for (var f : plan.fields()) {
+            // Meaningful anchors and linked objects must not be erased by
+            // a tree spawned a few blocks away from its exact coordinate.
+            for (var slot : f.placements()) {
+                int dx = pos.getX() - slot.x(), dz = pos.getZ() - slot.z();
+                if (dx * dx + dz * dz <= 8 * 8) return false;
+            }
             if (f.distance(pos.getX(), pos.getZ()) > BattlefieldWorldPlan.FIELD_RADIUS + 25 + margin
                     && f.approach(pos.getX(), pos.getZ()) < .15) continue;
             double pressure = Math.max(f.openness(pos.getX(), pos.getZ()),
