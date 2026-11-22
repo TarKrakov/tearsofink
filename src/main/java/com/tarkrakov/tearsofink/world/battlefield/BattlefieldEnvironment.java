@@ -5,6 +5,7 @@ import com.tarkrakov.tearsofink.world.InkLandsLayout;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -40,6 +41,21 @@ public final class BattlefieldEnvironment {
         return Integer.MIN_VALUE;
     }
 
+    private static boolean stampColumn(WorldGenLevel level, BlockPos.MutableBlockPos pos,
+                                       int x, int z, int begin) {
+        for (int y = begin; y >= Math.max(level.getMinBuildHeight() + 2, begin - 90); y--) {
+            BlockState under = level.getBlockState(pos.set(x, y, z));
+            if ((under.is(ModBlocks.ASPHODELITE_ROCK)
+                    || under.is(BlockTags.BASE_STONE_OVERWORLD))
+                    && !under.hasBlockEntity() && under.getFluidState().isEmpty()) {
+                level.setBlock(pos, ModBlocks.BATTLEFIELD_FIELD_MARKER.defaultBlockState(),
+                        Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** Return true if a natural column was altered. Everything stays inside the given chunk. */
     public static boolean decorate(WorldGenLevel level, InkLandsLayout layout,
                                    BattlefieldWorldPlan.Field field,
@@ -66,7 +82,12 @@ public final class BattlefieldEnvironment {
         var network = layout.templeNetwork();
         if (network != null && network.overlapsPath(x, z, 3)) return false;
         int ground = floor(level, pos, x, z);
-        if (ground == Integer.MIN_VALUE || ground > level.getMaxBuildHeight() - 42) return false;
+        // The battlefield also crosses natural river channels. Proof must be
+        // recorded below the WATER at new chunk centers so those causeways can
+        // be prepared later, even where no dry soil exists.
+        if (ground == Integer.MIN_VALUE) return planned && stampColumn(level, pos, x, z,
+                level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, x, z) - 4);
+        if (ground > level.getMaxBuildHeight() - 42) return false;
         BlockState soil = level.getBlockState(pos.set(x, ground, z));
         int hash = field.hash(x, z, 0xED06);
         double wear = Math.max(fieldValue, approach * .58);
@@ -85,15 +106,18 @@ public final class BattlefieldEnvironment {
             }
             if (nativeColumn) {
                 for (int y = ground; y > bottom; y--) {
-                    level.setBlock(pos.set(x, y, z), Blocks.AIR.defaultBlockState(), 2);
+                    level.setBlock(pos.set(x, y, z), Blocks.AIR.defaultBlockState(),
+                        Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
                 }
-                level.setBlock(pos.set(x, bottom, z), ModBlocks.ASPHODELITE_ROCK.defaultBlockState(), 2);
+                level.setBlock(pos.set(x, bottom, z), ModBlocks.ASPHODELITE_ROCK.defaultBlockState(),
+                        Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
                 ground = bottom;
                 soil = level.getBlockState(pos.set(x, ground, z));
                 changed = true;
             }
         } else if (scar < 0 && level.getBlockState(pos.set(x, ground + 1, z)).isAir()) {
-            level.setBlock(pos.set(x, ground + 1, z), ModBlocks.ASPHODELITE_ROCK.defaultBlockState(), 2);
+            level.setBlock(pos.set(x, ground + 1, z), ModBlocks.ASPHODELITE_ROCK.defaultBlockState(),
+                        Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
             ground++;
             soil = level.getBlockState(pos.set(x, ground, z));
             changed = true;
@@ -106,7 +130,7 @@ public final class BattlefieldEnvironment {
                 BlockState replacement = ((hash >>> 18) & 7) == 0
                         ? ModBlocks.ASPHODELITE_ROCK.defaultBlockState()
                         : ModBlocks.ASHEN_PATH.defaultBlockState();
-                level.setBlock(pos.set(x, ground, z), replacement, 2);
+                level.setBlock(pos.set(x, ground, z), replacement, Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
                 changed = true;
             }
         }
@@ -118,28 +142,18 @@ public final class BattlefieldEnvironment {
             BlockState s = level.getBlockState(pos.set(x, y, z));
             if (s.isAir()) continue;
             if (plant(s) && (open || (field.hash(x, z, y) >>> 1 & 255) < 255 * wear)) {
-                level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+                level.setBlock(pos, Blocks.AIR.defaultBlockState(),
+                        Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
                 changed = true;
             } else if (open && tree(s)) {
-                level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+                level.setBlock(pos, Blocks.AIR.defaultBlockState(),
+                        Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
                 changed = true;
             }
         }
         // Stamp ONLY freshly generated sites, well below the loose falling ash.
         // Never excavate a void under an ash layer or write over buildings.
-        if (planned) {
-            for (int depth = 4; depth <= 48 && ground - depth > level.getMinBuildHeight(); depth++) {
-                BlockPos mark = pos.set(x, ground - depth, z).immutable();
-                BlockState under = level.getBlockState(mark);
-                if ((under.is(ModBlocks.ASPHODELITE_ROCK)
-                        || under.is(BlockTags.BASE_STONE_OVERWORLD))
-                        && !under.hasBlockEntity() && under.getFluidState().isEmpty()) {
-                    level.setBlock(mark, ModBlocks.BATTLEFIELD_FIELD_MARKER.defaultBlockState(), 2);
-                    changed = true;
-                    break;
-                }
-            }
-        }
+        if (planned && stampColumn(level, pos, x, z, ground - 4)) changed = true;
         return changed;
     }
 }

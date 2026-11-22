@@ -10,6 +10,8 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 
 /**
@@ -107,6 +109,7 @@ public final class BattlefieldAccessRoutes {
         int steps = (int)Math.ceil(length);
         int start = section * STEP, stop = Math.min(steps, (section + 1) * STEP);
         List<Column> edit = new ArrayList<>();
+        Map<Long, Boolean> provenChunks = new HashMap<>();
         var pos = new BlockPos.MutableBlockPos();
         for (int i = start; i <= stop; i++) {
             double t = i / (double)steps;
@@ -142,7 +145,10 @@ public final class BattlefieldAccessRoutes {
                     }
                 }
                 if (closeToArt) continue;
-                if (!BattlefieldInstallations.stamped(level, field, x, z)) return false;
+                long chunkKey = net.minecraft.world.level.ChunkPos.asLong(x >> 4, z >> 4);
+                if (!provenChunks.computeIfAbsent(chunkKey,
+                        key -> BattlefieldInstallations.stamped(level, field,
+                                (x & ~15) + 8, (z & ~15) + 8))) return false;
                 int naturalY = floor(level, x, z);
                 if (naturalY == Integer.MIN_VALUE
                         || Math.abs(naturalY - target) > 66

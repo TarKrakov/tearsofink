@@ -4,6 +4,7 @@ import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.world.InkLandsLayout;
 import net.minecraft.core.BlockPos;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.server.level.ServerLevel;
@@ -165,20 +166,23 @@ public final class BattlefieldSitePreparation {
             for (int y = column.clearTop(); y > h; y--) {
                 var pos = probe.set(x, y, z);
                 if (!level.getBlockState(pos).isAir())
-                    level.setBlock(pos, Blocks.AIR.defaultBlockState(), 2);
+                    level.setBlock(pos, Blocks.AIR.defaultBlockState(),
+                            Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
             }
             int low = Math.min(column.floor(), h);
             for (int y = low; y < h; y++) {
                 var pos = probe.set(x, y, z);
                 if (column.floor() < h || !nativeSoil(level.getBlockState(pos)))
-                    level.setBlock(pos, ModBlocks.ASPHODELITE_ROCK.defaultBlockState(), 2);
+                    level.setBlock(pos, ModBlocks.ASPHODELITE_ROCK.defaultBlockState(),
+                            Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
             }
             // The scar is still part of the old landscape: retain sparse
             // exposed rock instead of painting each zone with one flat tile.
             boolean rough = (field.hash(x, z, 0x71AA) & 7) == 0;
             level.setBlock(probe.set(x, h, z), rough
                     ? ModBlocks.ASPHODELITE_ROCK.defaultBlockState()
-                    : ModBlocks.ASHEN_SOIL.defaultBlockState(), 2);
+                    : ModBlocks.ASHEN_SOIL.defaultBlockState(),
+                    Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
         }
         // Restore durable provenance after cutting away an old high marker
         // column; it is essential for fog and idempotent retries after reload.
@@ -186,7 +190,8 @@ public final class BattlefieldSitePreparation {
         if (underY > level.getMinBuildHeight()) {
             var below = probe.set(cx, underY, cz);
             if (nativeSoil(level.getBlockState(below))) {
-                level.setBlock(below, ModBlocks.BATTLEFIELD_FIELD_MARKER.defaultBlockState(), 2);
+                level.setBlock(below, ModBlocks.BATTLEFIELD_FIELD_MARKER.defaultBlockState(),
+                        Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
             }
         }
         return true;
