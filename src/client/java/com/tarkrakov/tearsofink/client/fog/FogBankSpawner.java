@@ -7,6 +7,7 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -68,5 +69,29 @@ public final class FogBankSpawner {
 			level.addAlwaysVisibleParticle(ModParticles.FOG_BANK, true,
 					x + random.nextDouble(), y, z + random.nextDouble(), tint[0], tint[1], tint[2]);
 		}
+
+        // Only in the discovered battlefield: a sparse, paper-thin mist
+        // practically touching the local block collision surface. The outer
+        // Pale Forest keeps its full billowing fog bank density.
+        if (level.getGameTime() % 3 != 0
+                || BattlefieldClarity.opennessAt(player.getX(), player.getZ()) < .32f) return;
+        double angle = random.nextDouble() * Math.PI * 2;
+        double dist = 2 + random.nextDouble() * 22;
+        int gx = (int) Math.floor(player.getX() + Math.cos(angle) * dist);
+        int gz = (int) Math.floor(player.getZ() + Math.sin(angle) * dist);
+        if (BattlefieldClarity.opennessAt(gx + .5, gz + .5) < .48f) return;
+        pos.set(gx, player.getBlockY(), gz);
+        if (!InkFog.isInk(level, pos)) return;
+        int gy = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, gx, gz);
+        BlockPos base = new BlockPos(gx, gy - 1, gz);
+        var support = level.getBlockState(base);
+        var shape = support.getCollisionShape(level, base);
+        if (shape.isEmpty() || !support.getFluidState().isEmpty()
+                || !support.isFaceSturdy(level, base, Direction.UP)) return;
+        double surface = base.getY() + shape.max(Direction.Axis.Y) + .035d;
+        // -2 flags the static ground plane in FogBankParticle.Provider.
+        level.addAlwaysVisibleParticle(ModParticles.FOG_BANK, true,
+                gx + .5d, surface, gz + .5d, -2d, 0d, 0d);
+
 	}
 }
