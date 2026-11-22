@@ -53,14 +53,18 @@ public final class BattlefieldDecorCommands {
     private static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> monumentCommand(
             String id, BattlefieldMonumentGeometry.Blade blade) {
         return Commands.literal(id)
-                .executes(ctx -> monument(ctx, blade, 0))
+                .executes(ctx -> monument(ctx, blade, 0, false))
                 .then(Commands.argument("variant", IntegerArgumentType.integer(0, 7))
-                        .executes(ctx -> monument(ctx, blade, IntegerArgumentType.getInteger(ctx, "variant"))));
+                        .executes(ctx -> monument(ctx, blade, IntegerArgumentType.getInteger(ctx, "variant"), false)))
+                .then(Commands.literal("tableau")
+                        .executes(ctx -> monument(ctx, blade, 0, true))
+                        .then(Commands.argument("variant", IntegerArgumentType.integer(0, 7))
+                                .executes(ctx -> monument(ctx, blade, IntegerArgumentType.getInteger(ctx, "variant"), true))));
     }
 
     /** Non-destructive operator-only placement of a giant weapon on prepared natural ground. */
     private static int monument(CommandContext<CommandSourceStack> context,
-                                BattlefieldMonumentGeometry.Blade blade, int variant)
+                                BattlefieldMonumentGeometry.Blade blade, int variant, boolean tableau)
             throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer player = context.getSource().getPlayerOrException();
         ServerLevel level = player.serverLevel();
@@ -78,15 +82,27 @@ public final class BattlefieldDecorCommands {
                     Direction facing = forward.getOpposite();
                     for (int k = 0; k < turn; k++) facing = facing.getClockWise();
                     if (!canPlaceMonument(level, base, blade, variant, facing)) continue;
+                    int[] relicContacts = tableau ? tableauContacts(level, base, facing, blade, variant) : new int[0];
+                    if (relicContacts == null) continue;
                     var state = ModBlocks.BATTLEFIELD_MONUMENT.defaultBlockState()
                             .setValue(HorizontalDirectionalBlock.FACING, facing)
                             .setValue(com.tarkrakov.tearsofink.block.BattlefieldMonumentBlock.BLADE, blade.ordinal())
-                            .setValue(com.tarkrakov.tearsofink.block.BattlefieldMonumentBlock.VARIANT, variant);
+                            .setValue(com.tarkrakov.tearsofink.block.BattlefieldMonumentBlock.VARIANT, variant)
+                            .setValue(com.tarkrakov.tearsofink.block.BattlefieldMonumentBlock.TABLEAU, tableau);
                     if (!level.setBlock(base, state, Block.UPDATE_CLIENTS)) continue;
+                    if (tableau) {
+                        if (level.getBlockEntity(base) instanceof com.tarkrakov.tearsofink.block.BattlefieldMonumentBlockEntity monumentEntity) {
+                            monumentEntity.configure(relicContacts);
+                            level.sendBlockUpdated(base, state, state, Block.UPDATE_CLIENTS);
+                        } else {
+                            level.setBlock(base, net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS);
+                            continue;
+                        }
+                    }
                     BlockPos placed = base;
                     var style = BattlefieldMonumentGeometry.style(variant);
                     context.getSource().sendSuccess(() -> Component.literal(
-                            "Монументальный " + blade.label + " установлен: " + placed.toShortString()
+                            "Монументальный " + blade.label + (tableau ? " с боевой композицией" : "") + " установлен: " + placed.toShortString()
                             + " (масштаб x" + style.scale() + ", наклон " + style.tilt()
                             + "°, поворот " + style.yaw() + "°)."), false);
                     return 1;
@@ -97,6 +113,43 @@ public final class BattlefieldDecorCommands {
                 "Для огромного клинка нет свободной площадки в загруженных чанках рядом. "
                 + "Строения и деревья сохранены; попробуйте открытую местность."));
         return 0;
+    }
+
+    /** Find natural ground contacts for the small relics without overwriting anything. */
+    private static int[] tableauContacts(ServerLevel level, BlockPos base, Direction facing,
+                                         BattlefieldMonumentGeometry.Blade blade, int variant) {
+        var relics = BattlefieldMonumentGeometry.tableau(blade, variant);
+        int[] contacts = new int[relics.length];
+        java.util.Arrays.fill(contacts, com.tarkrakov.tearsofink.block.BattlefieldMonumentBlockEntity.MISSING);
+        Direction right = facing.getClockWise();
+        for (int i = 0; i < relics.length; i++) {
+            var relic = relics[i];
+            BlockPos point = base.relative(facing, Math.round(relic.forward()))
+                    .relative(right, Math.round(relic.right()));
+            if (!level.hasChunkAt(point)) {
+                if (relic.required()) return null;
+                continue;
+            }
+            int height = level.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, point.getX(), point.getZ());
+            BlockPos at = new BlockPos(point.getX(), height, point.getZ());
+            var ground = level.getBlockState(at.below());
+            boolean good = Math.abs(height - base.getY()) <= 3
+                    && level.getWorldBorder().isWithinBounds(at)
+                    && level.getBlockState(at).isAir()
+                    && ground.isFaceSturdy(level, at.below(), Direction.UP)
+                    && (ground.is(net.minecraft.tags.BlockTags.DIRT)
+                    || ground.is(net.minecraft.tags.BlockTags.BASE_STONE_OVERWORLD)
+                    || ground.is(ModBlocks.ASHEN_SOIL) || ground.is(ModBlocks.BLOOD_SOIL)
+                    || ground.is(ModBlocks.TAR_SOIL) || ground.is(ModBlocks.ASPHODELITE_ROCK)
+                    || ground.is(ModBlocks.ASH))
+                    && level.getBlockState(at.above()).getCollisionShape(level, at.above()).isEmpty();
+            if (!good) {
+                if (relic.required()) return null;
+                continue;
+            }
+            contacts[i] = height - base.getY();
+        }
+        return contacts;
     }
 
     private static boolean canPlaceMonument(ServerLevel level, BlockPos base,

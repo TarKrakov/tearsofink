@@ -94,4 +94,38 @@ public final class BattlefieldMonumentGeometry {
         }
         return Set.copyOf(cells);
     }
+    /** Small storytelling details around one massive sword, no new lore or new meshes. */
+    public record Relic(BattlefieldWeaponCatalog.Source source,
+                        float forward, float right, float sink, float yaw, float pitch, float roll,
+                        boolean required) {}
+
+    private static Relic relic(BattlefieldWeaponCatalog.Source source,
+                               float forward, float right, float sink, float yaw, float pitch, float roll,
+                               boolean required) {
+        return new Relic(source, forward, right, source.groundSink(sink, pitch, roll),
+                yaw, pitch, roll, required);
+    }
+
+    /** Distinct silhouettes: burial with a defensive trace vs a broken advance. */
+    public static Relic[] tableau(Blade blade, int variant) {
+        int mirror = (variant & 1) == 0 ? 1 : -1;
+        float drift = (variant & 2) == 0 ? -.35f : .35f;
+        if (blade == Blade.LINEAR) return new Relic[] {
+                relic(BattlefieldWeaponCatalog.Source.PALE_LONGSWORD, -2.8f, -3.3f * mirror,
+                        -.13f, 24f * mirror, 25f, -15f * mirror, true),
+                relic(BattlefieldWeaponCatalog.Source.PALE_LONGSWORD, 1.5f, 3.6f * mirror,
+                        -.12f, -48f * mirror, 68f, 16f * mirror, false),
+                relic(BattlefieldWeaponCatalog.Source.SPIRE_ROARING_AXE, 3.1f, (1.0f + drift) * mirror,
+                        -.10f, 13f * mirror, 79f, -9f * mirror, false)
+        };
+        return new Relic[] {
+                relic(BattlefieldWeaponCatalog.Source.SPIRE_SHADOW_SCIMITAR, -2.6f, 3.0f * mirror,
+                        -.13f, -23f * mirror, 30f, 15f * mirror, true),
+                relic(BattlefieldWeaponCatalog.Source.SPIRE_RAPID_KNIFE, 1.1f, -3.8f * mirror,
+                        -.08f, 51f * mirror, 76f, -20f * mirror, false),
+                relic(BattlefieldWeaponCatalog.Source.PALE_LINEAR_GREATSWORD, 3.1f, (-1.1f + drift) * mirror,
+                        -.16f, -35f * mirror, 52f, 26f * mirror, false)
+        };
+    }
+
 }

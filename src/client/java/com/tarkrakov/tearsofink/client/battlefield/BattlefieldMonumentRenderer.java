@@ -41,6 +41,31 @@ public final class BattlefieldMonumentRenderer implements BlockEntityRenderer<Ba
         blocks.renderSingleBlock(ModBlocks.BATTLEFIELD_WEAPON_MESH.defaultBlockState()
                 .setValue(BattlefieldWeaponMeshBlock.SOURCE, mesh.ordinal()), stack, buffers, light, overlay);
         stack.popPose();
+
+        if (state.getValue(BattlefieldMonumentBlock.TABLEAU)) {
+            var relics = BattlefieldMonumentGeometry.tableau(blade, state.getValue(BattlefieldMonumentBlock.VARIANT));
+            stack.pushPose();
+            stack.translate(.5d, 0, .5d);
+            stack.mulPose(Axis.YP.rotationDegrees(180f - facing.toYRot()));
+            for (int i = 0; i < relics.length; i++) {
+                var relic = relics[i];
+                int height = entity.offsetAt(i);
+                if (height == BattlefieldMonumentBlockEntity.MISSING) continue;
+                var small = relic.source();
+                stack.pushPose();
+                stack.translate(relic.right(), height + relic.sink(), -relic.forward());
+                stack.mulPose(Axis.YP.rotationDegrees(relic.yaw()));
+                stack.mulPose(Axis.ZP.rotationDegrees(relic.roll()));
+                stack.mulPose(Axis.XP.rotationDegrees(relic.pitch()));
+                stack.mulPose(Axis.ZP.rotationDegrees(BattlefieldWeaponCatalog.TIP_DOWN_Z_DEGREES));
+                stack.translate(-small.maxX / 16f, -small.maxY / 16f, -small.centerZ() / 16f);
+                blocks.renderSingleBlock(ModBlocks.BATTLEFIELD_WEAPON_MESH.defaultBlockState()
+                        .setValue(BattlefieldWeaponMeshBlock.SOURCE, small.ordinal()),
+                        stack, buffers, light, overlay);
+                stack.popPose();
+            }
+            stack.popPose();
+        }
     }
     @Override public boolean shouldRenderOffScreen(BattlefieldMonumentBlockEntity entity) {
         // Single anchor, mesh up to ~14 blocks above it; avoid vanilla 1-block culling.

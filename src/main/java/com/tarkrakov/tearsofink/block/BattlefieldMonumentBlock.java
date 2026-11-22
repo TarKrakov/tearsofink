@@ -15,18 +15,20 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
 
 /** Rare no-collision, non-ticking anchor for a many-block-scale ancient sword. */
 public final class BattlefieldMonumentBlock extends BaseEntityBlock {
     public static final MapCodec<BattlefieldMonumentBlock> CODEC = simpleCodec(BattlefieldMonumentBlock::new);
     public static final IntegerProperty BLADE = IntegerProperty.create("blade", 0, 1);
     public static final IntegerProperty VARIANT = IntegerProperty.create("variant", 0, 7);
+    public static final BooleanProperty TABLEAU = BooleanProperty.create("tableau");
 
     public BattlefieldMonumentBlock(BlockBehaviour.Properties properties) {
         super(properties);
         registerDefaultState(stateDefinition.any()
                 .setValue(HorizontalDirectionalBlock.FACING, Direction.NORTH)
-                .setValue(BLADE, 0).setValue(VARIANT, 0));
+                .setValue(BLADE, 0).setValue(VARIANT, 0).setValue(TABLEAU, false));
     }
 
     @Override protected MapCodec<? extends BaseEntityBlock> codec() { return CODEC; }
@@ -44,6 +46,6 @@ public final class BattlefieldMonumentBlock extends BaseEntityBlock {
         return state.rotate(mirror.getRotation(state.getValue(HorizontalDirectionalBlock.FACING)));
     }
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(HorizontalDirectionalBlock.FACING, BLADE, VARIANT);
+        builder.add(HorizontalDirectionalBlock.FACING, BLADE, VARIANT, TABLEAU);
     }
 }
