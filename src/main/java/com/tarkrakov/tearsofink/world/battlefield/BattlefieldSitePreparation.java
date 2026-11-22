@@ -31,7 +31,17 @@ public final class BattlefieldSitePreparation {
     private static boolean nativeSoil(BlockState s) {
         return s.is(ModBlocks.ASHEN_SOIL) || s.is(ModBlocks.ASHEN_PATH)
                 || s.is(ModBlocks.ASH) || s.is(ModBlocks.ASPHODELITE_ROCK)
-                || s.is(ModBlocks.PALE_ORE) || s.is(BlockTags.BASE_STONE_OVERWORLD)
+                || s.is(ModBlocks.PALE_ORE) || s.is(ModBlocks.ASPHODELITE_ORE)
+                || s.is(ModBlocks.DEEPSLATE_ASPHODELITE_ORE)
+                || s.is(ModBlocks.ASPHODELITE_COAL_ORE)
+                || s.is(ModBlocks.ASPHODELITE_IRON_ORE)
+                || s.is(ModBlocks.ASPHODELITE_COPPER_ORE)
+                || s.is(ModBlocks.ASPHODELITE_GOLD_ORE)
+                || s.is(ModBlocks.ASPHODELITE_REDSTONE_ORE)
+                || s.is(ModBlocks.ASPHODELITE_LAPIS_ORE)
+                || s.is(ModBlocks.ASPHODELITE_DIAMOND_ORE)
+                || s.is(ModBlocks.ASPHODELITE_EMERALD_ORE)
+                || s.is(BlockTags.BASE_STONE_OVERWORLD)
                 || s.is(BlockTags.DIRT) || s.is(Blocks.GRAVEL)
                 || s.is(Blocks.TUFF) || s.is(Blocks.CLAY);
     }
