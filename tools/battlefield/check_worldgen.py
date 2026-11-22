@@ -41,13 +41,13 @@ assert 'return false;' in filter_code
 assert 'getChunkNow' in installation and 'new Factory<' in installation
 assert 'PlacedOrSkipped' in installation and 'setDirty()' in installation
 assert 'fieldReady(level, field)' in installation
-assert 'stamped(level, field, slot.x(), slot.z())' in installation
+assert 'provenBattlefieldCorridor(level, field, slot.x(), slot.z())' in installation
 assert 'BattlefieldSitePreparation.prepare(level, field, slot)' in installation
 assert 'toi_battlefield_installations_v3' in installation
 assert 'public int scar(int px, int pz)' in source
 terrain = read(base + "world/battlefield/BattlefieldSitePreparation.java")
 assert 'preflight' in terrain.lower()
-assert 'stamped(level, field, px, pz)' in terrain
+assert 'provenBattlefieldCorridor(level, field, px, pz)' in terrain
 assert 'nativeFloor(' in terrain and 'natural(' in terrain
 assert 'BattlefieldZonePreview.placePlanned' in installation
 assert 'BattlefieldDecorCommands.placePlannedMonument' in installation
@@ -88,3 +88,74 @@ assert 'Math.sin(3 * a' in source
 assert '78f * battlefieldClarity' in client
 assert 'BattlefieldInstallations.fieldReady(level, field)' in discovery
 print("D-135: validated deterministic field layout, 27 anchors, safe stamps, roads, temple and fog wiring.")
+
+
+# D-137: the first 27 scene IDs remain in place. Dense relic beds append after
+# those slots and render many actual aged meshes per inert anchor.
+assert 'Kind.RELIC' in source and 'relicBeds(field, placements)' in source
+assert source.index('relicBeds(field, placements)') > source.index('traces.length')
+assert 'BattlefieldAccessRoutes.nearCorridor(field, x, z, 6)' in source
+assert 'BattlefieldRelicPlacement.place(level, rootXZ' in installation
+assert 'slot.kind() == BattlefieldWorldPlan.Kind.RELIC' in installation
+relic_recipes = read(base + "world/battlefield/BattlefieldRelicRecipes.java")
+relic_placement = read(base + "world/battlefield/BattlefieldRelicPlacement.java")
+relic_entity = read(base + "block/BattlefieldRelicPatchBlockEntity.java")
+relic_renderer = read("src/client/java/com/tarkrakov/tearsofink/client/battlefield/BattlefieldRelicPatchRenderer.java")
+mod_blocks = read(base + "block/ModBlocks.java")
+mod_entities = read(base + "block/lantern/ModBlockEntities.java")
+assert 'battlefield_relic_patch' in mod_blocks and 'BATTLEFIELD_RELIC_PATCH' in mod_entities
+assert 'BATTLEFIELD_RELIC_PATCH' in ui
+assert 'BattlefieldWeaponCatalog.Source.values()' in relic_placement
+assert 'getChunkNow' in relic_placement
+assert 'public java.util.List<' in relic_entity and 'cached' in relic_entity
+assert 'entity.poses()' in relic_renderer and 'BATTLEFIELD_WEAPON_MESH' in relic_renderer
+assert 'BattlefieldSoulShieldCatalog.SCALE' in relic_renderer
+assert 'case 2 -> 16 +' in relic_recipes
+assert 'case 0 -> 14 +' in relic_recipes
+assert 'source' not in ""  # no new authored source texture for these aged mesh proxies
+
+# D-137: the inner battlefield sheds almost all fog particles by THEIR own
+# position; forest outside retains original particle density.
+bank_spawner = read("src/client/java/com/tarkrakov/tearsofink/client/fog/FogBankSpawner.java")
+bank_particle = read("src/client/java/com/tarkrakov/tearsofink/client/particle/FogBankParticle.java")
+assert 'particleMultiplier(x + .5, z + .5)' in bank_spawner
+assert 'particleMultiplier(this.x, this.z)' in bank_particle
+assert 'wall ? 1f' in bank_particle
+assert 'return 1f - 0.97f * openness' in clarity
+assert 'public static float opennessAt' in clarity
+
+# Native cleanup is deliberately item-whitelisted, does not sweep normal drops.
+cleanup = read(base + "world/battlefield/BattlefieldGroundCleanup.java")
+assert 'nativeDrop(ItemEntity item)' in cleanup
+assert 'nativePlant(BlockState s)' in cleanup
+assert 'Block.UPDATE_SUPPRESS_DROPS' in cleanup
+assert 'CleanedChunks' in installation and 'BattlefieldGroundCleanup.cleanChunk' in installation
+assert 'Block.UPDATE_SUPPRESS_DROPS' in environment
+assert 'Block.UPDATE_SUPPRESS_DROPS' in terrain
+
+# Connected terrain: all 8 route links join the roadward entry to the main
+# field and far upper bank without rerolling historical scene positions.
+access = read(base + "world/battlefield/BattlefieldAccessRoutes.java")
+match = re.search(r"private static final int\\[\\]\\[\\] LINKS = \\{(.*?)\\};", access, re.S)
+assert match is not None
+links = []
+for line in re.findall(r"\\{\\s*(-?\\d+)\\s*,\\s*(-?\\d+)\\s*,\\s*(-?\\d+)\\s*,\\s*(-?\\d+)\\s*\\}", match.group(1)):
+    a,b,c,d = map(int, line)
+    links.append(((a,b),(c,d)))
+assert len(links) == 8
+seen = {(-74,0)}
+for _ in range(len(links)):
+    for a,b in links:
+        if a in seen: seen.add(b)
+        if b in seen: seen.add(a)
+assert all(a in seen and b in seen for a,b in links)
+assert (44,44) in seen and (-52,-23) in seen
+assert 'JOINED' not in access  # NBT state is owned by the SavedData installer
+assert 'JoinedTerrain' in installation and 'BattlefieldAccessRoutes.prepare' in installation
+assert 'provenBattlefieldCorridor' in access
+assert 'Math.abs(player.getX() - x) < 12' in access
+assert 'layout.roadNear' in access and 'temples.overlapsPath' in access
+assert 'Block.UPDATE_SUPPRESS_DROPS' in access
+assert 'связующие переходы' in world_commands
+
+print("D-137: append-only dense weapon beds, local fog-particle suppression, debris cleanup, 8 linked terrain routes.")
