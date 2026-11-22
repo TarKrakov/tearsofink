@@ -53,6 +53,9 @@ public final class FogBankSpawner {
 			int z = (int) Math.floor(player.getZ() + Math.sin(angle) * dist);
 			pos.set(x, (int) player.getY(), z);
 			if (!InkFog.isInk(level, pos)) continue;
+            // Scatter no new banks across a freshly discovered battlefield
+            // while leaving the enclosing fog forest completely unchanged.
+            if (random.nextFloat() > BattlefieldClarity.particleMultiplier(x + .5, z + .5)) continue;
 
 			int ground = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
 			if (ground <= level.getMinBuildHeight() + 1) continue;

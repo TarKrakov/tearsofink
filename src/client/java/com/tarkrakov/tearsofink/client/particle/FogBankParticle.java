@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.client.particle;
 
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.tarkrakov.tearsofink.client.fog.InkFog;
+import com.tarkrakov.tearsofink.client.fog.BattlefieldClarity;
 import com.tarkrakov.tearsofink.client.fog.LanternClarity;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -82,7 +83,9 @@ public class FogBankParticle extends TextureSheetParticle {
 
 		float baseAlpha = this.alpha;
 		float zoneAlpha = wall ? WALL_ALPHA : Mth.lerp(InkFog.strength(), ALPHA_OUTSIDE, ALPHA_INSIDE);
-		this.alpha = baseAlpha * zoneAlpha * near * near; // мягкое, а не линейное растворение
+		float battlefield = wall ? 1f : BattlefieldClarity.particleMultiplier(this.x, this.z);
+        if (battlefield < 0.04f) return;
+        this.alpha = baseAlpha * zoneAlpha * near * near * battlefield; // мягкое, а не линейное растворение
 		super.render(buffer, camera, partialTick);
 		this.alpha = baseAlpha;
 	}
