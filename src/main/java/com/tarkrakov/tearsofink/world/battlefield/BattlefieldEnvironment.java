@@ -16,7 +16,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
 public final class BattlefieldEnvironment {
     private BattlefieldEnvironment() {}
     private static boolean base(BlockState s) {
-        return s.is(ModBlocks.ASHEN_SOIL) || s.is(ModBlocks.ASPHODELITE_ROCK)
+        return s.is(ModBlocks.ASHEN_SOIL) || s.is(ModBlocks.ASH) || s.is(ModBlocks.ASPHODELITE_ROCK)
                 || s.is(BlockTags.DIRT) || s.is(BlockTags.BASE_STONE_OVERWORLD);
     }
     private static boolean tree(BlockState s) {
