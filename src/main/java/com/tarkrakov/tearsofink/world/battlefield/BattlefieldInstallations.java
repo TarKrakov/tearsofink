@@ -33,9 +33,11 @@ public final class BattlefieldInstallations extends SavedData {
             new Factory<>(BattlefieldInstallations::new, BattlefieldInstallations::load, null);
     private final Set<Long> attempted = new HashSet<>();
     private final Set<Long> cleanedChunks = new HashSet<>();
+    private final Set<Long> connectedParts = new HashSet<>();
     private long nextTry;
     // Retry transiently blocked sites; only actual placed scenes are stored in SavedData.
     private final Map<Long, Long> blockedUntil = new HashMap<>();
+    private final Map<Long, Long> connectionsBlockedUntil = new HashMap<>();
 
     private BattlefieldInstallations() {}
 
@@ -43,12 +45,14 @@ public final class BattlefieldInstallations extends SavedData {
         BattlefieldInstallations data = new BattlefieldInstallations();
         for (long key : nbt.getLongArray("PlacedOrSkipped")) data.attempted.add(key);
         for (long key : nbt.getLongArray("CleanedChunks")) data.cleanedChunks.add(key);
+        for (long key : nbt.getLongArray("JoinedTerrain")) data.connectedParts.add(key);
         return data;
     }
 
     @Override public CompoundTag save(CompoundTag nbt, HolderLookup.Provider registries) {
         nbt.putLongArray("PlacedOrSkipped", attempted.stream().mapToLong(Long::longValue).toArray());
         nbt.putLongArray("CleanedChunks", cleanedChunks.stream().mapToLong(Long::longValue).toArray());
+        nbt.putLongArray("JoinedTerrain", connectedParts.stream().mapToLong(Long::longValue).toArray());
         return nbt;
     }
 
@@ -142,6 +146,47 @@ public final class BattlefieldInstallations extends SavedData {
         return count;
     }
 
+    private static long routeKey(int field, int link, int part) {
+        return 0x1000_0000_0000_0000L | ((long) field << 40) | ((long) link << 20) | part;
+    }
+
+    public static int routeCount(ServerLevel level, BattlefieldWorldPlan.Field field) {
+        var saved = level.getDataStorage().computeIfAbsent(FACTORY, "toi_battlefield_installations_v3");
+        int done = 0;
+        for (int r = 0; r < BattlefieldAccessRoutes.routes(); r++)
+            for (int part = 0; part < BattlefieldAccessRoutes.parts(r); part++)
+                if (saved.connectedParts.contains(routeKey(field.index(), r, part))) done++;
+        return done;
+    }
+    public static int routeTotal() {
+        int n = 0;
+        for (int r = 0; r < BattlefieldAccessRoutes.routes(); r++)
+            n += BattlefieldAccessRoutes.parts(r);
+        return n;
+    }
+
+    /**
+     * Only linked, newly-generated natural landscape may be moved. A high hill
+     * or river can otherwise separate scene clusters from the intended route.
+     * One short part per second, persisted by ID and safe to retry after login.
+     */
+    private void joinLandscape(ServerLevel level, BattlefieldWorldPlan.Field field, long now) {
+        int tries = 0;
+        for (int link = 0; link < BattlefieldAccessRoutes.routes(); link++)
+            for (int section = 0; section < BattlefieldAccessRoutes.parts(link); section++) {
+                long id = routeKey(field.index(), link, section);
+                if (connectedParts.contains(id)
+                        || connectionsBlockedUntil.getOrDefault(id, 0L) > now) continue;
+                if (BattlefieldAccessRoutes.prepare(level, field, link, section)) {
+                    connectedParts.add(id);
+                    setDirty();
+                    return;
+                }
+                connectionsBlockedUntil.put(id, now + 100L);
+                if (++tries >= 2) return;
+            }
+    }
+
     private static long key(int field, int placement) {
         return (((long) field) << 32) | (placement & 0xffff_ffffL);
     }
@@ -180,6 +225,10 @@ public final class BattlefieldInstallations extends SavedData {
                 if (cleanedThisTick >= 2) break;
             }
 
+            // A few narrow graded earth tracks keep the terrain's dramatic
+            // gorge and tall hill from splitting the battlefield in two.
+            // Their own persistent progress is separate from the 27+ episode IDs.
+            joinLandscape(level, field, now);
             for (BattlefieldWorldPlan.Placement slot : field.placements()) {
                 if (budget <= 0) return;
                 long id = key(field.index(), slot.id());
