@@ -44,6 +44,21 @@ public final class BattlefieldAccessRoutes {
             {-33,38, -52,-23}
     };
 
+    /** A deterministic quiet corridor for real foot traffic, not more sword beds. */
+    public static boolean nearCorridor(BattlefieldWorldPlan.Field field, int x, int z, int margin) {
+        for (int[] c : LINKS) {
+            Point a = point(field, c[0], c[1]);
+            Point b = point(field, c[2], c[3]);
+            double dx = b.x - a.x, dz = b.z - a.z;
+            double d = dx*dx + dz*dz;
+            double t = d < 1 ? 0 : Math.max(0, Math.min(1,
+                    ((x - a.x)*dx + (z - a.z)*dz) / d));
+            double px = a.x + t*dx, pz = a.z + t*dz;
+            if ((x-px)*(x-px) + (z-pz)*(z-pz) <= margin * margin) return true;
+        }
+        return false;
+    }
+
     public static int routes() { return LINKS.length; }
 
     public static int parts(int index) {

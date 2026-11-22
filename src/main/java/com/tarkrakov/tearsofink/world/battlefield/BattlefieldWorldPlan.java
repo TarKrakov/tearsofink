@@ -293,6 +293,10 @@ public final class BattlefieldWorldPlan {
                 int x = field.x + (int) Math.round(field.inwardX * forward - field.inwardZ * right);
                 int z = field.z + (int) Math.round(field.inwardZ * forward + field.inwardX * right);
                 if (field.openness(x, z) < .40) continue;
+                // Keep a legible, navigable earthen corridor between the
+                // large ruins and the high far bank; do not turn it into a
+                // thicket of separate static weapon anchors.
+                if (BattlefieldAccessRoutes.nearCorridor(field, x, z, 6)) continue;
                 boolean crowded = false;
                 for (Placement p : placements) {
                     double min = switch (p.kind()) {
