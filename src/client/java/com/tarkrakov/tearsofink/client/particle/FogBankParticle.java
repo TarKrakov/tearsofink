@@ -57,7 +57,6 @@ public class FogBankParticle extends TextureSheetParticle {
 		this.alpha = 0f;
 	}
 
-	@Override
 	private void configureGroundMist() {
         groundMist = true;
         quadSize = Mth.nextFloat(random, 1.1f, 2.0f);
@@ -105,7 +104,6 @@ public class FogBankParticle extends TextureSheetParticle {
 		this.alpha = baseAlpha;
 	}
 
-	@Override
 	private void renderGroundMist(VertexConsumer buffer, Camera camera, float partialTick) {
         Vec3 cam = camera.getPosition();
         float px = (float) (Mth.lerp(partialTick, xo, x) - cam.x);
