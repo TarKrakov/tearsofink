@@ -40,8 +40,15 @@ assert 'BATTLEFIELD_FIELD_MARKER' in environment and 'level.getMinBuildHeight' i
 assert 'return false;' in filter_code
 assert 'getChunkNow' in installation and 'new Factory<' in installation
 assert 'PlacedOrSkipped' in installation and 'setDirty()' in installation
-assert 'stamped(level, field.x(), field.z())' in installation
-assert 'stamped(level, slot.x(), slot.z())' in installation
+assert 'fieldReady(level, field)' in installation
+assert 'stamped(level, field, slot.x(), slot.z())' in installation
+assert 'BattlefieldSitePreparation.prepare(level, field, slot)' in installation
+assert 'toi_battlefield_installations_v3' in installation
+assert 'public int scar(int px, int pz)' in source
+terrain = read(base + "world/battlefield/BattlefieldSitePreparation.java")
+assert 'preflight' in terrain.lower()
+assert 'stamped(level, field, px, pz)' in terrain
+assert 'nativeFloor(' in terrain and 'natural(' in terrain
 assert 'BattlefieldZonePreview.placePlanned' in installation
 assert 'BattlefieldDecorCommands.placePlannedMonument' in installation
 assert 'BattlefieldInstallations.init()' in init
@@ -79,4 +86,5 @@ for seed in range(32):
 assert 'Math.sin(3 * angle' in clarity
 assert 'Math.sin(3 * a' in source
 assert '78f * battlefieldClarity' in client
+assert 'BattlefieldInstallations.fieldReady(level, field)' in discovery
 print("D-135: validated deterministic field layout, 27 anchors, safe stamps, roads, temple and fog wiring.")
