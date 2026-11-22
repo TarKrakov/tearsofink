@@ -183,6 +183,17 @@ public final class BattlefieldInstallations extends SavedData {
         return 0x1000_0000_0000_0000L | ((long) field << 40) | ((long) link << 20) | part;
     }
 
+    /** Actual placed slots by category, never planned counts or failed retries. */
+    public static int placedCount(ServerLevel level, BattlefieldWorldPlan.Field field,
+                                  java.util.function.Predicate<BattlefieldWorldPlan.Placement> matches) {
+        var saved = level.getDataStorage().computeIfAbsent(FACTORY, "toi_battlefield_installations_v3");
+        int count = 0;
+        for (var slot : field.placements()) {
+            if (matches.test(slot) && saved.attempted.contains(key(field.index(), slot.id()))) count++;
+        }
+        return count;
+    }
+
     public static int routeCount(ServerLevel level, BattlefieldWorldPlan.Field field) {
         var saved = level.getDataStorage().computeIfAbsent(FACTORY, "toi_battlefield_installations_v3");
         int done = 0;

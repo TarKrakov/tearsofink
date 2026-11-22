@@ -62,7 +62,13 @@ assert 'BattlefieldWorldCommands.literal()' in commands
 # The twenty-seven deterministic anchors are 2 dominants + 19 scenario
 # recipes + 6 progressively spaced discovery traces. Scene IDs stay untouched.
 assert source.count('monument(placements, field') == 2
-assert source.count('scene(placements, field') == 19
+# The first 27 anchors are stable. New late-game episodes append strictly
+# AFTER the original field and relic beds, without shifting saved scene IDs.
+first_27 = source.split('relicBeds(field, placements)', 1)[0]
+assert first_27.count('scene(placements, field') == 19
+assert source.count('scene(placements, field') == 22
+assert source.index('projectileBeds(field, placements)') > source.index('relicBeds(field, placements)')
+assert source.rindex('scene(placements, field') > source.index('projectileBeds(field, placements)')
 assert 'new BattlefieldPosedScenes.Scenario[]' in source
 assert 'traces.length' in source
 assert 'BattlefieldPosedScenes.Scenario.GRIND_CENTER' in source
@@ -158,3 +164,25 @@ assert 'Block.UPDATE_SUPPRESS_DROPS' in access
 assert 'связующие переходы' in world_commands
 
 print("D-137: append-only dense weapon beds, local fog-particle suppression, debris cleanup, 10 connected terrain links.")
+
+# D-138: impact beds reuse the existing inert relic-patch renderer, with
+# texture reuse and no per-arrow / per-bolt entities, and saved bare rigs
+# default to upright while new scenes use angled states.
+assert 'case 5 -> 17 +' in relic_recipes and 'case 6 -> 14 +' in relic_recipes
+assert 'case 7 -> 19 +' in relic_recipes and 'public boolean projectile()' in relic_recipes
+assert 'drawProjectile(' in relic_renderer and 'textures/entity/projectiles/pale_bolt.png' in relic_renderer
+assert 'textures/entity/projectiles/arrow.png' in relic_renderer
+assert 'new Placement(placements.size(), Kind.RELIC' in source
+banner_block = read(base + "block/BattlefieldBannerBlock.java")
+banner_renderer = read("src/client/java/com/tarkrakov/tearsofink/client/battlefield/BattlefieldBannerRenderer.java")
+banner_preview = read(base + "command/BattlefieldZonePreview.java")
+assert 'IntegerProperty.create("lean", 0, 7)' in banner_block
+assert '.setValue(LEAN, 0)' in banner_block
+assert 'if (bare && lean != 0)' in banner_renderer
+assert 'tiltedPoleFits(' in banner_preview
+assert '.setValue(BattlefieldBannerBlock.LEAN, lean)' in banner_preview
+assert 'configureGroundMist()' in bank_particle
+assert 'renderGroundMist(' in bank_particle and 'getU0()' in bank_particle
+assert 'BattlefieldClarity.opennessAt(' in bank_spawner
+assert 'shape.max(Direction.Axis.Y) + .035d' in bank_spawner
+print("D-138: append-only bolt/arrow patches, tilted bare flags, thin client ground fog.")

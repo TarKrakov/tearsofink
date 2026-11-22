@@ -246,8 +246,11 @@ public final class BattlefieldZonePreview {
             if (!validColumn(level, column)) continue;
             int y = surfaceY(level, column);
             BlockPos base = new BlockPos(column.getX(), y, column.getZ());
+            int lean = bare ? 1 + Math.floorMod(Long.hashCode(base.asLong())
+                    ^ (faction.ordinal() * 0x6a09e667), 7) : 0;
             if (Math.abs(y - root.getY()) > 3 || !naturalSupport(level, base)
-                    || !BattlefieldDecorCommands.canPlaceBanner(level, base, facing, bare, faction)) continue;
+                    || !BattlefieldDecorCommands.canPlaceBanner(level, base, facing, bare, faction)
+                    || bare && !tiltedPoleFits(level, base, facing, lean)) continue;
             Set<BlockPos> envelope = bannerEnvelope(base, facing, bare, faction);
             boolean overlap = false;
             for (BlockPos position : envelope) {
@@ -257,9 +260,36 @@ public final class BattlefieldZonePreview {
             return new Flag(base, ModBlocks.BATTLEFIELD_BANNER.defaultBlockState()
                     .setValue(HorizontalDirectionalBlock.FACING, facing)
                     .setValue(BattlefieldBannerBlock.BARE, bare)
-                .setValue(BattlefieldBannerBlock.FACTION, faction), envelope);
+                .setValue(BattlefieldBannerBlock.FACTION, faction)
+                .setValue(BattlefieldBannerBlock.LEAN, lean), envelope);
         }
         return null;
+    }
+
+    /**
+     * A tilted historical bare pole is checked along its actual 6.5-block
+     * upright axis AFTER its two authored-rig rotations and world facing.
+     * No chunk loads, no terrain changes and no new physical collision.
+     */
+    private static boolean tiltedPoleFits(ServerLevel level, BlockPos base, Direction facing, int lean) {
+        double x = Math.toRadians(BattlefieldBannerBlock.leanX(lean));
+        double z = Math.toRadians(BattlefieldBannerBlock.leanZ(lean));
+        double yaw = Math.toRadians(180f - facing.toYRot());
+        double lx = -Math.sin(z) * Math.cos(x);
+        double lz = Math.sin(x);
+        double dx = lx * Math.cos(yaw) + lz * Math.sin(yaw);
+        double dz = -lx * Math.sin(yaw) + lz * Math.cos(yaw);
+        double dy = Math.cos(z) * Math.cos(x);
+        for (int sample = 2; sample <= 14; sample++) {
+            double t = sample * .5;
+            BlockPos at = BlockPos.containing(base.getX() + .5 + dx * t,
+                    base.getY() + dy * t, base.getZ() + .5 + dz * t);
+            if (at.getY() <= base.getY()) continue; // the foot is buried
+            if (level.getChunkSource().getChunkNow(at.getX() >> 4, at.getZ() >> 4) == null
+                    || !level.getWorldBorder().isWithinBounds(at)
+                    || !level.getBlockState(at).getCollisionShape(level, at).isEmpty()) return false;
+        }
+        return true;
     }
 
     private static Set<BlockPos> bannerEnvelope(BlockPos base, Direction facing, boolean bare,

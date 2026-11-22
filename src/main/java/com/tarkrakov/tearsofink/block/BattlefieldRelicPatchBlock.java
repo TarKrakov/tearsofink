@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.state.properties.IntegerProperty;
 /** One static anchor for a dense bed of ancient weapons, not item entities. */
 public final class BattlefieldRelicPatchBlock extends BaseEntityBlock {
     public static final MapCodec<BattlefieldRelicPatchBlock> CODEC = simpleCodec(BattlefieldRelicPatchBlock::new);
-    public static final IntegerProperty STYLE = IntegerProperty.create("style", 0, 4);
+    public static final IntegerProperty STYLE = IntegerProperty.create("style", 0, 7);
     public static final IntegerProperty VARIANT = IntegerProperty.create("variant", 0, 7);
     public BattlefieldRelicPatchBlock(BlockBehaviour.Properties props) {
         super(props);
