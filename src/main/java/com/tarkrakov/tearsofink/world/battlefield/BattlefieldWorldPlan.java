@@ -266,6 +266,8 @@ public final class BattlefieldWorldPlan {
         // SINGLE inert anchor for 7..19 individual ancient weapons. Do not
         // pack all arms into the flag tableaux; leave wide quiet corridors.
         relicBeds(field, placements);
+        // Append-only. All D-135/D-137 saved slot IDs and poses are unchanged.
+        projectileBeds(field, placements);
         return List.copyOf(placements);
     }
 
@@ -313,6 +315,49 @@ public final class BattlefieldWorldPlan {
                 placements.add(new Placement(placements.size(), Kind.RELIC, x, z, field.axis(),
                         null, variant, group[3], false));
                 done++;
+            }
+        }
+    }
+
+    /** Coherent impact zones, not a uniform carpet of flying ammunition. */
+    private static void projectileBeds(Field field, List<Placement> placements) {
+        // Forward/right positions of six distinct old volleys: broken front,
+        // soul shield line, hunter flank and the abandoned rear positions.
+        // Kind.RELIC makes one inert patch represent many embedded projectiles.
+        int[][] sectors = {
+                {-28, -43, 5, 3}, {12, -32, 7, 3}, {44, 11, 6, 2},
+                {-32, 29, 5, 2}, {24, 40, 7, 2}, {-8, 17, 6, 2}
+        };
+        for (int group = 0; group < sectors.length; group++) {
+            int[] area = sectors[group];
+            int placed = 0;
+            for (int attempt = 0; attempt < 52 && placed < area[3]; attempt++) {
+                int roll = field.hash(group * 103 + attempt, group * 179 - attempt, 0xA220);
+                double angle = (roll & 65535) * (2 * Math.PI / 65536d);
+                double distance = 2.5 + ((roll >>> 16) & 255) / 255d * 12;
+                double forward = area[0] + Math.cos(angle) * distance;
+                double right = area[1] + Math.sin(angle) * distance;
+                int x = field.x + (int) Math.round(field.inwardX * forward - field.inwardZ * right);
+                int z = field.z + (int) Math.round(field.inwardZ * forward + field.inwardX * right);
+                if (field.openness(x, z) < .46
+                        || BattlefieldAccessRoutes.nearCorridor(field, x, z, 3)) continue;
+                boolean crowded = false;
+                for (Placement other : placements) {
+                    double gap = switch (other.kind()) {
+                        case MONUMENT -> 17d;
+                        case SCENE, TRACE -> 8d;
+                        case RELIC -> other.blade() >= 5 ? 10d : 8d;
+                    };
+                    if ((long)(x - other.x()) * (x - other.x())
+                            + (long)(z - other.z()) * (z - other.z()) < gap * gap) {
+                        crowded = true;
+                        break;
+                    }
+                }
+                if (crowded) continue;
+                placements.add(new Placement(placements.size(), Kind.RELIC, x, z, field.axis(),
+                        null, (roll >>> 10) & 7, area[2], false));
+                placed++;
             }
         }
     }
