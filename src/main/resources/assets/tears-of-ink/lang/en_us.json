@@ -1236,5 +1236,10 @@
   "diary.tears-of-ink.entry.collection_invitation.title": "The Invitation",
   "diary.tears-of-ink.collection.empty": "Collected letters and records will appear here.",
   "block.tears-of-ink.pantheon_column_shaft": "Pantheon Column Shaft",
-  "block.tears-of-ink.pantheon_column_capital": "Pantheon Column Capital"
+  "block.tears-of-ink.pantheon_column_capital": "Pantheon Column Capital",
+  "block.tears-of-ink.sanctum_floor_tile": "Sanctum Floor Tile",
+  "block.tears-of-ink.sanctum_tile": "Sanctum Tile",
+  "block.tears-of-ink.sanctum_carved_tile": "Carved Sanctum Tile",
+  "block.tears-of-ink.sanctum_wall": "Sanctum Wall Stone",
+  "block.tears-of-ink.sanctum_brick": "Sanctum Bricks"
 }

@@ -40,6 +40,11 @@
     "tears-of-ink:ink_anvil",
     "tears-of-ink:cursed_altar",
     "tears-of-ink:pantheon_column_shaft",
-    "tears-of-ink:pantheon_column_capital"
+    "tears-of-ink:pantheon_column_capital",
+    "tears-of-ink:sanctum_floor_tile",
+    "tears-of-ink:sanctum_tile",
+    "tears-of-ink:sanctum_carved_tile",
+    "tears-of-ink:sanctum_wall",
+    "tears-of-ink:sanctum_brick"
   ]
 }

@@ -1236,5 +1236,10 @@
   "diary.tears-of-ink.entry.collection_invitation.title": "Письмо-приглашение",
   "diary.tears-of-ink.collection.empty": "Здесь будут храниться найденные свидетельства и письма.",
   "block.tears-of-ink.pantheon_column_shaft": "Ствол колонны пантеона",
-  "block.tears-of-ink.pantheon_column_capital": "Капитель колонны пантеона"
+  "block.tears-of-ink.pantheon_column_capital": "Капитель колонны пантеона",
+  "block.tears-of-ink.sanctum_floor_tile": "Плитка пола святилища",
+  "block.tears-of-ink.sanctum_tile": "Плитка святилища",
+  "block.tears-of-ink.sanctum_carved_tile": "Резная плитка святилища",
+  "block.tears-of-ink.sanctum_wall": "Стеновой камень святилища",
+  "block.tears-of-ink.sanctum_brick": "Кирпичи святилища"
 }
