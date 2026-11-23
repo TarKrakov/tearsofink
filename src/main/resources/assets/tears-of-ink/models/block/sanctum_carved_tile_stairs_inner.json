@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/inner_stairs",
+  "textures": {
+    "bottom": "tears-of-ink:item/sanctum_carved_tile",
+    "top": "tears-of-ink:item/sanctum_carved_tile",
+    "side": "tears-of-ink:item/sanctum_carved_tile"
+  }
+}

@@ -1241,5 +1241,20 @@
   "block.tears-of-ink.sanctum_tile": "Sanctum Tile",
   "block.tears-of-ink.sanctum_carved_tile": "Carved Sanctum Tile",
   "block.tears-of-ink.sanctum_wall": "Sanctum Wall Stone",
-  "block.tears-of-ink.sanctum_brick": "Sanctum Bricks"
+  "block.tears-of-ink.sanctum_brick": "Sanctum Bricks",
+  "block.tears-of-ink.sanctum_floor_tile_stairs": "Sanctum Floor Tile Stairs",
+  "block.tears-of-ink.sanctum_floor_tile_slab": "Sanctum Floor Tile Slab",
+  "block.tears-of-ink.sanctum_floor_tile_wall": "Sanctum Floor Tile Wall",
+  "block.tears-of-ink.sanctum_tile_stairs": "Sanctum Tile Stairs",
+  "block.tears-of-ink.sanctum_tile_slab": "Sanctum Tile Slab",
+  "block.tears-of-ink.sanctum_tile_wall": "Sanctum Tile Wall",
+  "block.tears-of-ink.sanctum_carved_tile_stairs": "Carved Sanctum Tile Stairs",
+  "block.tears-of-ink.sanctum_carved_tile_slab": "Carved Sanctum Tile Slab",
+  "block.tears-of-ink.sanctum_carved_tile_wall": "Carved Sanctum Tile Wall",
+  "block.tears-of-ink.sanctum_wall_stairs": "Sanctum Wall Stone Stairs",
+  "block.tears-of-ink.sanctum_wall_slab": "Sanctum Wall Stone Slab",
+  "block.tears-of-ink.sanctum_wall_wall": "Sanctum Wall Stone Wall",
+  "block.tears-of-ink.sanctum_brick_stairs": "Sanctum Bricks Stairs",
+  "block.tears-of-ink.sanctum_brick_slab": "Sanctum Bricks Slab",
+  "block.tears-of-ink.sanctum_brick_wall": "Sanctum Bricks Wall"
 }

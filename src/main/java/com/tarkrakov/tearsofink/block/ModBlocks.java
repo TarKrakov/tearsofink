@@ -240,6 +240,23 @@ public final class ModBlocks {
 	public static final Block SANCTUM_BRICK = register("sanctum_brick",
 			new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_BLUE)));
 
+	// ===== Производные формы всех пяти камней Санктума =====
+	public static final Block SANCTUM_FLOOR_TILE_STAIRS = register("sanctum_floor_tile_stairs", new StairBlock(SANCTUM_FLOOR_TILE.defaultBlockState(), BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_STAIRS).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block SANCTUM_FLOOR_TILE_SLAB = register("sanctum_floor_tile_slab", new SlabBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_SLAB).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block SANCTUM_FLOOR_TILE_WALL = register("sanctum_floor_tile_wall", new WallBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_WALL).mapColor(MapColor.COLOR_LIGHT_BLUE).forceSolidOn()));
+	public static final Block SANCTUM_TILE_STAIRS = register("sanctum_tile_stairs", new StairBlock(SANCTUM_TILE.defaultBlockState(), BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_STAIRS).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block SANCTUM_TILE_SLAB = register("sanctum_tile_slab", new SlabBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_SLAB).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block SANCTUM_TILE_WALL = register("sanctum_tile_wall", new WallBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_WALL).mapColor(MapColor.COLOR_LIGHT_BLUE).forceSolidOn()));
+	public static final Block SANCTUM_CARVED_TILE_STAIRS = register("sanctum_carved_tile_stairs", new StairBlock(SANCTUM_CARVED_TILE.defaultBlockState(), BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_STAIRS).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block SANCTUM_CARVED_TILE_SLAB = register("sanctum_carved_tile_slab", new SlabBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_SLAB).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block SANCTUM_CARVED_TILE_WALL = register("sanctum_carved_tile_wall", new WallBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_WALL).mapColor(MapColor.COLOR_LIGHT_BLUE).forceSolidOn()));
+	public static final Block SANCTUM_WALL_STAIRS = register("sanctum_wall_stairs", new StairBlock(SANCTUM_WALL.defaultBlockState(), BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_STAIRS).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block SANCTUM_WALL_SLAB = register("sanctum_wall_slab", new SlabBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_SLAB).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block SANCTUM_WALL_WALL = register("sanctum_wall_wall", new WallBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_WALL).mapColor(MapColor.COLOR_LIGHT_BLUE).forceSolidOn()));
+	public static final Block SANCTUM_BRICK_STAIRS = register("sanctum_brick_stairs", new StairBlock(SANCTUM_BRICK.defaultBlockState(), BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_STAIRS).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block SANCTUM_BRICK_SLAB = register("sanctum_brick_slab", new SlabBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_SLAB).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block SANCTUM_BRICK_WALL = register("sanctum_brick_wall", new WallBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICK_WALL).mapColor(MapColor.COLOR_LIGHT_BLUE).forceSolidOn()));
+
 	public static final Block RUIN_BRICKS = register("ruin_bricks", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
 	public static final Block CRACKED_RUIN_BRICKS = register("cracked_ruin_bricks", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
 	public static final Block OVERGROWN_RUIN_BRICKS = register("overgrown_ruin_bricks", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));

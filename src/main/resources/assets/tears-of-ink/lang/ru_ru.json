@@ -1241,5 +1241,20 @@
   "block.tears-of-ink.sanctum_tile": "Плитка святилища",
   "block.tears-of-ink.sanctum_carved_tile": "Резная плитка святилища",
   "block.tears-of-ink.sanctum_wall": "Стеновой камень святилища",
-  "block.tears-of-ink.sanctum_brick": "Кирпичи святилища"
+  "block.tears-of-ink.sanctum_brick": "Кирпичи святилища",
+  "block.tears-of-ink.sanctum_floor_tile_stairs": "Ступени из плитки пола святилища",
+  "block.tears-of-ink.sanctum_floor_tile_slab": "Плита из плитки пола святилища",
+  "block.tears-of-ink.sanctum_floor_tile_wall": "Стенка из плитки пола святилища",
+  "block.tears-of-ink.sanctum_tile_stairs": "Ступени из плитки святилища",
+  "block.tears-of-ink.sanctum_tile_slab": "Плита из плитки святилища",
+  "block.tears-of-ink.sanctum_tile_wall": "Стенка из плитки святилища",
+  "block.tears-of-ink.sanctum_carved_tile_stairs": "Ступени из резной плитки святилища",
+  "block.tears-of-ink.sanctum_carved_tile_slab": "Плита из резной плитки святилища",
+  "block.tears-of-ink.sanctum_carved_tile_wall": "Стенка из резной плитки святилища",
+  "block.tears-of-ink.sanctum_wall_stairs": "Ступени из стенового камня святилища",
+  "block.tears-of-ink.sanctum_wall_slab": "Плита из стенового камня святилища",
+  "block.tears-of-ink.sanctum_wall_wall": "Стенка из стенового камня святилища",
+  "block.tears-of-ink.sanctum_brick_stairs": "Ступени из кирпичей святилища",
+  "block.tears-of-ink.sanctum_brick_slab": "Плита из кирпичей святилища",
+  "block.tears-of-ink.sanctum_brick_wall": "Стенка из кирпичей святилища"
 }
