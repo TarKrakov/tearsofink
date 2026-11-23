@@ -65,6 +65,11 @@ public final class ModCreativeTab {
 						output.accept(ModBlocks.ASPHODELITE_ROCK);
 						output.accept(ModBlocks.PANTHEON_COLUMN_SHAFT);
 						output.accept(ModBlocks.PANTHEON_COLUMN_CAPITAL);
+						output.accept(ModBlocks.SANCTUM_FLOOR_TILE);
+						output.accept(ModBlocks.SANCTUM_TILE);
+						output.accept(ModBlocks.SANCTUM_CARVED_TILE);
+						output.accept(ModBlocks.SANCTUM_WALL);
+						output.accept(ModBlocks.SANCTUM_BRICK);
 						output.accept(ModBlocks.RUIN_BRICKS);
 						output.accept(ModBlocks.CRACKED_RUIN_BRICKS);
 						output.accept(ModBlocks.OVERGROWN_RUIN_BRICKS);

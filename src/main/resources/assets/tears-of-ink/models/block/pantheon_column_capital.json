@@ -1,9 +1,9 @@
 {
   "ambientocclusion": false,
   "textures": {
-    "side": "tears-of-ink:block/pantheon_column_capital",
-    "top": "tears-of-ink:block/pantheon_column_shaft",
-    "particle": "tears-of-ink:block/pantheon_column_capital"
+    "side": "tears-of-ink:item/pantheon_column_capital",
+    "top": "tears-of-ink:item/pantheon_column_shaft",
+    "particle": "tears-of-ink:item/pantheon_column_capital"
   },
   "elements": [
     {

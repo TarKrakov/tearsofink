@@ -228,6 +228,18 @@ public final class ModBlocks {
 			new PantheonCapitalBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS)
 					.mapColor(MapColor.COLOR_LIGHT_BLUE).noOcclusion()));
 
+	// ===== Авторские строительные блоки святилища / пантеона =====
+	public static final Block SANCTUM_FLOOR_TILE = register("sanctum_floor_tile",
+			new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block SANCTUM_TILE = register("sanctum_tile",
+			new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block SANCTUM_CARVED_TILE = register("sanctum_carved_tile",
+			new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block SANCTUM_WALL = register("sanctum_wall",
+			new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block SANCTUM_BRICK = register("sanctum_brick",
+			new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+
 	public static final Block RUIN_BRICKS = register("ruin_bricks", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
 	public static final Block CRACKED_RUIN_BRICKS = register("cracked_ruin_bricks", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
 	public static final Block OVERGROWN_RUIN_BRICKS = register("overgrown_ruin_bricks", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
