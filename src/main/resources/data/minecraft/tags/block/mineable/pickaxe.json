@@ -45,6 +45,21 @@
     "tears-of-ink:sanctum_tile",
     "tears-of-ink:sanctum_carved_tile",
     "tears-of-ink:sanctum_wall",
-    "tears-of-ink:sanctum_brick"
+    "tears-of-ink:sanctum_brick",
+    "tears-of-ink:sanctum_floor_tile_stairs",
+    "tears-of-ink:sanctum_floor_tile_slab",
+    "tears-of-ink:sanctum_floor_tile_wall",
+    "tears-of-ink:sanctum_tile_stairs",
+    "tears-of-ink:sanctum_tile_slab",
+    "tears-of-ink:sanctum_tile_wall",
+    "tears-of-ink:sanctum_carved_tile_stairs",
+    "tears-of-ink:sanctum_carved_tile_slab",
+    "tears-of-ink:sanctum_carved_tile_wall",
+    "tears-of-ink:sanctum_wall_stairs",
+    "tears-of-ink:sanctum_wall_slab",
+    "tears-of-ink:sanctum_wall_wall",
+    "tears-of-ink:sanctum_brick_stairs",
+    "tears-of-ink:sanctum_brick_slab",
+    "tears-of-ink:sanctum_brick_wall"
   ]
 }

@@ -5,6 +5,11 @@
     "tears-of-ink:cracked_ruin_brick_slab",
     "tears-of-ink:overgrown_ruin_brick_slab",
     "tears-of-ink:ruin_tile_slab",
-    "tears-of-ink:cracked_ruin_tile_slab"
+    "tears-of-ink:cracked_ruin_tile_slab",
+    "tears-of-ink:sanctum_floor_tile_slab",
+    "tears-of-ink:sanctum_tile_slab",
+    "tears-of-ink:sanctum_carved_tile_slab",
+    "tears-of-ink:sanctum_wall_slab",
+    "tears-of-ink:sanctum_brick_slab"
   ]
 }
