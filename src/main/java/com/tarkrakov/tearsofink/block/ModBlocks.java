@@ -221,6 +221,13 @@ public final class ModBlocks {
 	public static final Block ASPHODELITE_ROCK = register("asphodelite_rock", new Block(
 			BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
 	// ===== Древние руины (заглушки текстур — автор нарисует) =====
+	/** Авторская колонна пантеона — 16x16 PNG ствола; капитель имеет собственную четырёхстороннюю геометрию. */
+	public static final Block PANTHEON_COLUMN_SHAFT = register("pantheon_column_shaft",
+			new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_BLUE)));
+	public static final Block PANTHEON_COLUMN_CAPITAL = register("pantheon_column_capital",
+			new PantheonCapitalBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS)
+					.mapColor(MapColor.COLOR_LIGHT_BLUE).noOcclusion()));
+
 	public static final Block RUIN_BRICKS = register("ruin_bricks", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
 	public static final Block CRACKED_RUIN_BRICKS = register("cracked_ruin_bricks", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));
 	public static final Block OVERGROWN_RUIN_BRICKS = register("overgrown_ruin_bricks", new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_GRAY)));

@@ -1234,5 +1234,7 @@
   "gui.tears-of-ink.personal.2": "Key",
   "diary.tears-of-ink.section.collection": "Collection",
   "diary.tears-of-ink.entry.collection_invitation.title": "The Invitation",
-  "diary.tears-of-ink.collection.empty": "Collected letters and records will appear here."
+  "diary.tears-of-ink.collection.empty": "Collected letters and records will appear here.",
+  "block.tears-of-ink.pantheon_column_shaft": "Pantheon Column Shaft",
+  "block.tears-of-ink.pantheon_column_capital": "Pantheon Column Capital"
 }
