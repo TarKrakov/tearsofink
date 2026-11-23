@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:block/cube_all",
   "textures": {
-    "all": "tears-of-ink:block/pantheon_column_shaft"
+    "all": "tears-of-ink:item/pantheon_column_shaft"
   }
 }
