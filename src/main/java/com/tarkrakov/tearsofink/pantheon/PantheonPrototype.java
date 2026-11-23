@@ -291,7 +291,10 @@ public final class PantheonPrototype {
         int dx = x, dz = z - 10;
         boolean island = dx * dx + dz * dz <= 16;
         if (y == 79) {
-            if (island) return Blocks.STONE.defaultBlockState();
+            // Keep an air-filled landing before the gate and a one-block solid sill
+            // across the entire room. Water sources farther inside cannot flow into the hub.
+            if (z < 3) return Blocks.AIR.defaultBlockState();
+            if (z == 3 || island) return Blocks.STONE.defaultBlockState();
             if (x == 0 && z <= 7 && z % 2 == 0) return Blocks.STONE.defaultBlockState();
             return Blocks.WATER.defaultBlockState();
         }
