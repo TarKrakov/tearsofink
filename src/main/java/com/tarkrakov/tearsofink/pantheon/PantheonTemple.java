@@ -96,10 +96,15 @@ public final class PantheonTemple {
     private PantheonTemple() {}
 
     public static void init() {
+        PantheonRuins.init();
         CommandRegistrationCallback.EVENT.register((dispatcher, access, environment) ->
                 dispatcher.register(Commands.literal("tearsofink")
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.literal("pantheon")
+                                .then(Commands.literal("ruins").then(Commands.literal("status").executes(ctx -> {
+                                    ctx.getSource().sendSuccess(() -> Component.literal(PantheonRuins.status()), false);
+                                    return 1;
+                                })))
                                 .then(Commands.literal("temple")
                                         .then(Commands.literal("install").executes(ctx -> install(ctx, false)))
                                         .then(Commands.literal("resume").executes(ctx -> install(ctx, true)))
@@ -265,7 +270,8 @@ public final class PantheonTemple {
 
     public static boolean protectedAt(BlockGetter level, BlockPos pos) {
         // The future arena may expose a server-owned whitelist here.
-        return level instanceof Level world && isTemple(world);
+        return level instanceof Level world && isTemple(world)
+                || level instanceof ServerLevel server && PantheonRuins.protectedAt(server, pos);
     }
 
     public static boolean allowsBlockWrite(Level level, BlockPos pos) {

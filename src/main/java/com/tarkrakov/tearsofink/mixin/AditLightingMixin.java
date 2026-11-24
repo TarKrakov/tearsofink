@@ -1,5 +1,6 @@
 package com.tarkrakov.tearsofink.mixin;
 
+import com.tarkrakov.tearsofink.pantheon.PantheonRuins;
 import com.tarkrakov.tearsofink.world.adit.AditStructure;
 import net.minecraft.server.level.GenerationChunkHolder;
 import net.minecraft.util.StaticCache2D;
@@ -21,5 +22,6 @@ abstract class AditLightingMixin {
 											ChunkAccess chunk, CallbackInfoReturnable<CompletableFuture<ChunkAccess>> ci) {
 		AditStructure.finishDecoration(context.level(), chunk);
 		com.tarkrakov.tearsofink.world.TemplePaths.finishDecoration(context.level(), chunk);
+		PantheonRuins.finishDecoration(context.level(), chunk);
 	}
 }
