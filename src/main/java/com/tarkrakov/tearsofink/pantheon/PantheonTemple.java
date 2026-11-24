@@ -5,6 +5,9 @@ import com.tarkrakov.tearsofink.TearsOfInk;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.event.player.PlayerBlockBreakEvents;
+import net.fabricmc.fabric.api.event.player.UseItemCallback;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
@@ -21,7 +24,13 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.item.BucketItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -55,17 +64,21 @@ public final class PantheonTemple {
     private static final BlockPos ORIGIN = new BlockPos(-57, 80, 0);
     private static final BlockPos CLAIM = new BlockPos(0, 78, -16);
     private static final BlockPos FINISHED = CLAIM.above();
+    private static final BlockPos CLEANED = FINISHED.above();
     private static final BlockPos ENTRANCE = ORIGIN.offset(58, 1, 12);
     private static final String RESOURCE = "/data/tears-of-ink/pantheon/toi_panteon.schem.b64";
 
     private static final Map<UUID, ReturnSpot> RETURNS = new HashMap<>();
     private static Job job;
+    private static boolean installing;
+    private static int cleanupCursor;
+    private static Template cleanupTemplate;
 
     private record ReturnSpot(ResourceKey<Level> dimension, double x, double y, double z, float yaw, float pitch) {}
-    private record Placement(BlockPos relative, BlockState state) {}
+    record Placement(BlockPos relative, BlockState state) {}
     private record Tile(BlockPos relative, CompoundTag nbt) {}
 
-    private record Template(BlockState[] states, List<Placement> placements, List<Tile> tiles) {}
+    record Template(BlockState[] states, List<Placement> placements, List<Placement> soil, List<Tile> tiles) {}
 
     private static final class Job {
         final Template template;
@@ -93,10 +106,22 @@ public final class PantheonTemple {
                                         .then(Commands.literal("enter").executes(PantheonTemple::enter))
                                         .then(Commands.literal("leave").executes(PantheonTemple::leave))
                                         .then(Commands.literal("status").executes(PantheonTemple::status))))));
+        PlayerBlockBreakEvents.BEFORE.register((level, player, pos, state, entity) -> !protectedAt(level, pos));
+        UseItemCallback.EVENT.register((player, level, hand) -> {
+            ItemStack stack = player.getItemInHand(hand);
+            return isTemple(level) && (stack.is(Items.ENDER_PEARL) || stack.is(Items.CHORUS_FRUIT)
+                    || stack.getItem() instanceof BucketItem)
+                    ? InteractionResultHolder.fail(stack) : InteractionResultHolder.pass(stack);
+        });
+        UseBlockCallback.EVENT.register((player, level, hand, hit) ->
+                isTemple(level) && player.getItemInHand(hand).getItem() instanceof BucketItem
+                        ? InteractionResult.FAIL : InteractionResult.PASS);
         ServerTickEvents.END_SERVER_TICK.register(PantheonTemple::tick);
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             job = null;
             RETURNS.clear();
+            cleanupCursor = 0;
+            cleanupTemplate = null;
         });
     }
 
@@ -138,7 +163,7 @@ public final class PantheonTemple {
         return 1;
     }
 
-    private static Template load() throws Exception {
+    static Template load() throws Exception {
         byte[] encoded;
         try (InputStream resource = PantheonTemple.class.getResourceAsStream(RESOURCE)) {
             if (resource == null) throw new IllegalStateException("Нет встроенной схемы " + RESOURCE);
@@ -165,6 +190,7 @@ public final class PantheonTemple {
         byte[] bytes = root.getByteArray("BlockData");
         BlockState[] states = new BlockState[VOLUME];
         List<Placement> placements = new ArrayList<>();
+        List<Placement> soil = new ArrayList<>();
         int cursor = 0;
         for (int index = 0; index < VOLUME; index++) {
             int value = 0, shift = 0, next;
@@ -179,7 +205,8 @@ public final class PantheonTemple {
                 throw new IllegalStateException("Индекс вне палитры");
             BlockState state = statesByPalette[value];
             states[index] = state;
-            if (!state.isAir()) placements.add(new Placement(relative(index), state));
+            if (accidentalSoil(state)) soil.add(new Placement(relative(index), state));
+            else if (!state.isAir()) placements.add(new Placement(relative(index), state));
         }
         if (cursor != bytes.length) throw new IllegalStateException("Лишние данные блоков");
         List<Tile> tiles = new ArrayList<>();
@@ -192,7 +219,7 @@ public final class PantheonTemple {
                 throw new IllegalStateException("Block entity вне схемы");
             tiles.add(new Tile(new BlockPos(pos[0], pos[1], pos[2]), entry.copy()));
         }
-        return new Template(states, placements, tiles);
+        return new Template(states, placements, soil, tiles);
     }
 
     private static BlockState parseState(String descriptor) {
@@ -232,12 +259,97 @@ public final class PantheonTemple {
         return ORIGIN.offset(relative);
     }
 
+    public static boolean isTemple(Level level) {
+        return DIMENSION.equals(level.dimension());
+    }
+
+    public static boolean protectedAt(BlockGetter level, BlockPos pos) {
+        // The future arena may expose a server-owned whitelist here.
+        return level instanceof Level world && isTemple(world);
+    }
+
+    public static boolean allowsBlockWrite(Level level, BlockPos pos) {
+        return installing || !protectedAt(level, pos);
+    }
+
+    private static boolean setTempleBlock(ServerLevel level, BlockPos pos, BlockState state, int flags) {
+        installing = true;
+        try {
+            return level.setBlock(pos, state, flags);
+        } finally {
+            installing = false;
+        }
+    }
+
+    private static boolean accidentalSoil(BlockState state) {
+        return state.is(Blocks.DIRT) || state.is(Blocks.GRASS_BLOCK) || state.is(Blocks.DIRT_PATH);
+    }
+
+    public static boolean ready(ServerLevel level) {
+        return level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK)
+                && level.getBlockState(CLEANED).is(Blocks.DIAMOND_BLOCK);
+    }
+
+    static BlockPos entrance() {
+        return ENTRANCE;
+    }
+
+    private static void cleanup(ServerLevel level, Template template) {
+        int end = Math.min(cleanupCursor + PLACEMENTS_PER_TICK, template.soil().size());
+        while (cleanupCursor < end) {
+            Placement soil = template.soil().get(cleanupCursor++);
+            BlockPos pos = world(soil.relative());
+            if (level.getBlockState(pos).equals(soil.state())) {
+                setTempleBlock(level, pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+            }
+        }
+        if (cleanupCursor == template.soil().size()) {
+            setTempleBlock(level, CLEANED, Blocks.DIAMOND_BLOCK.defaultBlockState(), Block.UPDATE_CLIENTS);
+            cleanupTemplate = null;
+            cleanupCursor = 0;
+        }
+    }
+
     private static void tick(MinecraftServer server) {
-        Job current = job;
-        if (current == null) return;
         ServerLevel level = server.getLevel(DIMENSION);
         if (level == null) {
             job = null;
+            return;
+        }
+        if (server.getTickCount() % 20 == 0) {
+            for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+                if (player.isAlive()) PantheonRecovery.deliver(player);
+            }
+        }
+        for (ServerPlayer player : List.copyOf(level.players())) {
+            if (!player.isAlive()) continue;
+            double x = player.getX() - ORIGIN.getX();
+            double y = player.getY() - ORIGIN.getY();
+            double z = player.getZ() - ORIGIN.getZ();
+            if (x < 0 || x >= WIDTH || y < -2 || y > HEIGHT + 6 || z < 0 || z >= DEPTH) {
+                if (level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK)) {
+                    player.connection.teleport(ENTRANCE.getX() + 0.5, ENTRANCE.getY(),
+                            ENTRANCE.getZ() + 0.5, 180f, 0f);
+                    player.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+                    player.resetFallDistance();
+                } else {
+                    returnToSpawn(player);
+                }
+            }
+        }
+        Job current = job;
+        if (current == null) {
+            if (level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK)
+                    && level.getBlockState(CLEANED).isAir()) {
+                if (cleanupTemplate == null) {
+                    try {
+                        cleanupTemplate = load();
+                    } catch (Exception ex) {
+                        throw new IllegalStateException("Cannot read the original Pantheon for soil migration", ex);
+                    }
+                }
+                cleanup(level, cleanupTemplate);
+            }
             return;
         }
         if (!current.building) {
@@ -259,7 +371,7 @@ public final class PantheonTemple {
                 }
             }
             if (current.scan < VOLUME) return;
-            if (!current.resume) level.setBlock(CLAIM, Blocks.LODESTONE.defaultBlockState(), Block.UPDATE_CLIENTS);
+            if (!current.resume) setTempleBlock(level, CLAIM, Blocks.LODESTONE.defaultBlockState(), Block.UPDATE_CLIENTS);
             current.building = true;
         }
         int writes = 0;
@@ -272,7 +384,7 @@ public final class PantheonTemple {
                 job = null;
                 return; // Someone edited the construction during the build. Never overwrite.
             }
-            if (!level.setBlock(target, placement.state(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE)) {
+            if (!setTempleBlock(level, target, placement.state(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE)) {
                 job = null;
                 server.getPlayerList().getPlayers().stream().filter(p -> p.hasPermissions(2))
                         .forEach(p -> p.sendSystemMessage(Component.literal("Пантеон: ошибка установки блока "
@@ -303,7 +415,7 @@ public final class PantheonTemple {
             entity.loadWithComponents(data, level.registryAccess());
             entity.setChanged();
         }
-        level.setBlock(FINISHED, Blocks.EMERALD_BLOCK.defaultBlockState(), Block.UPDATE_CLIENTS);
+        setTempleBlock(level, FINISHED, Blocks.EMERALD_BLOCK.defaultBlockState(), Block.UPDATE_CLIENTS);
         job = null;
         server.getPlayerList().getPlayers().stream().filter(p -> p.hasPermissions(2))
                 .forEach(p -> p.sendSystemMessage(Component.literal(
@@ -316,7 +428,8 @@ public final class PantheonTemple {
         String status = job != null
                 ? job.building ? "установка блоков " + job.placed + "/" + job.template.placements().size()
                                : "проверка пространства " + job.scan + "/" + VOLUME
-                : level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK) ? "храм установлен"
+                : ready(level) ? "храм установлен"
+                : level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK) ? "ожидается завершение очистки грунта"
                 : level.getBlockState(CLAIM).is(Blocks.LODESTONE) ? "установка прервана — temple resume"
                 : "не установлен — temple install";
         ctx.getSource().sendSuccess(() -> Component.literal("Pantheon temple: " + status), false);
@@ -326,7 +439,7 @@ public final class PantheonTemple {
     private static int enter(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
         ServerLevel level = level(source);
-        if (level == null || !level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK)) {
+        if (level == null || !ready(level)) {
             source.sendFailure(Component.literal("Сначала завершите установку храма."));
             return 0;
         }
@@ -337,6 +450,13 @@ public final class PantheonTemple {
         player.teleportTo(level, ENTRANCE.getX() + 0.5, ENTRANCE.getY(), ENTRANCE.getZ() + 0.5, 180f, 0f);
         source.sendSuccess(() -> Component.literal("Вы вошли в авторский храм. Выход: /tearsofink pantheon temple leave"), false);
         return 1;
+    }
+
+    private static void returnToSpawn(ServerPlayer player) {
+        ServerLevel overworld = player.server.overworld();
+        BlockPos fallback = overworld.getSharedSpawnPos();
+        player.teleportTo(overworld, fallback.getX() + 0.5, fallback.getY() + 1,
+                fallback.getZ() + 0.5, 0f, 0f);
     }
 
     private static int leave(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
@@ -351,10 +471,7 @@ public final class PantheonTemple {
         if (destination != null) {
             player.teleportTo(destination, previous.x(), previous.y(), previous.z(), previous.yaw(), previous.pitch());
         } else {
-            ServerLevel overworld = source.getServer().overworld();
-            BlockPos fallback = overworld.getSharedSpawnPos();
-            player.teleportTo(overworld, fallback.getX() + 0.5, fallback.getY() + 1,
-                    fallback.getZ() + 0.5, 0f, 0f);
+            returnToSpawn(player);
         }
         source.sendSuccess(() -> Component.literal("Вы покинули храм."), false);
         return 1;

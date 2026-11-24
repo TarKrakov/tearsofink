@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.mixin;
 
 import com.tarkrakov.tearsofink.entity.patrol.BarricadeGates;
+import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.piston.PistonStructureResolver;
 import org.spongepowered.asm.mixin.Final;
@@ -14,6 +15,11 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(PistonStructureResolver.class)
 public abstract class GatePistonProtectionMixin {
     @Shadow @Final private Level level;
+    @Inject(method="resolve",at=@At("HEAD"),cancellable=true)
+    private void tearsofink$preventTemplePiston(CallbackInfoReturnable<Boolean> cir) {
+        if (PantheonTemple.isTemple(level)) cir.setReturnValue(false);
+    }
+
     @Inject(method="resolve",at=@At("RETURN"),cancellable=true)
     private void tearsofink$keepGate(CallbackInfoReturnable<Boolean> cir) {
         if(!cir.getReturnValue())return;

@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.mixin;
 
 import com.tarkrakov.tearsofink.entity.patrol.BarricadeGates;
+import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
 import org.spongepowered.asm.mixin.Final;
@@ -16,6 +17,7 @@ public abstract class GateExplosionProtectionMixin {
     @Shadow @Final private Level level;
     @Inject(method="finalizeExplosion",at=@At("HEAD"))
     private void tearsofink$shieldGate(boolean particles,CallbackInfo ci) {
-        ((Explosion)(Object)this).getToBlow().removeIf(pos->BarricadeGates.protectedAt(level,pos));
+        ((Explosion)(Object)this).getToBlow().removeIf(pos->BarricadeGates.protectedAt(level,pos)
+                || PantheonTemple.protectedAt(level, pos));
     }
 }
