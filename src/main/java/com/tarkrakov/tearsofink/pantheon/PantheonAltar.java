@@ -59,7 +59,7 @@ public final class PantheonAltar {
     }
 
     static boolean editable(ServerLevel level) {
-        if (!PantheonTemple.ready(level) || PantheonCombat.active() || !PantheonArena.neutralReady()) return false;
+        if (PantheonEditor.active() || !PantheonTemple.ready(level) || PantheonCombat.active() || !PantheonArena.neutralReady()) return false;
         var state = level.getBlockState(POS);
         return state.is(ModBlocks.PANTHEON_ALTAR)
                 && (!state.getValue(PantheonAltarBlock.RELIC) || placed(level) != null);

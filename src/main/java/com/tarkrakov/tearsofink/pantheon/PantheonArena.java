@@ -146,13 +146,25 @@ final class PantheonArena {
     }
 
     private static Layout inspect() throws Exception {
-        var template = PantheonTemple.load();
+        return inspect(PantheonEditor.baselineTemplate(), PantheonEditor.hasBaseline());
+    }
+
+    static void validateEditedTemplate(PantheonTemple.Template template) throws Exception {
+        inspect(template, true);
+    }
+
+    static void invalidateLayout() { layout = null; }
+
+    private static Layout inspect(PantheonTemple.Template template, boolean edited) throws Exception {
         var free = new boolean[WIDTH][DEPTH];
         int columns = 0;
         for (int x = MIN_X; x <= MAX_X; x++) {
             for (int z = MIN_Z; z <= MAX_Z; z++) {
                 BlockState floor = PantheonTemple.authored(template, new BlockPos(x, FLOOR, z));
-                if (!floor.is(ModBlocks.SANCTUM_FLOOR_TILE) && !floor.is(ModBlocks.SANCTUM_CARVED_TILE)) continue;
+                if (edited) {
+                    if (floor.hasBlockEntity() || !floor.getFluidState().isEmpty()
+                            || !floor.isCollisionShapeFullBlock(EmptyBlockGetter.INSTANCE, new BlockPos(x, FLOOR, z))) continue;
+                } else if (!floor.is(ModBlocks.SANCTUM_FLOOR_TILE) && !floor.is(ModBlocks.SANCTUM_CARVED_TILE)) continue;
                 boolean clear = true;
                 for (int y = 2; y <= 21; y++) {
                     if (!PantheonTemple.authored(template, new BlockPos(x, y, z)).isAir()) {
@@ -165,9 +177,17 @@ final class PantheonArena {
             }
         }
         // The 57x47 approved central footprint must still be made of the original planar tiles.
-        for (int x = 30; x <= 86; x++) {
-            for (int z = 63; z <= 109; z++) {
-                if (!free[x - MIN_X][z - MIN_Z]) throw new IOException("Изменилась геометрия центрального поля");
+        if (!edited) {
+            for (int x = 30; x <= 86; x++) {
+                for (int z = 63; z <= 109; z++) {
+                    if (!free[x - MIN_X][z - MIN_Z]) throw new IOException("Изменилась геометрия центрального поля");
+                }
+            }
+        } else {
+            // Preserve a walkable arrival route and the registered test target spawn.
+            for (int x = 57; x <= 59; x++) for (int z = 45; z <= 86; z++) {
+                if (!free[x - MIN_X][z - MIN_Z])
+                    throw new IOException("Оставьте свободным центральный проход X 57..59, Z 45..86 (координаты схемы), полный пол и воздух над ним: " + x + ", " + z);
             }
         }
         Set<ChunkPos> chunks = new LinkedHashSet<>();
@@ -219,6 +239,8 @@ final class PantheonArena {
     }
 
     private static void restore(MinecraftServer server) {
+        // The edit journal owns the neutral world until save/cancel, including after a restart.
+        if (PantheonEditor.active()) return;
         Path file = journal(server);
         if (Files.notExists(file)) return;
         locked = true;
@@ -290,6 +312,7 @@ final class PantheonArena {
     }
 
     static String changeScene(ServerLevel level, Scene target) {
+        if (PantheonEditor.active()) return "Пантеон в режиме редактирования.";
         if (level == null || !PantheonTemple.ready(level) || badJournal || job != null)
             return "Арена сейчас недоступна. Проверьте arena status.";
         try {
