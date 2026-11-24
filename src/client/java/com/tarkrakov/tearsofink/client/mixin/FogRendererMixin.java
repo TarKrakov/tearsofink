@@ -4,6 +4,9 @@ import com.mojang.blaze3d.shaders.FogShape;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.tarkrakov.tearsofink.client.fog.InkFog;
 import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
+import com.tarkrakov.tearsofink.pantheon.PantheonArenaScenes;
+import com.tarkrakov.tearsofink.world.ModBiomes;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.client.Camera;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.world.entity.LivingEntity;
@@ -27,13 +30,26 @@ public abstract class FogRendererMixin {
 	@Shadow private static float fogGreen;
 	@Shadow private static float fogBlue;
 
-	/** Match the distant horizon to the warm twilight; preserve underwater and status-effect fog. */
+	/** Match the distant horizon to the warm twilight; preserve status-effect fog. */
 	@Inject(method = "setupColor", at = @At("TAIL"))
 	private static void tearsofink$pantheonHorizon(Camera camera, float partialTick, ClientLevel level,
 			int viewDistance, float skyDarkness, CallbackInfo ci) {
-		if (!PantheonTemple.isTemple(level) || camera.getFluidInCamera() != FogType.NONE) return;
+		if (!PantheonTemple.isTemple(level)) return;
 		if (camera.getEntity() instanceof LivingEntity living &&
 				(living.hasEffect(MobEffects.BLINDNESS) || living.hasEffect(MobEffects.DARKNESS))) return;
+		FogType medium = camera.getFluidInCamera();
+		if (medium == FogType.WATER && PantheonArenaScenes.usesLakeColor(camera.getBlockPosition())) {
+			var lake = level.registryAccess().registryOrThrow(Registries.BIOME).get(ModBiomes.TAR_LAKE);
+			if (lake != null) {
+				int color = lake.getWaterFogColor();
+				fogRed = (color >> 16 & 255) / 255f;
+				fogGreen = (color >> 8 & 255) / 255f;
+				fogBlue = (color & 255) / 255f;
+				RenderSystem.clearColor(fogRed, fogGreen, fogBlue, 0f);
+			}
+			return;
+		}
+		if (medium != FogType.NONE) return;
 		float south = Math.max(0f, (float) Math.cos(Math.toRadians(camera.getYRot())));
 		float glow = south * south;
 		fogRed = Mth.lerp(glow, 0.38f, 0.68f);

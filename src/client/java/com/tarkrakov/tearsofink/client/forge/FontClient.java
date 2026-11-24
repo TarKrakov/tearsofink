@@ -6,7 +6,11 @@ import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandler;
 import net.fabricmc.fabric.api.client.render.fluid.v1.FluidRenderHandlerRegistry;
+import com.tarkrakov.tearsofink.pantheon.PantheonArenaScenes;
+import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
+import com.tarkrakov.tearsofink.world.ModBiomes;
 import net.minecraft.client.Minecraft;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.core.BlockPos;
@@ -60,6 +64,12 @@ public final class FontClient {
 
 				@Override
 				public int getFluidColor(BlockAndTintGetter view, BlockPos pos, FluidState state) {
+					var level = mc.level;
+					if (pos != null && level != null && PantheonTemple.isTemple(level)
+							&& PantheonArenaScenes.usesLakeColor(pos)) {
+						var lake = level.registryAccess().registryOrThrow(Registries.BIOME).get(ModBiomes.TAR_LAKE);
+						if (lake != null) return lake.getWaterColor();
+					}
 					Integer c = pos == null ? null : colorAt(pos);
 					return c != null ? c : base.getFluidColor(view, pos, state);
 				}
