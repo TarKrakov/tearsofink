@@ -25,7 +25,7 @@ import java.util.UUID;
  * Кровавая дуга Тальвара: короткий широкий полумесяц (R) или крест под 45° (ПКМ парой).
  * Летит недалеко, режет всех на пути (кроме хозяина), вешает кровотечение. Рисуется частицами.
  */
-public class BloodArcEntity extends Entity {
+public class BloodArcEntity extends Entity implements net.minecraft.world.entity.TraceableEntity {
 	private static final EntityDataAccessor<Boolean> CROSS = SynchedEntityData.defineId(BloodArcEntity.class, EntityDataSerializers.BOOLEAN);
 	private static final DustParticleOptions RED = new DustParticleOptions(new Vector3f(0.75f, 0.05f, 0.1f), 1.1f);
 	private static final DustParticleOptions DARK = new DustParticleOptions(new Vector3f(0.35f, 0.0f, 0.05f), 1.4f);
@@ -58,6 +58,11 @@ public class BloodArcEntity extends Entity {
 		this.setPos(owner.getX() + dir.x * 0.8, owner.getY() + 0.9, owner.getZ() + dir.z * 0.8);
 		this.setDeltaMovement(dir.scale(BloodTuning.ARC_SPEED));
 	}
+
+    @Override
+    public Entity getOwner() {
+        return ownerId != null && level() instanceof ServerLevel server ? server.getEntity(ownerId) : null;
+    }
 
 	@Override
 	protected void defineSynchedData(SynchedEntityData.Builder builder) {

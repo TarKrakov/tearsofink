@@ -103,6 +103,7 @@ public final class PantheonTemple {
         PantheonRuins.init();
         PantheonGatekeeper.init();
         PantheonArena.init();
+        PantheonCombat.init();
         PantheonAltar.init();
         CommandRegistrationCallback.EVENT.register((dispatcher, access, environment) ->
                 dispatcher.register(Commands.literal("tearsofink")

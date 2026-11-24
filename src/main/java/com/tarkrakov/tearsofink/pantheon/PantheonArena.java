@@ -53,6 +53,8 @@ final class PantheonArena {
     private static final String JOURNAL = "tearsofink_pantheon_scene_v1.txt";
     private static final TicketType<ChunkPos> TICKET = TicketType.create("tearsofink_pantheon_arena",
             Comparator.comparingLong(ChunkPos::toLong));
+    private static final TicketType<ChunkPos> COMBAT_TICKET = TicketType.create("tearsofink_pantheon_combat",
+            Comparator.comparingLong(ChunkPos::toLong));
     private static final BlockState CLOSED_GATE = Blocks.TINTED_GLASS.defaultBlockState();
     private static final BlockState OPEN_GATE = Blocks.AIR.defaultBlockState();
     private static final List<BlockPos> GATE = List.of(
@@ -255,32 +257,61 @@ final class PantheonArena {
 
     static boolean preparing() { return job != null; }
 
-    static boolean neutralReady() { return !locked && job == null && selected == NEUTRAL; }
+    static boolean neutralReady() { return ready(NEUTRAL); }
+    static boolean ready(Scene scene) { return !locked && job == null && selected == scene; }
+    static String sceneStatus() { return selected.id() + (failure == null ? "" : " / " + failure); }
+    static String failure() { return failure; }
+
+    static void retainCombatArea(ServerLevel level, boolean keep) {
+        if (layout == null) return;
+        for (ChunkPos pos : layout.chunks()) {
+            if (keep) level.getChunkSource().addRegionTicket(COMBAT_TICKET, pos, 2, pos);
+            else level.getChunkSource().removeRegionTicket(COMBAT_TICKET, pos, 2, pos);
+        }
+    }
+
+    static boolean closeCombatGate(ServerLevel level) { return gate(level, CLOSED_GATE); }
+    static boolean openCombatGate(ServerLevel level) { return gate(level, OPEN_GATE); }
 
     static int request(CommandSourceStack source, Scene target) {
-        ServerLevel level = source.getServer().getLevel(PantheonTemple.DIMENSION);
-        if (level == null || !PantheonTemple.ready(level) || badJournal || job != null) {
-            source.sendFailure(Component.literal("Арена сейчас недоступна. Проверьте arena status."));
+        if (PantheonCombat.active()) {
+            source.sendFailure(Component.translatable("message.tears-of-ink.pantheon.combat.busy"));
             return 0;
         }
+        ServerLevel level = source.getServer().getLevel(PantheonTemple.DIMENSION);
+        String problem = changeScene(level, target);
+        if (problem != null) {
+            source.sendFailure(Component.literal(problem));
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal("Началась смена сцены на " + target.id()
+                + ". Проход откроется автоматически."), false);
+        return 1;
+    }
+
+    static String changeScene(ServerLevel level, Scene target) {
+        if (level == null || !PantheonTemple.ready(level) || badJournal || job != null)
+            return "Арена сейчас недоступна. Проверьте arena status.";
         try {
             if (layout == null) layout = inspect();
-            save(source.getServer(), target);
+            save(level.getServer(), target);
         } catch (Exception ex) {
-            source.sendFailure(Component.literal("Арена: не удалось сохранить переход. " + ex.getMessage()));
-            return 0;
+            return "Арена: не удалось сохранить переход. " + ex.getMessage();
         }
         selected = target;
         locked = true;
         failure = null;
         job = new Job(target);
         for (ServerPlayer player : List.copyOf(level.players())) evacuate(player);
-        source.sendSuccess(() -> Component.literal("Арена закрыта для смены сцены: " + target.id()), false);
-        return 1;
+        return null;
     }
 
     private static void evacuate(ServerPlayer player) {
         if (!locked || !PantheonTemple.isTemple(player.level()) || !player.isAlive() || player.getZ() < 39) return;
+        sendToHub(player);
+    }
+
+    static void sendToHub(ServerPlayer player) {
         Vec3 to = Vec3.atBottomCenterOf(PantheonTemple.entrance());
         player.stopRiding();
         player.connection.teleport(to.x, to.y, to.z, 0, 0);
@@ -298,7 +329,7 @@ final class PantheonArena {
 
         if (active.phase == Phase.LOADING) {
             if (!active.tickets) {
-                for (ChunkPos pos : layout.chunks()) level.getChunkSource().addRegionTicket(TICKET, pos, 0, pos);
+                for (ChunkPos pos : layout.chunks()) level.getChunkSource().addRegionTicket(TICKET, pos, 1, pos);
                 active.tickets = true;
             }
             if (++active.loadingTicks > LOAD_TIMEOUT) {
@@ -359,7 +390,7 @@ final class PantheonArena {
             active.cursor = 0;
             return;
         }
-        if (!gate(level, OPEN_GATE)) {
+        if (!PantheonCombat.holdsGate() && !gate(level, OPEN_GATE)) {
             fail(level, "проём изменён");
             return;
         }
@@ -369,6 +400,7 @@ final class PantheonArena {
         release(level);
         job = null;
         locked = false;
+        if (PantheonCombat.active()) return;
         for (ServerPlayer player : level.players()) {
             player.displayClientMessage(Component.translatable(selected == NEUTRAL
                     ? "message.tears-of-ink.pantheon.arena.restored"
@@ -399,7 +431,7 @@ final class PantheonArena {
 
     private static void release(ServerLevel level) {
         if (level == null || job == null || !job.tickets) return;
-        for (ChunkPos pos : layout.chunks()) level.getChunkSource().removeRegionTicket(TICKET, pos, 0, pos);
+        for (ChunkPos pos : layout.chunks()) level.getChunkSource().removeRegionTicket(TICKET, pos, 1, pos);
     }
 
     private static int status(CommandSourceStack source) {

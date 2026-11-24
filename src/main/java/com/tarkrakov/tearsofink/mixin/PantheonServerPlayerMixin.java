@@ -2,11 +2,13 @@ package com.tarkrakov.tearsofink.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.tarkrakov.tearsofink.pantheon.PantheonCombat;
 import com.tarkrakov.tearsofink.pantheon.PantheonRecovery;
 import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameRules;
@@ -31,6 +33,12 @@ public abstract class PantheonServerPlayerMixin {
         if (!PantheonTemple.isTemple(player.level())) return;
         if (player.containerMenu != player.inventoryMenu) player.closeContainer();
         player.inventoryMenu.removed(player);
+        PantheonCombat.playerDied(player);
+    }
+
+    @Inject(method = "awardKillScore", at = @At("HEAD"), cancellable = true)
+    private void tearsofink$noTrialKillProgress(Entity target, int points, DamageSource source, CallbackInfo ci) {
+        if (PantheonCombat.isTrialTarget(target)) ci.cancel();
     }
 
     @Inject(method = "addAdditionalSaveData", at = @At("TAIL"))

@@ -28,7 +28,7 @@ import java.util.UUID;
  * position interpolation or restarting client simulation. Both sides evaluate the
  * same bounded path; only the server resolves contact and damage.
  */
-public final class ShieldPhantomEntity extends Entity {
+public final class ShieldPhantomEntity extends Entity implements net.minecraft.world.entity.TraceableEntity {
     private static final EntityDataAccessor<ItemStack> SHIELD = SynchedEntityData.defineId(ShieldPhantomEntity.class, EntityDataSerializers.ITEM_STACK);
     private static final EntityDataAccessor<Float> RANGE = SynchedEntityData.defineId(ShieldPhantomEntity.class, EntityDataSerializers.FLOAT);
     private UUID owner;
@@ -69,6 +69,11 @@ public final class ShieldPhantomEntity extends Entity {
     }
     public Vec3 flightOffset(float partialTick) {
         return getLookAngle().scale(flightDistance(age + partialTick));
+    }
+
+    @Override
+    public Entity getOwner() {
+        return owner != null && level() instanceof ServerLevel server ? server.getEntity(owner) : null;
     }
 
     @Override protected void defineSynchedData(SynchedEntityData.Builder b) {

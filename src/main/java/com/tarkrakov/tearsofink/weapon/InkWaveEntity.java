@@ -22,7 +22,7 @@ import java.util.UUID;
  * Волна чернил: летит прямо, проходит сквозь врагов (каждого бьёт один раз), гаснет о стену
  * или через ~12 блоков. Видна как поток чернильных брызг.
  */
-public class InkWaveEntity extends Entity {
+public class InkWaveEntity extends Entity implements net.minecraft.world.entity.TraceableEntity {
 	// ===== Настройки — крутить здесь =====
 	public static final double SPEED = 0.9;
 	public static final double MAX_DISTANCE = 12;
@@ -65,6 +65,11 @@ public class InkWaveEntity extends Entity {
 		this.setDeltaMovement(dir.scale(SPEED));
 		this.setYRot((float) (Math.atan2(-dir.x, dir.z) * 180 / Math.PI));
 	}
+
+    @Override
+    public Entity getOwner() {
+        return ownerId != null && level() instanceof ServerLevel server ? server.getEntity(ownerId) : null;
+    }
 
 	@Override
 	protected void defineSynchedData(SynchedEntityData.Builder builder) {

@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.vow;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import com.tarkrakov.tearsofink.pantheon.PantheonCombat;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.advancement.ModAdvancements;
 import com.tarkrakov.tearsofink.hunt.HunterEntity;
@@ -94,6 +95,7 @@ public final class SoulFeats {
 	}
 
 	private static void onDeath(LivingEntity victim, DamageSource source) {
+		if (PantheonCombat.isTrialTarget(victim)) return;
 		if (!(source.getEntity() instanceof ServerPlayer player)
 				|| source.getDirectEntity() != player
 				|| victim == player || victim.isAlliedTo(player)
