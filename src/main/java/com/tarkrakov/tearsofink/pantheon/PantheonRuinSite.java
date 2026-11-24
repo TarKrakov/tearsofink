@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.pantheon;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.mixin.PantheonChunkMapAccessor;
 import com.tarkrakov.tearsofink.world.InkLandsLayout;
 import com.tarkrakov.tearsofink.world.TempleNetwork;
@@ -8,6 +9,7 @@ import com.tarkrakov.tearsofink.world.battlefield.BattlefieldWorldPlan;
 import com.tarkrakov.tearsofink.world.ruins.RuinStructure;
 import com.tarkrakov.tearsofink.world.ruins.Ruins;
 import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.ChunkPos;
@@ -28,20 +30,28 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 
 record PantheonRuinSite(BlockPos origin, Rotation rotation, Profile profile) {
     enum Profile {
-        FULL, COLLAPSED_ARENA;
+        FULL, COLLAPSED_ARENA, GATEWAY, EXISTING_GATEWAY;
 
         boolean keeps(BlockPos local) {
-            return this == FULL || local.getZ() <= 39
-                    || (local.getX() >= 28 && local.getX() <= 86 && local.getZ() <= 114);
+            return switch (this) {
+                case FULL -> true;
+                case COLLAPSED_ARENA -> local.getZ() <= 39
+                        || (local.getX() >= 28 && local.getX() <= 86 && local.getZ() <= 114);
+                case GATEWAY, EXISTING_GATEWAY -> local.getX() >= 51 && local.getX() <= 64
+                        && local.getZ() <= 19 && local.getY() <= 6;
+            };
         }
     }
 
     static final int WIDTH = 115, DEPTH = 144;
     private static final int[] DISTANCES = {112, 144, 176, 208, 240, 280, 320, 368, 416, 464, 512, 560};
+    private static final int[] GATEWAY_DISTANCES = {80, 112, 144, 176, 208, 240, 280, 320, 368, 416, 464, 512, 560, 640,
+            720, 800, 880, 960, 1080, 1200, 1360, 1520};
     private static final int DIRECTIONS = 40;
     private static final int EDGE_MARGIN = 8;
     private static final int ROAD_MARGIN = 18;
@@ -72,7 +82,6 @@ record PantheonRuinSite(BlockPos origin, Rotation rotation, Profile profile) {
                 .filter(p -> !Ruins.isStartTemple(layout, p[0], p[1]))
                 .min(Comparator.comparingDouble(p -> distanceSquared(p[0] - start[0], p[1] - start[1])))
                 .orElse(null);
-        if (second == null) return null;
 
         var full = new Footprint(template, Profile.FULL);
         var collapsed = new Footprint(template, Profile.COLLAPSED_ARENA);
@@ -84,9 +93,13 @@ record PantheonRuinSite(BlockPos origin, Rotation rotation, Profile profile) {
                 .resolve("region");
         var checkedChunks = new HashMap<Long, Boolean>();
         double phase = ((layout.seed() >>> 24) & 255) * (Math.PI * 2 / 256);
+        if (second == null) {
+            return chooseGateway(level, layout, template, temples, new int[]{(int) start[0], (int) start[1]},
+                    terrain, scattered, fields, region, checkedChunks, phase);
+        }
         int blocked = 0, occupied = 0, uneven = 0, structures = 0;
         for (int distance : DISTANCES) {
-            for (Profile profile : Profile.values()) {
+            for (Profile profile : List.of(Profile.FULL, Profile.COLLAPSED_ARENA)) {
                 Footprint footprint = profile == Profile.FULL ? full : collapsed;
                 for (int angle = 0; angle < DIRECTIONS; angle++) {
                     double direction = phase + angle * (Math.PI * 2 / DIRECTIONS);
@@ -124,8 +137,85 @@ record PantheonRuinSite(BlockPos origin, Rotation rotation, Profile profile) {
         }
         TearsOfInk.LOGGER.warn("Pantheon site search near temple {}, {}: reserved {}, occupied {}, terrain {}, scattered {}",
                 second[0], second[1], blocked, occupied, uneven, structures);
+        return chooseGateway(level, layout, template, temples, second, terrain, scattered, fields, region,
+                checkedChunks, phase);
+    }
+
+    private static PantheonRuinSite chooseGateway(ServerLevel level, InkLandsLayout layout,
+                                                  PantheonTemple.Template template, List<int[]> temples, int[] second,
+                                                  Terrain terrain, Scattered scattered, BattlefieldWorldPlan fields,
+                                                  Path region, HashMap<Long, Boolean> checkedChunks, double phase)
+            throws IOException {
+        Footprint footprint = new Footprint(template, Profile.GATEWAY);
+        TempleNetwork network = layout.templeNetwork();
+        for (int distance : GATEWAY_DISTANCES) {
+            for (int angle = 0; angle < DIRECTIONS; angle++) {
+                double direction = phase + angle * (Math.PI * 2 / DIRECTIONS);
+                int dx = (int) Math.round(distance * Math.cos(direction));
+                int dz = (int) Math.round(distance * Math.sin(direction));
+                int x = second[0] + dx, z = second[1] + dz;
+                Rotation facing = rotation(dx, dz);
+                for (Rotation turn : Rotation.values()) {
+                    Rotation rotation = facing.getRotated(turn);
+                    BlockPos origin = new BlockPos(x, 0, z).subtract(StructureTemplate.transform(
+                            ENTRY.atY(0), Mirror.NONE, rotation, BlockPos.ZERO));
+                    var site = new PantheonRuinSite(origin, rotation, Profile.GATEWAY);
+                    BoundingBox box = footprint.bounds(site);
+                    if (!outsideReserved(layout, temples, network, fields, box, site, footprint)) continue;
+                    // Cheap terrain prediction first, then inspect the real surface in a saved world.
+                    int y = terrain.platform(box, x, z, site, footprint);
+                    if (y == Integer.MIN_VALUE || scattered.overlaps(box, site, footprint)) continue;
+                    if (untouched(level, region, box, checkedChunks)) {
+                        return new PantheonRuinSite(origin.atY(y), rotation, Profile.GATEWAY);
+                    }
+                    BoundingBox approach = BoundingBox.fromCorners(site.world(new BlockPos(51, 0, -1)),
+                            site.world(new BlockPos(64, 0, 19)));
+                    if (!storedArea(level, region, approach)) continue;
+                    int existingY = existingPlatform(level, site, approach);
+                    if (existingY != Integer.MIN_VALUE) {
+                        return new PantheonRuinSite(origin.atY(existingY), rotation, Profile.EXISTING_GATEWAY);
+                    }
+                }
+            }
+        }
         return null;
     }
+
+    private static boolean storedArea(ServerLevel level, Path region, BoundingBox box) throws IOException {
+        for (int x = box.minX() >> 4; x <= box.maxX() >> 4; x++) {
+            for (int z = box.minZ() >> 4; z <= box.maxZ() >> 4; z++) {
+                if (level.getChunkSource().getChunkNow(x, z) == null && !stored(region, new ChunkPos(x, z))) return false;
+            }
+        }
+        return true;
+    }
+
+    private static int existingPlatform(ServerLevel level, PantheonRuinSite site, BoundingBox bounds) {
+        int low = Integer.MAX_VALUE, high = Integer.MIN_VALUE;
+        for (int x = bounds.minX(); x <= bounds.maxX(); x++) {
+            for (int z = bounds.minZ(); z <= bounds.maxZ(); z++) {
+                int surface = level.getHeight(Heightmap.Types.WORLD_SURFACE, x, z);
+                var ground = level.getBlockState(new BlockPos(x, surface - 1, z));
+                if (!ground.getFluidState().isEmpty()
+                        || !(ground.is(BlockTags.DIRT) || ground.is(BlockTags.BASE_STONE_OVERWORLD)
+                        || ground.is(ModBlocks.ASHEN_SOIL) || ground.is(ModBlocks.BLOOD_SOIL)
+                        || ground.is(ModBlocks.TAR_SOIL) || ground.is(ModBlocks.ASH)
+                        || ground.is(ModBlocks.ASPHODELITE_ROCK))) return Integer.MIN_VALUE;
+                low = Math.min(low, surface);
+                high = Math.max(high, surface);
+                if (high - low > 5) return Integer.MIN_VALUE;
+            }
+        }
+        if (high + 22 >= level.getMaxBuildHeight()) return Integer.MIN_VALUE;
+        for (int x = 57; x <= 58; x++) {
+            BlockPos front = site.world(new BlockPos(x, 0, -1));
+            if (level.getHeight(Heightmap.Types.WORLD_SURFACE, front.getX(), front.getZ()) != high)
+                return Integer.MIN_VALUE;
+        }
+        // One course above the recorded free surface leaves the foundation marker in air.
+        return high + 1;
+    }
+
 
     private static boolean outsideReserved(InkLandsLayout layout, java.util.List<int[]> temples,
                                            TempleNetwork network, BattlefieldWorldPlan fields, BoundingBox box,

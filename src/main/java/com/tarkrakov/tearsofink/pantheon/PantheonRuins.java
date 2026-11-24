@@ -11,12 +11,15 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
@@ -31,10 +34,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /** Places a frozen world-owned site during normal chunk generation only. */
 public final class PantheonRuins {
@@ -44,15 +50,17 @@ public final class PantheonRuins {
     private static final BlockState FOUNDATION = Blocks.COBBLED_DEEPSLATE.defaultBlockState();
     private static final BlockState STAMP = Blocks.POLISHED_BLACKSTONE.defaultBlockState();
     private static final BlockState AIR = Blocks.AIR.defaultBlockState();
-    private static final String NONE = "No untouched, dry site with a walkable approach and clearance from other structures";
+    private static final String NONE = "No safe dry site for the Pantheon ruins or their compact gateway";
     private static volatile Instance active;
     private enum SiteStatus { PLANNING, NO_SITE, ERROR, RESERVED }
     private static SiteStatus siteStatus = SiteStatus.PLANNING;
     private static String status = "Waiting for the temple plan";
     private static boolean attempted;
+    private static final Set<Long> SUPPORTED_CHUNKS = new HashSet<>();
 
-    private record Instance(ServerLevel level, PantheonRuinSite site,
-                            Map<Long, List<Map.Entry<BlockPos, BlockState>>> blocks) {}
+    private record Section(List<Map.Entry<BlockPos, BlockState>> blocks,
+                           List<Map.Entry<BlockPos, BlockState>> bases, Set<BlockPos> clearance) {}
+    private record Instance(ServerLevel level, PantheonRuinSite site, Map<Long, Section> sections) {}
 
     private PantheonRuins() {}
 
@@ -69,6 +77,7 @@ public final class PantheonRuins {
                 })));
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             active = null;
+            SUPPORTED_CHUNKS.clear();
             attempted = false;
             siteStatus = SiteStatus.PLANNING;
             status = "Waiting for the temple plan";
@@ -77,7 +86,11 @@ public final class PantheonRuins {
             if (ModDimensions.isLands(level) && Files.exists(planFile(level))) loadSite(level, null);
         });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
-            if (attempted || server.getTickCount() % 20 != 0) return;
+            if (server.getTickCount() % 20 != 0) return;
+            if (attempted) {
+                repairLoadedSupports();
+                return;
+            }
             ServerLevel level = ModDimensions.lands(server);
             if (level == null) return;
             InkLandsLayout layout = InkLandsLayout.of(level);
@@ -107,9 +120,13 @@ public final class PantheonRuins {
                 TearsOfInk.LOGGER.warn("Pantheon ruins: {}", status);
                 return;
             }
-            active = new Instance(level, site, blueprint(site, template, level.getSeed()));
+            var instance = new Instance(level, site, blueprint(site, template, level.getSeed()));
+            if (site.profile() == PantheonRuinSite.Profile.EXISTING_GATEWAY) installInEmptyAir(instance);
+            active = instance;
             siteStatus = SiteStatus.RESERVED;
-            status = "Reserved at " + site.entrance().toShortString() + "; placed as new chunks generate";
+            String placement = site.profile() == PantheonRuinSite.Profile.EXISTING_GATEWAY
+                    ? "; compact gateway installed" : "; placed as new chunks generate";
+            status = "Reserved at " + site.entrance().toShortString() + placement;
             TearsOfInk.LOGGER.info("Pantheon ruins: {}", status);
         } catch (Exception failure) {
             siteStatus = SiteStatus.ERROR;
@@ -162,41 +179,98 @@ public final class PantheonRuins {
     public static void finishDecoration(ServerLevel level, ChunkAccess chunk) {
         Instance current = active;
         if (current == null || current.level() != level || !(chunk instanceof ProtoChunk)
-                || chunk instanceof ImposterProtoChunk) return;
-        var blocks = current.blocks().get(chunk.getPos().toLong());
-        if (blocks == null) return;
+                || chunk instanceof ImposterProtoChunk
+                || current.site().profile() == PantheonRuinSite.Profile.EXISTING_GATEWAY) return;
+        Section section = current.sections().get(chunk.getPos().toLong());
+        if (section == null) return;
 
-        // Light can be retried on a saved protochunk. All writes are deterministic.
         // A structure's containers are never replaced even on a conflicting datapack.
-        for (var block : blocks) {
+        for (var block : section.blocks()) {
             if (chunk.getBlockState(block.getKey()).hasBlockEntity()) {
                 TearsOfInk.LOGGER.error("Pantheon ruins: reserved chunk {} contains a foreign block entity", chunk.getPos());
                 return;
             }
         }
-        for (var block : blocks) {
-            BlockPos pos = block.getKey();
-            if (pos.getY() <= current.site().origin().getY() && !block.getValue().isAir()) {
-                ground(chunk, pos);
+        for (var block : section.blocks()) chunk.setBlockState(block.getKey(), block.getValue(), false);
+        for (var base : section.bases()) {
+            for (BlockPos support : supportedColumn(chunk, base.getKey(), section.clearance(), false)) {
+                chunk.setBlockState(support, FOUNDATION, false);
             }
-            chunk.setBlockState(pos, block.getValue(), false);
         }
     }
 
-    private static void ground(ChunkAccess chunk, BlockPos floor) {
-        BlockPos.MutableBlockPos pos = floor.mutable();
-        for (int depth = 1; depth <= 32 && floor.getY() - depth >= chunk.getMinBuildHeight(); depth++) {
-            pos.setY(floor.getY() - depth);
+    private static void installInEmptyAir(Instance instance) throws IOException {
+        ServerLevel level = instance.level();
+        BlockPos proof = instance.site().world(PROOF);
+        if (level.getBlockState(proof).equals(STAMP)) return;
+        for (Section section : instance.sections().values()) {
+            for (var block : section.blocks()) {
+                BlockState existing = level.getBlockState(block.getKey());
+                if (!existing.isAir() && !existing.equals(block.getValue())) {
+                    throw new IOException("Compact Pantheon site changed at " + block.getKey().toShortString());
+                }
+            }
+        }
+        int flags = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        for (var entry : instance.sections().entrySet()) {
+            Section section = entry.getValue();
+            for (var block : section.blocks()) {
+                if (!block.getKey().equals(proof) && !block.getValue().isAir()
+                        && level.getBlockState(block.getKey()).isAir()) level.setBlock(block.getKey(), block.getValue(), flags);
+            }
+            ChunkPos chunk = new ChunkPos(entry.getKey());
+            var loaded = level.getChunk(chunk.x, chunk.z);
+            for (var base : section.bases()) {
+                for (BlockPos support : supportedColumn(loaded, base.getKey(), section.clearance(), true)) {
+                    if (level.getBlockState(support).isAir()) level.setBlock(support, FOUNDATION, flags);
+                }
+            }
+        }
+        level.getChunkSource().save(true);
+        if (!level.setBlock(proof, STAMP, flags)) throw new IOException("Could not mark the compact Pantheon as installed");
+    }
+
+    private static void repairLoadedSupports() {
+        Instance current = active;
+        if (current == null) return;
+        int remaining = 4;
+        for (var entry : current.sections().entrySet()) {
+            long key = entry.getKey();
+            if (SUPPORTED_CHUNKS.contains(key)) continue;
+            ChunkPos pos = new ChunkPos(key);
+            var chunk = current.level().getChunkSource().getChunkNow(pos.x, pos.z);
+            if (chunk == null) continue;
+            Section section = entry.getValue();
+            SUPPORTED_CHUNKS.add(key);
+            for (var base : section.bases()) {
+                if (!chunk.getBlockState(base.getKey()).equals(base.getValue())) continue;
+                for (BlockPos support : supportedColumn(chunk, base.getKey(), section.clearance(), true)) {
+                    if (!chunk.getBlockState(support).isAir()) continue;
+                    chunk.setBlockState(support, FOUNDATION, false);
+                    current.level().getChunkSource().blockChanged(support);
+                }
+            }
+            if (--remaining == 0) break;
+        }
+    }
+
+    private static List<BlockPos> supportedColumn(ChunkAccess chunk, BlockPos base, Set<BlockPos> clearance,
+                                                  boolean airOnly) {
+        List<BlockPos> fill = new ArrayList<>();
+        for (int y = base.getY() - 1; y >= Math.max(base.getY() - 56, chunk.getMinBuildHeight()); y--) {
+            BlockPos pos = base.atY(y);
+            if (clearance.contains(pos)) return List.of();
             BlockState existing = chunk.getBlockState(pos);
-            if (!existing.isAir() && existing.getFluidState().isEmpty()
-                    && existing.isSolidRender(chunk, pos)) break;
-            if (existing.hasBlockEntity()) break;
-            chunk.setBlockState(pos, FOUNDATION, false);
+            if (existing.hasBlockEntity()) return List.of();
+            if (existing.getFluidState().isEmpty() && !existing.is(BlockTags.LOGS) && !existing.is(BlockTags.LEAVES)
+                    && existing.isFaceSturdy(chunk, pos, Direction.UP)) return fill;
+            if (!existing.isAir() && (airOnly || !existing.canBeReplaced())) return List.of();
+            fill.add(pos);
         }
+        return List.of();
     }
 
-    private static Map<Long, List<Map.Entry<BlockPos, BlockState>>> blueprint(
-            PantheonRuinSite site, PantheonTemple.Template template, long seed) {
+    private static Map<Long, Section> blueprint(PantheonRuinSite site, PantheonTemple.Template template, long seed) {
         var blocks = new LinkedHashMap<BlockPos, BlockState>();
         for (var placement : template.placements()) {
             BlockPos pos = placement.relative();
@@ -240,8 +314,23 @@ public final class PantheonRuins {
         var byChunk = new HashMap<Long, java.util.ArrayList<Map.Entry<BlockPos, BlockState>>>();
         blocks.forEach((pos, state) -> byChunk.computeIfAbsent(new ChunkPos(pos).toLong(),
                 key -> new java.util.ArrayList<>()).add(Map.entry(pos, state)));
-        var frozen = new HashMap<Long, List<Map.Entry<BlockPos, BlockState>>>();
-        byChunk.forEach((chunk, cells) -> frozen.put(chunk, List.copyOf(cells)));
+        var frozen = new HashMap<Long, Section>();
+        byChunk.forEach((chunk, cells) -> {
+            var lowest = new LinkedHashMap<Long, Map.Entry<BlockPos, BlockState>>();
+            var clearance = new HashSet<BlockPos>();
+            for (var cell : cells) {
+                BlockPos pos = cell.getKey();
+                if (cell.getValue().isAir()) {
+                    clearance.add(pos);
+                    continue;
+                }
+                // Keep roof overhangs and arches. Ground the masonry's lowest load-bearing courses.
+                if (pos.getY() > site.origin().getY() + 4 || pos.equals(site.world(PROOF))) continue;
+                long column = BlockPos.asLong(pos.getX(), 0, pos.getZ());
+                lowest.merge(column, cell, (a, b) -> a.getKey().getY() <= b.getKey().getY() ? a : b);
+            }
+            frozen.put(chunk, new Section(List.copyOf(cells), List.copyOf(lowest.values()), Set.copyOf(clearance)));
+        });
         return Map.copyOf(frozen);
     }
 
