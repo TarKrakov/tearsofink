@@ -43,6 +43,8 @@ public final class PersonalSlots {
 
     private PersonalSlots() {}
 
+    public static void init() {}
+
     /** Called once a second on the server, after item-use teleportation is complete.
      * Outside the Lands the mirror moves to ordinary inventory, so no hidden slot traps it.
      * A full inventory retains the exact original stack and retries when space opens. */

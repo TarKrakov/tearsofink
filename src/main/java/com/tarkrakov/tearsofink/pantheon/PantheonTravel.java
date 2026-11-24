@@ -36,6 +36,8 @@ final class PantheonTravel {
 
     private PantheonTravel() {}
 
+    static void init() {}
+
     static boolean enter(ServerPlayer player) {
         ServerLevel destination = player.server.getLevel(PantheonTemple.DIMENSION);
         Vec3 arrival = Vec3.atBottomCenterOf(PantheonTemple.entrance());
@@ -62,9 +64,6 @@ final class PantheonTravel {
                 player.setAttached(RETURN, null);
                 return true;
             }
-            // A previously visited non-overworld dimension may be temporarily unsafe.
-            // Retain its return point so the player can retry.
-            if (level != player.server.overworld()) return false;
         }
         if (!returnToSpawn(player)) return false;
         player.setAttached(RETURN, null);
@@ -78,6 +77,16 @@ final class PantheonTravel {
         if (position == null) {
             int y = overworld.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, spawn.getX(), spawn.getZ());
             position = nearest(player, overworld, Vec3.atBottomCenterOf(spawn.atY(y)));
+        }
+        if (position == null) {
+            for (BlockPos column : BlockPos.spiralAround(spawn, 6, Direction.EAST, Direction.SOUTH)) {
+                int y = overworld.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, column.getX(), column.getZ());
+                Vec3 surface = Vec3.atBottomCenterOf(column.atY(y));
+                if (safe(player, overworld, surface)) {
+                    position = surface;
+                    break;
+                }
+            }
         }
         if (position == null) return false;
         move(player, overworld, position, overworld.getSharedSpawnAngle(), 0);

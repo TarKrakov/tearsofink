@@ -24,8 +24,11 @@ public abstract class GatePistonProtectionMixin {
     private void tearsofink$keepGate(CallbackInfoReturnable<Boolean> cir) {
         if(!cir.getReturnValue())return;
         var self=(PistonStructureResolver)(Object)this;
-        if(self.getToPush().stream().anyMatch(pos->BarricadeGates.protectedAt(level,pos))
-                ||self.getToDestroy().stream().anyMatch(pos->BarricadeGates.protectedAt(level,pos)))
+        if (self.getToPush().stream().anyMatch(pos -> BarricadeGates.protectedAt(level, pos)
+                || PantheonTemple.protectedAt(level, pos)
+                || PantheonTemple.protectedAt(level, pos.relative(self.getPushDirection())))
+                || self.getToDestroy().stream().anyMatch(pos -> BarricadeGates.protectedAt(level, pos)
+                || PantheonTemple.protectedAt(level, pos)))
             cir.setReturnValue(false);
     }
 }

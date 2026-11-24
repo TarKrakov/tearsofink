@@ -76,13 +76,19 @@ public final class PantheonRuins {
         attempted = true;
         try {
             Path file = planFile(level);
-            PantheonRuinSite site = layout == null ? read(file, level) : chooseAndSave(file, level, layout);
+            PantheonRuinSite site = Files.exists(file) ? read(file, level) : null;
+            if (site == null && layout == null) {
+                attempted = false;
+                return;
+            }
+            var template = PantheonTemple.load();
+            if (site == null) site = chooseAndSave(file, level, layout, template);
             if (site == null) {
                 status = NONE;
                 TearsOfInk.LOGGER.warn("Pantheon ruins: {}", status);
                 return;
             }
-            active = new Instance(level, site, blueprint(site, PantheonTemple.load(), level.getSeed()));
+            active = new Instance(level, site, blueprint(site, template, level.getSeed()));
             status = "Reserved at " + site.entrance().toShortString() + "; placed as new chunks generate";
             TearsOfInk.LOGGER.info("Pantheon ruins: {}", status);
         } catch (Exception failure) {
@@ -133,7 +139,7 @@ public final class PantheonRuins {
         }
         for (var block : blocks) {
             BlockPos pos = block.getKey();
-            if (pos.getY() == current.site().origin().getY() && !block.getValue().isAir()) {
+            if (pos.getY() <= current.site().origin().getY() && !block.getValue().isAir()) {
                 ground(chunk, pos);
             }
             chunk.setBlockState(pos, block.getValue(), false);
@@ -142,7 +148,7 @@ public final class PantheonRuins {
 
     private static void ground(ChunkAccess chunk, BlockPos floor) {
         BlockPos.MutableBlockPos pos = floor.mutable();
-        for (int depth = 1; depth <= 24 && floor.getY() - depth >= chunk.getMinBuildHeight(); depth++) {
+        for (int depth = 1; depth <= 32 && floor.getY() - depth >= chunk.getMinBuildHeight(); depth++) {
             pos.setY(floor.getY() - depth);
             BlockState existing = chunk.getBlockState(pos);
             if (!existing.isAir() && existing.getFluidState().isEmpty()
@@ -157,6 +163,7 @@ public final class PantheonRuins {
         var blocks = new LinkedHashMap<BlockPos, BlockState>();
         for (var placement : template.placements()) {
             BlockPos pos = placement.relative();
+            if (!site.profile().keeps(pos)) continue;
             BlockState state = placement.state();
             String id = BuiltInRegistries.BLOCK.getKey(state.getBlock()).getPath();
             if (!id.startsWith("sanctum_") && !id.startsWith("pantheon_column_")) continue;
@@ -175,7 +182,9 @@ public final class PantheonRuins {
         for (int z = 0; z <= 18; z++) {
             for (int x = 55; x <= 61; x++) {
                 if (z < 8 && (x < 57 || x > 59)) continue;
-                for (int y = 1; y <= 4; y++) blocks.putIfAbsent(site.world(new BlockPos(x, y, z)), AIR);
+                for (int y = 1; y <= (z < 7 ? 13 : 4); y++) {
+                    blocks.putIfAbsent(site.world(new BlockPos(x, y, z)), AIR);
+                }
             }
         }
         // The doorway is X57–58. Preserve the author's surrounding walls and close the entire arch.
@@ -203,17 +212,19 @@ public final class PantheonRuins {
         blocks.put(site.world(pos), state.rotate(site.rotation()));
     }
 
-    private static PantheonRuinSite chooseAndSave(Path file, ServerLevel level, InkLandsLayout layout) throws IOException {
-        PantheonRuinSite site = PantheonRuinSite.choose(level, layout);
-        String data = site == null ? "unavailable" : site.origin().asLong() + " " + site.rotation().name();
+    private static PantheonRuinSite chooseAndSave(Path file, ServerLevel level, InkLandsLayout layout,
+                                                  PantheonTemple.Template template) throws IOException {
+        PantheonRuinSite site = PantheonRuinSite.choose(level, layout, template);
+        if (site == null) return null;
+        String data = site.origin().asLong() + " " + site.rotation().name() + " " + site.profile().name();
         Files.createDirectories(file.getParent());
         Path temp = Files.createTempFile(file.getParent(), "pantheon-ruins-", ".tmp");
         try {
-            Files.writeString(temp, "1 " + level.getSeed() + " " + data + "\n");
+            Files.writeString(temp, "2 " + level.getSeed() + " " + data + "\n");
             try (var channel = FileChannel.open(temp, StandardOpenOption.WRITE)) {
                 channel.force(true);
             }
-            Files.move(temp, file, StandardCopyOption.ATOMIC_MOVE);
+            Files.move(temp, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
         } finally {
             Files.deleteIfExists(temp);
         }
@@ -222,15 +233,18 @@ public final class PantheonRuins {
 
     private static PantheonRuinSite read(Path file, ServerLevel level) throws IOException {
         String[] fields = Files.readString(file).strip().split(" ");
-        if (fields.length < 3 || !fields[0].equals("1") || Long.parseLong(fields[1]) != level.getSeed())
+        if (fields.length < 3 || Long.parseLong(fields[1]) != level.getSeed())
             throw new IOException("Unknown Pantheon site format or world seed");
-        if (fields.length == 3 && fields[2].equals("unavailable")) return null;
-        if (fields.length != 4) throw new IOException("Invalid Pantheon site");
+        boolean legacy = fields[0].equals("1");
+        if (legacy && fields.length == 3 && fields[2].equals("unavailable")) return null;
+        if ((!legacy && !fields[0].equals("2")) || fields.length != (legacy ? 4 : 5))
+            throw new IOException("Invalid Pantheon site");
         BlockPos origin = BlockPos.of(Long.parseLong(fields[2]));
         if (Math.abs(origin.getX()) > 3000 || Math.abs(origin.getZ()) > 3000
-                || origin.getY() <= level.getMinBuildHeight() + 25 || origin.getY() >= level.getMaxBuildHeight() - 22) {
+                || origin.getY() <= level.getMinBuildHeight() + 33 || origin.getY() >= level.getMaxBuildHeight() - 22) {
             throw new IOException("Pantheon site is outside valid world bounds");
         }
-        return new PantheonRuinSite(origin, Rotation.valueOf(fields[3]));
+        var profile = legacy ? PantheonRuinSite.Profile.FULL : PantheonRuinSite.Profile.valueOf(fields[4]);
+        return new PantheonRuinSite(origin, Rotation.valueOf(fields[3]), profile);
     }
 }

@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.pantheon;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.prologue.PersonalSlots;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -92,6 +93,10 @@ public final class PantheonTemple {
     private PantheonTemple() {}
 
     public static void init() {
+        // Register attachment codecs before loading any player NBT.
+        PersonalSlots.init();
+        PantheonTravel.init();
+        PantheonRecovery.init();
         PantheonRuins.init();
         PantheonGatekeeper.init();
         CommandRegistrationCallback.EVENT.register((dispatcher, access, environment) ->
@@ -314,6 +319,7 @@ public final class PantheonTemple {
             }
         }
         if (cleanupCursor == template.soil().size()) {
+            level.getChunkSource().save(true);
             setTempleBlock(level, CLEANED, Blocks.DIAMOND_BLOCK.defaultBlockState(), Block.UPDATE_CLIENTS);
             cleanupTemplate = null;
             cleanupCursor = 0;
@@ -381,7 +387,10 @@ public final class PantheonTemple {
                 }
             }
             if (current.scan < VOLUME) return;
-            if (!current.resume) setTempleBlock(level, CLAIM, Blocks.LODESTONE.defaultBlockState(), Block.UPDATE_CLIENTS);
+            if (!current.resume) {
+                setTempleBlock(level, CLAIM, Blocks.LODESTONE.defaultBlockState(), Block.UPDATE_CLIENTS);
+                level.getChunkSource().save(true);
+            }
             current.building = true;
         }
         int writes = 0;
@@ -425,6 +434,7 @@ public final class PantheonTemple {
             entity.loadWithComponents(data, level.registryAccess());
             entity.setChanged();
         }
+        level.getChunkSource().save(true);
         setTempleBlock(level, FINISHED, Blocks.EMERALD_BLOCK.defaultBlockState(), Block.UPDATE_CLIENTS);
         job = null;
         server.getPlayerList().getPlayers().stream().filter(p -> p.hasPermissions(2))
@@ -439,7 +449,8 @@ public final class PantheonTemple {
                 ? job.building ? "установка блоков " + job.placed + "/" + job.template.placements().size()
                                : "проверка пространства " + job.scan + "/" + VOLUME
                 : ready(level) ? "храм установлен"
-                : level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK) ? "ожидается завершение очистки грунта"
+                : level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK) ?
+                    (level.getBlockState(CLEANED).isAir() ? "очистка грунта" : "место метки очистки занято")
                 : level.getBlockState(CLAIM).is(Blocks.LODESTONE) ? "установка прервана — temple resume"
                 : "не установлен — temple install";
         ctx.getSource().sendSuccess(() -> Component.literal("Pantheon temple: " + status), false);
