@@ -3,6 +3,7 @@ package com.tarkrakov.tearsofink.weapon.forge;
 import com.mojang.serialization.Codec;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.hunt.HunterType;
+import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
 import com.tarkrakov.tearsofink.hunt.HunterWeaponItem;
 import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.vow.Vow;
@@ -32,6 +33,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -68,6 +70,8 @@ public final class AscensionFont {
 	public static final int INK = 1, SOUL = 2;
 
 	private static final Map<BlockPos, Active> ACTIVE = new HashMap<>();
+	/** Separate instance: identical coordinates in Ink Lands and the Pantheon must never collide. */
+	private static final Map<BlockPos, Active> TEMPLE_ACTIVE = new HashMap<>();
 	private static final Map<UUID, Long> LAST_HINT = new HashMap<>();
 	/** Клиент: стоит ли свой игрок в живой Купели (чтобы Shift+ПКМ не делал удар эфесом). Ставит клиент. */
 	public static Predicate<Player> clientInFont = p -> false;
@@ -109,7 +113,8 @@ public final class AscensionFont {
 			if (level.isClientSide) return clientInFont.test(player) ? InteractionResultHolder.success(stack) : InteractionResultHolder.pass(stack);
 			if (!(player instanceof ServerPlayer sp)) return InteractionResultHolder.pass(stack);
 			BlockPos c = sp.blockPosition();
-			if (!ACTIVE.containsKey(c)) return InteractionResultHolder.pass(stack);
+			Map<BlockPos, Active> active = activeFor(sp.serverLevel());
+			if (active == null || !active.containsKey(c)) return InteractionResultHolder.pass(stack);
 			ascend(sp, stack, c);
 			return InteractionResultHolder.success(stack);
 		});
@@ -155,8 +160,20 @@ public final class AscensionFont {
 
 	// ===== Ход =====
 	private static void tick(MinecraftServer server) {
+		if (server.getTickCount() % 10 != 0) return;
 		ServerLevel lands = ModDimensions.lands(server);
-		if (lands == null || server.getTickCount() % 10 != 0) return;
+		if (lands != null) tickLevel(server, lands, ACTIVE);
+		ServerLevel temple = server.getLevel(PantheonTemple.DIMENSION);
+		if (temple != null) tickLevel(server, temple, TEMPLE_ACTIVE);
+	}
+
+	private static Map<BlockPos, Active> activeFor(Level level) {
+		if (ModDimensions.isLands(level)) return ACTIVE;
+		if (level.dimension() == PantheonTemple.DIMENSION) return TEMPLE_ACTIVE;
+		return null;
+	}
+
+	private static void tickLevel(MinecraftServer server, ServerLevel lands, Map<BlockPos, Active> active) {
 		long now = lands.getGameTime();
 		for (ServerPlayer p : lands.players()) {
 			BlockPos feet = p.blockPosition();
@@ -165,7 +182,7 @@ public final class AscensionFont {
 			Active in = null;
 			for (int dx = -1; dx <= 1 && in == null; dx++)
 				for (int dz = -1; dz <= 1 && in == null; dz++) {
-					Active a = ACTIVE.get(feet.offset(dx, 0, dz));
+					Active a = active.get(feet.offset(dx, 0, dz));
 					if (a != null) in = a;
 				}
 			if (in != null) {
@@ -180,7 +197,7 @@ public final class AscensionFont {
 				Vow v = Vows.vow(p);
 				int color = v == Vow.INK ? INK : v == Vow.SOUL ? SOUL : 0;
 				if (color == 0) continue;
-				ACTIVE.put(feet.immutable(), new Active(color, now));
+				active.put(feet.immutable(), new Active(color, now));
 				com.tarkrakov.tearsofink.prologue.FateProgress.mark(p, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.FONT);
 				broadcast(lands, feet.immutable(), color);
 				lands.playSound(null, feet, SoundEvents.BEACON_ACTIVATE, SoundSource.BLOCKS, 0.8f, color == INK ? 0.6f : 1.4f);
@@ -189,7 +206,7 @@ public final class AscensionFont {
 				hint(p, miss, now);
 			}
 		}
-		for (Iterator<Map.Entry<BlockPos, Active>> it = ACTIVE.entrySet().iterator(); it.hasNext(); ) {
+		for (Iterator<Map.Entry<BlockPos, Active>> it = active.entrySet().iterator(); it.hasNext(); ) {
 			var e = it.next();
 			if (now - e.getValue().seen > 15) {
 				it.remove();
@@ -204,7 +221,7 @@ public final class AscensionFont {
 			}
 		}
 		// раз в 2 с — повторить живые Купели всем в Землях (вошедшим позже)
-		if (server.getTickCount() % 40 == 0) for (var e : ACTIVE.entrySet()) broadcast(lands, e.getKey(), e.getValue().color);
+		if (server.getTickCount() % 40 == 0) for (var e : active.entrySet()) broadcast(lands, e.getKey(), e.getValue().color);
 	}
 
 	private static void broadcast(ServerLevel lands, BlockPos pos, int color) {
@@ -260,7 +277,7 @@ public final class AscensionFont {
 		com.tarkrakov.tearsofink.prologue.FateProgress.mark(p, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.FONT, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.GEAR, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.CONTRAST);
 		if (tier + 1 >= 2) com.tarkrakov.tearsofink.prologue.FateProgress.mark(p, com.tarkrakov.tearsofink.prologue.FateProgress.Goal.RUBRICS);
 		ServerLevel level = p.serverLevel();
-		boolean ink = ACTIVE.get(c).color == INK;
+		boolean ink = activeFor(level).get(c).color == INK;
 		level.sendParticles(ink ? ParticleTypes.SQUID_INK : ParticleTypes.END_ROD, c.getX() + 0.5, c.getY() + 1.2, c.getZ() + 0.5,
 				40, 0.6, 0.8, 0.6, 0.05);
 		level.playSound(null, c, SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1f, ink ? 0.7f : 1.3f);
