@@ -6,6 +6,7 @@ import com.tarkrakov.tearsofink.skill.Skill;
 import com.tarkrakov.tearsofink.skill.SkillInput;
 import com.tarkrakov.tearsofink.skill.SkillPayloads;
 import com.tarkrakov.tearsofink.skill.Skills;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
@@ -59,6 +60,16 @@ public final class WeaponAbilities {
 	private WeaponAbilities() {}
 
 	public static void init() {
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			POWER.clear();
+			SHIELD_ABILITY_UNTIL.clear();
+			RAM.active.clear();
+			RADIANCE.active.clear();
+			CLEAVE.pending.clear();
+			MERCY.active.clear();
+			MERCY.lockedUntil.clear();
+			SALVATION.glow.clear();
+		});
 		PayloadTypeRegistry.playC2S().register(SkillPayloads.UseWeapon.TYPE, SkillPayloads.UseWeapon.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(SkillPayloads.UseWeapon.TYPE, (payload, context) ->
 				context.player().server.execute(() -> use(context.player(), payload)));
@@ -72,7 +83,7 @@ public final class WeaponAbilities {
 		});
 	}
 
-	private static final java.util.Map<UUID, Integer> SHIELD_ABILITY_UNTIL = new java.util.HashMap<>();
+	private static final Map<UUID, Integer> SHIELD_ABILITY_UNTIL = new HashMap<>();
 
 	private static void use(ServerPlayer player, SkillPayloads.UseWeapon payload) {
 		if (!player.isAlive() || player.isSpectator() || com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.locked(player)) return;
@@ -342,9 +353,8 @@ public final class WeaponAbilities {
 		/** Центр удара — на столько блоков перед игроком. */
 		public static final double REACH = 2.75;
 
-		private final Map<UUID, Integer> pending = new HashMap<>();
-		private final Map<UUID, Float> power = new HashMap<>();
-		private final Map<UUID, Boolean> offhand = new HashMap<>();
+		private record PendingCleave(int ticksLeft, float power, boolean offhand) {}
+		private final Map<UUID, PendingCleave> pending = new HashMap<>();
 
 		CleaveAbility() {
 			super(TearsOfInk.id("ink_cleave"), 15, 0, 100);
@@ -353,35 +363,32 @@ public final class WeaponAbilities {
 		@Override
 		public boolean activate(ServerPlayer player, SkillInput input) {
 			if (pending.containsKey(player.getUUID())) return false;
-			pending.put(player.getUUID(), WINDUP_TICKS);
-			power.put(player.getUUID(), WeaponAbilities.power(player));
-			offhand.put(player.getUUID(), input.sneaking());
+			pending.put(player.getUUID(), new PendingCleave(WINDUP_TICKS, WeaponAbilities.power(player), input.sneaking()));
 			player.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, WINDUP_TICKS, 3, false, false, false));
 			player.serverLevel().playSound(null, player.blockPosition(), SoundEvents.TRIDENT_RIPTIDE_1.value(), SoundSource.PLAYERS, 0.6f, 0.6f);
 			return true;
 		}
 
 		void tick(MinecraftServer server) {
-			Iterator<Map.Entry<UUID, Integer>> it = pending.entrySet().iterator();
+			Iterator<Map.Entry<UUID, PendingCleave>> it = pending.entrySet().iterator();
 			while (it.hasNext()) {
-				Map.Entry<UUID, Integer> e = it.next();
+				Map.Entry<UUID, PendingCleave> e = it.next();
 				ServerPlayer player = server.getPlayerList().getPlayer(e.getKey());
 				if (player == null || !player.isAlive()) {
 					it.remove();
 					continue;
 				}
-				int left = e.getValue() - 1;
+				PendingCleave cleave = e.getValue();
+				int left = cleave.ticksLeft() - 1;
 				ServerLevel level = player.serverLevel();
 				if (left > 0) {
 					// замах: чернила собираются над головой
 					level.sendParticles(ParticleTypes.SQUID_INK, player.getX(), player.getY() + 2.2, player.getZ(), 3, 0.2, 0.1, 0.2, 0.0);
-					e.setValue(left);
+					e.setValue(new PendingCleave(left, cleave.power(), cleave.offhand()));
 					continue;
 				}
 				it.remove();
-				strike(player, level, power.getOrDefault(e.getKey(), 1f), offhand.getOrDefault(e.getKey(), false));
-				power.remove(e.getKey());
-				offhand.remove(e.getKey());
+				strike(player, level, cleave.power(), cleave.offhand());
 			}
 		}
 
@@ -457,6 +464,7 @@ public final class WeaponAbilities {
 		}
 
 		void tick(MinecraftServer server) {
+			lockedUntil.values().removeIf(until -> until <= server.getTickCount());
 			for (UUID id : new java.util.ArrayList<>(active.keySet())) {
 				ServerPlayer player = server.getPlayerList().getPlayer(id);
 				if (player == null) {

@@ -24,6 +24,7 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -211,7 +212,7 @@ public final class WeaponAnims {
 			for (JsonElement el : o.getAsJsonArray("keyframes")) {
 				JsonObject k = el.getAsJsonObject();
 				keys.add(new Key(k.get("t").getAsFloat(), vec(k, "rotation", zero), vec(k, "translation", zero), vec(k, "scale", one),
-						k.has("ease") ? Ease.valueOf(k.get("ease").getAsString().toUpperCase()) : Ease.EASE_IN_OUT));
+						k.has("ease") ? Ease.valueOf(k.get("ease").getAsString().toUpperCase(Locale.ROOT)) : Ease.EASE_IN_OUT));
 			}
 			keys.sort((a, b) -> Float.compare(a.t(), b.t()));
 			out.put(e.getKey(), new Clip(o.get("length").getAsFloat(), absolute, keys,

@@ -3,7 +3,6 @@ package com.tarkrakov.tearsofink.skill;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.ink.InkData;
 import com.tarkrakov.tearsofink.ink.InkPowers;
-import com.mojang.serialization.Codec;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;

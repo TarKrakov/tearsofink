@@ -4,6 +4,7 @@ import com.tarkrakov.tearsofink.entity.ModMobs;
 import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
@@ -22,6 +23,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -91,6 +93,11 @@ public final class MadOrders {
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(MadOrders::tick);
 		ServerLivingEntityEvents.AFTER_DEATH.register(MadOrders::onDeath);
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			ORDERS.clear();
+			COOLDOWNS.clear();
+			nextId = 1;
+		});
 	}
 
 	// ===== Для окна Торговки =====
@@ -158,7 +165,7 @@ public final class MadOrders {
 	static Component name(Order o) {
 		Component base = Component.translatable("order.tears-of-ink.mad_name",
 				Component.translatable("hunt.tears-of-ink.type." + o.type.id), Component.translatable("hunt.tears-of-ink.rank." + o.rank));
-		return o.mod == Mod.NONE ? base : Component.translatable("order.tears-of-ink.mod." + o.mod.name().toLowerCase(), base);
+		return o.mod == Mod.NONE ? base : Component.translatable("order.tears-of-ink.mod." + o.mod.name().toLowerCase(Locale.ROOT), base);
 	}
 
 	private static void say(ServerPlayer p, String key, Object... args) {
@@ -167,10 +174,12 @@ public final class MadOrders {
 
 	// ===== Ход =====
 	private static void tick(MinecraftServer server) {
-		if (ORDERS.isEmpty() || server.getTickCount() % 10 != 0) return;
+		long now = server.getTickCount();
+		if (now % 10 != 0) return;
+		COOLDOWNS.values().removeIf(until -> until <= now);
+		if (ORDERS.isEmpty()) return;
 		ServerLevel lands = ModDimensions.lands(server);
 		if (lands == null) return;
-		long now = server.getTickCount();
 		for (Order o : java.util.List.copyOf(ORDERS.values())) {
 			ServerPlayer owner = server.getPlayerList().getPlayer(o.owner);
 			if (now >= o.end) {

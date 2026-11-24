@@ -12,6 +12,7 @@ import com.tarkrakov.tearsofink.weapon.combat.Archetype;
 import com.tarkrakov.tearsofink.weapon.combat.Combat;
 import com.tarkrakov.tearsofink.weapon.combat.Interruptible;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
@@ -23,7 +24,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -90,6 +90,12 @@ public final class Resonance {
 
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(Resonance::tick);
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			PENDING.clear();
+			DASH.clear();
+			PHALANX_UNTIL.clear();
+			HALO.clear();
+		});
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register(Resonance::allowDamage);
 	}
 
