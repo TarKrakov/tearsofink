@@ -62,7 +62,7 @@ public final class PantheonAltarMenu extends AbstractContainerMenu {
         return editable() && !relic.getItem(0).isEmpty();
     }
     private boolean stopAllowed() {
-        if (!(owner instanceof ServerPlayer player) || level == null) return false;
+        if (!(owner instanceof ServerPlayer player) || level == null || PantheonEditor.active()) return false;
         if (PantheonCombat.active()) return PantheonCombat.canStop(player);
         return PantheonTemple.ready(level) && !PantheonArena.preparing() && !PantheonArena.neutralReady();
     }

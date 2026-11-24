@@ -40,7 +40,9 @@ public final class FateHud {
     public static void init() {
         try {
             if (Files.isRegularFile(PREF)) enabled = !Files.readString(PREF).trim().equals("false");
-        } catch (IOException ignored) { }
+        } catch (IOException e) {
+            TearsOfInk.LOGGER.warn("Could not read Fate HUD preference from {}", PREF, e);
+        }
         toggleKey = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tears-of-ink.fate_hud",
                 InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, "key.categories.tears-of-ink"));
         HudRenderCallback.EVENT.register(FateHud::render);
@@ -69,7 +71,9 @@ public final class FateHud {
         try {
             Files.createDirectories(PREF.getParent());
             Files.writeString(PREF, Boolean.toString(enabled));
-        } catch (IOException ignored) { }
+        } catch (IOException e) {
+            TearsOfInk.LOGGER.warn("Could not save Fate HUD preference to {}", PREF, e);
+        }
     }
 
     private record Theme(int panel, int bar, int title, int task) {}

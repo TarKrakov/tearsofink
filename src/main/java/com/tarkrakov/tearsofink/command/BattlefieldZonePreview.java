@@ -7,7 +7,6 @@ import com.tarkrakov.tearsofink.block.BattlefieldBannerBlock;
 import com.tarkrakov.tearsofink.block.BattlefieldSceneBlock;
 import com.tarkrakov.tearsofink.block.BattlefieldSceneBlockEntity;
 import com.tarkrakov.tearsofink.block.ModBlocks;
-import com.tarkrakov.tearsofink.world.battlefield.BattlefieldBannerGeometry;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldFactionBannerGeometry;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldPosedScenes.Pose;

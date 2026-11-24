@@ -1,6 +1,5 @@
 package com.tarkrakov.tearsofink.compat.jaber;
 
-import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.world.InkLandsLayout;
 import net.minecraft.core.BlockPos;

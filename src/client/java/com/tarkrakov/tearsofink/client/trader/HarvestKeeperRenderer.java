@@ -1,7 +1,6 @@
 package com.tarkrakov.tearsofink.client.trader;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
-import com.tarkrakov.tearsofink.hunt.HarvestKeeperEntity;
 import com.tarkrakov.tearsofink.trader.SoulTraderEntity;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.resources.ResourceLocation;

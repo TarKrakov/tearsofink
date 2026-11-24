@@ -139,7 +139,7 @@ public final class PantheonCombat {
     }
 
     static void start(ServerPlayer player, ServerLevel level, PantheonTrial trial) {
-        if (trial == null || active() || !eligible(player) || !PantheonArena.neutralReady()) {
+        if (PantheonEditor.active() || trial == null || active() || !eligible(player) || !PantheonArena.neutralReady()) {
             player.sendSystemMessage(Component.translatable(LANG + "busy"));
             return;
         }

@@ -12,6 +12,10 @@ public final class MirrorBond {
 
 	private MirrorBond() {}
 
+	static void clear() {
+		LAST.clear();
+	}
+
 	public static void refuseStash(ServerPlayer p) {
 		long now = p.server.getTickCount();
 		Long last = LAST.get(p.getUUID());

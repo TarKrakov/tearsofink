@@ -39,6 +39,7 @@ final class PantheonTravel {
     static void init() {}
 
     static boolean enter(ServerPlayer player) {
+        if (PantheonEditor.active() && !PantheonEditor.isOwner(player)) return false;
         ServerLevel destination = player.server.getLevel(PantheonTemple.DIMENSION);
         Vec3 arrival = Vec3.atBottomCenterOf(PantheonTemple.entrance());
         if (destination == null || !PantheonTemple.ready(destination) || !safe(player, destination, arrival)) return false;

@@ -2,8 +2,6 @@ package com.tarkrakov.tearsofink.ink;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.advancement.ModAdvancements;
-import com.tarkrakov.tearsofink.world.InkLandsAccess;
-import com.tarkrakov.tearsofink.world.InkLandsLayout;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
@@ -15,9 +13,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.effect.MobEffectInstance;
 import com.tarkrakov.tearsofink.effect.ModEffects;
 

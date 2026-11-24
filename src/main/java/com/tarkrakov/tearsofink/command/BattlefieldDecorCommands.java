@@ -2,7 +2,6 @@ package com.tarkrakov.tearsofink.command;
 
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.block.BattlefieldBannerBlock;
-import com.tarkrakov.tearsofink.world.battlefield.BattlefieldBannerGeometry;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldMonumentGeometry;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldFactionBannerGeometry;

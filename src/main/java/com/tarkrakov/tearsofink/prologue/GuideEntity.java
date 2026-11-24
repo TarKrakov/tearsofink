@@ -1,6 +1,5 @@
 package com.tarkrakov.tearsofink.prologue;
 
-import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.travel.Guide;
 import com.tarkrakov.tearsofink.travel.LandsTravel;
 import com.tarkrakov.tearsofink.travel.Travel;

@@ -102,6 +102,7 @@ public final class PantheonTemple {
         PantheonRecovery.init();
         PantheonRuins.init();
         PantheonGatekeeper.init();
+        PantheonEditor.init(); // Load the saved neutral baseline before the scene journal.
         PantheonArena.init();
         PantheonCombat.init();
         PantheonAltar.init();
@@ -119,7 +120,8 @@ public final class PantheonTemple {
                                         .then(Commands.literal("enter").executes(PantheonTemple::enter))
                                         .then(Commands.literal("leave").executes(PantheonTemple::leave))
                                         .then(Commands.literal("status").executes(PantheonTemple::status))))));
-        PlayerBlockBreakEvents.BEFORE.register((level, player, pos, state, entity) -> !protectedAt(level, pos));
+        PlayerBlockBreakEvents.BEFORE.register((level, player, pos, state, entity) -> !protectedAt(level, pos)
+                || PantheonEditor.mayBreak(level, player, pos));
         UseItemCallback.EVENT.register((player, level, hand) -> {
             ItemStack stack = player.getItemInHand(hand);
             return isTemple(level) && (stack.is(Items.ENDER_PEARL) || stack.is(Items.CHORUS_FRUIT)
@@ -184,14 +186,18 @@ public final class PantheonTemple {
         return 1;
     }
 
-    static Template load() throws Exception {
+    static CompoundTag readSchematic() throws Exception {
         byte[] encoded;
         try (InputStream resource = PantheonTemple.class.getResourceAsStream(RESOURCE)) {
             if (resource == null) throw new IllegalStateException("Нет встроенной схемы " + RESOURCE);
             encoded = resource.readAllBytes();
         }
         byte[] zipped = Base64.getMimeDecoder().decode(new String(encoded, StandardCharsets.US_ASCII));
-        CompoundTag root = NbtIo.readCompressed(new ByteArrayInputStream(zipped), NbtAccounter.unlimitedHeap());
+        return NbtIo.readCompressed(new ByteArrayInputStream(zipped), NbtAccounter.unlimitedHeap());
+    }
+
+    static Template load() throws Exception {
+        CompoundTag root = readSchematic();
         if (root.getInt("Width") != WIDTH || root.getInt("Height") != HEIGHT
                 || root.getInt("Length") != DEPTH || root.getInt("Version") != 2) {
             throw new IllegalStateException("Размер или версия схемы отличаются от проверенного файла");
@@ -247,7 +253,7 @@ public final class PantheonTemple {
         return new Template(states, placements, soil, tiles);
     }
 
-    private static BlockState parseState(String descriptor) {
+    static BlockState parseState(String descriptor) {
         int bracket = descriptor.indexOf('[');
         String id = bracket < 0 ? descriptor : descriptor.substring(0, bracket);
         ResourceLocation key = ResourceLocation.parse(id);
@@ -273,7 +279,7 @@ public final class PantheonTemple {
         return state.setValue(property, parsed);
     }
 
-    private static BlockPos relative(int index) {
+    static BlockPos relative(int index) {
         int x = index % WIDTH;
         int z = (index / WIDTH) % DEPTH;
         int y = index / (WIDTH * DEPTH);
@@ -286,6 +292,10 @@ public final class PantheonTemple {
 
     static BlockPos local(BlockPos world) {
         return world.subtract(ORIGIN);
+    }
+
+    static Template withStates(Template template, BlockState[] states) {
+        return new Template(states, template.placements(), template.soil(), template.tiles());
     }
 
     static BlockState authored(Template template, BlockPos local) {
@@ -302,10 +312,11 @@ public final class PantheonTemple {
     }
 
     public static boolean allowsBlockWrite(Level level, BlockPos pos, BlockState state) {
-        return installing || PantheonArena.allowsWrite(level, pos, state) || !protectedAt(level, pos);
+        return installing || PantheonArena.allowsWrite(level, pos, state)
+                || PantheonEditor.mayWrite(level, pos, state) || !protectedAt(level, pos);
     }
 
-    private static boolean setTempleBlock(ServerLevel level, BlockPos pos, BlockState state, int flags) {
+    static boolean setTempleBlock(ServerLevel level, BlockPos pos, BlockState state, int flags) {
         installing = true;
         try {
             return level.setBlock(pos, state, flags);

@@ -10,6 +10,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerEntityEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseEntityCallback;
@@ -115,7 +116,8 @@ public final class Travel {
 
 	public static void init() {
 		FountainTravel.init();
-		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
+		ServerLifecycleEvents.SERVER_STOPPED.register(server -> MirrorBond.clear());
+		ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
 			for (ServerPlayer player : List.copyOf(RESPAWN_CHUNKS.keySet())) releaseRespawn(player);
 			for (ServerPlayer player : List.copyOf(MIRROR_ARRIVALS.keySet())) clearMirrorArrival(player);
 			RESPAWNING.clear();
