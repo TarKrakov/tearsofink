@@ -103,6 +103,7 @@ public final class PantheonTemple {
         PantheonRuins.init();
         PantheonGatekeeper.init();
         PantheonArena.init();
+        PantheonAltar.init();
         CommandRegistrationCallback.EVENT.register((dispatcher, access, environment) ->
                 dispatcher.register(Commands.literal("tearsofink")
                         .requires(source -> source.hasPermission(2))
@@ -341,7 +342,18 @@ public final class PantheonTemple {
         if (level.getBlockState(fountain).is(ModBlocks.INK_FOUNTAIN)) {
             setTempleBlock(level, fountain, Blocks.AIR.defaultBlockState(), flags);
         }
+        BlockPos altar = PantheonAltar.POS;
+        if (level.getBlockState(altar).is(Blocks.LAPIS_BLOCK)) {
+            setTempleBlock(level, altar, ModBlocks.PANTHEON_ALTAR.defaultBlockState(), flags);
+        }
         interiorChecked = true;
+    }
+
+    static boolean altarRelic(ServerLevel level, BlockState expected, boolean occupied) {
+        if (!ready(level) || !expected.is(ModBlocks.PANTHEON_ALTAR)
+                || !level.getBlockState(PantheonAltar.POS).equals(expected)) return false;
+        return setTempleBlock(level, PantheonAltar.POS,
+                expected.setValue(PantheonAltarBlock.RELIC, occupied), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
     }
 
     public static boolean ready(ServerLevel level) {

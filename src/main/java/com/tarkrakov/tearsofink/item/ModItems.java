@@ -279,6 +279,8 @@ public final class ModItems {
 			new com.tarkrakov.tearsofink.prologue.StoryKeyItem(com.tarkrakov.tearsofink.vow.Vow.INK, new Item.Properties().stacksTo(1).fireResistant()));
 	public static final Item SHARD_OF_HOPE = register("shard_of_hope",
 			new com.tarkrakov.tearsofink.prologue.StoryKeyItem(com.tarkrakov.tearsofink.vow.Vow.SOUL, new Item.Properties().stacksTo(1).fireResistant()));
+	public static final Item PANTHEON_TEST_RELIC = register("pantheon_test_relic",
+			new Item(new Item.Properties().stacksTo(1).rarity(Rarity.RARE)));
 	public static final Item PANTHEON_KEY = register("pantheon_key",
 			new Item(new Item.Properties().stacksTo(1).fireResistant()));
 	/** Тусклый скимитар — стартовое оружие Пути Чернил: удары Скимитаров, урон 4, тусклая Волна (R). */

@@ -222,6 +222,8 @@ public final class ModBlocks {
 			BlockBehaviour.Properties.ofFullCopy(Blocks.STONE).mapColor(MapColor.COLOR_LIGHT_BLUE)));
 	// ===== Древние руины (заглушки текстур — автор нарисует) =====
 	/** Авторская колонна пантеона — 16x16 PNG ствола; капитель имеет собственную четырёхстороннюю геометрию. */
+	public static final Block PANTHEON_ALTAR = registerNoItem("pantheon_altar",
+			new com.tarkrakov.tearsofink.pantheon.PantheonAltarBlock(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_BLUE)));
 	public static final Block PANTHEON_COLUMN_SHAFT = register("pantheon_column_shaft",
 			new Block(BlockBehaviour.Properties.ofFullCopy(Blocks.STONE_BRICKS).mapColor(MapColor.COLOR_LIGHT_BLUE)));
 	public static final Block PANTHEON_COLUMN_CAPITAL = register("pantheon_column_capital",

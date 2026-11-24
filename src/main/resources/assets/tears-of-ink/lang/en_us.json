@@ -1269,5 +1269,18 @@
   "message.tears-of-ink.pantheon.site_planning": "The server is still looking for a site for the Pantheon ruins. Use /pantheon to check again.",
   "message.tears-of-ink.pantheon.site_missing": "There is no suitable free site for the Pantheon ruins in this world. Explored chunks were preserved.",
   "message.tears-of-ink.pantheon.site_error": "The server could not load the Pantheon ruin site. See the server log for details.",
-  "message.tears-of-ink.pantheon.site_found": "Entrance to the Pantheon ruins in the Ink Lands: X %s, Y %s, Z %s. The Gatekeeper is inside."
+  "message.tears-of-ink.pantheon.site_found": "Entrance to the Pantheon ruins in the Ink Lands: X %s, Y %s, Z %s. The Gatekeeper is inside.",
+  "block.tears-of-ink.pantheon_altar": "Summoning Altar",
+  "item.tears-of-ink.pantheon_test_relic": "Pantheon Test Relic",
+  "message.tears-of-ink.pantheon.relic_only": "The reliquary accepts only Pantheon relics.",
+  "message.tears-of-ink.pantheon.altar.busy": "The arena is rebuilding or is not yet available.",
+  "message.tears-of-ink.pantheon.altar.empty_hand": "Empty your main hand or place an unmodified Pantheon relic.",
+  "message.tears-of-ink.pantheon.altar.active": "A trial is already prepared. Sneak-right-click with an empty hand to end the test.",
+  "message.tears-of-ink.pantheon.altar.occupied": "A relic is already on the altar. Right-click with an empty hand to summon.",
+  "message.tears-of-ink.pantheon.altar.placed": "Relic placed. Right-click with an empty hand to start the trial.",
+  "message.tears-of-ink.pantheon.altar.reset": "Trial ended. The arena is returning to its neutral state.",
+  "message.tears-of-ink.pantheon.altar.inventory_full": "Free an inventory slot before taking the relic.",
+  "message.tears-of-ink.pantheon.altar.taken": "Relic removed from the altar.",
+  "message.tears-of-ink.pantheon.altar.missing": "Place a relic on the altar.",
+  "message.tears-of-ink.pantheon.altar.started": "Test trial: forest. The relic is reusable. Sneak-right-click with an empty hand to end."
 }

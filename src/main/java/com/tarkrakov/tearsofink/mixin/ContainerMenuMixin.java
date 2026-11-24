@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.mixin;
 
 import com.tarkrakov.tearsofink.travel.MirrorBond;
 import com.tarkrakov.tearsofink.pantheon.PantheonGatekeeper;
+import com.tarkrakov.tearsofink.pantheon.PantheonAltar;
 import com.tarkrakov.tearsofink.travel.Travel;
 import com.tarkrakov.tearsofink.prologue.PersonalSlots;
 import net.minecraft.server.level.ServerPlayer;
@@ -29,6 +30,20 @@ public abstract class ContainerMenuMixin {
 		if (type == ClickType.PICKUP && button == 1 && getCarried().isEmpty()
 				&& player instanceof ServerPlayer server && server.containerMenu == server.inventoryMenu) {
 			PantheonGatekeeper.useKey(server);
+		}
+	}
+
+	/** Also prevent shift-click merging into any pre-existing non-relic stack. */
+	@Inject(method = "clicked", at = @At("HEAD"), cancellable = true)
+	private void tearsofink$relicQuickMove(int slotId, int button, ClickType type, Player player, CallbackInfo ci) {
+		if (!(player instanceof ServerPlayer sp) || type != ClickType.QUICK_MOVE) return;
+		AbstractContainerMenu menu = (AbstractContainerMenu) (Object) this;
+		if (slotId < 0 || slotId >= menu.slots.size()) return;
+		Slot slot = menu.slots.get(slotId);
+		if (!(slot.container instanceof Inventory) || PantheonAltar.isRelic(slot.getItem())) return;
+		if (menu.slots.stream().anyMatch(s -> PantheonAltar.isRelicChest(s.container))) {
+			ci.cancel();
+			sp.displayClientMessage(net.minecraft.network.chat.Component.translatable("message.tears-of-ink.pantheon.relic_only"), true);
 		}
 	}
 

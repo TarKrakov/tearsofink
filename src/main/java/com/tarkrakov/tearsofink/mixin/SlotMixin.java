@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.mixin;
 
 import com.tarkrakov.tearsofink.travel.Travel;
+import com.tarkrakov.tearsofink.pantheon.PantheonAltar;
 import com.tarkrakov.tearsofink.prologue.PersonalSlots;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.player.Inventory;
@@ -20,6 +21,10 @@ public abstract class SlotMixin {
 
 	@Inject(method = "mayPlace", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$mirrorStaysWithYou(ItemStack stack, CallbackInfoReturnable<Boolean> cir) {
+		if (PantheonAltar.isRelicChest(this.container) && !PantheonAltar.isRelic(stack)) {
+			cir.setReturnValue(false);
+			return;
+		}
 		if (Travel.isMirror(stack) && !(this.container instanceof Inventory) && !(this.container instanceof PersonalSlots.Items)) cir.setReturnValue(false);
 	}
 }

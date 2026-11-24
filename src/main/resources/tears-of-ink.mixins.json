@@ -17,6 +17,7 @@
     "PantheonBlockProtectionMixin",
     "PantheonChunkMapAccessor",
     "PantheonMenuProtectionMixin",
+    "PantheonCompoundContainerAccessor",
     "PantheonPlayerProtectionMixin",
     "PantheonServerPlayerMixin",
     "GatePistonProtectionMixin",

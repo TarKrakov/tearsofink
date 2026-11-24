@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "relic=false": {
+      "model": "tears-of-ink:block/pantheon_altar"
+    },
+    "relic=true": {
+      "model": "tears-of-ink:block/pantheon_altar_occupied"
+    }
+  }
+}

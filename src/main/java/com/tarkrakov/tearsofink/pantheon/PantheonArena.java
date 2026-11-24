@@ -252,7 +252,11 @@ final class PantheonArena {
         }
     }
 
-    private static int request(CommandSourceStack source, Scene target) {
+    static boolean preparing() { return job != null; }
+
+    static boolean neutralReady() { return !locked && job == null && selected == NEUTRAL; }
+
+    static int request(CommandSourceStack source, Scene target) {
         ServerLevel level = source.getServer().getLevel(PantheonTemple.DIMENSION);
         if (level == null || !PantheonTemple.ready(level) || badJournal || job != null) {
             source.sendFailure(Component.literal("Арена сейчас недоступна. Проверьте arena status."));
