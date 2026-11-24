@@ -4,6 +4,7 @@ import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.ink.InkData;
 import com.tarkrakov.tearsofink.ink.InkPowers;
 import com.tarkrakov.tearsofink.travel.FountainTravel;
+import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
 import com.tarkrakov.tearsofink.travel.Travel;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import com.mojang.serialization.Codec;
@@ -80,6 +81,13 @@ public class InkFountainBlock extends Block {
 	@Override
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
 		if (!(player instanceof ServerPlayer sp) || !(level instanceof ServerLevel server)) return InteractionResult.SUCCESS;
+		// The Pantheon is an isolated test dimension. Until its travel endpoint is
+		// formally connected, this decorative fountain must not award permanent
+		// Ink bonuses or overwrite the Ink Lands-only respawn binding.
+		if (server.dimension() == PantheonTemple.DIMENSION) {
+			sp.displayClientMessage(Component.literal("Фонтан пантеона пока не подключён к сети перемещений."), true);
+			return InteractionResult.SUCCESS;
+		}
 		InkData data = InkPowers.get(sp);
 		if (!data.inside()) {
 			sp.playNotifySound(SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.25f, 1.8f);
