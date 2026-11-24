@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.pantheon;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.prologue.PersonalSlots;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -70,6 +71,7 @@ public final class PantheonTemple {
     private static boolean installing;
     private static boolean autoAttempted;
     private static int cleanupCursor;
+    private static boolean passagesChecked;
     private static Template cleanupTemplate;
 
     record Placement(BlockPos relative, BlockState state) {}
@@ -128,6 +130,7 @@ public final class PantheonTemple {
             job = null;
             autoAttempted = false;
             cleanupCursor = 0;
+            passagesChecked = false;
             cleanupTemplate = null;
         });
     }
@@ -219,8 +222,11 @@ public final class PantheonTemple {
                 throw new IllegalStateException("Индекс вне палитры");
             BlockState state = statesByPalette[value];
             states[index] = state;
-            if (accidentalSoil(state)) soil.add(new Placement(relative(index), state));
-            else if (!state.isAir()) placements.add(new Placement(relative(index), state));
+            BlockPos local = relative(index);
+            if (accidentalSoil(state)) soil.add(new Placement(local, state));
+            else if (!state.isAir() && !(state.is(Blocks.GOLD_BLOCK) && corridorMarker(local))) {
+                placements.add(new Placement(local, state));
+            }
         }
         if (cursor != bytes.length) throw new IllegalStateException("Лишние данные блоков");
         List<Tile> tiles = new ArrayList<>();
@@ -300,8 +306,32 @@ public final class PantheonTemple {
         return state.is(Blocks.DIRT) || state.is(Blocks.GRASS_BLOCK) || state.is(Blocks.DIRT_PATH);
     }
 
+    private static boolean corridorMarker(BlockPos local) {
+        return local.getX() >= 57 && local.getX() <= 58 && local.getY() <= 3
+                && (local.getZ() == 19 && local.getY() >= 1 || local.getZ() == 39 && local.getY() >= 2);
+    }
+
+    private static void upgradePassages(ServerLevel level) {
+        int flags = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
+        for (BlockPos local : BlockPos.betweenClosed(57, 1, 19, 58, 3, 39)) {
+            if (!corridorMarker(local)) continue;
+            BlockPos pos = world(local);
+            if (level.getBlockState(pos).is(Blocks.GOLD_BLOCK)) {
+                setTempleBlock(level, pos, Blocks.AIR.defaultBlockState(), flags);
+            }
+        }
+        // Close the original outside doorway against the void. The room and its inner corridor stay open.
+        for (BlockPos local : BlockPos.betweenClosed(57, 1, 8, 58, 2, 8)) {
+            BlockPos pos = world(local);
+            if (level.getBlockState(pos).isAir()) {
+                setTempleBlock(level, pos, ModBlocks.SANCTUM_BRICK.defaultBlockState(), flags);
+            }
+        }
+        passagesChecked = true;
+    }
+
     public static boolean ready(ServerLevel level) {
-        return level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK)
+        return passagesChecked && level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK)
                 && level.getBlockState(CLEANED).is(Blocks.DIAMOND_BLOCK);
     }
 
@@ -355,8 +385,9 @@ public final class PantheonTemple {
         }
         Job current = job;
         if (current == null) {
-            if (level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK)
-                    && level.getBlockState(CLEANED).isAir()) {
+            if (!level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK)) return;
+            if (!passagesChecked) upgradePassages(level);
+            if (level.getBlockState(CLEANED).isAir()) {
                 if (cleanupTemplate == null) {
                     try {
                         cleanupTemplate = load();
