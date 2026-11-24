@@ -4,6 +4,7 @@ import com.tarkrakov.tearsofink.TearsOfInk;
 import com.mojang.serialization.Codec;
 import net.minecraft.server.level.ServerPlayer;
 import com.tarkrakov.tearsofink.item.ModItems;
+import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
@@ -18,23 +19,18 @@ import java.util.WeakHashMap;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Three personal, one-item inventory slots backed by a persistent player attachment.
- * Normal container packets synchronize the three slots; no client-authoritative item moves.
- * The visible panel belongs to the Ink Lands. Outside it, the mirror is returned
- * to the vanilla inventory without discarding its persistent stack data.
- */
+/** Real inventory menu slots backed by a persistent player attachment. */
 public final class PersonalSlots {
-    public static final int DIARY = 0, MIRROR = 1, KEY = 2, COUNT = 3;
+    public static final int DIARY = 0, MIRROR = 1, KEY = 2, PANTHEON_KEY = 3, COUNT = 4;
     public static final int INVENTORY_MENU_START = 46;
     /** Layout relative to the ordinary inventory GUI, shared by menu slots and client rendering. */
-    public static final int PANEL_X = -71, PANEL_Y = 9, PANEL_WIDTH = 67, PANEL_HEIGHT = 86;
+    public static final int PANEL_X = -71, PANEL_Y = 9, PANEL_WIDTH = 67, PANEL_HEIGHT = 109;
     public static final int SLOT_X = PANEL_X + 5, SLOT_Y = 20, SLOT_STEP = 23;
 
     private static final AttachmentType<List<ItemStack>> DATA = AttachmentRegistry.<List<ItemStack>>builder()
             .persistent(ItemStack.OPTIONAL_CODEC.listOf())
             .copyOnDeath()
-            .initializer(() -> List.of(ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY))
+            .initializer(() -> List.of(ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY, ItemStack.EMPTY))
             .buildAndRegister(TearsOfInk.id("personal_items"));
 
     private static final AttachmentType<Boolean> MIGRATED = AttachmentRegistry.<Boolean>builder()
@@ -82,7 +78,7 @@ public final class PersonalSlots {
     public static void migrateStarterItems(ServerPlayer player) {
         if (!ModDimensions.isLands(player.level()) || player.getAttachedOrCreate(MIGRATED)) return;
         var inventory = player.getInventory();
-        for (int slot = 0; slot < COUNT; slot++) {
+        for (int slot = 0; slot < PANTHEON_KEY; slot++) {
             if (holds(player,slot)) continue;
             for (int i = 0; i < inventory.getContainerSize(); i++) {
                 ItemStack item = inventory.getItem(i);
@@ -101,20 +97,37 @@ public final class PersonalSlots {
             case DIARY -> stack.is(ModItems.DIARY);
             case MIRROR -> stack.is(ModItems.DIM_MIRROR);
             case KEY -> stack.is(ModItems.INK_TEAR) || stack.is(ModItems.SHARD_OF_HOPE);
+            case PANTHEON_KEY -> stack.is(ModItems.PANTHEON_KEY);
             default -> false;
         };
     }
 
+    public static boolean fullPanel(Player player) {
+        return ModDimensions.isLands(player.level()) || PantheonTemple.isTemple(player.level());
+    }
+
     public static boolean available(Player player, int index) {
-        // All three panel slots are usable only inside the Ink Lands.
-        // Outside, syncMirrorLocation exposes the mirror in vanilla inventory.
-        return index >= 0 && index < COUNT && ModDimensions.isLands(player.level());
+        if (index < 0 || index >= COUNT) return false;
+        if (index == PANTHEON_KEY) return fullPanel(player) || holds(player, index);
+        return fullPanel(player) && (index != MIRROR || ModDimensions.isLands(player.level()));
+    }
+
+    public static boolean canMove(Player player, int index) {
+        return index != PANTHEON_KEY && available(player, index);
+    }
+
+    public static void ensurePantheonKey(ServerPlayer player) {
+        if (!holds(player, PANTHEON_KEY)) put(player, PANTHEON_KEY, new ItemStack(ModItems.PANTHEON_KEY));
     }
 
     public static ItemStack get(Player player, int index) {
         if (index < 0 || index >= COUNT) return ItemStack.EMPTY;
         List<ItemStack> stacks = player.getAttachedOrCreate(DATA);
-        return stacks.size() == COUNT ? stacks.get(index) : ItemStack.EMPTY;
+        if (stacks.size() == 3) {
+            stacks = List.of(stacks.get(DIARY), stacks.get(MIRROR), stacks.get(KEY), ItemStack.EMPTY);
+            player.setAttached(DATA, stacks);
+        }
+        return index < stacks.size() ? stacks.get(index) : ItemStack.EMPTY;
     }
 
     public static boolean holds(Player player, int index) {
@@ -155,7 +168,7 @@ public final class PersonalSlots {
         @Override public void setChanged() { /* put() updates the persistent attachment */ }
         @Override public boolean stillValid(Player player) { return player == owner; }
         @Override public boolean canPlaceItem(int index, ItemStack stack) {
-            return available(owner,index) && accepts(index, stack);
+            return canMove(owner, index) && accepts(index, stack);
         }
         @Override public void clearContent() {
             for (int i = 0; i < COUNT; i++) put(owner,i,ItemStack.EMPTY);

@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.particle.ModParticles;
+import com.tarkrakov.tearsofink.pantheon.PantheonRuins;
 import com.tarkrakov.tearsofink.travel.FountainTravel;
 import com.tarkrakov.tearsofink.vow.Vow;
 import com.tarkrakov.tearsofink.vow.Vows;
@@ -64,21 +65,16 @@ public final class StoryKeyItem extends Item {
         ItemStack stack = player.getItemInHand(hand);
         if (!ModDimensions.isLands(level)) return InteractionResultHolder.pass(stack);
         if (player instanceof ServerPlayer server) {
-            if (server.isSpectator() || Vows.vow(server) != path || FountainTravel.openedCount(server) >= 2)
+            if (server.isSpectator() || Vows.vow(server) != path)
                 return InteractionResultHolder.pass(stack);
             InkLandsLayout layout = InkLandsLayout.of(server.serverLevel());
             if (layout == null) return InteractionResultHolder.pass(stack);
-            int[] target = null;
-            double best = Double.POSITIVE_INFINITY;
-            double[] start = Ruins.start(layout);
-            // Stable order and distance from the starting temple, not from where the player clicks.
-            // The existing planner is read only; never request generation or load a distant chunk.
-            for (int[] temple : Ruins.templePoints(layout)) {
-                if (Ruins.isStartTemple(layout, temple[0], temple[1])
-                        || FountainTravel.hasOpenedNear(server, temple[0], temple[1], 26)) continue;
-                double dx = temple[0] - start[0], dz = temple[1] - start[1];
-                double distance = dx * dx + dz * dz;
-                if (distance < best) { best = distance; target = temple; }
+            int[] target;
+            if (FountainTravel.openedCount(server) >= 2) {
+                var ruins = PantheonRuins.entrance(server.serverLevel());
+                target = ruins == null ? null : new int[]{ruins.getX(), ruins.getZ()};
+            } else {
+                target = nextTemple(server, layout);
             }
             if (target == null) return InteractionResultHolder.pass(stack);
             int bit = path == Vow.INK ? INK_USED : SOUL_USED;
@@ -107,4 +103,22 @@ public final class StoryKeyItem extends Item {
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
     }
+
+    private static int[] nextTemple(ServerPlayer server, InkLandsLayout layout) {
+        int[] target = null;
+        double best = Double.POSITIVE_INFINITY;
+        double[] start = Ruins.start(layout);
+        for (int[] temple : Ruins.templePoints(layout)) {
+            if (Ruins.isStartTemple(layout, temple[0], temple[1])
+                    || FountainTravel.hasOpenedNear(server, temple[0], temple[1], 26)) continue;
+            double dx = temple[0] - start[0], dz = temple[1] - start[1];
+            double distance = dx * dx + dz * dz;
+            if (distance < best) {
+                best = distance;
+                target = temple;
+            }
+        }
+        return target;
+    }
+
 }

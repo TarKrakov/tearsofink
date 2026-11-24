@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.mixin;
 
 import com.tarkrakov.tearsofink.travel.Travel;
+import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
@@ -18,14 +19,17 @@ public abstract class ServerPlayerRespawnMixin {
 	@Inject(method = "adjustSpawnLocation", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$skipProvisionalRespawnSearch(ServerLevel level, BlockPos provisional,
 														CallbackInfoReturnable<BlockPos> ci) {
-		if (Travel.skipProvisionalSpawn(level)) ci.setReturnValue(provisional);
+		if (PantheonTemple.isTemple(level) || Travel.skipProvisionalSpawn(level)) ci.setReturnValue(provisional);
 	}
 
 	@Inject(method = "findRespawnPositionAndUseSpawnBlock", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$respawnInLands(boolean keepInventory, DimensionTransition.PostDimensionTransition post,
 										   CallbackInfoReturnable<DimensionTransition> cir) {
 		ServerPlayer self = (ServerPlayer) (Object) this;
-		if (ModDimensions.isLands(self.level()) && ModDimensions.lands(self.server) != null) {
+		if (PantheonTemple.isTemple(self.level())) {
+			var transition = PantheonTemple.respawn(self, post);
+			if (transition != null) cir.setReturnValue(transition);
+		} else if (ModDimensions.isLands(self.level()) && ModDimensions.lands(self.server) != null) {
 			cir.setReturnValue(Travel.landsRespawn(self, post));
 		}
 	}

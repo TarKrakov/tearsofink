@@ -28,11 +28,11 @@ public abstract class InventoryMenuMixin extends AbstractContainerMenu {
                     return PersonalSlots.available(owner, which);
                 }
                 @Override public boolean mayPlace(ItemStack stack) {
-                    return stack.getCount() == 1 && PersonalSlots.available(owner, which)
+                    return stack.getCount() == 1 && PersonalSlots.canMove(owner, which)
                             && PersonalSlots.accepts(which, stack);
                 }
                 @Override public boolean mayPickup(Player player) {
-                    return player == owner && PersonalSlots.available(owner, which);
+                    return player == owner && PersonalSlots.canMove(owner, which);
                 }
                 @Override public int getMaxStackSize() { return 1; }
             });

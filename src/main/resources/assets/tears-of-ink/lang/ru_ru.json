@@ -1256,5 +1256,12 @@
   "block.tears-of-ink.sanctum_wall_wall": "Стенка из стенового камня святилища",
   "block.tears-of-ink.sanctum_brick_stairs": "Ступени из кирпичей святилища",
   "block.tears-of-ink.sanctum_brick_slab": "Плита из кирпичей святилища",
-  "block.tears-of-ink.sanctum_brick_wall": "Стенка из кирпичей святилища"
+  "block.tears-of-ink.sanctum_brick_wall": "Стенка из кирпичей святилища",
+  "item.tears-of-ink.pantheon_key": "Ключ Пантеона",
+  "entity.tears-of-ink.pantheon_gatekeeper": "Привратник",
+  "gui.tears-of-ink.personal.3": "Пантеон",
+  "message.tears-of-ink.pantheon.greeting": "Привратник: Пантеон стоит во вневременье. Здесь герои прошлого и грядущего испытывают силу, смекалку и находчивость. Если ищешь испытаний и наград, возьми ключ. Нажми ПКМ на нём в личной вкладке, чтобы войти или вернуться.",
+  "message.tears-of-ink.pantheon.reminder": "Привратник: Ключ Пантеона в твоей личной вкладке. Он открывает дорогу в обе стороны.",
+  "message.tears-of-ink.pantheon.preparing": "Врата Пантеона ещё закрыты. Попробуй позже.",
+  "message.tears-of-ink.pantheon.no_safe_return": "Пока не удаётся найти безопасную точку возвращения."
 }

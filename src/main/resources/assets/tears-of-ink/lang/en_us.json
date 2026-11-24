@@ -1256,5 +1256,12 @@
   "block.tears-of-ink.sanctum_wall_wall": "Sanctum Wall Stone Wall",
   "block.tears-of-ink.sanctum_brick_stairs": "Sanctum Bricks Stairs",
   "block.tears-of-ink.sanctum_brick_slab": "Sanctum Bricks Slab",
-  "block.tears-of-ink.sanctum_brick_wall": "Sanctum Bricks Wall"
+  "block.tears-of-ink.sanctum_brick_wall": "Sanctum Bricks Wall",
+  "item.tears-of-ink.pantheon_key": "Pantheon Key",
+  "entity.tears-of-ink.pantheon_gatekeeper": "Gatekeeper",
+  "gui.tears-of-ink.personal.3": "Pantheon",
+  "message.tears-of-ink.pantheon.greeting": "Gatekeeper: The Pantheon stands outside time. Heroes past and future test their strength, wits, and resourcefulness here. If you seek trials and rewards, take this key. Right-click it in your personal inventory panel to enter or return.",
+  "message.tears-of-ink.pantheon.reminder": "Gatekeeper: Your Pantheon Key is in your personal inventory panel. It opens the way in both directions.",
+  "message.tears-of-ink.pantheon.preparing": "The Pantheon gate is still closed. Try again shortly.",
+  "message.tears-of-ink.pantheon.no_safe_return": "A safe return point could not be found yet."
 }

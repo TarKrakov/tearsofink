@@ -42,10 +42,7 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * Operator-only installation of the author's entire Pantheon shell from Axiom.
@@ -68,13 +65,12 @@ public final class PantheonTemple {
     private static final BlockPos ENTRANCE = ORIGIN.offset(58, 1, 12);
     private static final String RESOURCE = "/data/tears-of-ink/pantheon/toi_panteon.schem.b64";
 
-    private static final Map<UUID, ReturnSpot> RETURNS = new HashMap<>();
     private static Job job;
     private static boolean installing;
+    private static boolean autoAttempted;
     private static int cleanupCursor;
     private static Template cleanupTemplate;
 
-    private record ReturnSpot(ResourceKey<Level> dimension, double x, double y, double z, float yaw, float pitch) {}
     record Placement(BlockPos relative, BlockState state) {}
     private record Tile(BlockPos relative, CompoundTag nbt) {}
 
@@ -97,6 +93,7 @@ public final class PantheonTemple {
 
     public static void init() {
         PantheonRuins.init();
+        PantheonGatekeeper.init();
         CommandRegistrationCallback.EVENT.register((dispatcher, access, environment) ->
                 dispatcher.register(Commands.literal("tearsofink")
                         .requires(source -> source.hasPermission(2))
@@ -106,8 +103,8 @@ public final class PantheonTemple {
                                     return 1;
                                 })))
                                 .then(Commands.literal("temple")
-                                        .then(Commands.literal("install").executes(ctx -> install(ctx, false)))
-                                        .then(Commands.literal("resume").executes(ctx -> install(ctx, true)))
+                                        .then(Commands.literal("install").executes(ctx -> install(ctx.getSource(), false)))
+                                        .then(Commands.literal("resume").executes(ctx -> install(ctx.getSource(), true)))
                                         .then(Commands.literal("enter").executes(PantheonTemple::enter))
                                         .then(Commands.literal("leave").executes(PantheonTemple::leave))
                                         .then(Commands.literal("status").executes(PantheonTemple::status))))));
@@ -124,7 +121,7 @@ public final class PantheonTemple {
         ServerTickEvents.END_SERVER_TICK.register(PantheonTemple::tick);
         ServerLifecycleEvents.SERVER_STOPPING.register(server -> {
             job = null;
-            RETURNS.clear();
+            autoAttempted = false;
             cleanupCursor = 0;
             cleanupTemplate = null;
         });
@@ -136,8 +133,15 @@ public final class PantheonTemple {
         return temple;
     }
 
-    private static int install(CommandContext<CommandSourceStack> ctx, boolean resume) {
-        var source = ctx.getSource();
+    static void ensureInstallation(MinecraftServer server) {
+        ServerLevel temple = server.getLevel(DIMENSION);
+        if (temple == null || job != null || autoAttempted
+                || temple.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK)) return;
+        autoAttempted = true;
+        install(server.createCommandSourceStack(), temple.getBlockState(CLAIM).is(Blocks.LODESTONE));
+    }
+
+    private static int install(CommandSourceStack source, boolean resume) {
         ServerLevel level = level(source);
         if (level == null) return 0;
         if (job != null) {
@@ -339,7 +343,7 @@ public final class PantheonTemple {
                     player.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
                     player.resetFallDistance();
                 } else {
-                    returnToSpawn(player);
+                    PantheonTravel.returnToSpawn(player);
                 }
             }
         }
@@ -442,44 +446,28 @@ public final class PantheonTemple {
         return 1;
     }
 
-    private static int enter(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
-        CommandSourceStack source = ctx.getSource();
-        ServerLevel level = level(source);
-        if (level == null || !ready(level)) {
-            source.sendFailure(Component.literal("Сначала завершите установку храма."));
-            return 0;
-        }
-        ServerPlayer player = source.getPlayerOrException();
-        if (player.serverLevel().dimension() != DIMENSION)
-            RETURNS.put(player.getUUID(), new ReturnSpot(player.serverLevel().dimension(),
-                    player.getX(), player.getY(), player.getZ(), player.getYRot(), player.getXRot()));
-        player.teleportTo(level, ENTRANCE.getX() + 0.5, ENTRANCE.getY(), ENTRANCE.getZ() + 0.5, 180f, 0f);
-        source.sendSuccess(() -> Component.literal("Вы вошли в авторский храм. Выход: /tearsofink pantheon temple leave"), false);
-        return 1;
+    public static net.minecraft.world.level.portal.DimensionTransition respawn(
+            ServerPlayer player, net.minecraft.world.level.portal.DimensionTransition.PostDimensionTransition post) {
+        return PantheonTravel.respawn(player, post);
     }
 
-    private static void returnToSpawn(ServerPlayer player) {
-        ServerLevel overworld = player.server.overworld();
-        BlockPos fallback = overworld.getSharedSpawnPos();
-        player.teleportTo(overworld, fallback.getX() + 0.5, fallback.getY() + 1,
-                fallback.getZ() + 0.5, 0f, 0f);
+    private static int enter(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        CommandSourceStack source = ctx.getSource();
+        if (!PantheonTravel.enter(source.getPlayerOrException())) {
+            source.sendFailure(Component.literal("Сначала завершите установку храма и проверьте площадку входа."));
+            return 0;
+        }
+        source.sendSuccess(() -> Component.literal("Вы вошли в храм. Выход: /tearsofink pantheon temple leave"), false);
+        return 1;
     }
 
     private static int leave(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
         ServerPlayer player = source.getPlayerOrException();
-        if (player.serverLevel().dimension() != DIMENSION) {
-            source.sendFailure(Component.literal("Вы не в измерении храма."));
+        if (!isTemple(player.level()) || !PantheonTravel.leave(player)) {
+            source.sendFailure(Component.translatable("message.tears-of-ink.pantheon.no_safe_return"));
             return 0;
         }
-        ReturnSpot previous = RETURNS.remove(player.getUUID());
-        ServerLevel destination = previous == null ? null : source.getServer().getLevel(previous.dimension());
-        if (destination != null) {
-            player.teleportTo(destination, previous.x(), previous.y(), previous.z(), previous.yaw(), previous.pitch());
-        } else {
-            returnToSpawn(player);
-        }
-        source.sendSuccess(() -> Component.literal("Вы покинули храм."), false);
         return 1;
     }
 }

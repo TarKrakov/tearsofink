@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.mixin;
 
 import com.tarkrakov.tearsofink.travel.MirrorBond;
+import com.tarkrakov.tearsofink.pantheon.PantheonGatekeeper;
 import com.tarkrakov.tearsofink.travel.Travel;
 import com.tarkrakov.tearsofink.prologue.PersonalSlots;
 import net.minecraft.server.level.ServerPlayer;
@@ -20,6 +21,16 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(AbstractContainerMenu.class)
 public abstract class ContainerMenuMixin {
 	@Shadow public abstract net.minecraft.world.item.ItemStack getCarried();
+
+	@Inject(method = "clicked", at = @At("HEAD"), cancellable = true)
+	private void tearsofink$usePantheonKey(int slot, int button, ClickType type, Player player, CallbackInfo ci) {
+		if ((Object) this != player.inventoryMenu || slot != PersonalSlots.INVENTORY_MENU_START + PersonalSlots.PANTHEON_KEY) return;
+		ci.cancel();
+		if (type == ClickType.PICKUP && button == 1 && getCarried().isEmpty()
+				&& player instanceof ServerPlayer server && server.containerMenu == server.inventoryMenu) {
+			PantheonGatekeeper.useKey(server);
+		}
+	}
 
 	@Inject(method = "clicked", at = @At("HEAD"))
 	private void tearsofink$stashAttempt(int slotId, int button, ClickType type, Player player, CallbackInfo ci) {
