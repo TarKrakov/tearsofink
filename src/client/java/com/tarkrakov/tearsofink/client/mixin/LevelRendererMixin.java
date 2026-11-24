@@ -7,11 +7,13 @@ import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.resources.ResourceLocation;
+import org.joml.Matrix4f;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
@@ -29,6 +31,14 @@ public abstract class LevelRendererMixin {
 	@Unique
 	private static final float TEARSOFINK$SKY_BODY_BRIGHTNESS = 0.65f;
 
+	/** Arena entrance looks along +Z; rotate the entire sky (sun and glow together) from west to south. */
+	@ModifyVariable(method = "renderSky", at = @At("HEAD"), argsOnly = true, ordinal = 0)
+	private Matrix4f tearsofink$pantheonSkyDirection(Matrix4f view) {
+		var level = Minecraft.getInstance().level;
+		return level != null && PantheonTemple.isTemple(level)
+				? new Matrix4f(view).rotateY((float) (Math.PI / 2.0)) : view;
+	}
+
 	@ModifyArg(
 			method = "renderSky",
 			at = @At(value = "INVOKE",
@@ -44,7 +54,7 @@ public abstract class LevelRendererMixin {
 		var level = Minecraft.getInstance().level;
 		if (level != null && PantheonTemple.isTemple(level)) {
 			float alpha = RenderSystem.getShaderColor()[3];
-			if (sun) RenderSystem.setShaderColor(1f, 0.66f, 0.29f, alpha);
+			if (sun) RenderSystem.setShaderColor(1f, 0.39f, 0.12f, alpha);
 			else RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
 			return texture;
 		}

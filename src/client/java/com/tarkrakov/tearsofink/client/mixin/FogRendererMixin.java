@@ -3,10 +3,16 @@ package com.tarkrakov.tearsofink.client.mixin;
 import com.mojang.blaze3d.shaders.FogShape;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.tarkrakov.tearsofink.client.fog.InkFog;
+import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
 import net.minecraft.client.Camera;
+import net.minecraft.client.multiplayer.ClientLevel;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.level.material.FogType;
 import net.minecraft.client.renderer.FogRenderer;
 import net.minecraft.util.Mth;
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -17,6 +23,25 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
  */
 @Mixin(FogRenderer.class)
 public abstract class FogRendererMixin {
+	@Shadow private static float fogRed;
+	@Shadow private static float fogGreen;
+	@Shadow private static float fogBlue;
+
+	/** Match the distant horizon to the warm twilight; preserve underwater and status-effect fog. */
+	@Inject(method = "setupColor", at = @At("TAIL"))
+	private static void tearsofink$pantheonHorizon(Camera camera, float partialTick, ClientLevel level,
+			int viewDistance, float skyDarkness, CallbackInfo ci) {
+		if (!PantheonTemple.isTemple(level) || camera.getFluidInCamera() != FogType.NONE) return;
+		if (camera.getEntity() instanceof LivingEntity living &&
+				(living.hasEffect(MobEffects.BLINDNESS) || living.hasEffect(MobEffects.DARKNESS))) return;
+		float south = Math.max(0f, (float) Math.cos(Math.toRadians(camera.getYRot())));
+		float glow = south * south;
+		fogRed = Mth.lerp(glow, 0.38f, 0.68f);
+		fogGreen = Mth.lerp(glow, 0.22f, 0.34f);
+		fogBlue = Mth.lerp(glow, 0.27f, 0.19f);
+		RenderSystem.clearColor(fogRed, fogGreen, fogBlue, 0f);
+	}
+
 	@Inject(method = "setupFog", at = @At("TAIL"))
 	private static void tearsofink$inkFog(Camera camera, FogRenderer.FogMode fogMode, float renderDistance,
 										  boolean thickFog, float partialTick, CallbackInfo ci) {

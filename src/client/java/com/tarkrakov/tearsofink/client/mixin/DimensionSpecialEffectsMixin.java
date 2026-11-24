@@ -21,7 +21,7 @@ public abstract class DimensionSpecialEffectsMixin {
 		float[] color = cir.getReturnValue();
 		var level = Minecraft.getInstance().level;
 		if (level != null && PantheonTemple.isTemple(level)) {
-			if (color != null) cir.setReturnValue(new float[]{1f, 0.45f, 0.16f, color[3]});
+			if (color != null) cir.setReturnValue(new float[]{1f, 0.29f, 0.095f, Math.max(color[3], 0.72f)});
 			return;
 		}
 		float s = InkFog.strength();
