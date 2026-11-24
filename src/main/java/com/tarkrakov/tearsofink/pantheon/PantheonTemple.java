@@ -116,6 +116,10 @@ public final class PantheonTemple {
         }
         boolean claimed = level.getBlockState(CLAIM).is(Blocks.LODESTONE);
         boolean finished = level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK);
+        if (!resume && (!level.getBlockState(CLAIM).isAir() || !level.getBlockState(FINISHED).isAir())) {
+            source.sendFailure(Component.literal("Место служебных меток занято. Чужие блоки не изменены."));
+            return 0;
+        }
         if (finished || (claimed != resume)) {
             source.sendFailure(Component.literal(finished ? "Пантеон уже установлен." :
                     claimed ? "Незавершённая установка: используйте temple resume." :
@@ -268,14 +272,27 @@ public final class PantheonTemple {
                 job = null;
                 return; // Someone edited the construction during the build. Never overwrite.
             }
-            level.setBlock(target, placement.state(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
+            if (!level.setBlock(target, placement.state(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE)) {
+                job = null;
+                server.getPlayerList().getPlayers().stream().filter(p -> p.hasPermissions(2))
+                        .forEach(p -> p.sendSystemMessage(Component.literal("Пантеон: ошибка установки блока "
+                                + target.toShortString() + "; безопасное продолжение — temple resume.")));
+                return;
+            }
             writes++;
         }
         if (current.placed < current.template.placements().size()) return;
         for (Tile tile : current.template.tiles()) {
             BlockPos pos = world(tile.relative());
             BlockEntity entity = level.getBlockEntity(pos);
-            if (entity == null) continue;
+            if (entity == null) {
+                job = null;
+                server.getPlayerList().getPlayers().stream().filter(p -> p.hasPermissions(2))
+                        .forEach(p -> p.sendSystemMessage(Component.literal(
+                                "Пантеон: блок-сущность не создана на " + pos.toShortString()
+                                + "; продолжение — temple resume.")));
+                return;
+            }
             CompoundTag data = tile.nbt().copy();
             data.putString("id", data.getString("Id"));
             data.remove("Id");
