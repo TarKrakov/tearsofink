@@ -120,13 +120,22 @@ public final class PantheonCombat {
     static boolean active() { return session != null || recoveryError != null; }
     static boolean holdsGate() { return active() && (session == null || session.phase != Phase.OPEN); }
 
-    static void interact(ServerPlayer player, ServerLevel level, boolean cancel) {
-        if (cancel && session != null && session.initiator.equals(player.getUUID())
-                && (session.phase == Phase.PREPARING || session.phase == Phase.OPEN)) {
-            finish(level, false, "cancelled");
-        } else {
-            player.sendSystemMessage(Component.translatable(LANG + "busy"));
-        }
+    static boolean canStop(ServerPlayer player) {
+        return session != null
+                && (session.initiator.equals(player.getUUID()) || player.hasPermissions(2))
+                && (session.phase == Phase.PREPARING || session.phase == Phase.OPEN
+                    || session.phase == Phase.FIGHT || session.phase == Phase.ERROR);
+    }
+
+    /** A real altar button can cancel the owner's ritual, including a fight if the owner is back in the hub. */
+    static boolean stop(ServerPlayer player, ServerLevel level) {
+        if (!canStop(player)) return false;
+        if (session.phase == Phase.ERROR) {
+            session.restoring = false;
+            session.cleared = false;
+            beginCleanup(level);
+        } else finish(level, false, "cancelled");
+        return true;
     }
 
     static void start(ServerPlayer player, ServerLevel level, PantheonTrial trial) {

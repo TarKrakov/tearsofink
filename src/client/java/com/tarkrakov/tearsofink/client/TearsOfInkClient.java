@@ -98,6 +98,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 		SkillKeys.init();
 		WeaponStats.init();
 		MenuScreens.register(ModAlchemy.MENU, AlchemyScreen::new);
+		MenuScreens.register(com.tarkrakov.tearsofink.pantheon.PantheonAltar.MENU, com.tarkrakov.tearsofink.client.pantheon.PantheonAltarScreen::new);
 		MenuScreens.register(com.tarkrakov.tearsofink.weapon.forge.ModForge.MENU, com.tarkrakov.tearsofink.client.forge.InkAnvilScreen::new);
 		MenuScreens.register(com.tarkrakov.tearsofink.weapon.forge.ModForge.ALTAR_MENU, com.tarkrakov.tearsofink.client.forge.CursedAltarScreen::new);
 		com.tarkrakov.tearsofink.client.forge.FontClient.init(); // Купель: чёрная/белая вода

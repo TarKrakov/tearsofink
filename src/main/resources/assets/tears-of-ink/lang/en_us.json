@@ -1300,5 +1300,12 @@
   "message.tears-of-ink.pantheon.combat.save_failed": "Could not save the trial. Check combat status.",
   "message.tears-of-ink.pantheon.arena.restored": "Arena restored. The passage is open.",
   "message.tears-of-ink.pantheon.arena.ready": "The arena is ready. The passage is open.",
-  "message.tears-of-ink.pantheon.arena.failed": "Arena reconstruction failed: %s. The passage is closed."
+  "message.tears-of-ink.pantheon.arena.failed": "Arena reconstruction failed: %s. The passage is closed.",
+  "gui.tears-of-ink.pantheon.ritual.relic": "Relic",
+  "gui.tears-of-ink.pantheon.ritual.start": "Start ritual",
+  "gui.tears-of-ink.pantheon.ritual.stop": "Stop ritual",
+  "gui.tears-of-ink.pantheon.ritual.active": "Ritual active / restoring",
+  "gui.tears-of-ink.pantheon.ritual.unavailable": "Altar unavailable",
+  "gui.tears-of-ink.pantheon.ritual.ready": "Ready for ritual",
+  "gui.tears-of-ink.pantheon.ritual.empty": "Insert a relic"
 }

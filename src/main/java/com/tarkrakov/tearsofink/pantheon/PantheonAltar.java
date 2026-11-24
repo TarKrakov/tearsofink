@@ -5,6 +5,11 @@ import com.tarkrakov.tearsofink.TearsOfInk;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.Registry;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.inventory.MenuType;
+import net.minecraft.world.SimpleMenuProvider;
 import com.tarkrakov.tearsofink.mixin.PantheonCompoundContainerAccessor;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.core.BlockPos;
@@ -26,6 +31,9 @@ public final class PantheonAltar {
     private static final AttachmentType<ResourceLocation> RELIC_ID = AttachmentRegistry.<ResourceLocation>builder()
             .persistent(ResourceLocation.CODEC).buildAndRegister(TearsOfInk.id("pantheon_altar_relic"));
 
+    public static final MenuType<PantheonAltarMenu> MENU = Registry.register(BuiltInRegistries.MENU,
+            TearsOfInk.id("pantheon_altar"), new MenuType<>(PantheonAltarMenu::new, FeatureFlags.VANILLA_SET));
+
     private PantheonAltar() {}
 
     public static boolean isRelic(ItemStack stack) {
@@ -42,6 +50,33 @@ public final class PantheonAltar {
         return false;
     }
 
+    /** Legacy occupied block with no ID still contains the original starter relic. */
+    static PantheonTrial placed(ServerLevel level) {
+        var state = level.getBlockState(POS);
+        if (!state.is(ModBlocks.PANTHEON_ALTAR) || !state.getValue(PantheonAltarBlock.RELIC)) return null;
+        var id = level.getChunkAt(POS).getAttached(RELIC_ID);
+        return id == null ? PantheonTrial.legacyRelic() : PantheonTrial.lookup(id);
+    }
+
+    static boolean editable(ServerLevel level) {
+        if (!PantheonTemple.ready(level) || PantheonCombat.active() || !PantheonArena.neutralReady()) return false;
+        var state = level.getBlockState(POS);
+        return state.is(ModBlocks.PANTHEON_ALTAR)
+                && (!state.getValue(PantheonAltarBlock.RELIC) || placed(level) != null);
+    }
+
+    /** Read/write the existing canonical chunk attachment, never a per-menu inventory copy. */
+    static boolean setRelic(ServerLevel level, ItemStack stack) {
+        if (!editable(level) || (!stack.isEmpty() && (stack.getCount() != 1 || !isRelic(stack)))) return false;
+        PantheonTrial next = stack.isEmpty() ? null : PantheonTrial.forRelic(stack);
+        var state = level.getBlockState(POS);
+        boolean occupied = next != null;
+        if (state.getValue(PantheonAltarBlock.RELIC) != occupied
+                && !PantheonTemple.altarRelic(level, state, occupied)) return false;
+        level.getChunkAt(POS).setAttached(RELIC_ID, next == null ? null : next.id());
+        return true;
+    }
+
     static void init() {
         UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
             if (!PantheonTemple.isTemple(level) || !POS.equals(hit.getBlockPos())
@@ -51,67 +86,10 @@ public final class PantheonAltar {
             if (level.isClientSide) return InteractionResult.SUCCESS;
             if (!(player instanceof ServerPlayer sp) || !(level instanceof ServerLevel temple)
                     || !sp.isAlive()) return InteractionResult.FAIL;
-            if (PantheonCombat.active()) {
-                PantheonCombat.interact(sp, temple, sp.isShiftKeyDown() && sp.getMainHandItem().isEmpty());
-                return InteractionResult.CONSUME;
-            }
-            if (!PantheonTemple.ready(temple) || PantheonArena.preparing()) {
-                tell(sp, "busy");
-                return InteractionResult.CONSUME;
-            }
-
-            var state = temple.getBlockState(POS);
-            boolean occupied = state.getValue(PantheonAltarBlock.RELIC);
-            var chunk = temple.getChunkAt(POS);
-            var relicId = chunk.getAttached(RELIC_ID);
-            PantheonTrial placed = !occupied ? null
-                    : relicId == null ? PantheonTrial.legacyRelic() : PantheonTrial.lookup(relicId);
-            ItemStack held = sp.getMainHandItem();
-
-            if (!held.isEmpty()) {
-                PantheonTrial heldTrial = PantheonTrial.forRelic(held);
-                if (heldTrial == null) {
-                    tell(sp, "empty_hand");
-                } else if (!PantheonArena.neutralReady()) {
-                    tell(sp, "active");
-                } else if (occupied) {
-                    tell(sp, "occupied");
-                } else if (PantheonTemple.altarRelic(temple, state, true)) {
-                    chunk.setAttached(RELIC_ID, heldTrial.id());
-                    held.shrink(1);
-                    sp.getInventory().setChanged();
-                    tell(sp, "placed");
-                }
-                return InteractionResult.CONSUME;
-            }
-
-            if (sp.isShiftKeyDown()) {
-                if (!PantheonArena.neutralReady()) {
-                    if (PantheonArena.request(sp.createCommandSourceStack(), PantheonArenaScenes.Scene.NEUTRAL) != 0)
-                        tell(sp, "reset");
-                } else if (placed != null) {
-                    int free = sp.getInventory().getFreeSlot();
-                    if (free < 0) {
-                        tell(sp, "inventory_full");
-                    } else if (PantheonTemple.altarRelic(temple, state, false)) {
-                        chunk.setAttached(RELIC_ID, null);
-                        sp.getInventory().setItem(free, placed.relicStack());
-                        sp.getInventory().setChanged();
-                        tell(sp, "taken");
-                    }
-                } else tell(sp, "missing");
-            } else if (!PantheonArena.neutralReady()) {
-                tell(sp, "active");
-            } else if (placed == null) {
-                tell(sp, "missing");
-            } else {
-                PantheonCombat.start(sp, temple, placed);
-            }
+            sp.openMenu(new SimpleMenuProvider((id, inventory, owner) ->
+                    new PantheonAltarMenu(id, inventory, temple),
+                    Component.translatable("block.tears-of-ink.pantheon_altar")));
             return InteractionResult.CONSUME;
         });
-    }
-
-    private static void tell(ServerPlayer player, String id) {
-        player.displayClientMessage(Component.translatable("message.tears-of-ink.pantheon.altar." + id), false);
     }
 }

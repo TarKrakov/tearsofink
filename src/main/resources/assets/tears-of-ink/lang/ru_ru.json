@@ -1300,5 +1300,12 @@
   "message.tears-of-ink.pantheon.combat.save_failed": "Не удалось сохранить испытание. Проверьте combat status.",
   "message.tears-of-ink.pantheon.arena.restored": "Арена восстановлена. Проход открыт.",
   "message.tears-of-ink.pantheon.arena.ready": "Арена готова. Проход открыт.",
-  "message.tears-of-ink.pantheon.arena.failed": "Не удалось завершить перестройку арены: %s. Проход закрыт."
+  "message.tears-of-ink.pantheon.arena.failed": "Не удалось завершить перестройку арены: %s. Проход закрыт.",
+  "gui.tears-of-ink.pantheon.ritual.relic": "Реликвия",
+  "gui.tears-of-ink.pantheon.ritual.start": "Начать ритуал",
+  "gui.tears-of-ink.pantheon.ritual.stop": "Остановить ритуал",
+  "gui.tears-of-ink.pantheon.ritual.active": "Ритуал активен / восстановление",
+  "gui.tears-of-ink.pantheon.ritual.unavailable": "Алтарь недоступен",
+  "gui.tears-of-ink.pantheon.ritual.ready": "Готов к ритуалу",
+  "gui.tears-of-ink.pantheon.ritual.empty": "Поместите реликвию"
 }
