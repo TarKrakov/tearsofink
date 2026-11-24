@@ -7,6 +7,7 @@ import com.tarkrakov.tearsofink.world.InkLandsLayout;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
+import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
@@ -52,6 +53,7 @@ public final class InkPowers {
 			updateZone(player, false);
 			sync(player);
 		});
+		ServerEntityWorldChangeEvents.AFTER_PLAYER_CHANGE_WORLD.register((player, from, to) -> updateZone(player, true));
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldPlayer, newPlayer, alive) -> {
 			set(newPlayer, get(newPlayer).refilled());
 			updateZone(newPlayer, true);
@@ -129,7 +131,7 @@ public final class InkPowers {
 	/** Насколько глубоко игрок в Чернильных Землях; {@code null} — в этом измерении их нет. */
 	private static Double depth(ServerPlayer player) {
 		// Земли — своё измерение: внутри = в этом измерении (край там — туманная петля)
-		return com.tarkrakov.tearsofink.world.ModDimensions.isLands(player.level()) ? 1000.0 : null;
+		return com.tarkrakov.tearsofink.world.ModDimensions.hasLandsRules(player.level()) ? 1000.0 : null;
 	}
 
 	/**

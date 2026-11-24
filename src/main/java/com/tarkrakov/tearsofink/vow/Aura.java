@@ -79,7 +79,7 @@ public final class Aura {
 
 	/** Ступень света: −1 — не светится; 0 — Путь Души 100–114; 1–3 — стадии высокой Души. */
 	public static int light(ServerPlayer p) {
-		if (!ModDimensions.isLands(p.level())) return -1;
+		if (!ModDimensions.hasLandsRules(p.level())) return -1;
 		if (Vows.vow(p) != Vow.SOUL) return -1;
 		int max = InkPowers.get(p).soulMax();
 		if (max < InkData.SOUL_START) return -1; // продал душу — свет погас
@@ -90,7 +90,7 @@ public final class Aura {
 
 	/** Стадия тьмы 0–3 (по максимуму Души: продажа и Чернильные сердца). */
 	public static int dark(ServerPlayer p) {
-		if (!ModDimensions.isLands(p.level())) return 0;
+		if (!ModDimensions.hasLandsRules(p.level())) return 0;
 		int max = InkPowers.get(p).soulMax(), st = 0;
 		for (int t : DARK_STAGES) if (max <= t) st++;
 		return st;

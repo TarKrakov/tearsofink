@@ -27,7 +27,7 @@ public class AlchemyTableBlock extends Block {
 	protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hit) {
 		if (!level.isClientSide) {
 			player.openMenu(state.getMenuProvider(level, pos));
-			if (player instanceof ServerPlayer p && ModDimensions.isLands(level) && !p.isSpectator())
+			if (player instanceof ServerPlayer p && ModDimensions.hasLandsRules(level) && !p.isSpectator())
 				DiaryEntries.unlock(p, "draft_alchemy");
 		}
 		return InteractionResult.sidedSuccess(level.isClientSide);

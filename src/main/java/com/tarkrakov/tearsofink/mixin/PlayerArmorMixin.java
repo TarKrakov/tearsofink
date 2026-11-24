@@ -37,7 +37,7 @@ public abstract class PlayerArmorMixin {
 			target = "Lnet/minecraft/world/damagesource/CombatRules;getDamageAfterAbsorb(Lnet/minecraft/world/entity/LivingEntity;FLnet/minecraft/world/damagesource/DamageSource;FF)F"))
 	private float tearsofink$useFractionalProtection(LivingEntity entity, float damage, DamageSource source,
 													 float armor, float toughness, Operation<Float> original) {
-		if (entity instanceof ServerPlayer player && (ModDimensions.isLands(player.level())
+		if (entity instanceof ServerPlayer player && (ModDimensions.hasLandsRules(player.level())
 				|| player.getInventory().armor.stream().anyMatch(Gear::isModItem))) {
 			armor = (float) player.getAttributeValue(Attributes.ARMOR);
 		}

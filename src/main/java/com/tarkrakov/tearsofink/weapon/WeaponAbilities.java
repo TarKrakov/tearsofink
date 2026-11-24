@@ -238,7 +238,7 @@ public final class WeaponAbilities {
 				int left = state.left() - 1;
 				boolean held = player != null && (player.getMainHandItem() == state.shield()
 						|| player.getOffhandItem() == state.shield() && !InkGreatswordItem.twoHanded(player.getMainHandItem()));
-				if (!held || !player.isAlive() || !com.tarkrakov.tearsofink.world.ModDimensions.isLands(player.level()) || left <= 0) {
+				if (!held || !player.isAlive() || !com.tarkrakov.tearsofink.world.ModDimensions.hasLandsRules(player.level()) || left <= 0) {
 					// Only our short pulse expires. Never remove another source of resistance.
 					it.remove();
 					continue;

@@ -62,7 +62,7 @@ public final class HiltStrike {
 	/** Подходит ли сейчас удар эфесом (одинаково у игрока и на сервере). */
 	public static boolean applies(Player p, ItemStack stack, InteractionHand hand) {
 		if (hand != InteractionHand.MAIN_HAND || p.getMainHandItem() != stack) return false;
-		if (!ModDimensions.isLands(p.level()) || p.isSpectator()) return false;
+		if (!ModDimensions.hasLandsRules(p.level()) || p.isSpectator()) return false;
 		if (Archetype.of(stack) == null || InkGreatswordItem.twoHanded(stack)) return false;
 		if (stack.getItem() instanceof com.tarkrakov.tearsofink.weapon.SoulShieldItem) return false;
 		if (!p.getOffhandItem().isEmpty()) return false;
@@ -114,7 +114,7 @@ public final class HiltStrike {
 
 	private static void hit(ServerPlayer p) {
 		ItemStack stack = p.getMainHandItem();
-		if (Archetype.of(stack) == null || !ModDimensions.isLands(p.level())) return; // сменил клинок / ушёл — тычок пропал
+		if (Archetype.of(stack) == null || !ModDimensions.hasLandsRules(p.level())) return; // сменил клинок / ушёл — тычок пропал
 		ServerLevel level = p.serverLevel();
 		EntityHitResult hit = target(p, REACH);
 		if (hit == null || !(hit.getEntity() instanceof LivingEntity t)) return;

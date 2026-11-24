@@ -119,7 +119,7 @@ public final class ThirdPerson {
 		int id = entity.getId();
 		Playing[] slots = PLAYING.get(id);
 		if (slots == null) return;
-		if (entity.level() == null || entity.level().dimension() != ModDimensions.INK_LANDS) {
+		if (entity.level() == null || !ModDimensions.hasLandsRules(entity.level())) {
 			drop(id);
 			return;
 		}

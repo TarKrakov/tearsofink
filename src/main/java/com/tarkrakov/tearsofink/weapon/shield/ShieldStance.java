@@ -123,7 +123,7 @@ public final class ShieldStance {
 
 	/** Стоит в сомкнутой стойке прямо сейчас. */
 	public static boolean inStance(LivingEntity e) {
-		return e instanceof Player p && ModDimensions.isLands(p.level()) && dual(p) && p.isUsingItem()
+		return e instanceof Player p && ModDimensions.hasLandsRules(p.level()) && dual(p) && p.isUsingItem()
 				&& p.getUseItem().getItem() instanceof SoulShieldItem && !p.getCooldowns().isOnCooldown(p.getUseItem().getItem());
 	}
 
@@ -142,7 +142,7 @@ public final class ShieldStance {
 
 	private static void validatePair(ServerPlayer p) {
 		HeldPair pair = PAIRS.get(p.getUUID());
-		if (pair != null && (!p.isAlive() || !ModDimensions.isLands(p.level()) || p.getMainHandItem() != pair.main() || p.getOffhandItem() != pair.off())) {
+		if (pair != null && (!p.isAlive() || !ModDimensions.hasLandsRules(p.level()) || p.getMainHandItem() != pair.main() || p.getOffhandItem() != pair.off())) {
 			PAIRS.remove(p.getUUID());
 			RIPOSTE.remove(p.getUUID());
 			if (CHARGE.containsKey(p.getUUID())) setCharge(p,0);
@@ -269,7 +269,7 @@ public final class ShieldStance {
 	public static void release(ServerPlayer p) {
 		validatePair(p);
 		int c = charge(p);
-		if (c <= 0 || !ModDimensions.isLands(p.level()) || !dual(p)) return;
+		if (c <= 0 || !ModDimensions.hasLandsRules(p.level()) || !dual(p)) return;
 		float absorbed = ABSORBED.getOrDefault(p.getUUID(), 0f);
 		setCharge(p, 0);
 		ServerLevel level = p.serverLevel();
@@ -344,7 +344,7 @@ public final class ShieldStance {
 			validatePair(p);
 			boolean stance = inStance(p);
 			rock(p, stance);
-			if (!dual(p) || !ModDimensions.isLands(p.level())) {
+			if (!dual(p) || !ModDimensions.hasLandsRules(p.level())) {
 				// Заряд при снятии щитов теряется, но время последнего идеального блока — нет.
 				if (CHARGE.containsKey(p.getUUID())) setCharge(p, 0); // сменил щиты или ушёл — заряд сгорает
 			}

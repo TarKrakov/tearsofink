@@ -152,7 +152,7 @@ public final class Combat {
 
 	/** Бастион работает только с двумя щитами Души и в Чернильных землях. */
 	public static boolean bastion(net.minecraft.world.entity.player.Player p) {
-		return com.tarkrakov.tearsofink.weapon.shield.ShieldStance.dual(p) && com.tarkrakov.tearsofink.world.ModDimensions.isLands(p.level());
+		return com.tarkrakov.tearsofink.weapon.shield.ShieldStance.dual(p) && com.tarkrakov.tearsofink.world.ModDimensions.hasLandsRules(p.level());
 	}
 
 	/** Сейчас идёт удар или приём (клинок занят). */

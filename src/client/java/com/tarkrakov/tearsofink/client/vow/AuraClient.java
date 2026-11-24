@@ -98,7 +98,7 @@ public final class AuraClient {
 
 	/** Искорки вокруг светящихся, капли чернил с рук проклятых. */
 	private static void tick(Minecraft mc) {
-		if (mc.level == null || mc.isPaused() || !ModDimensions.isLands(mc.level)) return;
+		if (mc.level == null || mc.isPaused() || !ModDimensions.hasLandsRules(mc.level)) return;
 		var cam = mc.gameRenderer.getMainCamera().getPosition();
 		for (Player p : mc.level.players()) {
 			Aura.State s = state(p);
@@ -127,7 +127,7 @@ public final class AuraClient {
 		@Override
 		public void render(PoseStack pose, MultiBufferSource buffers, int light, AbstractClientPlayer p, float limbSwing, float limbAmount,
 				float partialTick, float age, float headYaw, float headPitch) {
-			if (p.isInvisible() || !ModDimensions.isLands(p.level())) return;
+			if (p.isInvisible() || !ModDimensions.hasLandsRules(p.level())) return;
 			Aura.State s = state(p);
 			if (s == null) return;
 			PlayerModel<AbstractClientPlayer> model = getParentModel();

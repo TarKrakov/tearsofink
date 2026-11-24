@@ -88,7 +88,7 @@ public final class ShieldStanceClient {
 
 	/** Щиты Души в обеих руках, в Землях. */
 	public static boolean dual(LivingEntity e) {
-		return e != null && ModDimensions.isLands(e.level()) && ShieldStance.dual(e);
+		return e != null && ModDimensions.hasLandsRules(e.level()) && ShieldStance.dual(e);
 	}
 
 	/** В сомкнутой стойке (оба щита подняты). */
@@ -218,7 +218,7 @@ public final class ShieldStanceClient {
 
 	/** Искорки вокруг щитов у всех, кто держит два щита Души (чаще с зарядом). */
 	public static void tick(net.minecraft.client.Minecraft mc) {
-		if (mc.level == null || mc.isPaused() || !ModDimensions.isLands(mc.level)) return;
+		if (mc.level == null || mc.isPaused() || !ModDimensions.hasLandsRules(mc.level)) return;
 		var cam = mc.gameRenderer.getMainCamera().getPosition();
 		for (Player p : mc.level.players()) {
 			if (!dual(p) || p.distanceToSqr(cam) > 48 * 48) continue;

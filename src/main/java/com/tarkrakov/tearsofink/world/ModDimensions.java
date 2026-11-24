@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.world;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.block.ModBlocks;
+import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
 import com.tarkrakov.tearsofink.world.ruins.RuinPiece;
 import com.tarkrakov.tearsofink.world.ruins.Ruins;
 import net.minecraft.core.BlockPos;
@@ -32,6 +33,11 @@ public final class ModDimensions {
 
 	public static boolean isLands(Level level) {
 		return level.dimension() == INK_LANDS;
+	}
+
+	/** Gameplay inside the Lands or their isolated Pantheon. Worldgen and travel use isLands. */
+	public static boolean hasLandsRules(Level level) {
+		return isLands(level) || PantheonTemple.isTemple(level);
 	}
 
 	@Nullable

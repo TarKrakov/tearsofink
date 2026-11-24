@@ -28,7 +28,7 @@ public abstract class PlayerEatMixin {
 		// The world-origin penalty is independent of Soul and Tear Solace.
 		boolean vanilla = BuiltInRegistries.ITEM.getKey(stack.getItem()).getNamespace().equals("minecraft");
 		float m = FoodBalance.multiplier(SoulPenalty.multiplier(self),
-				self instanceof ServerPlayer && ModDimensions.isLands(self.level()), vanilla);
+				self instanceof ServerPlayer && ModDimensions.hasLandsRules(self.level()), vanilla);
 		if (m == 1f) {
 			original.call(foodData, food);
 			return;

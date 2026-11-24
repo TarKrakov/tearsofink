@@ -27,7 +27,7 @@ public final class VanillaArmorPenalty {
 	}
 
 	public static void update(ServerPlayer player) {
-		boolean lands = ModDimensions.isLands(player.level());
+		boolean lands = ModDimensions.hasLandsRules(player.level());
 		var equipment = (EquippedArmor) player;
 		for (EquipmentSlot slot : SLOTS) {
 			// Читаем тот же снимок, с которым работают уже применённые ванилью модификаторы.

@@ -141,7 +141,7 @@ public final class Gear {
 
 	/** Износ (только игроки, только в Землях). Ниже отметки — деградация на ступень, свойства засыпают. */
 	public static void wear(LivingEntity user, ItemStack stack, int amount) {
-		if (!(user instanceof ServerPlayer p) || !ModDimensions.isLands(p.level()) || !ours(stack) || p.isCreative()) return;
+		if (!(user instanceof ServerPlayer p) || !ModDimensions.hasLandsRules(p.level()) || !ours(stack) || p.isCreative()) return;
 		int tier = tier(stack), max = SHARP_MAX[tier];
 		if (max <= 0) return;
 		int left = sharp(stack) - amount;
@@ -205,7 +205,7 @@ public final class Gear {
 	/** Apply affinity exactly once at the damage boundary; perks still operate only in Lands. */
 	public static float outgoing(LivingEntity target, DamageSource source, float amount) {
 		if (!(source.getEntity() instanceof Player user)) return amount;
-		boolean lands = ModDimensions.isLands(target.level());
+		boolean lands = ModDimensions.hasLandsRules(target.level());
 		Entity direct = source.getDirectEntity();
 		ItemStack held = com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.damageWeapon(user,
 				com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.damageWeapon(user));

@@ -1,6 +1,8 @@
 package com.tarkrakov.tearsofink.client.mixin;
 
 import com.tarkrakov.tearsofink.client.fog.InkFog;
+import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.DimensionSpecialEffects;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -17,6 +19,11 @@ public abstract class DimensionSpecialEffectsMixin {
 	@Inject(method = "getSunriseColor", at = @At("RETURN"), cancellable = true)
 	private void tearsofink$noSunriseGlow(float timeOfDay, float partialTicks, CallbackInfoReturnable<float[]> cir) {
 		float[] color = cir.getReturnValue();
+		var level = Minecraft.getInstance().level;
+		if (level != null && PantheonTemple.isTemple(level)) {
+			if (color != null) cir.setReturnValue(new float[]{1f, 0.45f, 0.16f, color[3]});
+			return;
+		}
 		float s = InkFog.strength();
 		if (color == null || s <= 0f) return;
 		if (s >= 1f) {

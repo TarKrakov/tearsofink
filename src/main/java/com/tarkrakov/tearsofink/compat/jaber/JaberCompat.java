@@ -29,7 +29,7 @@ public final class JaberCompat {
     }
 
     public static boolean active(Level level) {
-        return level instanceof ServerLevel && ModDimensions.isLands(level);
+        return level instanceof ServerLevel && ModDimensions.hasLandsRules(level);
     }
 
     /** Avoid the fog loop; this is the same noisy edge as InkLandsBorder, not a square/radial substitute. */

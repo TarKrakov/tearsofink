@@ -90,7 +90,7 @@ public final class WeaponStats {
 
     private static void tooltip(ItemStack stack, List<Component> lines) {
         Minecraft mc = Minecraft.getInstance();
-        boolean inside = mc.level != null && ModDimensions.isLands(mc.level);
+        boolean inside = mc.level != null && ModDimensions.hasLandsRules(mc.level);
         Item item = stack.getItem();
         if (inside && vanilla(stack) && stack.get(DataComponents.FOOD) != null) {
             lines.add(t("food.foreign", fmt((1 - FoodBalance.VANILLA_IN_LANDS) * 100)).withStyle(ChatFormatting.RED));

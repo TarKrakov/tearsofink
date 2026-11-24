@@ -12,6 +12,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class NoSunBurnMixin {
 	@Inject(method = "isSunBurnTick", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$noBurnInLands(CallbackInfoReturnable<Boolean> cir) {
-		if (ModDimensions.isLands(((Mob) (Object) this).level())) cir.setReturnValue(false);
+		if (ModDimensions.hasLandsRules(((Mob) (Object) this).level())) cir.setReturnValue(false);
 	}
 }

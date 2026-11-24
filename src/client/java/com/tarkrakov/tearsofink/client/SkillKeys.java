@@ -48,7 +48,7 @@ public final class SkillKeys {
 	private static void jumps(Minecraft mc, LocalPlayer player) {
 		boolean jump = mc.options.keyJump.isDown();
 		boolean ground = player.onGround() || player.isInWater() || player.onClimbable() || player.getAbilities().flying || player.isPassenger();
-		boolean lands = mc.level != null && mc.level.dimension() == com.tarkrakov.tearsofink.world.ModDimensions.INK_LANDS;
+		boolean lands = mc.level != null && com.tarkrakov.tearsofink.world.ModDimensions.hasLandsRules(mc.level);
 		com.tarkrakov.tearsofink.vow.Vow vow = com.tarkrakov.tearsofink.vow.Vow.CLIENT;
 		// Путь Души: Shift+пробел с земли — Вознесение (игра уже подбросила в этом же тике — сервер видит отрыв)
 		if (lands && mc.screen == null && vow == com.tarkrakov.tearsofink.vow.Vow.SOUL && jump && !jumpWas && groundWas && !ground

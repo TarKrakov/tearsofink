@@ -158,7 +158,7 @@ public final class Resonance {
 			Map.Entry<UUID, Pending> e = it.next();
 			ServerPlayer p = server.getPlayerList().getPlayer(e.getKey());
 			Pending pd = e.getValue();
-			if (p == null || !p.isAlive() || !ShieldStance.dual(p) || p.getMainHandItem() != pd.main() || p.getOffhandItem() != pd.off() || !com.tarkrakov.tearsofink.world.ModDimensions.isLands(p.level())) {
+			if (p == null || !p.isAlive() || !ShieldStance.dual(p) || p.getMainHandItem() != pd.main() || p.getOffhandItem() != pd.off() || !com.tarkrakov.tearsofink.world.ModDimensions.hasLandsRules(p.level())) {
 				it.remove();
 				continue;
 			}
@@ -173,7 +173,7 @@ public final class Resonance {
 		for (Iterator<Map.Entry<UUID, Dash>> it = DASH.entrySet().iterator(); it.hasNext(); ) {
 			Map.Entry<UUID, Dash> e = it.next();
 			ServerPlayer p = server.getPlayerList().getPlayer(e.getKey());
-			if (p == null || !p.isAlive() || !com.tarkrakov.tearsofink.world.ModDimensions.isLands(p.level()) || kind(p.getMainHandItem(),p.getOffhandItem()) != e.getValue().kind()) {
+			if (p == null || !p.isAlive() || !com.tarkrakov.tearsofink.world.ModDimensions.hasLandsRules(p.level()) || kind(p.getMainHandItem(),p.getOffhandItem()) != e.getValue().kind()) {
 				it.remove();
 				continue;
 			}
@@ -185,7 +185,7 @@ public final class Resonance {
 			Map.Entry<UUID, float[]> e = it.next();
 			ServerPlayer p = server.getPlayerList().getPlayer(e.getKey());
 			float[] h = e.getValue();
-			if (p == null || !p.isAlive() || kind(p.getMainHandItem(),p.getOffhandItem()) != Kind.HALO || !com.tarkrakov.tearsofink.world.ModDimensions.isLands(p.level()) || --h[0] < 0) {
+			if (p == null || !p.isAlive() || kind(p.getMainHandItem(),p.getOffhandItem()) != Kind.HALO || !com.tarkrakov.tearsofink.world.ModDimensions.hasLandsRules(p.level()) || --h[0] < 0) {
 				it.remove();
 				continue;
 			}
@@ -295,7 +295,7 @@ public final class Resonance {
 
 	/** Фаланга: спереди не пробить, пока идёт рывок и чуть после. */
 	private static boolean allowDamage(LivingEntity entity, DamageSource source, float amount) {
-		if (!(entity instanceof ServerPlayer p) || !com.tarkrakov.tearsofink.world.ModDimensions.isLands(p.level()) || kind(p.getMainHandItem(),p.getOffhandItem()) != Kind.PHALANX || source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_SHIELD)) return true;
+		if (!(entity instanceof ServerPlayer p) || !com.tarkrakov.tearsofink.world.ModDimensions.hasLandsRules(p.level()) || kind(p.getMainHandItem(),p.getOffhandItem()) != Kind.PHALANX || source.is(net.minecraft.tags.DamageTypeTags.BYPASSES_SHIELD)) return true;
 		Long until = PHALANX_UNTIL.get(p.getUUID());
 		if (until == null || until < p.serverLevel().getGameTime()) return true;
 		Vec3 from = source.getSourcePosition();

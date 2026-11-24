@@ -3,6 +3,8 @@ package com.tarkrakov.tearsofink.client.mixin;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.client.fog.InkFog;
+import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.resources.ResourceLocation;
 import org.spongepowered.asm.mixin.Mixin;
@@ -38,6 +40,14 @@ public abstract class LevelRendererMixin {
 		boolean sun = "textures/environment/sun.png".equals(texture.getPath());
 		boolean moon = "textures/environment/moon_phases.png".equals(texture.getPath());
 		if (!sun && !moon) return texture;
+
+		var level = Minecraft.getInstance().level;
+		if (level != null && PantheonTemple.isTemple(level)) {
+			float alpha = RenderSystem.getShaderColor()[3];
+			if (sun) RenderSystem.setShaderColor(1f, 0.66f, 0.29f, alpha);
+			else RenderSystem.setShaderColor(1f, 1f, 1f, alpha);
+			return texture;
+		}
 
 		if (sun && s > 0f) {
 			// Затухание при переходе: обычное солнце тает в дымке (s 0 → 0.5),

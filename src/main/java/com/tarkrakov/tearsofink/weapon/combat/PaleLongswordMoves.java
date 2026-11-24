@@ -61,7 +61,7 @@ public final class PaleLongswordMoves {
     private static long now(ServerPlayer p) { return p.server.getTickCount(); }
     private static boolean available(ServerPlayer p) {
         return p.isAlive() && !p.isSpectator() && !p.isPassenger() && !p.isSleeping()
-                && ModDimensions.isLands(p.level()) && !com.tarkrakov.tearsofink.weapon.blood.Parry.active(p);
+                && ModDimensions.hasLandsRules(p.level()) && !com.tarkrakov.tearsofink.weapon.blood.Parry.active(p);
     }
     private static boolean valid(ServerPlayer p, State s) {
         return p == s.owner && p.serverLevel() == s.level && p.getMainHandItem() == s.main
