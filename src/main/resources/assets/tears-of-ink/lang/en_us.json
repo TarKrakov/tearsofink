@@ -1282,5 +1282,8 @@
   "message.tears-of-ink.pantheon.altar.inventory_full": "Free an inventory slot before taking the relic.",
   "message.tears-of-ink.pantheon.altar.taken": "Relic removed from the altar.",
   "message.tears-of-ink.pantheon.altar.missing": "Place a relic on the altar.",
-  "message.tears-of-ink.pantheon.altar.started": "Test trial: forest. The relic is reusable. Sneak-right-click with an empty hand to end."
+  "message.tears-of-ink.pantheon.altar.started": "Test trial: forest. The relic is reusable. Sneak-right-click with an empty hand to end.",
+  "message.tears-of-ink.pantheon.arena.restored": "Arena restored. The passage is open.",
+  "message.tears-of-ink.pantheon.arena.ready": "The arena is ready. The passage is open.",
+  "message.tears-of-ink.pantheon.arena.failed": "Arena reconstruction failed: %s. The passage is closed."
 }

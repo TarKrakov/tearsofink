@@ -1282,5 +1282,8 @@
   "message.tears-of-ink.pantheon.altar.inventory_full": "Освободи ячейку инвентаря, чтобы забрать реликвию.",
   "message.tears-of-ink.pantheon.altar.taken": "Реликвия снята с алтаря.",
   "message.tears-of-ink.pantheon.altar.missing": "Возложи реликвию на алтарь.",
-  "message.tears-of-ink.pantheon.altar.started": "Пробное испытание: лес. Реликвия не расходуется. Shift+ПКМ пустой рукой — завершить."
+  "message.tears-of-ink.pantheon.altar.started": "Пробное испытание: лес. Реликвия не расходуется. Shift+ПКМ пустой рукой — завершить.",
+  "message.tears-of-ink.pantheon.arena.restored": "Арена восстановлена. Проход открыт.",
+  "message.tears-of-ink.pantheon.arena.ready": "Арена готова. Проход открыт.",
+  "message.tears-of-ink.pantheon.arena.failed": "Не удалось завершить перестройку арены: %s. Проход закрыт."
 }

@@ -13,6 +13,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.FullChunkStatus;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.TicketType;
 import net.minecraft.world.entity.Entity;
@@ -306,7 +307,9 @@ final class PantheonArena {
             }
             for (ChunkPos pos : layout.chunks()) {
                 var chunk = level.getChunkSource().getChunkNow(pos.x, pos.z);
-                if (chunk == null) return;
+                // Full-but-not-ticking chunks do not reliably emit UPDATE_CLIENTS block updates.
+                // Wait for the ticket to promote every affected chunk before writing.
+                if (chunk == null || !chunk.getFullStatus().isOrAfter(FullChunkStatus.BLOCK_TICKING)) return;
                 active.chunks.put(pos.toLong(), chunk);
             }
             if (!gate(level, CLOSED_GATE)) {
@@ -366,6 +369,11 @@ final class PantheonArena {
         release(level);
         job = null;
         locked = false;
+        for (ServerPlayer player : level.players()) {
+            player.displayClientMessage(Component.translatable(selected == NEUTRAL
+                    ? "message.tears-of-ink.pantheon.arena.restored"
+                    : "message.tears-of-ink.pantheon.arena.ready"), true);
+        }
     }
 
     private static boolean gate(ServerLevel level, BlockState target) {
@@ -384,6 +392,9 @@ final class PantheonArena {
         release(level);
         job = null;
         TearsOfInk.LOGGER.error("Pantheon arena remains closed: {}", why);
+        for (ServerPlayer player : level.players()) {
+            player.displayClientMessage(Component.translatable("message.tears-of-ink.pantheon.arena.failed", why), false);
+        }
     }
 
     private static void release(ServerLevel level) {

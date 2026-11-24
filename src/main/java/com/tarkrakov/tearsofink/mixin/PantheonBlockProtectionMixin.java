@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.mixin;
 
 import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
@@ -15,7 +16,11 @@ public abstract class PantheonBlockProtectionMixin {
             at = @At("HEAD"), cancellable = true)
     private void tearsofink$protectPantheon(BlockPos pos, BlockState state, int flags, int recursion,
                                             CallbackInfoReturnable<Boolean> cir) {
-        if (!PantheonTemple.allowsBlockWrite((Level) (Object) this, pos, state)) cir.setReturnValue(false);
+        // ClientLevel.setServerVerifiedBlockState also calls Level.setBlock. Its writes
+        // must not require the server-only installer/arena permission (even in singleplayer).
+        if ((Object) this instanceof ServerLevel level && !PantheonTemple.allowsBlockWrite(level, pos, state)) {
+            cir.setReturnValue(false);
+        }
     }
 
     @Inject(method = "destroyBlock(Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/entity/Entity;I)Z",
