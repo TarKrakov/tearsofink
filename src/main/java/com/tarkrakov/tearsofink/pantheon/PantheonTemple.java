@@ -64,6 +64,7 @@ public final class PantheonTemple {
     private static final BlockPos CLAIM = new BlockPos(0, 78, -16);
     private static final BlockPos FINISHED = CLAIM.above();
     private static final BlockPos CLEANED = FINISHED.above();
+    private static final BlockPos FOUNTAIN = new BlockPos(53, 6, 14);
     private static final BlockPos ENTRANCE = ORIGIN.offset(58, 1, 12);
     private static final String RESOURCE = "/data/tears-of-ink/pantheon/toi_panteon.schem.b64";
 
@@ -71,7 +72,7 @@ public final class PantheonTemple {
     private static boolean installing;
     private static boolean autoAttempted;
     private static int cleanupCursor;
-    private static boolean passagesChecked;
+    private static boolean interiorChecked;
     private static Template cleanupTemplate;
 
     record Placement(BlockPos relative, BlockState state) {}
@@ -130,7 +131,7 @@ public final class PantheonTemple {
             job = null;
             autoAttempted = false;
             cleanupCursor = 0;
-            passagesChecked = false;
+            interiorChecked = false;
             cleanupTemplate = null;
         });
     }
@@ -224,7 +225,8 @@ public final class PantheonTemple {
             states[index] = state;
             BlockPos local = relative(index);
             if (accidentalSoil(state)) soil.add(new Placement(local, state));
-            else if (!state.isAir() && !(state.is(Blocks.GOLD_BLOCK) && corridorMarker(local))) {
+            else if (!state.isAir() && !(state.is(Blocks.GOLD_BLOCK) && corridorMarker(local))
+                    && !(local.equals(FOUNTAIN) && state.is(ModBlocks.INK_FOUNTAIN))) {
                 placements.add(new Placement(local, state));
             }
         }
@@ -311,7 +313,7 @@ public final class PantheonTemple {
                 && (local.getZ() == 19 && local.getY() >= 1 || local.getZ() == 39 && local.getY() >= 2);
     }
 
-    private static void upgradePassages(ServerLevel level) {
+    private static void upgradeInterior(ServerLevel level) {
         int flags = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
         for (BlockPos local : BlockPos.betweenClosed(57, 1, 19, 58, 3, 39)) {
             if (!corridorMarker(local)) continue;
@@ -327,11 +329,15 @@ public final class PantheonTemple {
                 setTempleBlock(level, pos, ModBlocks.SANCTUM_BRICK.defaultBlockState(), flags);
             }
         }
-        passagesChecked = true;
+        BlockPos fountain = world(FOUNTAIN);
+        if (level.getBlockState(fountain).is(ModBlocks.INK_FOUNTAIN)) {
+            setTempleBlock(level, fountain, Blocks.AIR.defaultBlockState(), flags);
+        }
+        interiorChecked = true;
     }
 
     public static boolean ready(ServerLevel level) {
-        return passagesChecked && level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK)
+        return interiorChecked && level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK)
                 && level.getBlockState(CLEANED).is(Blocks.DIAMOND_BLOCK);
     }
 
@@ -386,7 +392,7 @@ public final class PantheonTemple {
         Job current = job;
         if (current == null) {
             if (!level.getBlockState(FINISHED).is(Blocks.EMERALD_BLOCK)) return;
-            if (!passagesChecked) upgradePassages(level);
+            if (!interiorChecked) upgradeInterior(level);
             if (level.getBlockState(CLEANED).isAir()) {
                 if (cleanupTemplate == null) {
                     try {
