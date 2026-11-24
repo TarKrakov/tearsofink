@@ -102,6 +102,7 @@ public final class PantheonTemple {
         PantheonRecovery.init();
         PantheonRuins.init();
         PantheonGatekeeper.init();
+        PantheonArena.init();
         CommandRegistrationCallback.EVENT.register((dispatcher, access, environment) ->
                 dispatcher.register(Commands.literal("tearsofink")
                         .requires(source -> source.hasPermission(2))
@@ -277,8 +278,16 @@ public final class PantheonTemple {
         return new BlockPos(x, y, z);
     }
 
-    private static BlockPos world(BlockPos relative) {
+    static BlockPos world(BlockPos relative) {
         return ORIGIN.offset(relative);
+    }
+
+    static BlockPos local(BlockPos world) {
+        return world.subtract(ORIGIN);
+    }
+
+    static BlockState authored(Template template, BlockPos local) {
+        return template.states()[local.getX() + WIDTH * (local.getZ() + DEPTH * local.getY())];
     }
 
     public static boolean isTemple(Level level) {
@@ -286,13 +295,12 @@ public final class PantheonTemple {
     }
 
     public static boolean protectedAt(BlockGetter level, BlockPos pos) {
-        // The future arena may expose a server-owned whitelist here.
         return level instanceof Level world && isTemple(world)
                 || level instanceof ServerLevel server && PantheonRuins.protectedAt(server, pos);
     }
 
-    public static boolean allowsBlockWrite(Level level, BlockPos pos) {
-        return installing || !protectedAt(level, pos);
+    public static boolean allowsBlockWrite(Level level, BlockPos pos, BlockState state) {
+        return installing || PantheonArena.allowsWrite(level, pos, state) || !protectedAt(level, pos);
     }
 
     private static boolean setTempleBlock(ServerLevel level, BlockPos pos, BlockState state, int flags) {

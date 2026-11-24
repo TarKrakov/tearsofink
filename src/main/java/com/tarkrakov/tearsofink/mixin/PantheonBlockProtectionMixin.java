@@ -15,7 +15,7 @@ public abstract class PantheonBlockProtectionMixin {
             at = @At("HEAD"), cancellable = true)
     private void tearsofink$protectPantheon(BlockPos pos, BlockState state, int flags, int recursion,
                                             CallbackInfoReturnable<Boolean> cir) {
-        if (!PantheonTemple.allowsBlockWrite((Level) (Object) this, pos)) cir.setReturnValue(false);
+        if (!PantheonTemple.allowsBlockWrite((Level) (Object) this, pos, state)) cir.setReturnValue(false);
     }
 
     @Inject(method = "destroyBlock(Lnet/minecraft/core/BlockPos;ZLnet/minecraft/world/entity/Entity;I)Z",
