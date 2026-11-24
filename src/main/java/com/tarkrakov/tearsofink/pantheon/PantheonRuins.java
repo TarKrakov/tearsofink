@@ -2,13 +2,18 @@ package com.tarkrakov.tearsofink.pantheon;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.block.ModBlocks;
+import com.tarkrakov.tearsofink.travel.FountainTravel;
+import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import com.tarkrakov.tearsofink.world.InkLandsLayout;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
+import net.minecraft.commands.Commands;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
@@ -41,6 +46,8 @@ public final class PantheonRuins {
     private static final BlockState AIR = Blocks.AIR.defaultBlockState();
     private static final String NONE = "No untouched, dry site with a walkable approach and clearance from other structures";
     private static volatile Instance active;
+    private enum SiteStatus { PLANNING, NO_SITE, ERROR, RESERVED }
+    private static SiteStatus siteStatus = SiteStatus.PLANNING;
     private static String status = "Waiting for the temple plan";
     private static boolean attempted;
 
@@ -50,9 +57,20 @@ public final class PantheonRuins {
     private PantheonRuins() {}
 
     public static void init() {
+        CommandRegistrationCallback.EVENT.register((dispatcher, access, environment) ->
+                dispatcher.register(Commands.literal("pantheon").executes(ctx -> {
+                    var player = ctx.getSource().getPlayerOrException();
+                    int opened = FountainTravel.openedCount(player);
+                    Component hint = opened < 2
+                            ? Component.translatable("message.tears-of-ink.pantheon.activate_fountains", opened)
+                            : navigationHint(player.server);
+                    ctx.getSource().sendSuccess(() -> hint, false);
+                    return 1;
+                })));
         ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
             active = null;
             attempted = false;
+            siteStatus = SiteStatus.PLANNING;
             status = "Waiting for the temple plan";
         });
         ServerWorldEvents.LOAD.register((server, level) -> {
@@ -84,14 +102,17 @@ public final class PantheonRuins {
             var template = PantheonTemple.load();
             if (site == null) site = chooseAndSave(file, level, layout, template);
             if (site == null) {
+                siteStatus = SiteStatus.NO_SITE;
                 status = NONE;
                 TearsOfInk.LOGGER.warn("Pantheon ruins: {}", status);
                 return;
             }
             active = new Instance(level, site, blueprint(site, template, level.getSeed()));
+            siteStatus = SiteStatus.RESERVED;
             status = "Reserved at " + site.entrance().toShortString() + "; placed as new chunks generate";
             TearsOfInk.LOGGER.info("Pantheon ruins: {}", status);
         } catch (Exception failure) {
+            siteStatus = SiteStatus.ERROR;
             status = "Site unavailable: " + failure.getMessage();
             TearsOfInk.LOGGER.error("Pantheon ruins are disabled for this save", failure);
         }
@@ -99,6 +120,22 @@ public final class PantheonRuins {
 
     public static String status() {
         return status;
+    }
+
+    public static Component navigationHint(MinecraftServer server) {
+        if (ModDimensions.lands(server) == null) {
+            return Component.translatable("message.tears-of-ink.pantheon.lands_unavailable");
+        }
+        return switch (siteStatus) {
+            case PLANNING -> Component.translatable("message.tears-of-ink.pantheon.site_planning");
+            case NO_SITE -> Component.translatable("message.tears-of-ink.pantheon.site_missing");
+            case ERROR -> Component.translatable("message.tears-of-ink.pantheon.site_error");
+            case RESERVED -> {
+                BlockPos entrance = active.site().entrance();
+                yield Component.translatable("message.tears-of-ink.pantheon.site_found",
+                        entrance.getX(), entrance.getY(), entrance.getZ());
+            }
+        };
     }
 
     public static BlockPos entrance(ServerLevel level) {

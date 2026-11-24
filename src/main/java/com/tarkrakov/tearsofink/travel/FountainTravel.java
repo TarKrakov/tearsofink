@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.travel;
 
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.hunt.Hunt;
+import com.tarkrakov.tearsofink.pantheon.PantheonRuins;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents;
@@ -173,7 +174,11 @@ public final class FountainTravel {
 
 	public static void activate(ServerPlayer player, BlockPos pos) {
 		if (ModDimensions.isLands(player.level()) && !player.isSpectator()) {
-			FountainTravelData.get(player).activate(player, pos);
+			FountainTravelData data = FountainTravelData.get(player);
+			data.activate(player, pos);
+			if (data.opened().size() == 1 && !data.opened().contains(pos.asLong())) {
+				player.sendSystemMessage(PantheonRuins.navigationHint(player.server));
+			}
 			com.tarkrakov.tearsofink.prologue.FateProgress.refresh(player, false);
 		}
 	}

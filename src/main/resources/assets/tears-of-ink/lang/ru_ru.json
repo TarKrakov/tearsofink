@@ -1263,5 +1263,11 @@
   "message.tears-of-ink.pantheon.greeting": "Привратник: Пантеон стоит во вневременье. Здесь герои прошлого и грядущего испытывают силу, смекалку и находчивость. Если ищешь испытаний и наград, возьми ключ. Нажми ПКМ на нём в личной вкладке, чтобы войти или вернуться.",
   "message.tears-of-ink.pantheon.reminder": "Привратник: Ключ Пантеона в твоей личной вкладке. Он открывает дорогу в обе стороны.",
   "message.tears-of-ink.pantheon.preparing": "Врата Пантеона ещё закрыты. Попробуй позже.",
-  "message.tears-of-ink.pantheon.no_safe_return": "Пока не удаётся найти безопасную точку возвращения."
+  "message.tears-of-ink.pantheon.no_safe_return": "Пока не удаётся найти безопасную точку возвращения.",
+  "message.tears-of-ink.pantheon.activate_fountains": "Открыто малых фонтанов: %s из 2. Активируй следующий фонтан ПКМ пустой рукой.",
+  "message.tears-of-ink.pantheon.lands_unavailable": "Чернильные земли недоступны. Путь к руинам Пантеона пока закрыт.",
+  "message.tears-of-ink.pantheon.site_planning": "Сервер ещё ищет площадку для руин Пантеона. Состояние можно проверить командой /pantheon.",
+  "message.tears-of-ink.pantheon.site_missing": "В этом мире не нашлось свободной площадки для руин Пантеона. Исследованные чанки сохранены.",
+  "message.tears-of-ink.pantheon.site_error": "Сервер не смог загрузить площадку руин Пантеона. Подробности в журнале сервера.",
+  "message.tears-of-ink.pantheon.site_found": "Вход в руины Пантеона в Чернильных землях: X %s, Y %s, Z %s. Внутри ждёт Привратник."
 }

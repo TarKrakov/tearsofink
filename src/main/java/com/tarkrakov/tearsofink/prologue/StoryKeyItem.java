@@ -67,16 +67,26 @@ public final class StoryKeyItem extends Item {
         if (player instanceof ServerPlayer server) {
             if (server.isSpectator() || Vows.vow(server) != path)
                 return InteractionResultHolder.pass(stack);
-            InkLandsLayout layout = InkLandsLayout.of(server.serverLevel());
-            if (layout == null) return InteractionResultHolder.pass(stack);
+            int opened = FountainTravel.openedCount(server);
             int[] target;
-            if (FountainTravel.openedCount(server) >= 2) {
+            if (opened >= 2) {
                 var ruins = PantheonRuins.entrance(server.serverLevel());
-                target = ruins == null ? null : new int[]{ruins.getX(), ruins.getZ()};
+                server.displayClientMessage(PantheonRuins.navigationHint(server.server), true);
+                if (ruins == null) {
+                    server.getCooldowns().addCooldown(this, 20);
+                    return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+                }
+                target = new int[]{ruins.getX(), ruins.getZ()};
             } else {
-                target = nextTemple(server, layout);
+                InkLandsLayout layout = InkLandsLayout.of(server.serverLevel());
+                target = layout == null ? null : nextTemple(server, layout);
+                if (target == null) {
+                    server.displayClientMessage(Component.translatable(
+                            "message.tears-of-ink.pantheon.activate_fountains", opened), true);
+                    server.getCooldowns().addCooldown(this, 20);
+                    return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
+                }
             }
-            if (target == null) return InteractionResultHolder.pass(stack);
             int bit = path == Vow.INK ? INK_USED : SOUL_USED;
             int history = server.getAttachedOrCreate(HISTORY);
             if ((history & bit) == 0) {
