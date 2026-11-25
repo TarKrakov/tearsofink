@@ -58,6 +58,7 @@ public final class OrionCombatTest {
         for (Window window : SLASH)
             require(slashAdvance(window.from()) == slashAdvance(window.to()), "rush and facing settle for each slash");
         require(slashAdvance(.35f) == 0 && Math.abs(1 - slashAdvance(2.9f)) < .0001, "three advancing windups");
+        verifyDamageAndSpinReach();
         verifyAnimationPlayback();
         verifyMovementCollision();
         verifyFirstDeadly();
@@ -69,6 +70,25 @@ public final class OrionCombatTest {
         require(slash.touches(new AABB(-2.9, 0, -.35, -2.4, 1.8, .35)), "visible blade reaches player");
         require(!slash.touches(new AABB(2.4, 0, -.35, 2.9, 1.8, .35)), "blade does not hit behind");
         System.out.println("Orion combat checks passed");
+    }
+
+    private static void verifyDamageAndSpinReach() {
+        require(PHASE_DAMAGE == 1, "phase two has no damage multiplier");
+        require(SLASH.get(0).damage() <= 9 * 2f / 3
+                && SLASH.get(1).damage() <= 10 * 2f / 3
+                && SLASH.get(2).damage() <= 10 * 2f / 3, "all slash hits reduced by at least a third");
+        require(SPIN.damage() <= 9.5f * 2 / 3 && CLEAVE.damage() <= 16 * 2f / 3
+                && SPIN_LIGHT_DAMAGE <= 8 * 2f / 3 && WAVE_DAMAGE <= 8 * 2f / 3
+                && CLEAVE_IMPACT_DAMAGE <= 11 * 2f / 3, "all other damage reduced by at least a third");
+        require(Math.abs(SPIN_MARGIN - .68 * .75) < .000001
+                && Math.abs(SPIN_LIGHT_RADIUS - LIGHT_RADIUS * .75) < .000001,
+                "spin contact margin and radiant radius reduced by a quarter");
+        var blade = new OrionBlade.Segment(Vec3.ZERO, new Vec3(0, 0, 2));
+        var close = new AABB(.35, -.1, .5, .95, 1.7, 1.1);
+        var outer = new AABB(.60, -.1, .5, 1.20, 1.7, 1.1);
+        require(blade.contact(close, SPIN_MARGIN) != null, "nearby target still hit");
+        require(blade.contact(outer, .68) != null && blade.contact(outer, SPIN_MARGIN) == null,
+                "old excessive side margin no longer hits");
     }
 
     private static void verifyAnimationPlayback() {
