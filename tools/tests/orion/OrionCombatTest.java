@@ -58,8 +58,7 @@ public final class OrionCombatTest {
         for (Window window : SLASH)
             require(slashAdvance(window.from()) == slashAdvance(window.to()), "rush and facing settle for each slash");
         require(slashAdvance(.35f) == 0 && Math.abs(1 - slashAdvance(2.9f)) < .0001, "three advancing windups");
-        var delayed = new OrionEntity.Performance(Clip.SPIN_DASH, 10, 1, Clip.IDLE, 0, 1, false, 4, 20);
-        require(delayed.elapsedTicks(400, .9f) == 5, "client cursor can lead the sampled server by at most one tick");
+        verifyAnimationPlayback();
         verifyMovementCollision();
         verifyFirstDeadly();
         verifyHitWindow();
@@ -70,6 +69,29 @@ public final class OrionCombatTest {
         require(slash.touches(new AABB(-2.9, 0, -.35, -2.4, 1.8, .35)), "visible blade reaches player");
         require(!slash.touches(new AABB(2.4, 0, -.35, 2.9, 1.8, .35)), "blade does not hit behind");
         System.out.println("Orion combat checks passed");
+    }
+
+    private static void verifyAnimationPlayback() {
+        var clock = new OrionAnimationClock();
+        clock.reset(0);
+        for (int serverTick : new int[] {1, 2, 2, 4, 5, 5, 7, 8, 8, 10}) {
+            float last = clock.current();
+            clock.advance(serverTick);
+            var pose = new OrionEntity.Performance(Clip.SPIN_DASH, 30, 1, Clip.IDLE, 0, false,
+                    clock.previous(), clock.current(), 0);
+            require(pose.elapsedTicks(400, 0) == last, "adjacent client ticks share an endpoint");
+            require(pose.elapsedTicks(400, .25f) < pose.elapsedTicks(400, .75f),
+                    "the visual pose advances between renders even with irregular packets");
+            require(clock.current() <= serverTick + 1, "client stays within one tick of its latest sample");
+        }
+        for (int stalledTick = 0; stalledTick < 20; stalledTick++) clock.advance(10);
+        require(clock.current() <= 11 && Math.abs(clock.current() - clock.previous()) < .001,
+                "prolonged stall holds the cursor");
+        clock.advance(14);
+        require(clock.current() > clock.previous() && clock.current() - clock.previous() <= 1.5,
+                "a late packet resumes playback without jumping");
+        clock.reset(0);
+        require(clock.previous() == 0 && clock.current() == 0, "the next clip starts with its own cursor");
     }
 
     private static void verifyMovementCollision() {

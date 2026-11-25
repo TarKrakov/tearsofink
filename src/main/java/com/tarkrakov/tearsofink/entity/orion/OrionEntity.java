@@ -57,7 +57,8 @@ public final class OrionEntity extends PathfinderMob {
     private long started, recoverUntil, longReadyAt, lastContact, lastChoice, lastDamage = -100;
     private float rate = 1;
     private float previousTime;
-    private int lastClientCursor;
+    private final OrionAnimationClock clientClock = new OrionAnimationClock();
+    private Performance clientPerformance;
     private Combo combo;
     private int step;
     private Technique technique;
@@ -77,13 +78,12 @@ public final class OrionEntity extends PathfinderMob {
     private record Wave(Vec3 origin, Vec3 forward, Vec3 lateral, long launch, boolean radiant, HitWindow hit) {}
 
     public record Performance(Clip clip, long start, float rate, Clip previous, long previousStart,
-                              float previousRate, boolean phaseTwo, int elapsed, int cursorAge) {
+                              boolean phaseTwo, float fromTick, float toTick, float previousSeconds) {
         public float elapsedTicks(long tick, float partial) {
-            if (elapsed >= 0) return elapsed + Mth.clamp(cursorAge + partial, 0, 1);
+            if (fromTick >= 0) return Mth.lerp(Mth.clamp(partial, 0, 1), fromTick, toTick);
             return Math.max(0, tick - start + partial);
         }
         public float seconds(long tick, float partial) { return elapsedTicks(tick, partial) * rate / 20; }
-        public float previousSeconds(long tick) { return Math.max(0, (tick - previousStart) * previousRate / 20); }
     }
 
     public OrionEntity(EntityType<? extends PathfinderMob> type, Level level) { super(type, level); }
@@ -100,19 +100,35 @@ public final class OrionEntity extends PathfinderMob {
         builder.define(ACTION_TICKS, 0);
     }
 
-    @Override public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
-        super.onSyncedDataUpdated(key);
-        if (ACTION_TICKS.equals(key)) lastClientCursor = tickCount;
+    public Performance performance() {
+        return clientPerformance != null ? clientPerformance : trackedPerformance();
     }
 
-    public Performance performance() {
+    private Performance trackedPerformance() {
         CompoundTag state = entityData.get(PERFORMANCE);
-        if (state.isEmpty()) return new Performance(Clip.IDLE, 0, 1, Clip.IDLE, 0, 1, false, -1, 0);
+        if (state.isEmpty()) return new Performance(Clip.IDLE, 0, 1, Clip.IDLE, 0, false, -1, -1, 0);
         Clip synced = Clip.values()[state.getInt("clip")];
-        return new Performance(synced, state.getLong("start"), state.getFloat("rate"),
-                Clip.values()[state.getInt("previous")], state.getLong("previousStart"),
-                state.getFloat("previousRate"), state.getBoolean("phaseTwo"),
-                synced.usesCursor() ? entityData.get(ACTION_TICKS) : -1, tickCount - lastClientCursor);
+        long start = state.getLong("start");
+        long previousStart = state.getLong("previousStart");
+        float previousSeconds = Math.max(0, (start - previousStart) * state.getFloat("previousRate") / 20);
+        int elapsed = synced.usesCursor() ? entityData.get(ACTION_TICKS) : -1;
+        return new Performance(synced, start, state.getFloat("rate"), Clip.values()[state.getInt("previous")],
+                previousStart, state.getBoolean("phaseTwo"), elapsed, elapsed, previousSeconds);
+    }
+
+    private void tickClientAnimation() {
+        Performance tracked = trackedPerformance();
+        Performance former = clientPerformance;
+        boolean changed = former == null || former.clip() != tracked.clip() || former.start() != tracked.start();
+        float previousSeconds = tracked.previousSeconds();
+        if (!changed) previousSeconds = former.previousSeconds();
+        else if (former != null && tracked.previous() == former.clip() && tracked.previousStart() == former.start())
+            previousSeconds = former.seconds(level().getGameTime() - 1, 1);
+
+        if (changed) clientClock.reset(tracked.toTick());
+        else if (tracked.clip().usesCursor()) clientClock.advance(tracked.toTick());
+        clientPerformance = new Performance(tracked.clip(), tracked.start(), tracked.rate(), tracked.previous(),
+                tracked.previousStart(), tracked.phaseTwo(), clientClock.previous(), clientClock.current(), previousSeconds);
     }
 
     private void play(Clip next) {
@@ -214,12 +230,14 @@ public final class OrionEntity extends PathfinderMob {
 
     @Override public void tick() {
         super.tick();
-        if (!(level() instanceof ServerLevel server)) return;
+        if (!(level() instanceof ServerLevel server)) {
+            tickClientAnimation();
+            return;
+        }
         final long now = server.getGameTime();
         final int elapsed = (int)(now - started);
         final float time = elapsed * rate / 20;
-        // In a stalled tick or delayed packet, hold the action within one tick of the server cursor.
-        // Locomotion is still free to loop locally in the absence of movement updates.
+        // The server owns contact timing. The client uses these samples to pace its visual playhead.
         if (clip.usesCursor()) entityData.set(ACTION_TICKS, elapsed);
         if (clip == Clip.DEATH) {
             tickDeath(server, time);

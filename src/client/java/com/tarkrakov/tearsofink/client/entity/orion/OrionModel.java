@@ -40,7 +40,7 @@ public final class OrionModel extends HierarchicalModel<OrionEntity> {
         float partial = age - entity.tickCount;
         float mix = Mth.clamp(state.elapsedTicks(now, partial) / 3, 0, 1);
         if (mix < 1) {
-            apply(state.previous(), state.previousSeconds(state.start()));
+            apply(state.previous(), state.previousSeconds());
             for (int i = 0; i < parts.size(); i++) {
                 ModelPart part = parts.get(i);
                 former[i] = part.storePose();
