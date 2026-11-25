@@ -11,7 +11,6 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.world.entity.HumanoidArm;
 
 /** Temporary pixel glyphs; a matching 32x32 resource can replace each without code changes. */
 public final class CombatCooldownHud {
@@ -33,19 +32,27 @@ public final class CombatCooldownHud {
         String[] keys = {SkillKeys.mobilityKeyLabel().getString(),r,mc.options.keyUse.getTranslatedKeyMessage().getString(),shift+"+"+r,SkillKeys.loadoutKeyLabel().getString()};
         int count=0; for (Entry e:slots) if (!e.id().isEmpty()) count++;
         if(count==0) return;
-        int edge = g.guiWidth()/2-94;
+        // Draw in the original logical coordinates, then halve the whole HUD.
+        // Its right edge aligns with the left-hand slot instead of the health bar.
+        final float scale = 0.5f;
+        final int rowHeight = 19;
+        int edge = g.guiWidth()/2-100;
         int available = edge-3;
-        // At very narrow GUI widths use a compact column above the heart rows.
-        boolean narrow = available < 37;
-        int width = narrow ? 54 : Math.min(76,available);
-        int x = narrow ? 3 : edge-width;
-        int bottom = g.guiHeight() - (narrow ? 80 : 45);
-        // Align above offhand and attack indicator rather than covering them.
-        int y = Math.max(3,bottom-count*19);
+        // With insufficient room beside the hotbar, keep clear of the heart rows.
+        boolean narrow = available < 27;
+        int width = narrow ? 54 : Math.min(76,available*2);
+        int x = narrow ? 3 : edge-(width+1)/2;
+        int bottom = g.guiHeight() - (narrow ? 80 : 25);
+        int top = Math.max(3,bottom-(count*rowHeight+1)/2);
+        g.pose().pushPose();
+        g.pose().translate(x,top,0);
+        g.pose().scale(scale,scale,1f);
+        int y=0;
         for(int i=0;i<slots.length;i++) {
             Entry e=slots[i]; if(e.id().isEmpty())continue;
-            draw(g,mc,e,keys[i],x,y,width); y+=19;
+            draw(g,mc,e,keys[i],0,y,width); y+=rowHeight;
         }
+        g.pose().popPose();
     }
     private static void draw(GuiGraphics g,Minecraft mc,Entry e,String key,int x,int y,int width) {
         boolean active=e.state()==CombatCooldowns.ACTIVE;
