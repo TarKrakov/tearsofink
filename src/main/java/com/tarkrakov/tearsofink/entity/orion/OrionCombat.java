@@ -32,12 +32,12 @@ public final class OrionCombat {
     static final float CLEAVE_BRACE_START = 1.5f, CLEAVE_IMPACT = 3.15f;
     static final int WAVE_DELAY = 12, WAVE_TICKS = 11;
     static final double WAVE_SPEED = .69, WAVE_HALF_WIDTH = 1.45;
-    static final Damage WAVE_DAMAGE = new Damage(5.6f, 6f), CLEAVE_IMPACT_DAMAGE = new Damage(7.7f, 8.25f);
-    static final float SPIN_LIGHT_DAMAGE = 6f;
+    static final Damage WAVE_DAMAGE = new Damage(5.6f, 4.8f), CLEAVE_IMPACT_DAMAGE = new Damage(7.7f, 6.6f);
+    static final float SPIN_LIGHT_DAMAGE = 4.8f;
     static final float SPIN_LIGHT = .68f;
     static final float EMPOWER_AFTER_SLASH = 3.04f, EMPOWER_AFTER_SPIN = 1.12f;
     // Retain the pre-existing softer blade contact in DEADLY, without runtime scaling.
-    static final float DEADLY_CLEAVE_DAMAGE = 10.56f;
+    static final float DEADLY_CLEAVE_DAMAGE = 8.448f;
 
     public enum Clip {
         IDLE(1), WALK(1.52f), RUN(1.50f), SLASH_COMBO(1.36f), SPIN_DASH(1.10f), CLEAVE(1.57f),
@@ -66,10 +66,10 @@ public final class OrionCombat {
         boolean touches(float previous, float current) { return current >= from && previous < to; }
     }
 
-    static final List<Window> SLASH = List.of(new Window(1.05f, 1.28f, new Damage(6.3f, 6.75f)),
-            new Window(1.91f, 2.14f, new Damage(7f, 7.5f)), new Window(2.60f, 2.89f, new Damage(7f, 7.5f)));
-    static final Window SPIN = new Window(.22f, .94f, new Damage(6.65f, 7.125f));
-    static final Window CLEAVE = new Window(3.10f, 3.19f, new Damage(11.2f, 12f));
+    static final List<Window> SLASH = List.of(new Window(1.05f, 1.28f, new Damage(6.3f, 5.4f)),
+            new Window(1.91f, 2.14f, new Damage(7f, 6f)), new Window(2.60f, 2.89f, new Damage(7f, 6f)));
+    static final Window SPIN = new Window(.22f, .94f, new Damage(6.65f, 5.7f));
+    static final Window CLEAVE = new Window(3.10f, 3.19f, new Damage(11.2f, 9.6f));
 
     enum Combo {
         BASIC(0, 29, 8, 0, 6, Technique.SLASH, Technique.SPIN),
