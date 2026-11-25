@@ -21,7 +21,8 @@
     "ItemInHandLayerMixin",
     "LivingEntityRendererMixin",
     "NoExperimentalWarningMixin",
-    "InventoryScreenMixin"
+    "InventoryScreenMixin",
+    "PistolElementAngleMixin"
   ],
   "injectors": {
     "defaultRequire": 1
