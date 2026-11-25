@@ -444,9 +444,9 @@ public final class OrionEntity extends PathfinderMob {
         float to = Math.min(time, clip.length());
         Vec3 old = position();
         if (technique == Technique.SPIN || technique == Technique.DODGE) {
-            float start = technique == Technique.SPIN ? DASH_START : .05f;
-            float end = technique == Technique.SPIN ? DASH_END : .39f;
-            double interval = movementProgress(to, start, end) - movementProgress(previousTime, start, end);
+            double interval = technique == Technique.SPIN
+                    ? spinAdvance(to, phaseTwo) - spinAdvance(previousTime, phaseTwo)
+                    : movementProgress(to, .05f, .39f) - movementProgress(previousTime, .05f, .39f);
             if (interval > 0 && travel.horizontalDistanceSqr() > .0001 && !step(travel.scale(interval * movementFactor()))) {
                 if (techniqueTravel < DASH_CONFIRM || !hasLineOfSight(opponent)) blockedMovement = true;
                 travel = Vec3.ZERO;

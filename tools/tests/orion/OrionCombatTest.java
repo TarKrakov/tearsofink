@@ -57,6 +57,11 @@ public final class OrionCombatTest {
                 && Clip.EMPOWER.length() == 2.5 && Clip.EMPOWER.rate(true) == 1, "authored finale lengths");
         require(movementProgress(DASH_START, DASH_START, DASH_END) == 0
                 && movementProgress(DASH_END, DASH_START, DASH_END) == 1, "dash translation stays inside the spin");
+        require(spinAdvance(DASH_END_PHASE_TWO, true) == 1 && DASH_END_PHASE_TWO < SPIN_LIGHT
+                && SPIN_LIGHT < SPIN.to(), "phase-two spin arrives before light pulse and contact ends");
+        require(spinAdvance(SPIN_LIGHT, false) < 1 && spinAdvance(DASH_END, false) == 1,
+                "phase-one motion timing is unchanged");
+        require(spinAdvance(.45f, true) > spinAdvance(.45f, false), "phase-two translation leads the spin");
         require(LINK_WAIT * ALIGN_TURN + ALIGN_TOLERANCE >= 180, "link can face a target behind the completed dash");
         require(dashDistance(4, false) > 4 && dashDistance(16, true) > 8, "dash travels through a nearby target");
         for (Window window : SLASH)

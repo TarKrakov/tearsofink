@@ -24,7 +24,7 @@ public final class OrionCombat {
     static final double DASH_MIN = 2.7, DASH_THROUGH = .85, DASH_CONFIRM = .75;
     static final double ENGAGE_RANGE = 14, ENGAGE_RANGE_PHASE_TWO = 17;
     static final float SLASH_TURN = 8, ALIGN_TURN = 22, ALIGN_TOLERANCE = 23, SWEEP_STEP = .015f;
-    static final float DASH_START = .11f, DASH_END = .94f;
+    static final float DASH_START = .11f, DASH_END = .94f, DASH_END_PHASE_TWO = .66f;
     static final int LONG_COOLDOWN = 230, OPENING_RESPONSE = 6, LINK_WAIT = 8;
     static final int SOLO_RECOVERY = 23, BLOCKED_RECOVERY = 8, REPOSITION_TICKS = 13;
     static final int OPENING_RECOVERY_BONUS = 8;
@@ -148,6 +148,11 @@ public final class OrionCombat {
     static double dashDistance(double targetDistance, boolean phaseTwo) {
         double limit = DASH_DISTANCE * (phaseTwo ? PHASE_MOVE / PHASE_RATE : 1);
         return Math.clamp(targetDistance + DASH_THROUGH, DASH_MIN, limit);
+    }
+
+    // Phase II reaches the committed destination before the radiant spin pulse.
+    static float spinAdvance(float time, boolean phaseTwo) {
+        return movementProgress(time, DASH_START, phaseTwo ? DASH_END_PHASE_TWO : DASH_END);
     }
 
     static float slashAdvance(float time) {
