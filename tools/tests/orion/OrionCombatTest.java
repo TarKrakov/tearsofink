@@ -4,6 +4,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
+import java.util.UUID;
 
 import static com.tarkrakov.tearsofink.entity.orion.OrionCombat.*;
 
@@ -27,6 +28,12 @@ public final class OrionCombatTest {
         require(healthEvent(HEALTH * .51f, HEALTH, false) == HealthEvent.NONE, "above phase threshold");
         require(healthEvent(HEALTH * .5f, HEALTH, true) == HealthEvent.NONE, "phase never restarts");
         require(healthEvent(0, HEALTH, true) == HealthEvent.DEFEAT, "lethal after empower");
+        require(partyHealth(0) == HEALTH && partyHealth(1) == HEALTH, "solo health");
+        require(partyHealth(2) == 630 && partyHealth(3) == 780 && partyHealth(4) == 930, "tested party sizes");
+        require(partyHealth(5) == 958 && partyHealth(8) == 1001 && partyHealth(Integer.MAX_VALUE) == VANILLA_HEALTH_CAP,
+                "larger parties taper toward the vanilla attribute cap");
+        for (int players = 1; players <= 20; players++)
+            require(partyHealth(players) >= partyHealth(players - 1), "party health never drops with another fighter");
         require(!acceptsDamage(true, false, true, Clip.CLEAVE), "guard between threshold and empower");
         require(!acceptsDamage(true, false, false, Clip.EMPOWER), "empower immunity");
         require(!acceptsDamage(true, true, false, Clip.DEATH), "finale immunity");
@@ -34,7 +41,9 @@ public final class OrionCombatTest {
                 && incoming(20, Clip.CLEAVE, CLEAVE_IMPACT) == 20, "cleave brace interval");
 
         for (boolean phaseTwo : new boolean[] {false, true}) {
-            for (Window window : OrionCombat.SLASH) assertCrossing(Clip.SLASH_COMBO, phaseTwo, window.from());
+            for (Window window : OrionCombat.SLASH) assertWindow(Clip.SLASH_COMBO, phaseTwo, window);
+            assertWindow(Clip.CLEAVE, phaseTwo, CLEAVE);
+            assertWindow(Clip.SPIN_DASH, phaseTwo, SPIN);
             assertCrossing(Clip.CLEAVE, phaseTwo, CLEAVE_IMPACT);
             assertCrossing(Clip.SPIN_DASH, phaseTwo, SPIN_LIGHT);
             assertCrossing(Clip.DEATH, phaseTwo, Clip.DEATH.length());
@@ -42,8 +51,18 @@ public final class OrionCombatTest {
         }
         require(Clip.DEATH.length() == 6 && Clip.DEATH.rate(true) == 1
                 && Clip.EMPOWER.length() == 2.5 && Clip.EMPOWER.rate(true) == 1, "authored finale lengths");
-        require(movementProgress(.12f, .12f, .82f) == 0 && movementProgress(.82f, .12f, .82f) == 1,
-                "dash translation starts and ends inside the spin");
+        require(movementProgress(DASH_START, DASH_START, DASH_END) == 0
+                && movementProgress(DASH_END, DASH_START, DASH_END) == 1, "dash translation stays inside the spin");
+        require(LINK_WAIT * ALIGN_TURN + ALIGN_TOLERANCE >= 180, "link can face a target behind the completed dash");
+        require(dashDistance(4, false) > 4 && dashDistance(16, true) > 8, "dash travels through a nearby target");
+        for (Window window : SLASH)
+            require(slashAdvance(window.from()) == slashAdvance(window.to()), "rush and facing settle for each slash");
+        require(slashAdvance(.35f) == 0 && Math.abs(1 - slashAdvance(2.9f)) < .0001, "three advancing windups");
+        var delayed = new OrionEntity.Performance(Clip.SPIN_DASH, 10, 1, Clip.IDLE, 0, 1, false, 4, 20);
+        require(delayed.elapsedTicks(400, .9f) == 5, "client cursor can lead the sampled server by at most one tick");
+        verifyMovementCollision();
+        verifyFirstDeadly();
+        verifyHitWindow();
         var cleave = OrionBlade.sample(Clip.CLEAVE, CLEAVE_IMPACT, Vec3.ZERO, 0);
         require(cleave.tip().y < .65 && cleave.tip().z > 2.4, "cleave's visible ground contact");
         var slash = OrionBlade.sample(Clip.SLASH_COMBO, 2, Vec3.ZERO, 90);
@@ -51,6 +70,56 @@ public final class OrionCombatTest {
         require(slash.touches(new AABB(-2.9, 0, -.35, -2.4, 1.8, .35)), "visible blade reaches player");
         require(!slash.touches(new AABB(2.4, 0, -.35, 2.9, 1.8, .35)), "blade does not hit behind");
         System.out.println("Orion combat checks passed");
+    }
+
+    private static void verifyMovementCollision() {
+        double[] at = {0};
+        moveInSlices(new Vec3(1.37, 0, 0), slice -> {
+            require(slice.x <= .18, "swept subdivision");
+            if (at[0] + slice.x >= .59) return false;
+            at[0] += slice.x;
+            return true;
+        });
+        require(at[0] > .45 && at[0] < .59, "stops at a blocked intermediate position");
+    }
+
+    private static void verifyFirstDeadly() {
+        for (boolean burst : new boolean[] {false, true}) {
+            var opening = new DeadlyOpening();
+            require(!opening.required(false) && opening.required(true), "first deadly opens in phase two");
+            if (burst) opening.deferLethal();
+            for (Technique step : Combo.DEADLY.steps) {
+                int before = opening.performed();
+                require(opening.next() == step, "picks each mandatory step");
+                opening.finish(step, false);
+                require(opening.performed() == before && !opening.releaseLethal(), "blocked step does not advance");
+                opening.finish(step, true);
+                require(opening.performed() == before + 1, "completed step counts once");
+            }
+            require(opening.awaitingWave(), "last cleave wave stays active");
+            opening.resolve(true);
+            require(opening.required(true) && !opening.releaseLethal(), "wave keeps lethal deferred");
+            opening.resolve(false);
+            require(!opening.required(true) && opening.releaseLethal() == burst, "finale after six steps and wave");
+        }
+        require(new DeadlyOpening().performed() == 0, "a new encounter has its own opening");
+    }
+
+    private static void verifyHitWindow() {
+        var target = new UUID(0, 1);
+        var window = new HitWindow();
+        require(window.register(target), "first sample hits");
+        require(window.contains(target) && !window.register(target), "overlap does not duplicate damage");
+        require(window.register(new UUID(0, 2)), "distinct target can be hit");
+        window.reset();
+        require(window.register(target) && new HitWindow().register(target), "next hit and distinct wave stay independent");
+    }
+
+    private static void assertWindow(Clip clip, boolean phaseTwo, Window window) {
+        assertCrossing(clip, phaseTwo, window.from());
+        assertCrossing(clip, phaseTwo, window.to());
+        require(!window.touches(0, window.from() - .001f) && window.touches(0, window.to() + .001f)
+                && !window.touches(window.to(), window.to() + .001f), "window at slow/fast samples " + window);
     }
 
     private static void assertCrossing(Clip clip, boolean phaseTwo, float event) {

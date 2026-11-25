@@ -6,6 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -33,10 +34,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 import static com.tarkrakov.tearsofink.entity.orion.OrionCombat.*;
@@ -44,17 +43,21 @@ import static com.tarkrakov.tearsofink.entity.orion.OrionCombat.*;
 public final class OrionEntity extends PathfinderMob {
     private static final EntityDataAccessor<CompoundTag> PERFORMANCE =
             SynchedEntityData.defineId(OrionEntity.class, EntityDataSerializers.COMPOUND_TAG);
+    private static final EntityDataAccessor<Integer> ACTION_TICKS =
+            SynchedEntityData.defineId(OrionEntity.class, EntityDataSerializers.INT);
     private static final List<Clip> DODGES = List.of(Clip.DODGE_LEFT, Clip.DODGE_RIGHT, Clip.DODGE_BACK);
 
     private final ServerBossEvent boss = new ServerBossEvent(getType().getDescription(),
             BossEvent.BossBarColor.YELLOW, BossEvent.BossBarOverlay.PROGRESS);
     private final EnumMap<Technique, Long> readyAt = new EnumMap<>(Technique.class);
     private final Map<UUID, Threat> threat = new HashMap<>();
-    private final List<Set<UUID>> hit = List.of(new HashSet<>(), new HashSet<>(), new HashSet<>());
+    private final List<HitWindow> hit = List.of(new HitWindow(), new HitWindow(), new HitWindow());
+    private final DeadlyOpening opening = new DeadlyOpening();
     private Clip clip = Clip.IDLE;
     private long started, recoverUntil, longReadyAt, lastContact, lastChoice, lastDamage = -100;
     private float rate = 1;
     private float previousTime;
+    private int lastClientCursor;
     private Combo combo;
     private int step;
     private Technique technique;
@@ -64,15 +67,22 @@ public final class OrionEntity extends PathfinderMob {
     private Path detour;
     private UUID detourTarget;
     private long repathAt;
+    private double techniqueTravel;
+    private long linkUntil, repositionUntil;
     private boolean fighting, phaseTwo, pendingEmpower, inDamage, pendingLethal, finaleComplete;
     private String choice = "waiting";
+    private static final String LAST_STAND = "entity.tears-of-ink.orion.last_stand";
 
     private record Threat(float points, long time) {}
-    private record Wave(Vec3 origin, Vec3 forward, Vec3 lateral, long launch, boolean radiant, Set<UUID> hit) {}
+    private record Wave(Vec3 origin, Vec3 forward, Vec3 lateral, long launch, boolean radiant, HitWindow hit) {}
 
     public record Performance(Clip clip, long start, float rate, Clip previous, long previousStart,
-                              float previousRate, boolean phaseTwo) {
-        public float seconds(long tick, float partial) { return Math.max(0, (tick - start + partial) * rate / 20); }
+                              float previousRate, boolean phaseTwo, int elapsed, int cursorAge) {
+        public float elapsedTicks(long tick, float partial) {
+            if (elapsed >= 0) return elapsed + Mth.clamp(cursorAge + partial, 0, 1);
+            return Math.max(0, tick - start + partial);
+        }
+        public float seconds(long tick, float partial) { return elapsedTicks(tick, partial) * rate / 20; }
         public float previousSeconds(long tick) { return Math.max(0, (tick - previousStart) * previousRate / 20); }
     }
 
@@ -87,14 +97,22 @@ public final class OrionEntity extends PathfinderMob {
     @Override protected void defineSynchedData(SynchedEntityData.Builder builder) {
         super.defineSynchedData(builder);
         builder.define(PERFORMANCE, new CompoundTag());
+        builder.define(ACTION_TICKS, 0);
+    }
+
+    @Override public void onSyncedDataUpdated(EntityDataAccessor<?> key) {
+        super.onSyncedDataUpdated(key);
+        if (ACTION_TICKS.equals(key)) lastClientCursor = tickCount;
     }
 
     public Performance performance() {
         CompoundTag state = entityData.get(PERFORMANCE);
-        if (state.isEmpty()) return new Performance(Clip.IDLE, 0, 1, Clip.IDLE, 0, 1, false);
-        return new Performance(Clip.values()[state.getInt("clip")], state.getLong("start"), state.getFloat("rate"),
+        if (state.isEmpty()) return new Performance(Clip.IDLE, 0, 1, Clip.IDLE, 0, 1, false, -1, 0);
+        Clip synced = Clip.values()[state.getInt("clip")];
+        return new Performance(synced, state.getLong("start"), state.getFloat("rate"),
                 Clip.values()[state.getInt("previous")], state.getLong("previousStart"),
-                state.getFloat("previousRate"), state.getBoolean("phaseTwo"));
+                state.getFloat("previousRate"), state.getBoolean("phaseTwo"),
+                synced.usesCursor() ? entityData.get(ACTION_TICKS) : -1, tickCount - lastClientCursor);
     }
 
     private void play(Clip next) {
@@ -111,10 +129,11 @@ public final class OrionEntity extends PathfinderMob {
         state.putFloat("rate", rate);
         state.putBoolean("phaseTwo", phaseTwo);
         entityData.set(PERFORMANCE, state);
+        entityData.set(ACTION_TICKS, 0);
     }
 
     public void beginFight(int players) {
-        getAttribute(Attributes.MAX_HEALTH).setBaseValue(HEALTH * (1 + (Math.min(8, players) - 1) * COOP_HEALTH));
+        getAttribute(Attributes.MAX_HEALTH).setBaseValue(partyHealth(players));
         setHealth(getMaxHealth());
         fighting = true;
         started = lastContact = level().getGameTime();
@@ -124,7 +143,7 @@ public final class OrionEntity extends PathfinderMob {
 
     @Override public boolean hurt(DamageSource source, float amount) {
         if (!acceptsDamage(fighting, pendingLethal, pendingEmpower, clip)
-                || !PantheonCombat.permitsInteraction(this, source.getEntity())) return false;
+                || opening.lethalDeferred() || !PantheonCombat.permitsInteraction(this, source.getEntity())) return false;
         amount = incoming(amount, clip, previousTime);
         float before = getHealth();
         inDamage = true;
@@ -152,7 +171,13 @@ public final class OrionEntity extends PathfinderMob {
                 }
                 case DEFEAT -> {
                     health = 1;
-                    pendingLethal = true;
+                    if (opening.required(phaseTwo)) {
+                        opening.deferLethal();
+                        boss.setName(Component.translatable(LAST_STAND));
+                        for (ServerPlayer player : PantheonCombat.opponents(this)) {
+                            player.sendSystemMessage(Component.translatable(LAST_STAND + ".hint"));
+                        }
+                    } else pendingLethal = true;
                 }
                 case NONE -> {}
             }
@@ -170,6 +195,7 @@ public final class OrionEntity extends PathfinderMob {
         setInvulnerable(true);
         setDeltaMovement(Vec3.ZERO);
         play(Clip.DEATH);
+        boss.setName(getType().getDescription());
         boss.setProgress(0);
     }
 
@@ -181,14 +207,20 @@ public final class OrionEntity extends PathfinderMob {
     public String combatStatus() {
         return "Orion " + (phaseTwo ? 2 : 1) + " / " + clip + "@" + previousTime
                 + " / " + (combo == null ? "-" : combo + " " + (step + 1)) + " / "
-                + (opponent == null ? "-" : opponent.getGameProfile().getName()) + " / " + choice;
+                + (opponent == null ? "-" : opponent.getGameProfile().getName()) + " / " + choice
+                + " / first deadly " + opening.performed() + "/6"
+                + (opening.lethalDeferred() ? " / lethal deferred" : "");
     }
 
     @Override public void tick() {
         super.tick();
         if (!(level() instanceof ServerLevel server)) return;
         final long now = server.getGameTime();
-        final float time = (now - started) * rate / 20;
+        final int elapsed = (int)(now - started);
+        final float time = elapsed * rate / 20;
+        // In a stalled tick or delayed packet, hold the action within one tick of the server cursor.
+        // Locomotion is still free to loop locally in the absence of movement updates.
+        if (clip.usesCursor()) entityData.set(ACTION_TICKS, elapsed);
         if (clip == Clip.DEATH) {
             tickDeath(server, time);
             return;
@@ -198,6 +230,11 @@ public final class OrionEntity extends PathfinderMob {
         updateBoss(players);
         if (players.isEmpty()) return;
         if (wave != null) tickWave(server, players, now);
+        opening.resolve(wave != null);
+        if (opening.releaseLethal()) {
+            pendingLethal = true;
+            return;
+        }
 
         if (clip == Clip.EMPOWER) {
             if (crossed(previousTime, time, .50f)) light(server, position().add(0, 1.5, 0), 1.8, false);
@@ -205,7 +242,7 @@ public final class OrionEntity extends PathfinderMob {
             if (time >= clip.length()) {
                 phaseTwo = true;
                 readyAt.replaceAll((ignored, value) -> now + Math.max(0, (long)((value - now) * PHASE_COOLDOWN)));
-                recoverUntil = now + 9;
+                recoverUntil = now + OPENING_RESPONSE;
                 play(Clip.IDLE);
             }
             return;
@@ -218,7 +255,7 @@ public final class OrionEntity extends PathfinderMob {
             empower();
             return;
         }
-        think(players, now);
+        if (!opening.awaitingWave()) think(players, now);
     }
 
     private void updateBoss(List<ServerPlayer> players) {
@@ -238,11 +275,29 @@ public final class OrionEntity extends PathfinderMob {
     }
 
     private void think(List<ServerPlayer> players, long now) {
-        if (!players.contains(opponent) || now - lastChoice >= 12) chooseTarget(players, now);
+        if (!players.contains(opponent) || now - lastChoice >= (phaseTwo ? 8 : 12)) chooseTarget(players, now);
         if (opponent == null) return;
         double distance = distanceTo(opponent);
-        if (now >= recoverUntil && distance <= 13 && hasLineOfSight(opponent)) {
-            boolean mobile = opponent.isSprinting() || now - lastContact > 110;
+        boolean visible = hasLineOfSight(opponent);
+        boolean openingRequired = opening.required(phaseTwo);
+        if (openingRequired && now < repositionUntil) {
+            reposition();
+            return;
+        }
+        double range = phaseTwo ? ENGAGE_RANGE_PHASE_TWO : ENGAGE_RANGE;
+        boolean ready = now >= recoverUntil && distance <= range && visible;
+        if (openingRequired && ready) {
+            if (combo != Combo.DEADLY) {
+                combo = Combo.DEADLY;
+                step = opening.performed();
+                linkUntil = now + LINK_WAIT;
+            }
+            if (tryLinked(now, "first deadly")) return;
+        } else if (!openingRequired && combo != null) {
+            if (visible && distance <= range && tryLinked(now, "chain continuation")) return;
+            if (combo != null && now >= linkUntil) finishChain(now, "link lost");
+        } else if (ready) {
+            boolean mobile = opponent.isSprinting() || now - lastContact > (phaseTwo ? 70 : 100);
             Combo candidate = selectCombo(now, distance, mobile);
             boolean recentHit = now - lastDamage < 14 && distance < 4.5;
             if (recentHit && now >= readyAt.getOrDefault(Technique.DODGE, 0L) && random.nextFloat() < .14
@@ -250,14 +305,26 @@ public final class OrionEntity extends PathfinderMob {
             if (candidate != null) {
                 combo = candidate;
                 step = 0;
-                if (startTechnique(combo.steps.getFirst(), now, mobile ? "mobile target" : distance > 5 ? "range" : "close"))
-                    return;
-                stopChain("no free opening");
-                recoverUntil = now + 7;
-            } else if (distance <= 3.6 && now >= readyAt.getOrDefault(Technique.SLASH, 0L)
+                linkUntil = now + LINK_WAIT;
+                if (tryLinked(now, mobile ? "mobile target" : distance > 5 ? "range" : "close")) return;
+            } else if (distance <= SLASH_START_RANGE && now >= readyAt.getOrDefault(Technique.SLASH, 0L)
                     && startTechnique(Technique.SLASH, now, "short opening")) return;
         }
         maneuver(distance, now);
+    }
+
+    /** Align between clips within a bounded turn budget. Failed mandatory links resume at the same step. */
+    private boolean tryLinked(long now, String reason) {
+        Technique move = combo.steps.get(step);
+        if (startTechnique(move, now, reason)) return true;
+        if (now >= linkUntil) {
+            if (opening.required(phaseTwo)) {
+                repositionBeforeDeadly(now);
+            } else finishChain(now, "link blocked");
+            return false;
+        }
+        face(opponent.position(), ALIGN_TURN);
+        return true;
     }
 
     private void chooseTarget(List<ServerPlayer> players, long now) {
@@ -286,7 +353,7 @@ public final class OrionEntity extends PathfinderMob {
         List<Combo> choices = new ArrayList<>();
         for (Combo option : Combo.values()) {
             if (!option.available(phaseTwo, now >= longReadyAt, move -> now >= readyAt.getOrDefault(move, 0L))) continue;
-            if (distance > 6 && option.steps.getFirst() == Technique.SLASH) continue;
+            if (distance > SLASH_START_RANGE && option.steps.getFirst() == Technique.SLASH) continue;
             int weight = mobile ? option.mobile : distance > 5 ? option.distant : option.close;
             for (int i = 0; i < weight; i++) choices.add(option);
         }
@@ -294,8 +361,10 @@ public final class OrionEntity extends PathfinderMob {
     }
 
     private boolean startTechnique(Technique move, long now, String reason) {
-        if (opponent == null) return false;
-        face(opponent.position(), 180);
+        if (opponent == null || !hasLineOfSight(opponent)) return false;
+        float difference = Mth.wrapDegrees(yawTo(opponent.position()) - getYRot());
+        if (Math.abs(difference) > ALIGN_TOLERANCE) return false;
+        face(opponent.position(), ALIGN_TURN);
         Vec3 forward = Vec3.directionFromRotation(0, getYRot());
         float motion = phaseTwo ? PHASE_MOVE / PHASE_RATE : 1;
         travel = Vec3.ZERO;
@@ -303,17 +372,17 @@ public final class OrionEntity extends PathfinderMob {
             case SLASH -> Clip.SLASH_COMBO;
             case CLEAVE -> Clip.CLEAVE;
             case SPIN -> {
-                double cover = Math.clamp(distanceTo(opponent) - .55, 1.9, DASH_DISTANCE) * motion;
-                travel = forward.scale(cover);
-                yield canStep(forward.scale(.42)) ? Clip.SPIN_DASH : null;
+                travel = forward.scale(dashDistance(distanceTo(opponent), phaseTwo));
+                yield canStep(forward.scale(.36)) ? Clip.SPIN_DASH : null;
             }
             case DODGE -> chooseDodge(forward, motion);
         };
         if (next == null) return false;
         if (combo != null && combo.phase == 2 && step == 0) longReadyAt = now + LONG_COOLDOWN;
         technique = move;
+        techniqueTravel = 0;
         readyAt.put(move, now + Math.round(move.cooldown * (phaseTwo ? PHASE_COOLDOWN : 1)));
-        for (Set<UUID> window : hit) window.clear();
+        for (HitWindow window : hit) window.reset();
         setDeltaMovement(Vec3.ZERO);
         choice = reason;
         play(next);
@@ -343,16 +412,16 @@ public final class OrionEntity extends PathfinderMob {
         float to = Math.min(time, clip.length());
         Vec3 old = position();
         if (technique == Technique.SPIN || technique == Technique.DODGE) {
-            float start = technique == Technique.SPIN ? .12f : .05f;
-            float end = technique == Technique.SPIN ? .82f : .39f;
+            float start = technique == Technique.SPIN ? DASH_START : .05f;
+            float end = technique == Technique.SPIN ? DASH_END : .39f;
             double interval = movementProgress(to, start, end) - movementProgress(previousTime, start, end);
-            if (interval > 0 && !step(travel.scale(interval))) travel = Vec3.ZERO;
-        } else {
-            // Follow the target only early in a telegraph. Commit to the facing before contact.
-            if (players.contains(opponent) && (technique == Technique.SLASH && to < .58f
-                    || technique == Technique.CLEAVE && to < CLEAVE_BRACE_START))
-                face(opponent.position(), 9);
+            if (interval > 0 && !step(travel.scale(interval * movementFactor()))) travel = Vec3.ZERO;
+        } else if (players.contains(opponent)) {
+            // The blade's path stays committed during contact. Only the intervening windups track the target.
+            if (technique == Technique.SLASH) advanceSlash(to);
+            else if (to < CLEAVE_BRACE_START) face(opponent.position(), 9);
         }
+        techniqueTravel += position().subtract(old).horizontalDistance();
         if (technique == Technique.SLASH) {
             for (int i = 0; i < SLASH.size(); i++) sweep(server, players, SLASH.get(i), i, to, old);
         } else if (technique == Technique.SPIN) {
@@ -370,18 +439,53 @@ public final class OrionEntity extends PathfinderMob {
             }
         }
         previousTime = to;
-        if (time < clip.length()) return;
-        if (pendingEmpower) {
+        if (pendingEmpower && (time >= clip.length() || wave == null && switch (technique) {
+            case SLASH -> to >= EMPOWER_AFTER_SLASH;
+            case SPIN -> to >= EMPOWER_AFTER_SPIN;
+            default -> false;
+        })) {
             empower();
             return;
         }
-        if (combo != null && ++step < combo.steps.size()) {
-            chooseTarget(players, now);
-            if (opponent != null && startTechnique(combo.steps.get(step), now, "chain continuation")) return;
+        if (time < clip.length()) return;
+        if (combo == Combo.DEADLY && opening.required(phaseTwo)) {
+            opening.finish(technique, technique != Technique.SPIN || techniqueTravel >= DASH_CONFIRM);
+            if (opening.awaitingWave()) {
+                finishChain(now, "first deadly executed");
+                recoverUntil += OPENING_RECOVERY_BONUS;
+                return;
+            }
+            if (step == opening.performed()) {
+                repositionBeforeDeadly(now);
+                return;
+            }
         }
-        int recovery = combo == null ? 31 : combo.recovery;
-        stopChain(players.contains(opponent) ? "recovery" : "target lost");
-        recoverUntil = now + Math.round(recovery * (phaseTwo ? .80f : 1));
+        if (combo != null && ++step < combo.steps.size()) {
+            technique = null;
+            travel = Vec3.ZERO;
+            linkUntil = now + LINK_WAIT;
+            chooseTarget(players, now);
+            if (opponent != null) tryLinked(now, "chain continuation");
+            return;
+        }
+        finishChain(now, "recovery");
+    }
+
+    private void advanceSlash(float to) {
+        float interval = slashAdvance(to) - slashAdvance(previousTime);
+        if (interval <= 0 || !hasLineOfSight(opponent)) return;
+        if (SLASH.stream().noneMatch(window -> window.touches(previousTime, to))) face(opponent.position(), SLASH_TURN);
+        if (Math.abs(Mth.wrapDegrees(yawTo(opponent.position()) - getYRot())) > 35) return;
+        double distance = opponent.position().subtract(position()).horizontalDistance();
+        double advance = Math.min(distance - SLASH_STOP_RANGE,
+                interval * (phaseTwo ? SLASH_ADVANCE_PHASE_TWO : SLASH_ADVANCE) * movementFactor());
+        if (advance > 0) step(Vec3.directionFromRotation(0, getYRot()).scale(advance));
+    }
+
+    private void finishChain(long now, String reason) {
+        int recovery = combo == null ? SOLO_RECOVERY : combo.recovery;
+        stopChain(reason);
+        recoverUntil = now + Math.round(recovery * (phaseTwo ? RECOVERY_PHASE_TWO : 1));
         play(Clip.IDLE);
     }
 
@@ -391,25 +495,46 @@ public final class OrionEntity extends PathfinderMob {
             server.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.HOSTILE, 1, .78f);
         float first = Math.max(previousTime, window.from());
         float last = Math.min(to, window.to());
-        int subdivisions = Math.max(1, Mth.ceil((last - first) / .018f));
-        Set<UUID> affected = hit.get(index);
+        int subdivisions = Math.max(1, Mth.ceil((last - first) / SWEEP_STEP));
+        HitWindow affected = hit.get(index);
         for (int i = 0; i <= subdivisions; i++) {
             float sample = Mth.lerp((float) i / subdivisions, first, last);
             Vec3 origin = old.lerp(position(), (sample - previousTime) / Math.max(.0001f, to - previousTime));
             OrionBlade.Segment blade = OrionBlade.sample(clip, sample, origin, getYRot());
+            var obstruction = server.clip(new ClipContext(blade.base(), blade.tip(), ClipContext.Block.COLLIDER,
+                    ClipContext.Fluid.NONE, this));
+            if (obstruction.getType() != HitResult.Type.MISS) {
+                blade = new OrionBlade.Segment(blade.base(), obstruction.getLocation());
+            }
+            double margin = switch (clip) {
+                case SLASH_COMBO -> SLASH_MARGIN;
+                case SPIN_DASH -> SPIN_MARGIN;
+                default -> BLADE_TOLERANCE;
+            };
             for (ServerPlayer player : players) {
-                if (!affected.contains(player.getUUID()) && blade.touches(player.getBoundingBox()) && hasLineOfSight(player))
-                    strike(player, window.damage(), affected);
+                if (affected.contains(player.getUUID())) continue;
+                var bounds = player.getBoundingBox();
+                Vec3 contact = blade.contact(bounds, margin);
+                if (contact == null) continue;
+                Vec3 body = new Vec3(player.getX(), Math.clamp(contact.y, bounds.minY + .05, bounds.maxY - .05), player.getZ());
+                if (clearLine(server, origin.add(0, getEyeHeight(), 0), contact) && clearLine(server, contact, body))
+                    strike(player, bladeDamage(window), affected, attackFrom(origin));
             }
         }
     }
 
+    private float bladeDamage(Window window) {
+        return technique == Technique.CLEAVE && combo == Combo.DEADLY
+                ? window.damage() * DEADLY_CLEAVE_EDGE : window.damage();
+    }
+
     private void shockwave(ServerLevel server, List<ServerPlayer> players, Vec3 at, double radius, float damage,
-                           Set<UUID> affected, boolean radiant) {
+                           HitWindow affected, boolean radiant) {
         light(server, at, radius, radiant);
         for (ServerPlayer player : players) {
             Vec3 delta = player.position().subtract(at);
-            if (Math.abs(delta.y) > 1.25 || delta.horizontalDistanceSqr() > radius * radius || !hasLineOfSight(player)) continue;
+            if (Math.abs(delta.y) > 1.25 || delta.horizontalDistanceSqr() > radius * radius
+                    || !clearLine(server, at.add(0, .25, 0), player.position().add(0, .6, 0))) continue;
             strike(player, damage, affected);
         }
     }
@@ -418,7 +543,7 @@ public final class OrionEntity extends PathfinderMob {
         Vec3 origin = ground.add(0, .22, 0);
         Vec3 forward = Vec3.directionFromRotation(0, getYRot());
         if (!clearLine(server, position().add(0, .35, 0), origin)) return;
-        wave = new Wave(origin, forward, forward.yRot(Mth.HALF_PI), now + WAVE_DELAY, phaseTwo, new HashSet<>());
+        wave = new Wave(origin, forward, forward.yRot(Mth.HALF_PI), now + WAVE_DELAY, phaseTwo, new HitWindow());
         server.sendParticles(phaseTwo ? ParticleTypes.END_ROD : ParticleTypes.CRIT,
                 origin.x, origin.y, origin.z, 14, .55, .1, .55, .035);
     }
@@ -449,9 +574,7 @@ public final class OrionEntity extends PathfinderMob {
                     point.x, point.y, point.z, 2, .10, .09, .10, .025);
         }
         Vec3 sourcePosition = origin.subtract(wave.forward().scale(.55));
-        DamageSource source = new DamageSource(damageSources().mobAttack(this).typeHolder(), this) {
-            @Override public Vec3 getSourcePosition() { return sourcePosition; }
-        };
+        DamageSource source = attackFrom(sourcePosition);
         for (ServerPlayer player : players) {
             Vec3 offset = player.position().subtract(origin);
             double forward = offset.dot(wave.forward());
@@ -467,12 +590,18 @@ public final class OrionEntity extends PathfinderMob {
                 .getType() == HitResult.Type.MISS;
     }
 
-    private void strike(ServerPlayer player, float damage, Set<UUID> affected) {
+    private DamageSource attackFrom(Vec3 sourcePosition) {
+        return new DamageSource(damageSources().mobAttack(this).typeHolder(), this) {
+            @Override public Vec3 getSourcePosition() { return sourcePosition; }
+        };
+    }
+
+    private void strike(ServerPlayer player, float damage, HitWindow affected) {
         strike(player, damage, affected, damageSources().mobAttack(this));
     }
 
-    private void strike(ServerPlayer player, float damage, Set<UUID> affected, DamageSource source) {
-        if (!PantheonCombat.fighter(player) || !affected.add(player.getUUID())) return;
+    private void strike(ServerPlayer player, float damage, HitWindow affected, DamageSource source) {
+        if (!PantheonCombat.fighter(player) || !affected.register(player.getUUID())) return;
         if (player.hurt(source, damage * (phaseTwo ? PHASE_DAMAGE : 1)))
             lastContact = level().getGameTime();
     }
@@ -485,19 +614,37 @@ public final class OrionEntity extends PathfinderMob {
         choice = reason;
     }
 
+    private void repositionBeforeDeadly(long now) {
+        stopChain("first deadly: reposition");
+        repositionUntil = now + REPOSITION_TICKS;
+        recoverUntil = repositionUntil + BLOCKED_RECOVERY;
+    }
+
+    private void reposition() {
+        Vec3 fromTarget = position().subtract(opponent.position()).multiply(1, 0, 1);
+        if (fromTarget.horizontalDistanceSqr() < .01) fromTarget = Vec3.directionFromRotation(0, getYRot()).reverse();
+        Vec3 retreat = fromTarget.normalize().scale(WALK_SPEED * PHASE_MOVE * movementFactor());
+        Vec3 before = position();
+        boolean moved = step(retreat) || step(retreat.yRot(1.35f)) || step(retreat.yRot(-1.35f));
+        if (moved) {
+            face(position().add(position().subtract(before)), ALIGN_TURN);
+            if (clip != Clip.WALK) play(Clip.WALK);
+        }
+    }
+
     private void maneuver(double distance, long now) {
         Vec3 direction = opponent.position().subtract(position()).multiply(1, 0, 1).normalize();
         boolean responding = now < recoverUntil;
-        if (responding && distance < 3.9 || !responding && distance < 2.8) {
+        if (responding && distance < (phaseTwo ? 3.25 : 3.6) || !responding && distance < 2.65) {
             face(opponent.position(), 19);
             if (clip != Clip.IDLE) play(Clip.IDLE);
             return;
         }
         boolean visible = hasLineOfSight(opponent);
-        if (distance < 5.3 || !visible)
-            direction = direction.yRot((tickCount / 80 % 2 == 0 ? 1 : -1) * (responding ? 1.18f : .60f));
-        boolean run = !responding && distance > 6;
-        double speed = (run ? RUN_SPEED : WALK_SPEED) * (phaseTwo ? PHASE_MOVE : 1);
+        if (responding && distance < 5.4 || !visible)
+            direction = direction.yRot((tickCount / 80 % 2 == 0 ? 1 : -1) * (responding ? .9f : .60f));
+        boolean run = distance > (phaseTwo ? 4.9 : 6);
+        double speed = (run ? RUN_SPEED : WALK_SPEED) * (phaseTwo ? PHASE_MOVE : 1) * movementFactor();
         if (!visible && !responding) {
             Vec3 route = followingPath(now);
             if (route != null) direction = route;
@@ -524,13 +671,21 @@ public final class OrionEntity extends PathfinderMob {
         return null;
     }
 
-    private void face(Vec3 target, float max) {
+    private float yawTo(Vec3 target) {
         Vec3 difference = target.subtract(position());
-        if (difference.horizontalDistanceSqr() < .0001) return;
-        float yaw = (float)(Mth.atan2(-difference.x, difference.z) * Mth.RAD_TO_DEG);
-        setYRot(Mth.approachDegrees(getYRot(), yaw, max));
+        return difference.horizontalDistanceSqr() < .0001 ? getYRot()
+                : (float)(Mth.atan2(-difference.x, difference.z) * Mth.RAD_TO_DEG);
+    }
+
+    private void face(Vec3 target, float max) {
+        setYRot(Mth.approachDegrees(getYRot(), yawTo(target), max));
         setYHeadRot(getYRot());
         yBodyRot = getYRot();
+    }
+
+    private double movementFactor() {
+        // Shields and Ink slow effects modify the normal attribute, including on custom movement.
+        return Math.clamp(getAttributeValue(Attributes.MOVEMENT_SPEED) / RUN_SPEED, .35, 1.3);
     }
 
     private boolean canStep(Vec3 delta) {
@@ -543,13 +698,12 @@ public final class OrionEntity extends PathfinderMob {
 
     private boolean step(Vec3 delta) {
         double distance = delta.horizontalDistance();
-        int slices = Math.max(1, Mth.ceil(distance / .22));
-        Vec3 slice = delta.scale(1.0 / slices);
         Vec3 before = position();
-        for (int i = 0; i < slices; i++) {
-            if (!canStep(slice)) break;
+        moveInSlices(delta, slice -> {
+            if (!canStep(slice)) return false;
             move(MoverType.SELF, slice);
-        }
+            return true;
+        });
         return position().distanceToSqr(before) >= distance * distance * .75;
     }
 

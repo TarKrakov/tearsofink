@@ -38,7 +38,7 @@ public final class OrionModel extends HierarchicalModel<OrionEntity> {
         var state = entity.performance();
         long now = entity.level().getGameTime();
         float partial = age - entity.tickCount;
-        float mix = Mth.clamp((now - state.start() + partial) / 3, 0, 1);
+        float mix = Mth.clamp(state.elapsedTicks(now, partial) / 3, 0, 1);
         if (mix < 1) {
             apply(state.previous(), state.previousSeconds(state.start()));
             for (int i = 0; i < parts.size(); i++) {

@@ -1273,6 +1273,8 @@
   "block.tears-of-ink.pantheon_altar": "Summoning Altar",
   "item.tears-of-ink.pantheon_test_relic": "Relic of Orion",
   "entity.tears-of-ink.orion": "Orion, the Faithful Blade",
+  "entity.tears-of-ink.orion.last_stand": "Orion, the Faithful Blade · Last Stand",
+  "entity.tears-of-ink.orion.last_stand.hint": "Orion fights on with his last strength. Survive his deadly combo.",
   "message.tears-of-ink.pantheon.relic_only": "The reliquary accepts only Sanctuary relics.",
   "message.tears-of-ink.pantheon.altar.busy": "The arena is rebuilding or is not yet available.",
   "message.tears-of-ink.pantheon.altar.empty_hand": "Place a Sanctuary relic in the altar slot.",

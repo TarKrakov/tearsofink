@@ -10,8 +10,12 @@ import org.joml.Vector3f;
 final class OrionBlade {
     record Segment(Vec3 base, Vec3 tip) {
         boolean touches(AABB bounds) {
-            AABB padded = bounds.inflate(OrionCombat.BLADE_TOLERANCE);
-            return padded.contains(base) || padded.contains(tip) || padded.clip(base, tip).isPresent();
+            return contact(bounds, OrionCombat.BLADE_TOLERANCE) != null;
+        }
+
+        Vec3 contact(AABB bounds, double margin) {
+            AABB padded = bounds.inflate(margin, Math.min(margin, .54), margin);
+            return padded.contains(base) ? base : padded.clip(base, tip).orElse(padded.contains(tip) ? tip : null);
         }
     }
 

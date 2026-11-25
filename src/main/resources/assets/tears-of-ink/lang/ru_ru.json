@@ -1273,6 +1273,8 @@
   "block.tears-of-ink.pantheon_altar": "Алтарь призыва",
   "item.tears-of-ink.pantheon_test_relic": "Реликвия Ориона",
   "entity.tears-of-ink.orion": "Орион, Верный Клинок",
+  "entity.tears-of-ink.orion.last_stand": "Орион, Верный Клинок · Последний натиск",
+  "entity.tears-of-ink.orion.last_stand.hint": "Орион держится из последних сил. Переживите его смертельную серию.",
   "message.tears-of-ink.pantheon.relic_only": "Реликварий принимает только реликвии Святилища.",
   "message.tears-of-ink.pantheon.altar.busy": "Арена перестраивается или ещё недоступна.",
   "message.tears-of-ink.pantheon.altar.empty_hand": "Помести реликвию Святилища в слот алтаря.",

@@ -552,9 +552,15 @@ public final class PantheonCombat {
             return !isTrialTarget(recipient) || session != null && session.phase == Phase.FIGHT;
         Entity source = damage.getEntity();
         if (source == null) source = damage.getDirectEntity();
-        if (recipient instanceof ServerPlayer victim && source instanceof ServerPlayer attacker
-                && victim != attacker && session != null && (session.phase == Phase.FIGHT || session.phase == Phase.FINALE)
-                && session.members.contains(victim.getUUID()) && session.members.contains(attacker.getUUID())) return false;
+        Entity actor = source instanceof ServerPlayer ? source : owner(source);
+        if (recipient instanceof ServerPlayer victim && actor instanceof ServerPlayer attacker
+                && victim != attacker && session != null) {
+            if (session.phase == Phase.OPEN && PantheonTemple.isTemple(victim.level()) && inside(victim))
+                return false;
+            if ((session.phase == Phase.FIGHT || session.phase == Phase.FINALE)
+                    && session.members.contains(victim.getUUID()) && session.members.contains(attacker.getUUID()))
+                return false;
+        }
         return permitsInteraction(recipient, source);
     }
 
