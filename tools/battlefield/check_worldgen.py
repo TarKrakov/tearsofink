@@ -240,7 +240,10 @@ assert "ParticleTypes.WHITE_ASH" in ash_mixin
 assert 'method = "createParticle(' in ash_mixin
 assert 'method = "tickParticle(' in ash_mixin
 assert "access.toi$setAlpha(1f - field)" in ash_mixin
-assert 'BattlefieldClarity.opennessAt(x, z)' in ash_mixin
+assert 'BattlefieldMemoryMotes.opennessAt(level, x, z)' in ash_mixin
+assert 'BattlefieldMemoryMotes.opennessAt(level, access.toi$getX(), access.toi$getZ())' in ash_mixin
+assert 'if (!PantheonTemple.isTemple(level)) return BattlefieldClarity.opennessAt(x, z);' in motes
+assert 'PantheonArenaScenes.battlefieldGround(level.getBlockState(ground))' in motes
 assert '@Accessor("alpha")' in access
 assert "BattlefieldWhiteAshMixin" in mixins_cfg["client"]
 assert "BattlefieldParticleAccess" in mixins_cfg["client"]
@@ -252,7 +255,7 @@ assert "if (!level.hasChunkAt(probe)" in motes
 assert "ModBiomes.PALE_FOREST" in motes
 assert "ATTEMPTS_PER_TICK = 6" in motes
 assert "level.addAlwaysVisibleParticle(ModParticles.BATTLEFIELD_MEMORY_MOTE, true" in motes
-assert "BattlefieldClarity.opennessAt(x, z)" in mote
+assert "BattlefieldMemoryMotes.opennessAt(level, x, z)" in mote
 assert "LightTexture.FULL_BRIGHT" in mote
 assert "150, 230" in mote
 assert mote_atlas["textures"] == ["tears-of-ink:tear_glint_0", "tears-of-ink:tear_glint_1"]
