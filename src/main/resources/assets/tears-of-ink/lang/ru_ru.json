@@ -1320,5 +1320,18 @@
   "gui.tears-of-ink.pantheon.ritual.retained": "Выньте реликвию для сброса",
   "message.tears-of-ink.pantheon.combat.restart": "Испытание прервано. Сцена сохранена.",
   "gui.tears-of-ink.pantheon.ritual.ready": "Готов к ритуалу",
-  "gui.tears-of-ink.pantheon.ritual.empty": "Поместите реликвию"
+  "gui.tears-of-ink.pantheon.ritual.empty": "Поместите реликвию",
+  "item.tears-of-ink.ink_crossbow": "Чернильный арбалет",
+  "item.tears-of-ink.blood_throwing_dagger": "Кровавый кинжал",
+  "item.tears-of-ink.holy_pistol": "Священный пистоль",
+  "item.tears-of-ink.ink_quiver": "Колчан",
+  "item.tears-of-ink.holy_bandolier": "Патронташ",
+  "item.tears-of-ink.pale_bullet": "Бледная пуля",
+  "skill.tears-of-ink.ranged_ink_shot": "Чернильный снаряд",
+  "skill.tears-of-ink.ranged_blood_shot": "Кровавый снаряд",
+  "skill.tears-of-ink.ranged_wild_shot": "Шальной выстрел",
+  "key.tears-of-ink.ranged_offhand": "Выстрел второй рукой",
+  "ranged.tears-of-ink.charges": "Запас: %s / %s",
+  "ranged.tears-of-ink.loaded": "Заряжено",
+  "ranged.tears-of-ink.unloaded": "Не заряжено"
 }

@@ -116,6 +116,7 @@ public final class WeaponLoadouts {
         }
 
         CombatTransitions.begin(player, false);
+        com.tarkrakov.tearsofink.weapon.ranged.RangedCombat.resetReload(player);
         setReserve(player, main, off);
         inventory.setItem(selected, reserve.get(0));
         inventory.setItem(Inventory.SLOT_OFFHAND, reserve.get(1));

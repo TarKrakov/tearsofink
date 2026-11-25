@@ -83,6 +83,7 @@ public class TearsOfInk implements ModInitializer {
 		ModEntities.init();
 		ModMobs.init();
 		WeaponAbilities.init();
+		com.tarkrakov.tearsofink.weapon.ranged.RangedCombat.init();
 		ModCommands.init();
 		com.tarkrakov.tearsofink.pantheon.PantheonPrototype.init();
 		com.tarkrakov.tearsofink.pantheon.PantheonTemple.init();

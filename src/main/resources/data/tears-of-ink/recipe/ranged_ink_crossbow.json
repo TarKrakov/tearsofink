@@ -1,0 +1,23 @@
+{
+  "type": "tears-of-ink:forging",
+  "pattern": [
+    "ISI",
+    " T ",
+    " T "
+  ],
+  "key": {
+    "I": {
+      "item": "tears-of-ink:ink_ingot"
+    },
+    "S": {
+      "item": "tears-of-ink:silk_thread"
+    },
+    "T": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:ink_crossbow",
+    "count": 1
+  }
+}

@@ -30,6 +30,12 @@ public final class ModCreativeTab {
 						output.accept(ModItems.INK_TEAR);
 						output.accept(ModItems.SHARD_OF_HOPE);
 						output.accept(ModItems.INK_LONGKNIFE);
+						output.accept(ModItems.INK_CROSSBOW);
+						output.accept(ModItems.BLOOD_THROWING_DAGGER);
+						output.accept(ModItems.HOLY_PISTOL);
+						output.accept(ModItems.INK_QUIVER);
+						output.accept(ModItems.HOLY_BANDOLIER);
+						output.accept(ModItems.PALE_BULLET);
 						output.accept(ModItems.SALVATION_PENDANT);
 						output.accept(ModItems.DIM_HAND_LANTERN);
 						output.accept(ModItems.GUIDE_SPAWN_EGG);

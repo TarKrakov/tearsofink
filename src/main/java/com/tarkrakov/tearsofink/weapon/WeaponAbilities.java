@@ -86,6 +86,7 @@ public final class WeaponAbilities {
 		return RAM.active.remove(p.getUUID()) != null;
 	}
 	public static Skill boundAbility(ServerPlayer p, boolean left) {
+		if (left && com.tarkrakov.tearsofink.weapon.ranged.RangedCombat.blocksOffhand(p)) return null;
 		if (com.tarkrakov.tearsofink.weapon.shield.ShieldStance.dual(p))
 			return left ? ((SoulShieldItem)p.getOffhandItem().getItem()).ability() : com.tarkrakov.tearsofink.weapon.shield.Resonance.SKILL;
 		ItemStack stack = left ? p.getOffhandItem() : p.getMainHandItem();
@@ -93,6 +94,7 @@ public final class WeaponAbilities {
 	}
 
 	private static void use(ServerPlayer player, SkillPayloads.UseWeapon payload) {
+		if (payload.offhand() && com.tarkrakov.tearsofink.weapon.ranged.RangedCombat.blocksOffhand(player)) return;
 		if (!player.isAlive() || player.isSpectator() || player.isPassenger() || player.isSleeping()) return;
 		// два щита Души: R — Резонанс, Shift+R — способность левого щита
 		if (com.tarkrakov.tearsofink.weapon.shield.ShieldStance.dual(player)) {

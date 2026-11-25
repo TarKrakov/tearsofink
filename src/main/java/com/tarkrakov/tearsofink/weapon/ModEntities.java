@@ -25,6 +25,9 @@ public final class ModEntities {
 	public static final EntityType<com.tarkrakov.tearsofink.weapon.shield.ShieldPhantomEntity> SHIELD_PHANTOM = Registry.register(BuiltInRegistries.ENTITY_TYPE,
 			TearsOfInk.id("shield_phantom"), EntityType.Builder.<com.tarkrakov.tearsofink.weapon.shield.ShieldPhantomEntity>of(com.tarkrakov.tearsofink.weapon.shield.ShieldPhantomEntity::new, MobCategory.MISC)
 				.sized(1.2f,1.2f).clientTrackingRange(6).updateInterval(1).noSave().build("shield_phantom"));
+	public static final EntityType<com.tarkrakov.tearsofink.weapon.ranged.RangedProjectile> RANGED_SHOT = Registry.register(BuiltInRegistries.ENTITY_TYPE,
+        TearsOfInk.id("ranged_shot"), EntityType.Builder.<com.tarkrakov.tearsofink.weapon.ranged.RangedProjectile>of(com.tarkrakov.tearsofink.weapon.ranged.RangedProjectile::new, MobCategory.MISC)
+            .sized(.18f,.18f).clientTrackingRange(8).updateInterval(1).noSave().build("ranged_shot"));
 	private ModEntities() {}
 
 	public static void init() {}

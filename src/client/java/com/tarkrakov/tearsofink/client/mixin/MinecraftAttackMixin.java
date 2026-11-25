@@ -25,6 +25,11 @@ public abstract class MinecraftAttackMixin {
 
 	@Inject(method = "startAttack", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$comboSwing(CallbackInfoReturnable<Boolean> cir) {
+        if (player != null && com.tarkrakov.tearsofink.weapon.ranged.RangedItem.kind(player.getMainHandItem()) != null) {
+            com.tarkrakov.tearsofink.client.RangedClient.fire(false);
+            cir.setReturnValue(false);
+            return;
+        }
 		if (player == null || player.isSpectator() || Archetype.of(player.getMainHandItem()) == null) return;
 		if (Archetype.of(player.getMainHandItem()) == Archetype.BASTION && !com.tarkrakov.tearsofink.weapon.combat.Combat.bastion(player)) return;
 		CombatClient.requestSwing();
@@ -33,7 +38,8 @@ public abstract class MinecraftAttackMixin {
 
 	@Inject(method = "startUseItem", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$releaseBeforeUsingNewLoadout(CallbackInfo ci) {
-		if (SkillKeys.suppressHeldUse((Minecraft) (Object) this)) ci.cancel();
+		if (SkillKeys.suppressHeldUse((Minecraft) (Object) this) ||
+            player != null && com.tarkrakov.tearsofink.weapon.ranged.RangedItem.kind(player.getMainHandItem()) != null) ci.cancel();
 	}
 
 	@Inject(method = "startUseItem", at = @At("TAIL"))
@@ -47,6 +53,7 @@ public abstract class MinecraftAttackMixin {
 
 	@Inject(method = "continueAttack", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$holdToMine(boolean leftClick, CallbackInfo ci) {
+        if (player != null && com.tarkrakov.tearsofink.weapon.ranged.RangedItem.kind(player.getMainHandItem()) != null) { ci.cancel(); return; }
 		if (!leftClick || player == null || Archetype.of(player.getMainHandItem()) == null) return;
 		if (Archetype.of(player.getMainHandItem()) == Archetype.BASTION && !com.tarkrakov.tearsofink.weapon.combat.Combat.bastion(player)) return;
 		if (CombatClient.attackHeld() < CombatClient.MINING_HOLD) ci.cancel();

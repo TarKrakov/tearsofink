@@ -1,0 +1,19 @@
+{
+  "type": "tears-of-ink:forging",
+  "pattern": [
+    "LSL",
+    "LLL"
+  ],
+  "key": {
+    "L": {
+      "item": "minecraft:leather"
+    },
+    "S": {
+      "item": "tears-of-ink:silk_thread"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:holy_bandolier",
+    "count": 1
+  }
+}

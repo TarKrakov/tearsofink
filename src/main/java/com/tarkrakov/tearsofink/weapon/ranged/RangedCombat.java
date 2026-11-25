@@ -1,0 +1,191 @@
+package com.tarkrakov.tearsofink.weapon.ranged;
+
+import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.item.ModItems;
+import com.tarkrakov.tearsofink.skill.Skill;
+import com.tarkrakov.tearsofink.skill.SkillInput;
+import com.tarkrakov.tearsofink.world.ModDimensions;
+import com.tarkrakov.tearsofink.weapon.forge.Gear;
+import com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind;
+import com.tarkrakov.tearsofink.pantheon.PantheonCombat;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.*;
+import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
+import net.fabricmc.fabric.api.event.player.UseItemCallback;
+import net.fabricmc.fabric.api.event.player.UseBlockCallback;
+import net.fabricmc.fabric.api.event.player.UseEntityCallback;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.InteractionResultHolder;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.core.particles.ParticleTypes;
+import java.util.*;
+
+public final class RangedCombat {
+    private static final String LOADED="toi_ranged_loaded", EMPOWERED="toi_ranged_empowered";
+    private static final net.minecraft.resources.ResourceLocation SLOW=TearsOfInk.id("ranged_reload_slow");
+    private static final Map<UUID,State> STATES=new HashMap<>();
+    private static final class Job { ItemStack stack=ItemStack.EMPTY; int ticks; }
+    private static final class State { final Job main=new Job(), off=new Job(); long nextMain, nextOff; double slow; }
+    private RangedCombat(){}
+    public record Fire(boolean off,boolean aimed) implements CustomPacketPayload {
+        public static final Type<Fire> TYPE=new Type<>(TearsOfInk.id("ranged_fire"));
+        public static final StreamCodec<ByteBuf,Fire> CODEC=StreamCodec.composite(ByteBufCodecs.BOOL,Fire::off,ByteBufCodecs.BOOL,Fire::aimed,Fire::new);
+        @Override public Type<Fire> type(){return TYPE;}
+    }
+    public static boolean loaded(ItemStack s){return flag(s,LOADED);}
+    public static boolean empowered(ItemStack s){return flag(s,EMPOWERED);}
+    private static boolean flag(ItemStack s,String key){CustomData d=s.get(DataComponents.CUSTOM_DATA);return d!=null && d.copyTag().getBoolean(key);}
+    private static void flag(ItemStack s,String key,boolean value){CustomData.update(DataComponents.CUSTOM_DATA,s,t->t.putBoolean(key,value));}
+    public static boolean blocksOffhand(Player p){return RangedItem.kind(p.getMainHandItem())==Kind.CROSSBOW;}
+    private static boolean paired(Player p,Kind kind){return kind!=Kind.CROSSBOW && RangedItem.kind(p.getMainHandItem())==kind && RangedItem.kind(p.getOffhandItem())==kind;}
+    private static boolean valid(ServerPlayer p){return p.isAlive()&&!p.isSpectator()&&!p.isSleeping()&&!p.isPassenger()
+        &&p.containerMenu==p.inventoryMenu&&ModDimensions.hasLandsRules(p.level());}
+    public static void init(){
+        PayloadTypeRegistry.playC2S().register(Fire.TYPE,Fire.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(Fire.TYPE,(packet,ctx)->ctx.player().server.execute(()->fire(ctx.player(),packet.off(),packet.aimed(),false)));
+        ServerTickEvents.END_SERVER_TICK.register(server->{for(ServerPlayer p:server.getPlayerList().getPlayers()) tick(p);});
+        ServerPlayConnectionEvents.DISCONNECT.register((h,s)->STATES.remove(h.getPlayer().getUUID()));
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(s->STATES.clear());
+        AttackEntityCallback.EVENT.register((p,level,hand,target,hit)->RangedItem.kind(p.getMainHandItem())!=null?InteractionResult.FAIL:InteractionResult.PASS);
+        UseItemCallback.EVENT.register((p,level,hand)->blocked(p,hand)
+            ?InteractionResultHolder.fail(p.getItemInHand(hand)):InteractionResultHolder.pass(p.getItemInHand(hand)));
+        UseBlockCallback.EVENT.register((p,level,hand,hit)->blocked(p,hand)?InteractionResult.FAIL:InteractionResult.PASS);
+        UseEntityCallback.EVENT.register((p,level,hand,target,hit)->blocked(p,hand)?InteractionResult.FAIL:InteractionResult.PASS);
+    }
+    private static boolean blocked(Player p,InteractionHand hand){return hand==InteractionHand.OFF_HAND&&blocksOffhand(p)
+        || RangedItem.kind(p.getItemInHand(hand))!=null;}
+    public static void resetReload(ServerPlayer p){
+        State s=STATES.get(p.getUUID());
+        if(s!=null){s.main.stack=ItemStack.EMPTY;s.main.ticks=0;s.off.stack=ItemStack.EMPTY;s.off.ticks=0;slow(p,s,0);}
+    }
+    private static void slow(ServerPlayer p,State s,double value){
+        var a=p.getAttribute(Attributes.MOVEMENT_SPEED);
+        if(a==null)return;
+        if(s.slow==value && (value==0 || a.getModifier(SLOW)!=null))return;
+        a.removeModifier(SLOW);
+        if(value>0)a.addTransientModifier(new AttributeModifier(SLOW,-value,AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL));
+        s.slow=value;
+    }
+    private static void tick(ServerPlayer p){
+        State s=STATES.get(p.getUUID());
+        boolean has=RangedItem.kind(p.getMainHandItem())!=null||RangedItem.kind(p.getOffhandItem())!=null;
+        if(!has&&s==null)return;
+        if(s==null){s=new State();STATES.put(p.getUUID(),s);}
+        if(!valid(p)){resetReload(p);return;}
+        boolean blocked=blocksOffhand(p);
+        if(blocked&&p.isUsingItem()&&p.getUsedItemHand()==InteractionHand.OFF_HAND)p.stopUsingItem();
+        boolean pair=paired(p,Kind.PISTOL);
+        boolean m=reload(p,s.main,p.getMainHandItem(),false,pair);
+        boolean o=reload(p,s.off,p.getOffhandItem(),true,pair);
+        slow(p,s,m&&blocked?.50:m||o?.18:0);
+        if(!has)STATES.remove(p.getUUID());
+    }
+    private static boolean reload(ServerPlayer p,Job job,ItemStack stack,boolean off,boolean pair){
+        Kind kind=RangedItem.kind(stack);
+        if(job.stack!=stack){job.stack=stack;job.ticks=0;}
+        if(kind==null||kind==Kind.DAGGER||loaded(stack)||(off&&(blocksOffhand(p)||kind==Kind.CROSSBOW))){
+            job.ticks=0;return false;
+        }
+        if(!p.getAbilities().instabuild&&RangedSupply.available(p,kind)<(pair?2:1)){job.ticks=0;return false;}
+        int duration=kind==Kind.CROSSBOW?46:pair?60:38;
+        if(++job.ticks>=duration){
+            flag(stack,LOADED,true);job.ticks=0;
+            p.level().playSound(null,p.blockPosition(),SoundEvents.CROSSBOW_LOADING_END,SoundSource.PLAYERS,.5f,1f);
+            return false;
+        }
+        return true;
+    }
+    private static boolean fire(ServerPlayer p,boolean off,boolean aimed,boolean special){
+        if(!valid(p)||off&&blocksOffhand(p))return false;
+        ItemStack first=off?p.getOffhandItem():p.getMainHandItem();
+        Kind kind=RangedItem.kind(first);
+        if(kind==null||off&&kind==Kind.CROSSBOW)return false;
+        boolean pair=!off&&paired(p,kind);
+        // Mouse 4 is auxiliary only; matching pairs fire from primary input.
+        if(off&&!special&&paired(p,kind))return false;
+        ItemStack second=pair?p.getOffhandItem():ItemStack.EMPTY;
+        State s=STATES.computeIfAbsent(p.getUUID(),k->new State());
+        long now=p.serverLevel().getGameTime();
+        if(now<(off?s.nextOff:s.nextMain)||pair&&now<s.nextOff)return false;
+        int n=pair?2:1;
+        if(kind==Kind.DAGGER){
+            int cost=special?2:1;
+            if(!p.getAbilities().instabuild&&(RangedSupply.amount(first)<cost||pair&&RangedSupply.amount(second)<cost))return false;
+            if(!p.getAbilities().instabuild){RangedSupply.set(first,RangedSupply.amount(first)-cost);if(pair)RangedSupply.set(second,RangedSupply.amount(second)-cost);}
+        }else{
+            if(!loaded(first)||pair&&!loaded(second)||!RangedSupply.take(p,kind,n))return false;
+            flag(first,LOADED,false);if(pair)flag(second,LOADED,false);
+        }
+        Map<UUID,Long> hits=pair?RangedProjectile.pair():null;
+        launch(p,first,kind,off,aimed&&!off,special,hits);
+        if(pair)launch(p,second,kind,true,aimed,special,hits);
+        int gap=kind==Kind.DAGGER?12:5;
+        if(off)s.nextOff=now+gap;else s.nextMain=now+gap;
+        if(pair)s.nextOff=now+gap;
+        p.getInventory().setChanged();
+        p.level().playSound(null,p.blockPosition(),kind==Kind.DAGGER?SoundEvents.TRIDENT_THROW:SoundEvents.CROSSBOW_SHOOT,SoundSource.PLAYERS,.85f,kind==Kind.PISTOL?.65f:1f);
+        return true;
+    }
+    private static void launch(ServerPlayer p,ItemStack stack,Kind kind,boolean off,boolean aimed,boolean special,Map<UUID,Long> hits){
+        boolean ink=kind==Kind.CROSSBOW&&empowered(stack);
+        if(ink)flag(stack,EMPOWERED,false);
+        float damage=kind==Kind.CROSSBOW?(ink?15:11):kind==Kind.PISTOL?12:4.5f;
+        float bleed=kind==Kind.DAGGER?(special?.80f:.25f):0;
+        RangedProjectile shot=new RangedProjectile(p.serverLevel(),p,damage,bleed,ink,hits);
+        shot.setItem(new ItemStack(kind==Kind.DAGGER?ModItems.BLOOD_THROWING_DAGGER:kind==Kind.PISTOL?ModItems.PALE_BULLET:Items.ARROW));
+        Vec3 look=p.getLookAngle();
+        Vec3 right=new Vec3(-look.z,0,look.x).normalize();
+        double side=(off?-1:1)*(p.getMainArm()==net.minecraft.world.entity.HumanoidArm.RIGHT?1:-1);
+        Vec3 start=p.getEyePosition().add(right.scale(side*.22)).add(0,-.15,0);
+        shot.setPos(start.x,start.y,start.z);
+        float spread=kind==Kind.CROSSBOW?(aimed?.5f:3f):kind==Kind.PISTOL?(aimed?3f:8f):1.7f;
+        shot.shoot(look.x,look.y,look.z,kind==Kind.DAGGER?1.7f:kind==Kind.PISTOL?3.2f:2.7f,spread);
+        p.serverLevel().addFreshEntity(shot);
+    }
+    private static ItemStack held(ServerPlayer p,SkillInput input){return input.sneaking()?p.getOffhandItem():p.getMainHandItem();}
+    public static final Skill INK_SHOT=new Skill(TearsOfInk.id("ranged_ink_shot"),8,0,60){
+        @Override public boolean activate(ServerPlayer p,SkillInput input){
+            ItemStack s=held(p,input);
+            if(input.sneaking()||RangedItem.kind(s)!=Kind.CROSSBOW||empowered(s))return false;
+            flag(s,EMPOWERED,true);return true;
+        }
+    };
+    public static final Skill BLOOD_SHOT=new Skill(TearsOfInk.id("ranged_blood_shot"),0,0,40){
+        @Override public boolean activate(ServerPlayer p,SkillInput input){return RangedItem.kind(held(p,input))==Kind.DAGGER&&fire(p,input.sneaking(),false,true);}
+    };
+    public static final Skill WILD_SHOT=new Skill(TearsOfInk.id("ranged_wild_shot"),0,12,100){
+        @Override public boolean activate(ServerPlayer p,SkillInput input){
+            ItemStack s=held(p,input);
+            if(!valid(p)||input.sneaking()&&blocksOffhand(p)||RangedItem.kind(s)!=Kind.PISTOL||!loaded(s)||!RangedSupply.take(p,Kind.PISTOL,2))return false;
+            flag(s,LOADED,false);
+            Vec3 look=p.getLookAngle().multiply(1,0,1).normalize();
+            if(look.lengthSqr()<1e-5)look=Vec3.directionFromRotation(0,p.getYRot());
+            for(LivingEntity t:p.serverLevel().getEntitiesOfClass(LivingEntity.class,p.getBoundingBox().inflate(3.3),e->e!=p&&e.isAlive())){
+                Vec3 d=t.position().subtract(p.position()).multiply(1,0,1);
+                if(d.lengthSqr()>10.89||d.lengthSqr()<1e-5||look.dot(d.normalize())<.45||!p.hasLineOfSight(t)
+                    ||t.isAlliedTo(p)||!PantheonCombat.permitsInteraction(t,p))continue;
+                if(Gear.hurtModWave(t,p.damageSources().playerAttack(p),15f))t.knockback(1.1,p.getX()-t.getX(),p.getZ()-t.getZ());
+            }
+            p.setDeltaMovement(p.getDeltaMovement().add(look.scale(-.75)).add(0,.14,0));p.hurtMarked=true;
+            p.serverLevel().sendParticles(ParticleTypes.POOF,p.getX()+look.x,p.getY()+1.15,p.getZ()+look.z,18,.4,.3,.4,.06);
+            p.level().playSound(null,p.blockPosition(),SoundEvents.GENERIC_EXPLODE,SoundSource.PLAYERS,.6f,1.3f);
+            return true;
+        }
+    };
+}

@@ -1,0 +1,19 @@
+{
+  "type": "tears-of-ink:forging",
+  "pattern": [
+    "PP",
+    "PT"
+  ],
+  "key": {
+    "P": {
+      "item": "tears-of-ink:pale_ingot"
+    },
+    "T": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:holy_pistol",
+    "count": 1
+  }
+}

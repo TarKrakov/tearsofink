@@ -98,6 +98,7 @@ public final class WeaponStats {
         if (inside && stack.is(ModItems.RAW_CATERPILLAR_MEAT)) {
             lines.add(t("food.corrupted", SoulPenalty.RAW_MEAT_STAGE).withStyle(ChatFormatting.GRAY));
         }
+        if (item instanceof com.tarkrakov.tearsofink.weapon.ranged.RangedItem) return; // ranged prototype provides its own tooltip
         if (!(item instanceof AbilityWeapon) && !(item instanceof OrdinaryArmorItem)) {
             if (inside && !Gear.isModItem(stack)) {
                 if (item instanceof ArmorItem) lines.add(t("penalty.armor", fmt((1 - VanillaArmorPenalty.LAND_MULTIPLIER) * 100)).withStyle(ChatFormatting.RED));

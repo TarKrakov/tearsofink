@@ -55,6 +55,7 @@ public final class SkillKeys {
 				context.client().execute(() -> suppressHeldUse = context.client().options.keyUse.isDown()));
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> suppressHeldUse = false);
 		ClientTickEvents.END_CLIENT_TICK.register(SkillKeys::tick);
+		RangedClient.init();
 	}
 
 	private static void bind(Skill skill, String name, int defaultKey) {

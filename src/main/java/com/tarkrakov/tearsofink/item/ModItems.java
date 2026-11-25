@@ -124,6 +124,12 @@ public final class ModItems {
 	public static final Item RAW_BLOOD_METAL = register("raw_blood_metal", new Item(new Item.Properties()));
 	/** Чернильный металл — только с врагов Чернолесья и из сундуков (руды нет). */
 	public static final Item RAW_INK_METAL = register("raw_ink_metal", new Item(new Item.Properties()));
+	public static final Item INK_CROSSBOW = register("ink_crossbow", new com.tarkrakov.tearsofink.weapon.ranged.RangedItem(com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.CROSSBOW));
+	public static final Item BLOOD_THROWING_DAGGER = register("blood_throwing_dagger", new com.tarkrakov.tearsofink.weapon.ranged.RangedItem(com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.DAGGER));
+	public static final Item HOLY_PISTOL = register("holy_pistol", new com.tarkrakov.tearsofink.weapon.ranged.RangedItem(com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.PISTOL));
+	public static final Item INK_QUIVER = register("ink_quiver", new com.tarkrakov.tearsofink.weapon.ranged.RangedSupply(64));
+	public static final Item HOLY_BANDOLIER = register("holy_bandolier", new com.tarkrakov.tearsofink.weapon.ranged.RangedSupply(32));
+	public static final Item PALE_BULLET = register("pale_bullet", new Item(new Item.Properties()));
 	public static final Item PALE_INGOT = register("pale_ingot", new Item(new Item.Properties()));
 	public static final Item BLOOD_INGOT = register("blood_ingot", new Item(new Item.Properties()));
 	public static final Item INK_INGOT = register("ink_ingot", new Item(new Item.Properties()));

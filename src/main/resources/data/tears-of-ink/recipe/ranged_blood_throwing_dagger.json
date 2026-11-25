@@ -1,0 +1,19 @@
+{
+  "type": "tears-of-ink:forging",
+  "pattern": [
+    " B",
+    "T "
+  ],
+  "key": {
+    "B": {
+      "item": "tears-of-ink:blood_ingot"
+    },
+    "T": {
+      "item": "minecraft:stick"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:blood_throwing_dagger",
+    "count": 1
+  }
+}

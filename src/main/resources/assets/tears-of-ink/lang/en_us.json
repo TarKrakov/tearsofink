@@ -1320,5 +1320,18 @@
   "gui.tears-of-ink.pantheon.ritual.retained": "Remove relic to reset",
   "message.tears-of-ink.pantheon.combat.restart": "The trial was interrupted. The arena remains.",
   "gui.tears-of-ink.pantheon.ritual.ready": "Ready for ritual",
-  "gui.tears-of-ink.pantheon.ritual.empty": "Insert a relic"
+  "gui.tears-of-ink.pantheon.ritual.empty": "Insert a relic",
+  "item.tears-of-ink.ink_crossbow": "Ink Crossbow",
+  "item.tears-of-ink.blood_throwing_dagger": "Blood Dagger",
+  "item.tears-of-ink.holy_pistol": "Sacred Pistol",
+  "item.tears-of-ink.ink_quiver": "Quiver",
+  "item.tears-of-ink.holy_bandolier": "Bandolier",
+  "item.tears-of-ink.pale_bullet": "Pale Bullet",
+  "skill.tears-of-ink.ranged_ink_shot": "Ink Shot",
+  "skill.tears-of-ink.ranged_blood_shot": "Blood Shot",
+  "skill.tears-of-ink.ranged_wild_shot": "Wild Shot",
+  "key.tears-of-ink.ranged_offhand": "Offhand ranged attack",
+  "ranged.tears-of-ink.charges": "Charges: %s / %s",
+  "ranged.tears-of-ink.loaded": "Loaded",
+  "ranged.tears-of-ink.unloaded": "Unloaded"
 }

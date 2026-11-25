@@ -1,0 +1,20 @@
+{
+  "type": "tears-of-ink:forging",
+  "pattern": [
+    "LSL",
+    "L L",
+    " L "
+  ],
+  "key": {
+    "L": {
+      "item": "minecraft:leather"
+    },
+    "S": {
+      "item": "tears-of-ink:silk_thread"
+    }
+  },
+  "result": {
+    "id": "tears-of-ink:ink_quiver",
+    "count": 1
+  }
+}

@@ -77,7 +77,10 @@ public class InkAnvilMenu extends AbstractContainerMenu {
 		CraftingInput input = grid.asCraftInput();
 		ItemStack out = level.getRecipeManager().getRecipeFor(ModForge.TYPE, input, level)
 				.map(r -> r.value().assemble(input, level.registryAccess()))
-				.orElseGet(this::sharpening);
+				.orElseGet(() -> {
+                    ItemStack refill = com.tarkrakov.tearsofink.weapon.ranged.RangedSupply.refill(grid);
+                    return refill.isEmpty() ? sharpening() : refill;
+                });
 		result.setItem(0, out);
 		broadcastChanges();
 	}
