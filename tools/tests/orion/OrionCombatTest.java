@@ -61,6 +61,7 @@ public final class OrionCombatTest {
         verifyDamageAndSpinReach();
         verifyAnimationPlayback();
         verifyMovementCollision();
+        verifyArenaRouting();
         verifyFirstDeadly();
         verifyHitWindow();
         var cleave = OrionBlade.sample(Clip.CLEAVE, CLEAVE_IMPACT, Vec3.ZERO, 0);
@@ -116,6 +117,38 @@ public final class OrionCombatTest {
                 "a late packet resumes playback without jumping");
         clock.reset(0);
         require(clock.previous() == 0 && clock.current() == 0, "the next clip starts with its own cursor");
+    }
+
+    private static void verifyArenaRouting() {
+        // Expanded obstacle boxes already include the boss's footprint.
+        java.util.function.BiPredicate<Vec3,Vec3> clear = (from, to) -> {
+            for (int i = 1; i <= 12; i++) {
+                Vec3 p = from.lerp(to, i / 12.0);
+                if (Math.abs(p.x) > 12 || Math.abs(p.z) > 12) return false;
+                if (p.x >= -2 && p.x <= 2 && p.z >= -2 && p.z <= 2) return false;
+                // L-shaped corner: initial progress toward the goal is blocked.
+                if (p.x >= 4 && p.x <= 5.5 && p.z >= -7 && p.z <= 3) return false;
+                if (p.x >= 4 && p.x <= 10 && p.z >= 2 && p.z <= 3) return false;
+            }
+            return true;
+        };
+        var pillarStart = new Vec3(-4, 0, 0);
+        var pillarGoal = new Vec3(3.5, 0, 0);
+        var cornerStart = new Vec3(7, 0, 0);
+        var cornerGoal = new Vec3(3, 0, 4);
+        for (var pair : List.of(List.of(pillarStart, pillarGoal), List.of(cornerStart, cornerGoal))) {
+            Vec3 start = pair.get(0), goal = pair.get(1);
+            require(!clear.test(start, goal), "direct approach obstructed");
+            var path = OrionRoute.find(start, goal, p -> p.distanceToSqr(goal) < .8 * .8, clear);
+            require(!path.isEmpty() && path.getLast().distanceToSqr(goal) < .8 * .8, "route reaches around obstacle");
+            Vec3 previous = start;
+            for (Vec3 next : path) {
+                require(clear.test(previous, next), "no route segment clips an obstacle");
+                previous = next;
+            }
+        }
+        require(OrionRoute.find(Vec3.ZERO, new Vec3(2, 0, 0), p -> false, (a,b) -> false).isEmpty(),
+                "no invented path when fully enclosed");
     }
 
     private static void verifyMovementCollision() {

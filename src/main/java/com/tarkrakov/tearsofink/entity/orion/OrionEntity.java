@@ -25,7 +25,6 @@ import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
@@ -65,9 +64,12 @@ public final class OrionEntity extends PathfinderMob {
     private ServerPlayer opponent;
     private Vec3 travel = Vec3.ZERO;
     private Wave wave;
-    private Path detour;
+    private List<Vec3> detour = List.of();
+    private int detourIndex;
     private UUID detourTarget;
-    private long repathAt;
+    private Vec3 plannedTarget;
+    private long repathAt, escapeUntil;
+    private boolean blockedMovement;
     private double techniqueTravel;
     private long linkUntil, repositionUntil;
     private boolean fighting, phaseTwo, pendingEmpower, inDamage, pendingLethal, finaleComplete;
@@ -299,11 +301,16 @@ public final class OrionEntity extends PathfinderMob {
         boolean visible = hasLineOfSight(opponent);
         boolean openingRequired = opening.required(phaseTwo);
         if (openingRequired && now < repositionUntil) {
-            reposition();
+            reposition(now);
             return;
         }
+        if (now < escapeUntil) {
+            maneuver(distance, now);
+            return;
+        }
+        boolean approachBlocked = needsDetour(distance, visible);
         double range = phaseTwo ? ENGAGE_RANGE_PHASE_TWO : ENGAGE_RANGE;
-        boolean ready = now >= recoverUntil && distance <= range && visible;
+        boolean ready = now >= recoverUntil && distance <= range && visible && !approachBlocked;
         if (openingRequired && ready) {
             if (combo != Combo.DEADLY) {
                 combo = Combo.DEADLY;
@@ -312,7 +319,7 @@ public final class OrionEntity extends PathfinderMob {
             }
             if (tryLinked(now, "first deadly")) return;
         } else if (!openingRequired && combo != null) {
-            if (visible && distance <= range && tryLinked(now, "chain continuation")) return;
+            if (visible && !approachBlocked && distance <= range && tryLinked(now, "chain continuation")) return;
             if (combo != null && now >= linkUntil) finishChain(now, "link lost");
         } else if (ready) {
             boolean mobile = opponent.isSprinting() || now - lastContact > (phaseTwo ? 70 : 100);
@@ -391,7 +398,12 @@ public final class OrionEntity extends PathfinderMob {
             case CLEAVE -> Clip.CLEAVE;
             case SPIN -> {
                 travel = forward.scale(dashDistance(distanceTo(opponent), phaseTwo));
-                yield canStep(forward.scale(.36)) ? Clip.SPIN_DASH : null;
+                double probe = Math.min(1.5, Math.max(.36, distanceTo(opponent) - .5));
+                if (!canTraverse(position(), position().add(forward.scale(probe)))) {
+                    requestEscape(now);
+                    yield null;
+                }
+                yield Clip.SPIN_DASH;
             }
             case DODGE -> chooseDodge(forward, motion);
         };
@@ -399,6 +411,8 @@ public final class OrionEntity extends PathfinderMob {
         if (combo != null && combo.phase == 2 && step == 0) longReadyAt = now + LONG_COOLDOWN;
         technique = move;
         techniqueTravel = 0;
+        blockedMovement = false;
+        clearDetour();
         readyAt.put(move, now + Math.round(move.cooldown * (phaseTwo ? PHASE_COOLDOWN : 1)));
         for (HitWindow window : hit) window.reset();
         setDeltaMovement(Vec3.ZERO);
@@ -433,7 +447,10 @@ public final class OrionEntity extends PathfinderMob {
             float start = technique == Technique.SPIN ? DASH_START : .05f;
             float end = technique == Technique.SPIN ? DASH_END : .39f;
             double interval = movementProgress(to, start, end) - movementProgress(previousTime, start, end);
-            if (interval > 0 && !step(travel.scale(interval * movementFactor()))) travel = Vec3.ZERO;
+            if (interval > 0 && travel.horizontalDistanceSqr() > .0001 && !step(travel.scale(interval * movementFactor()))) {
+                if (techniqueTravel < DASH_CONFIRM || !hasLineOfSight(opponent)) blockedMovement = true;
+                travel = Vec3.ZERO;
+            }
         } else if (players.contains(opponent)) {
             // The blade's path stays committed during contact. Only the intervening windups track the target.
             if (technique == Technique.SLASH) advanceSlash(to);
@@ -466,6 +483,7 @@ public final class OrionEntity extends PathfinderMob {
             return;
         }
         if (time < clip.length()) return;
+        if (blockedMovement) requestEscape(now);
         if (combo == Combo.DEADLY && opening.required(phaseTwo)) {
             opening.finish(technique, technique != Technique.SPIN || techniqueTravel >= DASH_CONFIRM);
             if (opening.awaitingWave()) {
@@ -481,9 +499,9 @@ public final class OrionEntity extends PathfinderMob {
         if (combo != null && ++step < combo.steps.size()) {
             technique = null;
             travel = Vec3.ZERO;
-            linkUntil = now + LINK_WAIT;
+            linkUntil = Math.max(now, escapeUntil) + LINK_WAIT;
             chooseTarget(players, now);
-            if (opponent != null) tryLinked(now, "chain continuation");
+            if (opponent != null && now >= escapeUntil) tryLinked(now, "chain continuation");
             return;
         }
         finishChain(now, "recovery");
@@ -638,55 +656,141 @@ public final class OrionEntity extends PathfinderMob {
         recoverUntil = repositionUntil + BLOCKED_RECOVERY;
     }
 
-    private void reposition() {
+    private void clearDetour() {
+        detour = List.of();
+        detourIndex = 0;
+        detourTarget = null;
+        plannedTarget = null;
+        repathAt = 0;
+    }
+
+    private void requestEscape(long now) {
+        clearDetour();
+        escapeUntil = Math.max(escapeUntil, now + 10);
+        linkUntil = Math.max(linkUntil, escapeUntil + LINK_WAIT);
+    }
+
+    private void reposition(long now) {
+        if (!hasLineOfSight(opponent)) {
+            maneuver(distanceTo(opponent), now);
+            return;
+        }
         Vec3 fromTarget = position().subtract(opponent.position()).multiply(1, 0, 1);
         if (fromTarget.horizontalDistanceSqr() < .01) fromTarget = Vec3.directionFromRotation(0, getYRot()).reverse();
-        Vec3 retreat = fromTarget.normalize().scale(WALK_SPEED * PHASE_MOVE * movementFactor());
-        Vec3 before = position();
-        boolean moved = step(retreat) || step(retreat.yRot(1.35f)) || step(retreat.yRot(-1.35f));
-        if (moved) {
-            face(position().add(position().subtract(before)), ALIGN_TURN);
+        double speed = WALK_SPEED * PHASE_MOVE * movementFactor();
+        Vec3 direction = localHeading(fromTarget.normalize(), speed);
+        if (direction != null && step(direction.scale(speed))) {
+            face(position().add(direction), ALIGN_TURN);
             if (clip != Clip.WALK) play(Clip.WALK);
+        } else {
+            requestEscape(now);
+            maneuver(distanceTo(opponent), now);
         }
+    }
+
+    private boolean needsDetour(double distance, boolean visible) {
+        if (!visible) return true;
+        if (distance <= 2.65) return false;
+        Vec3 direction = opponent.position().subtract(position()).multiply(1, 0, 1).normalize();
+        double probe = Math.max(.25, distance - 2.35);
+        if (detourIndex >= detour.size()) probe = Math.min(probe, 2.5);
+        return !canTraverse(position(), position().add(direction.scale(probe)));
     }
 
     private void maneuver(double distance, long now) {
         Vec3 direction = opponent.position().subtract(position()).multiply(1, 0, 1).normalize();
         boolean responding = now < recoverUntil;
-        if (responding && distance < (phaseTwo ? 3.25 : 3.6) || !responding && distance < 2.65) {
+        boolean visible = hasLineOfSight(opponent);
+        boolean escaping = now < escapeUntil;
+        boolean routing = escaping || needsDetour(distance, visible);
+        if (!routing && (responding && distance < (phaseTwo ? 3.25 : 3.6) || !responding && distance < 2.65)) {
+            clearDetour();
             face(opponent.position(), 19);
             if (clip != Clip.IDLE) play(Clip.IDLE);
             return;
         }
-        boolean visible = hasLineOfSight(opponent);
-        if (responding && distance < 5.4 || !visible)
-            direction = direction.yRot((tickCount / 80 % 2 == 0 ? 1 : -1) * (responding ? .9f : .60f));
+        if (!routing && responding && distance < 5.4)
+            direction = direction.yRot((tickCount / 80 % 2 == 0 ? 1 : -1) * .9f);
         boolean run = distance > (phaseTwo ? 4.9 : 6);
         double speed = (run ? RUN_SPEED : WALK_SPEED) * (phaseTwo ? PHASE_MOVE : 1) * movementFactor();
-        if (!visible && !responding) {
-            Vec3 route = followingPath(now);
+        if (routing) {
+            Vec3 route = followingPath(now, escaping);
             if (route != null) direction = route;
+            else direction = localHeading(direction, speed);
+        } else {
+            clearDetour();
+            if (!canTraverse(position(), position().add(direction.scale(speed)))) {
+                direction = localHeading(direction, speed);
+                if (direction == null) requestEscape(now);
+            }
         }
-        Vec3 advance = direction.scale(speed);
-        boolean moved = step(advance) || step(advance.yRot(1.16f)) || step(advance.yRot(-1.16f));
-        Clip next = moved ? run ? Clip.RUN : Clip.WALK : Clip.IDLE;
+        Vec3 before = position();
+        boolean moved = false;
+        if (direction != null) {
+            double stride = speed;
+            if (routing && detourIndex < detour.size())
+                stride = Math.min(stride, detour.get(detourIndex).subtract(position()).horizontalDistance());
+            if (stride > .001) moved = step(direction.scale(stride));
+            if (!moved) {
+                detour = List.of();
+                detourIndex = 0;
+                repathAt = Math.min(repathAt, now + 3);
+            }
+        }
+        Vec3 actual = position().subtract(before);
+        boolean advancing = actual.horizontalDistanceSqr() > .0001;
+        Clip next = advancing ? run ? Clip.RUN : Clip.WALK : Clip.IDLE;
         if (clip != next) play(next);
-        face(moved && run ? position().add(direction) : opponent.position(), run ? 16 : 22);
+        face(advancing && (routing || run) ? position().add(actual) : opponent.position(), run ? 16 : 22);
     }
 
-    @Nullable private Vec3 followingPath(long now) {
-        if (!opponent.getUUID().equals(detourTarget) || now >= repathAt) {
+    @Nullable private Vec3 followingPath(long now, boolean escaping) {
+        Vec3 target = opponent.position();
+        boolean changed = !opponent.getUUID().equals(detourTarget);
+        boolean movedTarget = plannedTarget == null || target.distanceToSqr(plannedTarget) > 2.25;
+        if (changed || now >= repathAt && (movedTarget || detourIndex >= detour.size() || now >= repathAt + 20)) {
             detourTarget = opponent.getUUID();
-            repathAt = now + 18;
-            detour = getNavigation().createPath(opponent, 0);
+            plannedTarget = target;
+            repathAt = now + 8;
+            Vec3 origin = position();
+            ServerLevel server = (ServerLevel) level();
+            detour = OrionRoute.find(origin, target, at -> {
+                Vec3 offset = at.subtract(target);
+                return offset.horizontalDistanceSqr() <= 2.35 * 2.35
+                        && (!escaping || at.distanceToSqr(origin) >= 1.2 * 1.2)
+                        && clearLine(server, at.add(0, getEyeHeight(), 0), opponent.getEyePosition());
+            }, this::canTraverse);
+            detourIndex = 0;
         }
-        if (detour == null) return null;
-        while (!detour.isDone()) {
-            Vec3 offset = detour.getNextEntityPos(this).subtract(position()).multiply(1, 0, 1);
-            if (offset.horizontalDistanceSqr() > .62 * .62) return offset.normalize();
-            detour.advance();
+        while (detourIndex < detour.size()) {
+            Vec3 offset = detour.get(detourIndex).subtract(position()).multiply(1, 0, 1);
+            if (offset.horizontalDistanceSqr() > .08 * .08) {
+                if (!canTraverse(position(), detour.get(detourIndex))) {
+                    detour = List.of();
+                    detourIndex = 0;
+                    repathAt = Math.min(repathAt, now + 3);
+                    return null;
+                }
+                return offset.normalize();
+            }
+            detourIndex++;
         }
         return null;
+    }
+
+    /** Try lateral and retreat directions as well as forward, without taking several partial steps in one tick. */
+    @Nullable private Vec3 localHeading(Vec3 preferred, double speed) {
+        if (preferred.horizontalDistanceSqr() < .0001) preferred = Vec3.directionFromRotation(0, getYRot());
+        Vec3 best = null;
+        double score = -Double.MAX_VALUE;
+        for (float angle : new float[]{0, .6f, -.6f, 1.16f, -1.16f, 1.57f, -1.57f, 2.15f, -2.15f, 2.7f, -2.7f, Mth.PI}) {
+            Vec3 candidate = preferred.yRot(angle);
+            if (!canTraverse(position(), position().add(candidate.scale(speed)))) continue;
+            double value = Math.cos(angle);
+            if (canTraverse(position(), position().add(candidate.scale(Math.max(speed, 1.1))))) value += 1.5;
+            if (value > score) { best = candidate; score = value; }
+        }
+        return best;
     }
 
     private float yawTo(Vec3 target) {
@@ -706,9 +810,19 @@ public final class OrionEntity extends PathfinderMob {
         return Math.clamp(getAttributeValue(Attributes.MOVEMENT_SPEED) / RUN_SPEED, .35, 1.3);
     }
 
-    private boolean canStep(Vec3 delta) {
-        Vec3 next = position().add(delta);
-        if (!PantheonCombat.canMoveOrion(this, next) || level().getBlockCollisions(this, getBoundingBox().move(delta)).iterator().hasNext())
+    private boolean canStep(Vec3 delta) { return canStandAt(position().add(delta)); }
+
+    private boolean canTraverse(Vec3 from, Vec3 to) {
+        Vec3 delta = to.subtract(from);
+        int samples = Math.max(1, (int)Math.ceil(delta.horizontalDistance() / .18));
+        for (int i = 1; i <= samples; i++)
+            if (!canStandAt(from.add(delta.scale((double)i / samples)))) return false;
+        return true;
+    }
+
+    private boolean canStandAt(Vec3 next) {
+        if (!PantheonCombat.canMoveOrion(this, next)
+                || level().getBlockCollisions(this, getBoundingBox().move(next.subtract(position()))).iterator().hasNext())
             return false;
         BlockPos support = BlockPos.containing(next.x, next.y - .12, next.z);
         return level().getBlockState(support).isFaceSturdy(level(), support, Direction.UP);
