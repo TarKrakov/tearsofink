@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.pantheon;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.item.ModItems;
+import com.tarkrakov.tearsofink.entity.ModMobs;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
@@ -30,7 +31,11 @@ record PantheonTrial(ResourceLocation id, Supplier<Item> relic, PantheonArenaSce
                 if (target != null) target.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(Items.IRON_AXE));
                 return target;
             }, target -> target.setNoAi(false), id -> {}, Mob::discard);
-    private static final List<PantheonTrial> REGISTERED = List.of(FOREST);
+    private static final PantheonTrial ORION = new PantheonTrial(TearsOfInk.id("orion_trial"),
+            () -> ModItems.PANTHEON_TEST_RELIC, PantheonArenaScenes.Scene.ORION_BATTLEFIELD_V1,
+            PantheonTemple.world(new BlockPos(58, 2, 86)), level -> ModMobs.ORION.create(level),
+            target -> target.setNoAi(false), id -> {}, Mob::discard);
+    private static final List<PantheonTrial> REGISTERED = List.of(ORION);
 
     static PantheonTrial forRelic(ItemStack stack) {
         for (PantheonTrial trial : REGISTERED) {
@@ -40,13 +45,15 @@ record PantheonTrial(ResourceLocation id, Supplier<Item> relic, PantheonArenaSce
     }
 
     static PantheonTrial lookup(ResourceLocation id) {
+        if (legacyId(id)) return FOREST;
         for (PantheonTrial trial : REGISTERED) {
             if (trial.id().equals(id)) return trial;
         }
         return null;
     }
 
-    static PantheonTrial legacyRelic() { return FOREST; }
+    static boolean legacyId(ResourceLocation id) { return FOREST.id().equals(id); }
+    static PantheonTrial starter() { return ORION; }
 
     ItemStack relicStack() { return new ItemStack(relic.get()); }
 }

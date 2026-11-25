@@ -21,7 +21,10 @@ final class PantheonCombatJournal {
     }
 
     static void save(MinecraftServer server, CompoundTag data) throws IOException {
-        Path file = path(server);
+        write(path(server), data);
+    }
+
+    static void write(Path file, CompoundTag data) throws IOException {
         Files.createDirectories(file.getParent());
         Path temp = Files.createTempFile(file.getParent(), "pantheon-combat-", ".tmp");
         try {

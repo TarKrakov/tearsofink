@@ -166,3 +166,5 @@ processResources {
     dependsOn tasks.named('generateBattlefieldAgedResources')
     from(battlefieldAgedResources)
 }
+
+apply from: "gradle/orion.gradle"

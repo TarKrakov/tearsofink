@@ -22,6 +22,18 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtAccounter;
+import net.minecraft.nbt.NbtIo;
+import net.minecraft.world.level.storage.LevelResource;
+import com.tarkrakov.tearsofink.mixin.PantheonPlayerListAccessor;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
+import java.util.function.Consumer;
 
 /** The existing altar and filtered reliquary share the registered trial relics. */
 public final class PantheonAltar {
@@ -33,6 +45,23 @@ public final class PantheonAltar {
 
     public static final MenuType<PantheonAltarMenu> MENU = Registry.register(BuiltInRegistries.MENU,
             TearsOfInk.id("pantheon_altar"), new MenuType<>(PantheonAltarMenu::new, FeatureFlags.VANILLA_SET));
+
+    private static final String RECEIPT = "TearsOfInkAltarReceipt";
+    private static Transfer transfer;
+    private static boolean writingReceipt;
+
+    private record Transfer(UUID id, UUID player, UUID session, boolean insert, boolean host, PantheonTrial relic) {
+        CompoundTag encode() {
+            CompoundTag tag = new CompoundTag();
+            tag.putUUID("Id", id);
+            tag.putUUID("Player", player);
+            if (session != null) tag.putUUID("Session", session);
+            tag.putBoolean("Insert", insert);
+            tag.putBoolean("Host", host);
+            tag.putString("Relic", relic.id().toString());
+            return tag;
+        }
+    }
 
     private PantheonAltar() {}
 
@@ -50,34 +79,147 @@ public final class PantheonAltar {
         return false;
     }
 
-    /** Legacy occupied block with no ID still contains the original starter relic. */
+    static boolean occupied(ServerLevel level) {
+        var state = level.getBlockState(POS);
+        return state.is(ModBlocks.PANTHEON_ALTAR) && state.getValue(PantheonAltarBlock.RELIC);
+    }
+
+    private static ResourceLocation attached(ServerLevel level) {
+        return level.getChunkAt(POS).getAttached(RELIC_ID);
+    }
+
+    /** A legacy occupied altar with no attachment still owns the starter relic. */
     static PantheonTrial placed(ServerLevel level) {
-        var state = level.getBlockState(POS);
-        if (!state.is(ModBlocks.PANTHEON_ALTAR) || !state.getValue(PantheonAltarBlock.RELIC)) return null;
-        var id = level.getChunkAt(POS).getAttached(RELIC_ID);
-        return id == null ? PantheonTrial.legacyRelic() : PantheonTrial.lookup(id);
+        if (!occupied(level)) return null;
+        var id = attached(level);
+        return id == null || PantheonTrial.legacyId(id) ? PantheonTrial.starter() : PantheonTrial.lookup(id);
     }
 
-    static boolean editable(ServerLevel level) {
-        if (PantheonEditor.active() || !PantheonTemple.ready(level) || PantheonCombat.active() || !PantheonArena.neutralReady()) return false;
-        var state = level.getBlockState(POS);
-        return state.is(ModBlocks.PANTHEON_ALTAR)
-                && (!state.getValue(PantheonAltarBlock.RELIC) || placed(level) != null);
+    static boolean matches(ServerLevel level, PantheonTrial trial) {
+        PantheonTrial current = placed(level);
+        return current != null && current.relic().get() == trial.relic().get();
     }
 
-    /** Read/write the existing canonical chunk attachment, never a per-menu inventory copy. */
-    static boolean setRelic(ServerLevel level, ItemStack stack) {
-        if (!editable(level) || (!stack.isEmpty() && (stack.getCount() != 1 || !isRelic(stack)))) return false;
-        PantheonTrial next = stack.isEmpty() ? null : PantheonTrial.forRelic(stack);
+    private static boolean available(ServerLevel level) {
+        return transfer == null && !PantheonEditor.active() && PantheonTemple.ready(level)
+                && level.getBlockState(POS).is(ModBlocks.PANTHEON_ALTAR);
+    }
+
+    static boolean canInsert(ServerLevel level) {
+        return available(level) && !PantheonCombat.sceneOwned() && PantheonArena.neutralReady()
+                && !occupied(level) && attached(level) == null;
+    }
+
+    static boolean canExtract(ServerLevel level) {
+        return available(level) && placed(level) != null && PantheonCombat.canExtract();
+    }
+
+    /** Transfer one item between the canonical chunk slot and the player's durable inventory/cursor. */
+    static void transfer(ServerPlayer player, ServerLevel level, ItemStack stack, Consumer<ItemStack> set) {
+        boolean insert = !stack.isEmpty();
+        PantheonTrial relic = insert ? PantheonTrial.forRelic(stack) : placed(level);
+        if (relic == null || (insert ? !canInsert(level) : !canExtract(level))) return;
+        var intent = new Transfer(UUID.randomUUID(), player.getUUID(), PantheonCombat.sceneOwner(), insert,
+                player.server.isSingleplayerOwner(player.getGameProfile()), relic);
+        try {
+            PantheonCombatJournal.write(path(level.getServer()), intent.encode());
+        } catch (IOException ex) {
+            TearsOfInk.LOGGER.error("Cannot prepare altar transfer", ex);
+            return;
+        }
+        transfer = intent;
+        ItemStack before = stack.copy();
+        set.accept(insert ? stack.copyWithCount(stack.getCount() - 1) : relic.relicStack());
+        writingReceipt = true;
+        try {
+            ((PantheonPlayerListAccessor) player.server.getPlayerList()).tearsofink$savePantheonPlayer(player);
+            // IntegratedServer loads its host from level.dat ahead of the playerdata file.
+            if (intent.host()) player.server.saveAllChunks(true, true, true);
+            if (!receiptSaved(player.server, intent)) {
+                writingReceipt = false;
+                set.accept(before);
+                clearTransfer(player.server);
+                return;
+            }
+            if (!commit(level, intent)) PantheonCombat.altarConflict(level);
+        } catch (Exception ex) {
+            TearsOfInk.LOGGER.error("Altar transfer requires recovery", ex);
+            PantheonCombat.altarConflict(level);
+        }
+    }
+
+    public static void writeReceipt(ServerPlayer player, CompoundTag tag) {
+        if (writingReceipt && transfer != null && transfer.player().equals(player.getUUID()))
+            tag.putUUID(RECEIPT, transfer.id());
+    }
+
+    private static boolean receiptSaved(MinecraftServer server, Transfer intent) throws IOException {
+        Path player = intent.host() ? server.getWorldPath(LevelResource.LEVEL_DATA_FILE)
+                : server.getWorldPath(LevelResource.PLAYER_DATA_DIR).resolve(intent.player() + ".dat");
+        if (Files.notExists(player)) {
+            if (!intent.host()) return false;
+            player = server.getWorldPath(LevelResource.OLD_LEVEL_DATA_FILE);
+            if (Files.notExists(player)) return false;
+        }
+        var tag = NbtIo.readCompressed(player, NbtAccounter.unlimitedHeap());
+        if (intent.host()) tag = tag.getCompound("Data").getCompound("Player");
+        return tag.hasUUID(RECEIPT) && intent.id().equals(tag.getUUID(RECEIPT));
+    }
+
+    private static boolean commit(ServerLevel level, Transfer intent) throws IOException {
+        if (!java.util.Objects.equals(intent.session(), PantheonCombat.sceneOwner())) return false;
         var state = level.getBlockState(POS);
-        boolean occupied = next != null;
-        if (state.getValue(PantheonAltarBlock.RELIC) != occupied
-                && !PantheonTemple.altarRelic(level, state, occupied)) return false;
-        level.getChunkAt(POS).setAttached(RELIC_ID, next == null ? null : next.id());
+        if (!state.is(ModBlocks.PANTHEON_ALTAR)) return false;
+        boolean wasOccupied = state.getValue(PantheonAltarBlock.RELIC);
+        ResourceLocation id = attached(level);
+        if (wasOccupied && !matches(level, intent.relic()) || !wasOccupied && id != null) return false;
+        if (wasOccupied != intent.insert() && !PantheonTemple.altarRelic(level, state, intent.insert())) return false;
+        level.getChunkAt(POS).setAttached(RELIC_ID, intent.insert() ? intent.relic().id() : null);
+        level.getChunkSource().save(true);
+        if (!intent.insert() && !PantheonCombat.relicExtracted(level, intent.session())) return false;
+        clearTransfer(level.getServer());
         return true;
     }
 
+    static boolean hasTransfer() { return transfer != null; }
+
+    static void loadTransfer(MinecraftServer server) throws IOException {
+        CompoundTag tag = NbtIo.read(path(server));
+        if (tag == null) return;
+        PantheonTrial relic = PantheonTrial.lookup(ResourceLocation.parse(tag.getString("Relic")));
+        if (relic == null) throw new IOException("Unknown relic in pending altar transfer");
+        transfer = new Transfer(tag.getUUID("Id"), tag.getUUID("Player"),
+                tag.hasUUID("Session") ? tag.getUUID("Session") : null, tag.getBoolean("Insert"), tag.getBoolean("Host"), relic);
+    }
+
+    static boolean recoverTransfer(ServerLevel level) {
+        if (transfer == null) return true;
+        try {
+            if (receiptSaved(level.getServer(), transfer)) return commit(level, transfer);
+            if (occupied(level) == transfer.insert()) return false;
+            clearTransfer(level.getServer());
+            return true;
+        } catch (IOException ex) {
+            TearsOfInk.LOGGER.error("Cannot reconcile altar transfer", ex);
+            return false;
+        }
+    }
+
+    private static Path path(MinecraftServer server) {
+        return server.getWorldPath(LevelResource.ROOT).resolve("data/tearsofink_pantheon_altar_v1.dat");
+    }
+
+    private static void clearTransfer(MinecraftServer server) throws IOException {
+        Files.deleteIfExists(path(server));
+        transfer = null;
+        writingReceipt = false;
+    }
+
     static void init() {
+        net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+            transfer = null;
+            writingReceipt = false;
+        });
         UseBlockCallback.EVENT.register((player, level, hand, hit) -> {
             if (!PantheonTemple.isTemple(level) || !POS.equals(hit.getBlockPos())
                     || !level.getBlockState(POS).is(ModBlocks.PANTHEON_ALTAR)

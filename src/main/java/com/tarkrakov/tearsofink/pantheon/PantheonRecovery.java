@@ -25,6 +25,7 @@ public final class PantheonRecovery {
     static void init() {}
 
     public static void writeCursor(ServerPlayer player, CompoundTag tag) {
+        PantheonAltar.writeReceipt(player, tag);
         if (!PantheonTemple.isTemple(player.level())) return;
         var items = new ListTag();
         ItemStack cursor = player.containerMenu.getCarried();

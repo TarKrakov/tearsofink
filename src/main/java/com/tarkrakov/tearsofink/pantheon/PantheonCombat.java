@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.pantheon;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.entity.orion.OrionEntity;
 import com.tarkrakov.tearsofink.mixin.PantheonPlayerListAccessor;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.entity.event.v1.ServerEntityWorldChangeEvents;
@@ -35,13 +36,14 @@ import net.minecraft.world.phys.Vec3;
 
 import java.io.IOException;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.StreamSupport;
 
-import static com.tarkrakov.tearsofink.pantheon.PantheonArenaScenes.Scene.NEUTRAL;
+import static com.tarkrakov.tearsofink.pantheon.PantheonArenaScenes.Scene.*;
 
-/** One server-owned cooperative trial in the existing temple, with an abort-only restart policy. */
+/** One cooperative trial. The altar owns the scene independently of the active fight. */
 public final class PantheonCombat {
     private static final int ENTRY_WINDOW = 10 * 20;
     private static final int EMPTY_TIMEOUT = 120 * 20;
@@ -52,7 +54,13 @@ public final class PantheonCombat {
     private static final String TARGET_TAG = "toi.pantheon.target";
     private static final String LANG = "message.tears-of-ink.pantheon.combat.";
 
-    private enum Phase { PREPARING, OPEN, FIGHT, WON, FAILED, CLEANUP, ERROR }
+    private enum Phase {
+        PREPARING, OPEN, FIGHT, FINALE, RETAINED_WON, RETAINED_FAILED, RETAINED_STOPPED, RESETTING;
+
+        boolean retained() {
+            return this == RETAINED_WON || this == RETAINED_FAILED || this == RETAINED_STOPPED;
+        }
+    }
 
     private static final class Session {
         final UUID id, initiator;
@@ -64,8 +72,9 @@ public final class PantheonCombat {
         long deadline;
         long entryEnds;
         long deathTick = Long.MIN_VALUE;
-        boolean restoring;
         boolean cleared;
+        boolean restored;
+        boolean completed;
         String reason = "";
 
         Session(UUID id, UUID initiator, PantheonTrial trial, UUID target) {
@@ -81,6 +90,7 @@ public final class PantheonCombat {
     private static String recoveryError;
     private static String lastResult;
     private static boolean pendingDirty;
+    private static boolean reconciling;
 
     private PantheonCombat() {}
 
@@ -95,11 +105,12 @@ public final class PantheonCombat {
             session = null;
             pendingHub.clear();
             pendingDirty = false;
+            reconciling = false;
             recoveryError = null;
             lastResult = null;
         });
         ServerTickEvents.START_WORLD_TICK.register(level -> {
-            if (active() && PantheonTemple.isTemple(level)) enforcePlayers(level);
+            if (activeCombat() && PantheonTemple.isTemple(level)) enforcePlayers(level);
         });
         ServerTickEvents.END_SERVER_TICK.register(PantheonCombat::tick);
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> onArrival(handler.player));
@@ -117,29 +128,52 @@ public final class PantheonCombat {
         });
     }
 
-    static boolean active() { return session != null || recoveryError != null; }
-    static boolean holdsGate() { return active() && (session == null || session.phase != Phase.OPEN); }
+    static boolean sceneOwned() { return session != null || recoveryError != null || PantheonAltar.hasTransfer(); }
 
-    static boolean canStop(ServerPlayer player) {
-        return session != null
-                && (session.initiator.equals(player.getUUID()) || player.hasPermissions(2))
-                && (session.phase == Phase.PREPARING || session.phase == Phase.OPEN
-                    || session.phase == Phase.FIGHT || session.phase == Phase.ERROR);
+    static boolean activeCombat() {
+        return recoveryError != null || session != null && !session.phase.retained();
     }
 
-    /** A real altar button can cancel the owner's ritual, including a fight if the owner is back in the hub. */
+    static boolean canExtract() {
+        return !reconciling && recoveryError == null && (session == null
+                ? PantheonArena.neutralReady() : session.phase.retained()
+                && session.completed && PantheonArena.ready(sceneFor(session)));
+    }
+
+    static boolean canStart(ServerLevel level) {
+        return !sceneOwned() && !PantheonEditor.active() && PantheonTemple.ready(level)
+                && PantheonArena.neutralReady() && PantheonAltar.placed(level) != null;
+    }
+
+    static UUID sceneOwner() { return session == null ? null : session.id; }
+
+    static boolean relicExtracted(ServerLevel level, UUID owner) {
+        if (owner == null) return session == null;
+        if (session == null || !owner.equals(session.id)) return false;
+        if (session.phase == Phase.RESETTING) return true;
+        if (!session.phase.retained() || !session.completed || PantheonAltar.occupied(level)) return false;
+        phase(level, Phase.RESETTING, TRANSITION_TIMEOUT);
+        return persist(level);
+    }
+
+    static boolean holdsGate() {
+        return reconciling || activeCombat() && (session == null || session.phase != Phase.OPEN);
+    }
+
+    static boolean canStop(ServerPlayer player) {
+        return !reconciling && session != null
+                && (session.initiator.equals(player.getUUID()) || player.hasPermissions(2))
+                && (session.phase == Phase.PREPARING || session.phase == Phase.OPEN || session.phase == Phase.FIGHT);
+    }
+
     static boolean stop(ServerPlayer player, ServerLevel level) {
         if (!canStop(player)) return false;
-        if (session.phase == Phase.ERROR) {
-            session.restoring = false;
-            session.cleared = false;
-            beginCleanup(level);
-        } else finish(level, false, "cancelled");
+        retain(level, Phase.RETAINED_STOPPED, "cancelled");
         return true;
     }
 
     static void start(ServerPlayer player, ServerLevel level, PantheonTrial trial) {
-        if (PantheonEditor.active() || trial == null || active() || !eligible(player) || !PantheonArena.neutralReady()) {
+        if (trial == null || !canStart(level) || !eligible(player)) {
             player.sendSystemMessage(Component.translatable(LANG + "busy"));
             return;
         }
@@ -162,9 +196,14 @@ public final class PantheonCombat {
     private static void tick(MinecraftServer server) {
         ServerLevel level = server.getLevel(PantheonTemple.DIMENSION);
         if (level == null) return;
+        if (reconciling && PantheonTemple.ready(level)) reconcile(level);
+        if (reconciling) return;
+        if (recoveryError != null) {
+            if (PantheonTemple.ready(level)) PantheonArena.closeCombatGate(level);
+            return;
+        }
         if (session == null) {
-            if (recoveryError != null && PantheonTemple.ready(level)) PantheonArena.closeCombatGate(level);
-            if (pendingDirty && recoveryError == null) persist(level);
+            if (pendingDirty) persist(level);
             return;
         }
         long now = level.getGameTime();
@@ -183,9 +222,9 @@ public final class PantheonCombat {
             }
             case OPEN -> tickOpen(level, now);
             case FIGHT -> tickFight(level);
-            case WON, FAILED -> beginCleanup(level);
-            case CLEANUP -> tickCleanup(level, now);
-            case ERROR -> { }
+            case FINALE -> tickFinale(level);
+            case RETAINED_WON, RETAINED_FAILED, RETAINED_STOPPED -> tickRetained(level);
+            case RESETTING -> tickReset(level);
         }
     }
 
@@ -224,7 +263,7 @@ public final class PantheonCombat {
     private static void tickOpen(ServerLevel level, long now) {
         Mob mob = target(level);
         if (mob == null || !mob.isAlive() || !inside(mob)) {
-            finish(level, false, "missing");
+            retain(level, Phase.RETAINED_FAILED, "missing");
             return;
         }
         Set<UUID> entrants = new LinkedHashSet<>();
@@ -238,7 +277,7 @@ public final class PantheonCombat {
         }
         if (entrants.isEmpty()) {
             session.entryEnds = 0;
-            if (now >= session.deadline) finish(level, false, "empty");
+            if (now >= session.deadline) retain(level, Phase.RETAINED_FAILED, "empty");
             return;
         }
         if (session.entryEnds == 0) {
@@ -256,98 +295,122 @@ public final class PantheonCombat {
         enforcePlayers(level);
         mob.setInvulnerable(false);
         session.trial.activate().accept(mob);
+        if (mob instanceof OrionEntity orion) orion.beginFight(entrants.size());
         announce(level, "fight");
     }
 
     private static void tickFight(ServerLevel level) {
         enforcePlayers(level);
         if (session.phase != Phase.FIGHT) return;
-        boolean alive = level.players().stream().anyMatch(PantheonCombat::fighter);
-        if (!alive) finish(level, false, "party");
-        else if (session.deathTick != Long.MIN_VALUE) {
-            if (level.getGameTime() > session.deathTick) finish(level, true, "won");
-        }
-        else {
-            Mob mob = target(level);
-            if (mob == null || !mob.isAlive() || !inside(mob)) finish(level, false, "missing");
-        }
-    }
-
-    private static void finish(ServerLevel level, boolean won, String reason) {
-        session.reason = reason;
-        phase(level, won ? Phase.WON : Phase.FAILED, 0);
-        if (!persist(level)) return;
-        lastResult = session.phase + " / " + reason;
-        TearsOfInk.LOGGER.info("Pantheon combat {}: {}", session.id, lastResult);
         Mob mob = target(level);
-        if (mob != null) {
-            mob.setNoAi(true);
-            mob.setInvulnerable(true);
-            mob.setTarget(null);
+        if (level.players().stream().noneMatch(PantheonCombat::fighter)) {
+            retain(level, Phase.RETAINED_FAILED, "party");
+        } else if (mob instanceof OrionEntity orion && orion.lethalPending()) {
+            // The end of the lethal tick is the arbitration point. Party defeat wins ties.
+            phase(level, Phase.FINALE, TRANSITION_TIMEOUT);
+            if (persist(level)) orion.beginFinale();
+        } else if (session.deathTick != Long.MIN_VALUE) {
+            if (level.getGameTime() > session.deathTick) retain(level, Phase.RETAINED_WON, "won");
+        } else if (mob == null || !mob.isAlive() || !inside(mob)) {
+            retain(level, Phase.RETAINED_FAILED, "missing");
         }
-        if (won) session.trial.defeated().accept(session.id);
-        announce(level, reason);
     }
 
-    private static void beginCleanup(ServerLevel level) {
-        phase(level, Phase.CLEANUP, TRANSITION_TIMEOUT);
-        if (!persist(level)) return;
-        tickCleanup(level, level.getGameTime());
-    }
-
-    private static void tickCleanup(ServerLevel level, long now) {
+    private static void tickFinale(ServerLevel level) {
         enforcePlayers(level);
-        if (!PantheonTemple.ready(level)) {
-            if (now >= session.deadline) error(level, "temple readiness timeout");
-            return;
-        }
-        if (!PantheonArena.closeCombatGate(level)) {
-            error(level, "could not close combat gate");
-            return;
-        }
-        if (!session.cleared) {
-            // Unloaded owned entities are discarded by the load hook, even after the journal is cleared.
-            var owned = StreamSupport.stream(level.getAllEntities().spliterator(), false)
-                    .filter(entity -> entity.getTags().contains(ownershipTag())).toList();
-            for (Entity entity : owned) {
-                if (entity.getUUID().equals(session.target) && entity instanceof Mob mob && session.trial != null)
-                    session.trial.cleanup().accept(mob);
-                else entity.discard();
+        Mob mob = target(level);
+        if (mob instanceof OrionEntity orion && !orion.finaleComplete()) return;
+        // FINALE is durable before the animation begins. A restart finishes this same bloom.
+        clearOwned(level);
+        if (PantheonArena.ready(ORION_BLOOM_V1)) {
+            retain(level, Phase.RETAINED_WON, "won");
+        } else if (!PantheonArena.preparing()) {
+            if (PantheonArena.failure() != null) {
+                failClosed(level, "finale: " + PantheonArena.failure());
+                return;
             }
-            session.cleared = true;
+            String problem = PantheonArena.changeScene(level, ORION_BLOOM_V1);
+            if (problem != null) failClosed(level, problem);
         }
-        if (PantheonArena.preparing()) {
-            if (now >= session.deadline) error(level, "scene cleanup timeout");
+    }
+
+    private static PantheonArenaScenes.Scene sceneFor(Session current) {
+        return current.phase == Phase.RETAINED_WON && current.trial.scene() == ORION_BATTLEFIELD_V1
+                ? ORION_BLOOM_V1 : current.trial.scene();
+    }
+
+    private static void retain(ServerLevel level, Phase result, String reason) {
+        session.reason = reason;
+        phase(level, result, 0);
+        if (!persist(level)) return;
+        lastResult = result + " / " + reason;
+        TearsOfInk.LOGGER.info("Pantheon combat {}: {}", session.id, lastResult);
+        tickRetained(level);
+    }
+
+    private static void clearOwned(ServerLevel level) {
+        if (session.cleared) return;
+        var owned = StreamSupport.stream(level.getAllEntities().spliterator(), false)
+                .filter(entity -> entity.getTags().contains(ownershipTag())).toList();
+        for (Entity entity : owned) {
+            if (entity.getUUID().equals(session.target) && entity instanceof Mob mob)
+                session.trial.cleanup().accept(mob);
+            else entity.discard();
+        }
+        session.cleared = true;
+    }
+
+    private static void tickRetained(ServerLevel level) {
+        clearOwned(level);
+        if (PantheonArena.preparing()) return;
+        var scene = sceneFor(session);
+        if (!PantheonArena.ready(scene)) {
+            // An interrupted PREPARING can precede the scene journal entirely.
+            if (PantheonArena.neutralReady() && !session.completed && session.restored) {
+                String problem = PantheonArena.changeScene(level, scene);
+                if (problem == null) return;
+                failClosed(level, problem);
+            } else failClosed(level, "retained scene does not match: " + PantheonArena.sceneStatus());
             return;
         }
+        if (session.completed && !session.restored) return;
+        if (!PantheonArena.openCombatGate(level)) {
+            failClosed(level, "could not reopen the retained arena");
+            return;
+        }
+        PantheonArena.retainCombatArea(level, false);
+        for (ServerPlayer player : level.players()) {
+            UUID id = player.getUUID();
+            if (session.members.contains(id) && !session.eliminated.contains(id)
+                    && eligible(player) && !session.restored) pendingHub.remove(id);
+        }
+        boolean notify = !session.completed;
+        session.completed = true;
+        session.restored = false;
+        if (persist(level) && notify) {
+            if (session.phase == Phase.RETAINED_WON) session.trial.defeated().accept(session.id);
+            announce(level, session.reason);
+        }
+    }
+
+    private static void tickReset(ServerLevel level) {
+        if (PantheonAltar.occupied(level)) {
+            failClosed(level, "reset journal requires an empty altar");
+            return;
+        }
+        enforcePlayers(level);
+        if (PantheonArena.preparing()) return;
         if (PantheonArena.neutralReady()) {
-            Session completed = session;
-            session = null;
-            if (!persist(level)) {
-                session = completed;
-                session.phase = Phase.ERROR;
-                session.reason = recoveryError;
-                return;
-            }
             if (!PantheonArena.openCombatGate(level)) {
-                session = completed;
-                error(level, "could not reopen combat gate");
+                failClosed(level, "could not reopen the neutral arena");
                 return;
             }
-            PantheonArena.retainCombatArea(level, false);
-            for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
-                if (pendingHub.contains(player.getUUID())) onArrival(player);
-            }
-            announce(level, "restored");
-            return;
-        }
-        if (session.restoring) {
-            error(level, PantheonArena.failure() != null ? PantheonArena.failure() : "neutral scene not ready");
+            session = null;
+            if (persist(level)) announce(level, "restored");
             return;
         }
         String problem = PantheonArena.changeScene(level, NEUTRAL);
-        if (problem != null) error(level, problem);
-        else session.restoring = true;
+        if (problem != null) failClosed(level, problem);
     }
 
     private static void enforcePlayers(ServerLevel level) {
@@ -355,7 +418,7 @@ public final class PantheonCombat {
     }
 
     private static void enforcePlayer(ServerPlayer player) {
-        if (!active() || !player.isAlive()) return;
+        if (!activeCombat() || !player.isAlive()) return;
         if (registeredFighter(player)) {
             if (!eligible(player) || !inside(player)) {
                 forfeit(player);
@@ -364,6 +427,9 @@ public final class PantheonCombat {
             return;
         }
         if (session != null && session.phase == Phase.OPEN && eligible(player)) return;
+        if (session != null && session.phase == Phase.FINALE
+                && session.members.contains(player.getUUID()) && !session.eliminated.contains(player.getUUID())
+                && inside(player) && eligible(player)) return;
         if (player.getZ() >= (session != null && session.phase == Phase.FIGHT ? HUB_LIMIT_Z : PASSAGE_Z))
             PantheonArena.sendToHub(player);
     }
@@ -372,13 +438,13 @@ public final class PantheonCombat {
         if (!player.isAlive()) return;
         UUID id = player.getUUID();
         if (PantheonTemple.isTemple(player.level())) {
-            boolean eliminated = session != null && session.eliminated.contains(id);
+            boolean eliminated = session != null && !session.phase.retained() && session.eliminated.contains(id);
             if (pendingHub.contains(id) || eliminated) PantheonArena.sendToHub(player);
             if (eliminated && session.phase == Phase.FIGHT)
                 player.sendSystemMessage(Component.translatable(LANG + "observer"));
             enforcePlayer(player);
         }
-        if (session == null && recoveryError == null && pendingHub.remove(id)) {
+        if (!activeCombat() && pendingHub.remove(id)) {
             ((PantheonPlayerListAccessor) player.server.getPlayerList()).tearsofink$savePantheonPlayer(player);
             pendingDirty = true;
         }
@@ -391,7 +457,7 @@ public final class PantheonCombat {
         session.eliminated.add(player.getUUID());
         ServerLevel level = player.server.getLevel(PantheonTemple.DIMENSION);
         if (level != null && persist(level) && level.players().stream().noneMatch(PantheonCombat::fighter))
-            finish(level, false, "party");
+            retain(level, Phase.RETAINED_FAILED, "party");
     }
 
     private static boolean registeredFighter(ServerPlayer player) {
@@ -399,8 +465,19 @@ public final class PantheonCombat {
                 && !session.eliminated.contains(player.getUUID());
     }
 
-    private static boolean fighter(ServerPlayer player) {
+    public static boolean fighter(ServerPlayer player) {
         return registeredFighter(player) && PantheonTemple.isTemple(player.level()) && eligible(player) && inside(player);
+    }
+
+    public static List<ServerPlayer> opponents(OrionEntity orion) {
+        if (!(orion.level() instanceof ServerLevel level) || !combatant(orion)) return List.of();
+        return level.players().stream().filter(PantheonCombat::fighter).toList();
+    }
+
+    public static boolean canMoveOrion(OrionEntity orion, Vec3 at) {
+        if (!isTrialTarget(orion)) return false;
+        return at.x >= -40.25 && at.x <= 40.25 && at.z >= 46.25 && at.z <= 126.75
+                && at.y >= 80 && at.y < 102;
     }
 
     private static boolean eligible(ServerPlayer player) {
@@ -440,16 +517,21 @@ public final class PantheonCombat {
         if (!PantheonTemple.isTemple(level) || entity instanceof ServerPlayer) return;
         if (entity.getTags().stream().anyMatch(tag -> tag.startsWith(ENTITY_TAG))) {
             if (session == null || !entity.getTags().contains(ownershipTag())
-                    || session.phase == Phase.CLEANUP || session.phase == Phase.ERROR) entity.discard();
+                    || session.restored || session.phase.retained() || session.phase == Phase.RESETTING) entity.discard();
         } else if (session != null && combatant(owner(entity))) {
             entity.addTag(ownershipTag());
         }
     }
 
     public static boolean mayTick(Entity entity) {
-        if (!active() || !PantheonTemple.isTemple(entity.level())) return true;
+        if (!PantheonTemple.isTemple(entity.level())) return true;
+        if (!activeCombat() && !isTrialTarget(entity)) {
+            if (entity.getTags().stream().noneMatch(tag -> tag.startsWith(ENTITY_TAG))) return true;
+            entity.discard();
+            return false;
+        }
         if (isTrialTarget(entity)) return session != null
-                && (session.phase == Phase.OPEN || session.phase == Phase.FIGHT);
+                && (session.phase == Phase.OPEN || session.phase == Phase.FIGHT || session.phase == Phase.FINALE);
         if (!(entity instanceof TraceableEntity) && !(entity instanceof OwnableEntity)) return true;
         Entity owner = owner(entity);
         if (entity.getTags().stream().anyMatch(tag -> tag.startsWith(ENTITY_TAG))
@@ -471,13 +553,14 @@ public final class PantheonCombat {
         Entity source = damage.getEntity();
         if (source == null) source = damage.getDirectEntity();
         if (recipient instanceof ServerPlayer victim && source instanceof ServerPlayer attacker
-                && victim != attacker && fighter(victim) && fighter(attacker)) return false;
+                && victim != attacker && session != null && (session.phase == Phase.FIGHT || session.phase == Phase.FINALE)
+                && session.members.contains(victim.getUUID()) && session.members.contains(attacker.getUUID())) return false;
         return permitsInteraction(recipient, source);
     }
 
     /** Guard damage, sourced status effects, projectiles, targeting and collisions at their endpoints. */
     public static boolean permitsInteraction(Entity recipient, Entity source) {
-        if (!active() || !PantheonTemple.isTemple(recipient.level())) return true;
+        if (!PantheonTemple.isTemple(recipient.level())) return true;
         if ((isTrialTarget(recipient) || source != null && isTrialTarget(source))
                 && (session == null || session.phase != Phase.FIGHT)) return false;
         if (session == null || session.phase != Phase.FIGHT) return true;
@@ -496,40 +579,53 @@ public final class PantheonCombat {
         for (ServerPlayer player : level.players()) player.sendSystemMessage(Component.translatable(LANG + message));
     }
 
-    private static void error(ServerLevel level, String reason) {
-        session.phase = Phase.ERROR;
-        session.reason = reason;
+    static void altarConflict(ServerLevel level) { failClosed(level, "altar transfer requires recovery"); }
+
+    private static void error(ServerLevel level, String reason) { failClosed(level, reason); }
+
+    private static void failClosed(ServerLevel level, String reason) {
+        if (recoveryError != null) return;
+        recoveryError = reason;
         if (PantheonTemple.ready(level)) PantheonArena.closeCombatGate(level);
         PantheonArena.retainCombatArea(level, false);
         enforcePlayers(level);
         for (ServerPlayer player : level.players())
             player.sendSystemMessage(Component.translatable(LANG + "error", reason));
-        TearsOfInk.LOGGER.error("Pantheon combat {} closed: {}", session.id, reason);
-        persist(level);
+        TearsOfInk.LOGGER.error("Pantheon combat {} closed: {}", sceneOwner(), reason);
     }
 
     private static int abort(CommandSourceStack source) {
         ServerLevel level = source.getServer().getLevel(PantheonTemple.DIMENSION);
-        if (level == null || session == null || session.phase == Phase.CLEANUP
-                || session.phase == Phase.WON || session.phase == Phase.FAILED) {
+        if (level == null || session == null && !PantheonAltar.hasTransfer()) {
             source.sendFailure(Component.translatable(LANG + "nothing_to_abort"));
             return 0;
         }
-        if (session.phase == Phase.ERROR) {
-            session.restoring = false;
-            session.cleared = false;
-            beginCleanup(level);
-        } else finish(level, false, "cancelled");
-        return 1;
+        if (recoveryError != null) {
+            recoveryError = null;
+            reconciling = true;
+            if (PantheonArena.failure() != null && !PantheonArena.preparing())
+                PantheonArena.changeScene(level, PantheonArena.selected());
+            return 1;
+        }
+        if (session.phase == Phase.PREPARING || session.phase == Phase.OPEN || session.phase == Phase.FIGHT) {
+            retain(level, Phase.RETAINED_STOPPED, "cancelled");
+            return 1;
+        }
+        source.sendFailure(Component.translatable(LANG + "nothing_to_abort"));
+        return 0;
     }
 
     private static int status(CommandSourceStack source) {
-        String state = recoveryError != null ? "ERROR / " + recoveryError : "IDLE";
-        if (session != null) state = session.phase + " / " + session.id + " / trial "
+        String state = recoveryError != null ? "ERROR / " + recoveryError
+                : session == null ? "IDLE" : session.phase.name();
+        if (session != null) state += (recoveryError == null ? "" : " / " + session.phase) + " / " + session.id + " / trial "
                 + (session.trial == null ? "?" : session.trial.id()) + " / target " + session.target
                 + " / members " + session.members.size() + " " + session.members
                 + " / eliminated " + session.eliminated.size() + " " + session.eliminated
                 + (session.reason.isEmpty() ? "" : " / " + session.reason);
+        ServerLevel temple = source.getServer().getLevel(PantheonTemple.DIMENSION);
+        if (temple != null && session != null && target(temple) instanceof OrionEntity orion)
+            state += " / " + orion.combatStatus();
         String text = state + " / scene " + PantheonArena.sceneStatus()
                 + (lastResult == null ? "" : " / last " + lastResult);
         source.sendSuccess(() -> Component.literal(text), false);
@@ -551,6 +647,7 @@ public final class PantheonCombat {
             if (session == null && pendingHub.isEmpty()) PantheonCombatJournal.clear(level.getServer());
             else {
                 CompoundTag data = new CompoundTag();
+                data.putInt("Version", 2);
                 data.put("ReturnToHub", writeIds(pendingHub));
                 if (session != null) {
                     CompoundTag record = new CompoundTag();
@@ -562,18 +659,18 @@ public final class PantheonCombat {
                     record.put("Members", writeIds(session.members));
                     record.put("Eliminated", writeIds(session.eliminated));
                     record.putString("Reason", session.reason);
+                    record.putBoolean("Completed", session.completed);
                     data.put("Session", record);
                 }
                 PantheonCombatJournal.save(level.getServer(), data);
             }
             pendingDirty = false;
+            reconciling = false;
             recoveryError = null;
             return true;
         } catch (IOException ex) {
             recoveryError = ex.toString();
             if (session != null) {
-                session.phase = Phase.ERROR;
-                session.reason = recoveryError;
                 if (PantheonTemple.ready(level)) PantheonArena.closeCombatGate(level);
             }
             TearsOfInk.LOGGER.error("Cannot persist Pantheon combat recovery", ex);
@@ -584,26 +681,58 @@ public final class PantheonCombat {
 
     private static void recover(MinecraftServer server) {
         try {
+            PantheonAltar.loadTransfer(server);
             CompoundTag saved = PantheonCombatJournal.read(server);
-            if (saved == null) return;
-            readIds(saved, "ReturnToHub", pendingHub);
-            if (!saved.contains("Session", Tag.TAG_COMPOUND)) return;
-            CompoundTag record = saved.getCompound("Session");
-            ResourceLocation key = ResourceLocation.tryParse(record.getString("Trial"));
-            session = new Session(record.getUUID("Id"), record.getUUID("Initiator"),
-                    key == null ? null : PantheonTrial.lookup(key), record.getUUID("Target"));
-            readIds(record, "Members", session.members);
-            readIds(record, "Eliminated", session.eliminated);
-            pendingHub.addAll(session.members);
-            session.phase = Phase.CLEANUP;
-            ServerLevel level = server.getLevel(PantheonTemple.DIMENSION);
-            session.deadline = (level == null ? 0 : level.getGameTime()) + TRANSITION_TIMEOUT;
-            session.reason = "restart";
-            lastResult = "FAILED / restart";
+            if (saved != null) {
+                readIds(saved, "ReturnToHub", pendingHub);
+                if (saved.contains("Session", Tag.TAG_COMPOUND)) {
+                    CompoundTag record = saved.getCompound("Session");
+                    ResourceLocation key = ResourceLocation.parse(record.getString("Trial"));
+                    PantheonTrial trial = PantheonTrial.lookup(key);
+                    if (trial == null) throw new IOException("Unknown trial " + key);
+                    session = new Session(record.getUUID("Id"), record.getUUID("Initiator"), trial, record.getUUID("Target"));
+                    readIds(record, "Members", session.members);
+                    readIds(record, "Eliminated", session.eliminated);
+                    session.reason = record.getString("Reason");
+                    session.completed = record.getBoolean("Completed");
+                    String previous = record.getString("Phase");
+                    session.phase = saved.getInt("Version") < 2 ? switch (previous) {
+                        case "WON" -> Phase.RETAINED_WON;
+                        case "CLEANUP" -> "won".equals(session.reason) ? Phase.RETAINED_WON : Phase.RETAINED_FAILED;
+                        case "FAILED", "ERROR" -> Phase.RETAINED_FAILED;
+                        default -> Phase.valueOf(previous);
+                    } : Phase.valueOf(previous);
+                    session.restored = true;
+                    if (!session.phase.retained()) pendingHub.addAll(session.members);
+                }
+            }
+            reconciling = session != null || PantheonAltar.hasTransfer();
+            if (!reconciling && (PantheonArena.selected() == ORION_BATTLEFIELD_V1
+                    || PantheonArena.selected() == ORION_BLOOM_V1))
+                throw new IOException("Orion arena has no session journal");
         } catch (Exception ex) {
-            session = null;
             recoveryError = ex.toString();
-            TearsOfInk.LOGGER.error("Cannot read the Pantheon combat recovery journal", ex);
+            TearsOfInk.LOGGER.error("Cannot read the Pantheon recovery journal", ex);
         }
+    }
+
+    private static void reconcile(ServerLevel level) {
+        reconciling = false;
+        if (!PantheonAltar.recoverTransfer(level)) {
+            failClosed(level, "cannot reconcile the altar transfer");
+            return;
+        }
+        if (session == null) return;
+        if (session.phase == Phase.RESETTING && !PantheonAltar.occupied(level)) return;
+        if (!PantheonAltar.matches(level, session.trial)) {
+            failClosed(level, "the journal and the altar disagree");
+            return;
+        }
+        if (session.phase == Phase.FINALE) return;
+        if (!session.phase.retained()) {
+            phase(level, Phase.RETAINED_FAILED, 0);
+            session.reason = "restart";
+        }
+        persist(level);
     }
 }

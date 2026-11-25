@@ -42,7 +42,7 @@ public final class PantheonAltarScreen extends AbstractContainerScreen<PantheonA
     @Override protected void renderLabels(GuiGraphics g, int mouseX, int mouseY) {
         super.renderLabels(g, mouseX, mouseY);
         g.drawString(font, Component.translatable(LANG + "relic"), 8, 28, 0x404040, false);
-        Component status = Component.translatable(LANG + (menu.ritualActive() ? "active"
+        Component status = Component.translatable(LANG + (menu.sceneRetained() ? "retained" : menu.ritualActive() ? "active"
                 : !menu.canEditRelic() ? "unavailable" : menu.canStart() ? "ready" : "empty"));
         g.drawString(font, status, 8, 44, 0x404040, false);
     }

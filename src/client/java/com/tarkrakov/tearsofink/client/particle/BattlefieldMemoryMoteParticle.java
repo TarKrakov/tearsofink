@@ -1,6 +1,6 @@
 package com.tarkrakov.tearsofink.client.particle;
 
-import com.tarkrakov.tearsofink.client.fog.BattlefieldClarity;
+import com.tarkrakov.tearsofink.client.battlefield.BattlefieldMemoryMotes;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleProvider;
@@ -54,7 +54,7 @@ public final class BattlefieldMemoryMoteParticle extends TextureSheetParticle {
         // field-edge attenuation if the particle drifts across the boundary.
         float fade = Math.min(1f, ageRatio / .12f)
                 * Mth.clamp((1f - ageRatio) / .48f, 0f, 1f);
-        float field = BattlefieldClarity.opennessAt(x, z);
+        float field = BattlefieldMemoryMotes.opennessAt(level, x, z);
         alpha = brightness * fade * field;
         if (field <= .001f) remove();
     }

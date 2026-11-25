@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.client.mixin;
 
-import com.tarkrakov.tearsofink.client.fog.BattlefieldClarity;
+import com.tarkrakov.tearsofink.client.battlefield.BattlefieldMemoryMotes;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleEngine;
 import net.minecraft.client.particle.WhiteAshParticle;
@@ -24,6 +25,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ParticleEngine.class)
 public abstract class BattlefieldWhiteAshMixin {
     @Shadow @Final private RandomSource random;
+    @Shadow protected ClientLevel level;
 
     @Inject(
             method = "createParticle(Lnet/minecraft/core/particles/ParticleOptions;DDDDDD)Lnet/minecraft/client/particle/Particle;",
@@ -33,7 +35,7 @@ public abstract class BattlefieldWhiteAshMixin {
                                      double xd, double yd, double zd,
                                      CallbackInfoReturnable<Particle> cir) {
         if (options.getType() != ParticleTypes.WHITE_ASH) return;
-        float field = BattlefieldClarity.opennessAt(x, z);
+        float field = BattlefieldMemoryMotes.opennessAt(level, x, z);
         if (field >= 1f || (field > 0f && random.nextFloat() < field))
             cir.setReturnValue(null);
     }
@@ -45,7 +47,7 @@ public abstract class BattlefieldWhiteAshMixin {
     private void toi$fadeWhiteAsh(Particle particle, CallbackInfo ci) {
         if (!(particle instanceof WhiteAshParticle)) return;
         var access = (BattlefieldParticleAccess) particle;
-        float field = BattlefieldClarity.opennessAt(access.toi$getX(), access.toi$getZ());
+        float field = BattlefieldMemoryMotes.opennessAt(level, access.toi$getX(), access.toi$getZ());
         access.toi$setAlpha(1f - field);
     }
 }

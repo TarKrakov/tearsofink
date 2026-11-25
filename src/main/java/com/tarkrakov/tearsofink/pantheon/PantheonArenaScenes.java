@@ -23,7 +23,9 @@ public final class PantheonArenaScenes {
     enum Scene {
         NEUTRAL(Lighting.TWILIGHT),
         FOREST(Lighting.TWILIGHT),
-        ISLAND(Lighting.TWILIGHT);
+        ISLAND(Lighting.TWILIGHT),
+        ORION_BATTLEFIELD_V1(Lighting.TWILIGHT),
+        ORION_BLOOM_V1(Lighting.TWILIGHT);
 
         final Lighting lighting;
 
@@ -40,6 +42,8 @@ public final class PantheonArenaScenes {
                 case NEUTRAL -> neutral;
                 case FOREST -> forest(local, neutral);
                 case ISLAND -> island(local, neutral, free);
+                case ORION_BATTLEFIELD_V1 -> OrionBattlefield.block(local, neutral, free, false);
+                case ORION_BLOOM_V1 -> OrionBattlefield.block(local, neutral, free, true);
             };
         }
     }
@@ -109,6 +113,14 @@ public final class PantheonArenaScenes {
     private static boolean pool(int dx, int dz) {
         return dx * dx * POOL_Z_RADIUS * POOL_Z_RADIUS + dz * dz * POOL_X_RADIUS * POOL_X_RADIUS
                 <= POOL_X_RADIUS * POOL_X_RADIUS * POOL_Z_RADIUS * POOL_Z_RADIUS;
+    }
+
+    public static BlockPos battlefieldFloor(int x, int z) {
+        return new BlockPos(x, PantheonTemple.world(new BlockPos(0, FLOOR, 0)).getY(), z);
+    }
+
+    public static boolean battlefieldGround(BlockState floor) {
+        return floor.is(ModBlocks.ASHEN_SOIL) || floor.is(ModBlocks.ASHEN_PATH) || floor.is(ModBlocks.ASPHODELITE_ROCK);
     }
 
     /** Label water by its bounded scene footprint. The font is outside this mask. */

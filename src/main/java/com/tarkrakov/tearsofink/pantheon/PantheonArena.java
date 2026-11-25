@@ -2,6 +2,12 @@ package com.tarkrakov.tearsofink.pantheon;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.block.ModBlocks;
+import com.tarkrakov.tearsofink.block.BattlefieldBannerBlockEntity;
+import com.tarkrakov.tearsofink.block.BattlefieldSceneBlockEntity;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
+import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
+import com.mojang.serialization.Codec;
+import java.util.Arrays;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
@@ -43,7 +49,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static com.tarkrakov.tearsofink.pantheon.PantheonArenaScenes.*;
-import static com.tarkrakov.tearsofink.pantheon.PantheonArenaScenes.Scene.NEUTRAL;
+import static com.tarkrakov.tearsofink.pantheon.PantheonArenaScenes.Scene.*;
 
 /** One server-owned reconstruction job in the installed author's temple. */
 final class PantheonArena {
@@ -60,6 +66,9 @@ final class PantheonArena {
     private static final List<BlockPos> GATE = List.of(
             PantheonTemple.world(new BlockPos(57, 2, 39)), PantheonTemple.world(new BlockPos(58, 2, 39)),
             PantheonTemple.world(new BlockPos(57, 3, 39)), PantheonTemple.world(new BlockPos(58, 3, 39)));
+    private static final AttachmentType<String> SCENE_DECOR = AttachmentRegistry.<String>builder()
+            .persistent(Codec.STRING).buildAndRegister(TearsOfInk.id("pantheon_scene_decor"));
+    private static final String ORION_PLAN = "orion_battlefield_v1";
     private static final ThreadLocal<Write> WRITE = new ThreadLocal<>();
     private static final AABB INTERIOR = new AABB(
             Vec3.atLowerCornerOf(PantheonTemple.world(new BlockPos(MIN_X, FLOOR, MIN_Z))),
@@ -68,17 +77,19 @@ final class PantheonArena {
     private enum Phase { LOADING, CHECKING, APPLYING }
     private record Write(ServerLevel level, BlockPos pos, BlockState state) {}
     private record Cell(BlockPos pos, BlockState[] states) {
-        boolean accepts(BlockState state) {
-            for (BlockState candidate : states) {
-                if (candidate.equals(state)) return true;
-            }
-            return false;
+        BlockState state(Scene scene) { return states[scene.ordinal()]; }
+
+        boolean accepts(BlockState state, Job job) {
+            return state.equals(state(job.target)) || (job.source != null && state.equals(state(job.source)))
+                    || (job.source == null && (state.equals(state(NEUTRAL))
+                    || state.equals(state(FOREST)) || state.equals(state(ISLAND))));
         }
     }
     private record Layout(List<Cell> cells, List<ChunkPos> chunks, int freeColumns) {}
     private record Stats(int writes, double durationMs, double peakMs) {}
 
     private static Scene selected = NEUTRAL;
+    private static Scene transitionSource = NEUTRAL;
     private static Layout layout;
     private static Job job;
     private static boolean locked;
@@ -87,7 +98,8 @@ final class PantheonArena {
     private static Stats last;
 
     private static final class Job {
-        final Scene target;
+        final Scene source, target;
+        final boolean inPlace;
         final long began = System.nanoTime();
         final Map<Long, LevelChunk> chunks = new HashMap<>();
         Phase phase = Phase.LOADING;
@@ -97,8 +109,11 @@ final class PantheonArena {
         long peak;
         boolean tickets;
 
-        Job(Scene target) {
+        Job(Scene source, Scene target) {
+            this.source = source;
             this.target = target;
+            this.inPlace = target == ORION_BLOOM_V1 && (source == ORION_BATTLEFIELD_V1 || source == target)
+                    || target == ORION_BATTLEFIELD_V1 && source == target;
         }
     }
 
@@ -110,6 +125,7 @@ final class PantheonArena {
                     .then(Commands.literal("status").executes(ctx -> status(ctx.getSource())))
                     .then(Commands.literal("reset").executes(ctx -> request(ctx.getSource(), NEUTRAL)));
             for (Scene scene : Scene.values()) {
+                if (scene == ORION_BATTLEFIELD_V1 || scene == ORION_BLOOM_V1) continue;
                 arena.then(Commands.literal(scene.id()).executes(ctx -> request(ctx.getSource(), scene)));
             }
             dispatcher.register(Commands.literal("tearsofink").requires(source -> source.hasPermission(2))
@@ -127,6 +143,7 @@ final class PantheonArena {
             failure = null;
             last = null;
             selected = NEUTRAL;
+            transitionSource = NEUTRAL;
         });
     }
 
@@ -203,7 +220,8 @@ final class PantheonArena {
             boolean changes = false;
             for (Scene preset : presets) {
                 BlockState state = preset.block(p, neutral, free);
-                if (state.hasBlockEntity() || neutral.hasBlockEntity()) throw new IOException("Блок-сущность в маске арены");
+                if (neutral.hasBlockEntity() || state.hasBlockEntity() && !ownsDecorState(state, preset))
+                    throw new IOException("Блок-сущность в маске арены");
                 states[preset.ordinal()] = state;
                 changes |= !state.equals(neutral);
             }
@@ -245,16 +263,16 @@ final class PantheonArena {
         if (Files.notExists(file)) return;
         locked = true;
         try {
-            String id = Files.readString(file).strip();
-            for (Scene scene : Scene.values()) {
-                if (scene.id().equals(id)) {
-                    layout = inspect();
-                    selected = scene;
-                    job = new Job(scene);
-                    return;
-                }
-            }
-            throw new IOException("Неизвестная сцена: " + id);
+            String[] ids = Files.readString(file).strip().split("\\s+");
+            if (ids.length < 1 || ids.length > 2) throw new IOException("Invalid arena scene journal");
+            Scene destination = byId(ids[ids.length - 1]);
+            Scene from = ids.length == 1 ? null : byId(ids[0]);
+            if (from == null && (destination == ORION_BATTLEFIELD_V1 || destination == ORION_BLOOM_V1))
+                throw new IOException("Missing prior scene in Orion transition");
+            layout = inspect();
+            transitionSource = from;
+            selected = destination;
+            job = new Job(from, destination);
         } catch (Exception ex) {
             badJournal = true;
             failure = ex.getMessage();
@@ -262,12 +280,17 @@ final class PantheonArena {
         }
     }
 
-    private static void save(MinecraftServer server, Scene target) throws IOException {
+    private static Scene byId(String id) throws IOException {
+        for (Scene scene : Scene.values()) if (scene.id().equals(id)) return scene;
+        throw new IOException("Unknown arena scene: " + id);
+    }
+
+    private static void save(MinecraftServer server, Scene source, Scene target) throws IOException {
         Path file = journal(server);
         Files.createDirectories(file.getParent());
         Path temp = Files.createTempFile(file.getParent(), "pantheon-arena-", ".tmp");
         try {
-            Files.writeString(temp, target.id() + "\n");
+            Files.writeString(temp, (source == null ? "" : source.id() + " ") + target.id() + "\n");
             try (var channel = FileChannel.open(temp, StandardOpenOption.WRITE)) {
                 channel.force(true);
             }
@@ -277,6 +300,7 @@ final class PantheonArena {
         }
     }
 
+    static Scene selected() { return selected; }
     static boolean preparing() { return job != null; }
 
     static boolean neutralReady() { return ready(NEUTRAL); }
@@ -296,7 +320,7 @@ final class PantheonArena {
     static boolean openCombatGate(ServerLevel level) { return gate(level, OPEN_GATE); }
 
     static int request(CommandSourceStack source, Scene target) {
-        if (PantheonCombat.active()) {
+        if (PantheonCombat.sceneOwned()) {
             source.sendFailure(Component.translatable("message.tears-of-ink.pantheon.combat.busy"));
             return 0;
         }
@@ -315,22 +339,25 @@ final class PantheonArena {
         if (PantheonEditor.active()) return "Пантеон в режиме редактирования.";
         if (level == null || !PantheonTemple.ready(level) || badJournal || job != null)
             return "Арена сейчас недоступна. Проверьте arena status.";
+        Scene from = locked ? transitionSource : selected;
+        if (locked && target != selected) return "Retry the interrupted scene first.";
         try {
             if (layout == null) layout = inspect();
-            save(level.getServer(), target);
+            save(level.getServer(), from, target);
         } catch (Exception ex) {
             return "Арена: не удалось сохранить переход. " + ex.getMessage();
         }
+        transitionSource = from;
         selected = target;
         locked = true;
         failure = null;
-        job = new Job(target);
+        job = new Job(from, target);
         for (ServerPlayer player : List.copyOf(level.players())) evacuate(player);
         return null;
     }
 
     private static void evacuate(ServerPlayer player) {
-        if (!locked || !PantheonTemple.isTemple(player.level()) || !player.isAlive() || player.getZ() < 39) return;
+        if (!locked || job != null && job.inPlace || !PantheonTemple.isTemple(player.level()) || !player.isAlive() || player.getZ() < 39) return;
         sendToHub(player);
     }
 
@@ -374,7 +401,8 @@ final class PantheonArena {
             return;
         }
 
-        if (!level.getEntitiesOfClass(Entity.class, INTERIOR, entity -> !(entity instanceof ServerPlayer)).isEmpty()) {
+        if (!active.inPlace && active.target != NEUTRAL
+                && !level.getEntitiesOfClass(Entity.class, INTERIOR, entity -> !(entity instanceof ServerPlayer)).isEmpty()) {
             fail(level, "внутри маски осталась сущность");
             return;
         }
@@ -391,15 +419,19 @@ final class PantheonArena {
             BlockPos pos = cell.pos();
             var chunk = active.chunks.get(ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4));
             BlockState existing = chunk.getBlockState(pos);
-            if (existing.hasBlockEntity() || !cell.accepts(existing)) {
+            if (!cell.accepts(existing, active) || !ownedDecor(chunk, pos, existing)) {
                 fail(level, "посторонний блок " + pos.toShortString());
                 return;
             }
             if (active.phase == Phase.CHECKING) continue;
-            BlockState target = cell.states()[active.target.ordinal()];
+            BlockState target = cell.state(active.target);
             if (!existing.equals(target)) {
                 if (!put(level, pos, target)) {
                     fail(level, "запись отклонена в " + pos.toShortString());
+                    return;
+                }
+                if (target.hasBlockEntity() && !markDecor(level, pos, target)) {
+                    fail(level, "не создана декорация в " + pos.toShortString());
                     return;
                 }
                 writes++;
@@ -417,18 +449,54 @@ final class PantheonArena {
             fail(level, "проём изменён");
             return;
         }
+        // Flush the previous transition before replacing its intent with a new one.
+        try {
+            level.getChunkSource().save(true);
+            save(level.getServer(), active.target, active.target);
+            transitionSource = active.target;
+        } catch (Exception ex) {
+            fail(level, "cannot commit arena transition: " + ex.getMessage());
+            return;
+        }
         last = new Stats(active.writes, (System.nanoTime() - active.began) / 1_000_000.0, active.peak / 1_000_000.0);
         TearsOfInk.LOGGER.info("Pantheon arena: READY {} | {} writes | {} ms | max batch {} ms",
                 selected.id(), last.writes(), last.durationMs(), last.peakMs());
         release(level);
         job = null;
         locked = false;
-        if (PantheonCombat.active()) return;
+        if (PantheonCombat.sceneOwned()) return;
         for (ServerPlayer player : level.players()) {
             player.displayClientMessage(Component.translatable(selected == NEUTRAL
                     ? "message.tears-of-ink.pantheon.arena.restored"
                     : "message.tears-of-ink.pantheon.arena.ready"), true);
         }
+    }
+
+    private static boolean ownsDecorState(BlockState state, Scene scene) {
+        return (scene == ORION_BATTLEFIELD_V1 || scene == ORION_BLOOM_V1)
+                && (state.is(ModBlocks.BATTLEFIELD_BANNER) || state.is(ModBlocks.BATTLEFIELD_SCENE));
+    }
+
+    private static boolean ownedDecor(LevelChunk chunk, BlockPos pos, BlockState state) {
+        var entity = chunk.getBlockEntity(pos, LevelChunk.EntityCreationType.CHECK);
+        if (!state.hasBlockEntity()) return entity == null;
+        if (entity == null || !ORION_PLAN.equals(entity.getAttached(SCENE_DECOR))) return false;
+        if (state.is(ModBlocks.BATTLEFIELD_BANNER)) return entity instanceof BattlefieldBannerBlockEntity;
+        return state.is(ModBlocks.BATTLEFIELD_SCENE) && entity instanceof BattlefieldSceneBlockEntity
+                && Arrays.equals(entity.getUpdateTag(chunk.getLevel().registryAccess()).getIntArray("Contacts"),
+                        OrionBattlefield.contacts(state));
+    }
+
+    private static boolean markDecor(ServerLevel level, BlockPos pos, BlockState state) {
+        var entity = level.getBlockEntity(pos);
+        if (state.is(ModBlocks.BATTLEFIELD_SCENE) && entity instanceof BattlefieldSceneBlockEntity scene)
+            scene.configure(OrionBattlefield.contacts(state));
+        else if (!state.is(ModBlocks.BATTLEFIELD_BANNER) || !(entity instanceof BattlefieldBannerBlockEntity))
+            return false;
+        entity.setAttached(SCENE_DECOR, ORION_PLAN);
+        entity.setChanged();
+        level.sendBlockUpdated(pos, state, state, Block.UPDATE_CLIENTS);
+        return true;
     }
 
     private static boolean gate(ServerLevel level, BlockState target) {

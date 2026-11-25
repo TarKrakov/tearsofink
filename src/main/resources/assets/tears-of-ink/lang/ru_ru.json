@@ -1271,7 +1271,8 @@
   "message.tears-of-ink.pantheon.site_error": "Сервер не смог загрузить площадку руин Святилища. Подробности в журнале сервера.",
   "message.tears-of-ink.pantheon.site_found": "Вход в руины Святилища в Чернильных землях: X %s, Y %s, Z %s. Внутри ждёт Мастер Эскизов.",
   "block.tears-of-ink.pantheon_altar": "Алтарь призыва",
-  "item.tears-of-ink.pantheon_test_relic": "Пробная реликвия Святилища",
+  "item.tears-of-ink.pantheon_test_relic": "Реликвия Ориона",
+  "entity.tears-of-ink.orion": "Орион, Верный Клинок",
   "message.tears-of-ink.pantheon.relic_only": "Реликварий принимает только реликвии Святилища.",
   "message.tears-of-ink.pantheon.altar.busy": "Арена перестраивается или ещё недоступна.",
   "message.tears-of-ink.pantheon.altar.empty_hand": "Помести реликвию Святилища в слот алтаря.",
@@ -1306,6 +1307,8 @@
   "gui.tears-of-ink.pantheon.ritual.stop": "Остановить ритуал",
   "gui.tears-of-ink.pantheon.ritual.active": "Ритуал активен / восстановление",
   "gui.tears-of-ink.pantheon.ritual.unavailable": "Алтарь недоступен",
+  "gui.tears-of-ink.pantheon.ritual.retained": "Выньте реликвию для сброса",
+  "message.tears-of-ink.pantheon.combat.restart": "Испытание прервано. Сцена сохранена.",
   "gui.tears-of-ink.pantheon.ritual.ready": "Готов к ритуалу",
   "gui.tears-of-ink.pantheon.ritual.empty": "Поместите реликвию"
 }

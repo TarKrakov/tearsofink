@@ -1271,7 +1271,8 @@
   "message.tears-of-ink.pantheon.site_error": "The server could not load the Sanctuary ruin site. See the server log for details.",
   "message.tears-of-ink.pantheon.site_found": "Entrance to the Sanctuary ruins in the Ink Lands: X %s, Y %s, Z %s. The Sketch Master awaits inside.",
   "block.tears-of-ink.pantheon_altar": "Summoning Altar",
-  "item.tears-of-ink.pantheon_test_relic": "Sanctuary Test Relic",
+  "item.tears-of-ink.pantheon_test_relic": "Relic of Orion",
+  "entity.tears-of-ink.orion": "Orion, the Faithful Blade",
   "message.tears-of-ink.pantheon.relic_only": "The reliquary accepts only Sanctuary relics.",
   "message.tears-of-ink.pantheon.altar.busy": "The arena is rebuilding or is not yet available.",
   "message.tears-of-ink.pantheon.altar.empty_hand": "Place a Sanctuary relic in the altar slot.",
@@ -1306,6 +1307,8 @@
   "gui.tears-of-ink.pantheon.ritual.stop": "Stop ritual",
   "gui.tears-of-ink.pantheon.ritual.active": "Ritual active / restoring",
   "gui.tears-of-ink.pantheon.ritual.unavailable": "Altar unavailable",
+  "gui.tears-of-ink.pantheon.ritual.retained": "Remove relic to reset",
+  "message.tears-of-ink.pantheon.combat.restart": "The trial was interrupted. The arena remains.",
   "gui.tears-of-ink.pantheon.ritual.ready": "Ready for ritual",
   "gui.tears-of-ink.pantheon.ritual.empty": "Insert a relic"
 }

@@ -4,6 +4,9 @@ import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.client.fog.BattlefieldClarity;
 import com.tarkrakov.tearsofink.particle.ModParticles;
 import com.tarkrakov.tearsofink.world.ModBiomes;
+import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
+import com.tarkrakov.tearsofink.pantheon.PantheonArenaScenes;
+import net.minecraft.client.multiplayer.ClientLevel;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
@@ -22,10 +25,43 @@ public final class BattlefieldMemoryMotes {
     private static final double VISIBLE_RADIUS = 44d;
     private BattlefieldMemoryMotes() {}
 
+    public static float opennessAt(ClientLevel level, double x, double z) {
+        if (level == null) return 0f;
+        if (!PantheonTemple.isTemple(level)) return BattlefieldClarity.opennessAt(x, z);
+        int covered = 0;
+        for (int dx = -2; dx <= 2; dx += 2) for (int dz = -2; dz <= 2; dz += 2) {
+            BlockPos ground = PantheonArenaScenes.battlefieldFloor((int)Math.floor(x) + dx, (int)Math.floor(z) + dz);
+            if (level.hasChunkAt(ground) && PantheonArenaScenes.battlefieldGround(level.getBlockState(ground))) covered++;
+        }
+        return covered / 9f;
+    }
+
+    private static void templeMotes(ClientLevel level, double x, double z) {
+        if (z < 36) return;
+        RandomSource random = level.random;
+        for (int i = 0; i < 4; i++) {
+            double angle = random.nextDouble() * Math.PI * 2;
+            double radius = 24 * Math.sqrt(random.nextDouble());
+            double px = x + Math.cos(angle) * radius;
+            double pz = z + Math.sin(angle) * radius;
+            var floor = PantheonArenaScenes.battlefieldFloor((int)Math.floor(px), (int)Math.floor(pz));
+            if (!level.hasChunkAt(floor) || !PantheonArenaScenes.battlefieldGround(level.getBlockState(floor))
+                    || !level.getBlockState(floor.above()).getCollisionShape(level, floor.above()).isEmpty()
+                    || random.nextFloat() > opennessAt(level, px, pz) * .32f) continue;
+            level.addAlwaysVisibleParticle(ModParticles.BATTLEFIELD_MEMORY_MOTE, true, px, floor.getY() + 1.08, pz,
+                    (random.nextDouble() - .5) * .012, .045 + random.nextDouble() * .025, (random.nextDouble() - .5) * .012);
+        }
+    }
+
     public static void tick(Minecraft mc) {
         var level = mc.level;
         var player = mc.player;
-        if (level == null || player == null || mc.isPaused() || !ModDimensions.isLands(level))
+        if (level == null || player == null || mc.isPaused()) return;
+        if (PantheonTemple.isTemple(level)) {
+            templeMotes(level, player.getX(), player.getZ());
+            return;
+        }
+        if (!ModDimensions.isLands(level))
             return;
         // Prepare the updraft on the VISIBLE side of the boundary even when
         // the player is still just outside; prevents an abrupt empty strip.

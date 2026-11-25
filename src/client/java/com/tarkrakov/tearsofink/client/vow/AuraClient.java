@@ -138,14 +138,28 @@ public final class AuraClient {
 			if (s.light() >= 0) {
 				int st = Math.min(3, s.light());
 				float k = s.low() ? 0.5f + 0.25f * Mth.sin(age * 0.9f) : 1f;
-				RenderType glow = RenderType.eyes(WHITE);
-				model.renderToBuffer(pose, new Tint(buffers.getBuffer(glow), GLOW[st] * k), 0xF000F0, OverlayTexture.NO_OVERLAY, 0xFFFFF4DC);
-				pose.pushPose();
-				pose.scale(1.08f, 1.04f, 1.08f);
-				model.renderToBuffer(pose, new Tint(buffers.getBuffer(glow), HALO[st] * k), 0xF000F0, OverlayTexture.NO_OVERLAY, 0xFFFFF4DC);
-				pose.popPose();
+				renderSoulLight(model, pose, buffers, st, k);
 			}
 		}
+	}
+
+	public static void renderSoulLight(net.minecraft.client.model.EntityModel<?> model, PoseStack pose,
+			MultiBufferSource buffers, int stage, float strength) {
+		RenderType glow = RenderType.eyes(WHITE);
+		model.renderToBuffer(pose, new Tint(buffers.getBuffer(glow), GLOW[stage] * strength),
+				0xF000F0, OverlayTexture.NO_OVERLAY, 0xFFFFF4DC);
+		pose.pushPose();
+		pose.scale(1.08f, 1.04f, 1.08f);
+		model.renderToBuffer(pose, new Tint(buffers.getBuffer(glow), HALO[stage] * strength),
+				0xF000F0, OverlayTexture.NO_OVERLAY, 0xFFFFF4DC);
+		pose.popPose();
+	}
+
+	public static void renderWhiteLight(net.minecraft.client.model.EntityModel<?> model, PoseStack pose,
+			MultiBufferSource buffers, float strength) {
+		int alpha = Mth.clamp(Math.round(strength * 255), 0, 255);
+		model.renderToBuffer(pose, buffers.getBuffer(RenderType.entityTranslucentEmissive(WHITE)),
+				0xF000F0, OverlayTexture.NO_OVERLAY, (alpha << 24) | 0xFFFFFF);
 	}
 
 	/** Приглушает цвет вершин (сила свечения). */

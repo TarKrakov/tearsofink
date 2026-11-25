@@ -1,0 +1,96 @@
+// The Blockbench exports are the sole source for Orion's render rig and blade motion.
+def orionModel = file('blockbench/sunctuary_boss_orion.java')
+def orionAnimations = file('blockbench/sunctuary_boss_orion.animation.json')
+def orionClient = layout.buildDirectory.dir('generated/orion/client')
+def orionCommon = layout.buildDirectory.dir('generated/orion/common')
+
+def compileOrionExports = tasks.register('compileOrionExports') {
+    inputs.files(orionModel, orionAnimations)
+    outputs.dirs(orionClient, orionCommon)
+    doLast {
+        def model = orionModel.getText('UTF-8')
+        def animations = new groovy.json.JsonSlurper().parse(orionAnimations)
+        def geometry = (model =~ /(?s)public static LayerDefinition createBodyLayer\(\) \{.*?\n\t\}/)
+        if (!geometry.find() || !(animations instanceof String))
+            throw new GradleException('Unexpected Orion Blockbench export format')
+
+        def clientDir = new File(orionClient.get().asFile, 'com/tarkrakov/tearsofink/client/entity/orion')
+        clientDir.mkdirs()
+        new File(clientDir, 'OrionGeometry.java').setText('''package com.tarkrakov.tearsofink.client.entity.orion;
+import net.minecraft.client.model.geom.PartPose;
+import net.minecraft.client.model.geom.builders.*;
+final class OrionGeometry {
+''' + geometry.group() + '\n}\n', 'UTF-8')
+        new File(clientDir, 'OrionAnimations.java').setText('''package com.tarkrakov.tearsofink.client.entity.orion;
+import net.minecraft.client.animation.*;
+''' + animations.replace('public class sunctuary_boss_orionAnimation', 'final class OrionAnimations'), 'UTF-8')
+
+        // Both sides use the same exported transforms. The server needs only the four
+        // ancestors of the blade and can evaluate them without loading client classes.
+        def bones = ['main', 'hand_r', 'hand_r_2', 'sword']
+        def pivots = bones.collect { bone ->
+            def match = (model =~ /(?s)PartDefinition ${bone} = [^;]*?PartPose\.offset\(([^)]+)\)/)
+            if (!match.find()) throw new GradleException("Missing Orion blade bone: ${bone}")
+            '{' + match.group(1) + '}'
+        }
+        def declarations = (animations =~ /(?s)AnimationDefinition (\w+) = AnimationDefinition.Builder.withLength\(([^)]+)\)(.*?)\.build\(\);/)
+        def fields = []
+        def durations = []
+        declarations.each { clip ->
+            durations.add('case ' + clip[1].toUpperCase(Locale.ROOT) + ' -> ' + clip[2] + ';')
+            if (!(clip[1] in ['slash_combo', 'spin_dash', 'cleave'])) return
+            def channels = (clip[3] =~ /(?s)\.addAnimation\("([^"]+)", new AnimationChannel\(AnimationChannel.Targets.(\w+),\s*(.*?)\n\s*\)\)/)
+            def tracks = []
+            channels.each { channel ->
+                int bone = bones.indexOf(channel[1])
+                if (bone < 0) return
+                int axis = ['POSITION', 'ROTATION', 'SCALE'].indexOf(channel[2])
+                if (axis < 0) throw new GradleException("Unknown Orion channel: ${channel[2]}")
+                def frames = (channel[3] =~ /new Keyframe\(([^,]+), KeyframeAnimations\.\w+\(([^)]+)\), AnimationChannel.Interpolations.(\w+)\)/)
+                def keys = frames.collect { frame ->
+                    if (!(frame[3] in ['LINEAR', 'CATMULLROM']))
+                        throw new GradleException("Unknown Orion interpolation: ${frame[3]}")
+                    '{' + frame[1] + ',' + frame[2] + ',' + (frame[3] == 'CATMULLROM' ? '1' : '0') + '}'
+                }
+                if (keys.isEmpty()) throw new GradleException("No Orion blade keyframes for ${clip[1]}/${channel[1]}")
+                tracks.add("new Track(${bone}, ${axis}, new float[][]{${keys.join(',')}})")
+            }
+            if (tracks.isEmpty()) throw new GradleException("No Orion blade tracks for ${clip[1]}")
+            fields.add('static final Track[] ' + clip[1].toUpperCase(Locale.ROOT) + ' = {\n' + tracks.join(',\n') + '\n};')
+        }
+        if (durations.size() != 11 || fields.size() != 3) throw new GradleException('Unexpected set of Orion clips')
+        def commonDir = new File(orionCommon.get().asFile, 'com/tarkrakov/tearsofink/entity/orion')
+        commonDir.mkdirs()
+        new File(commonDir, 'OrionExport.java').setText('''package com.tarkrakov.tearsofink.entity.orion;
+final class OrionExport {
+    record Track(int bone, int channel, float[][] keys) {}
+    static final float[][] PIVOTS = {''' + pivots.join(',') + '''};
+    static float length(OrionCombat.Clip clip) {
+        return switch (clip) {''' + durations.join('\n') + '''};
+    }
+''' + fields.join('\n') + '\n}\n', 'UTF-8')
+    }
+}
+
+sourceSets.main.java.srcDir(orionCommon)
+sourceSets.client.java.srcDir(orionClient)
+tasks.named('compileJava') { dependsOn compileOrionExports }
+tasks.named('compileClientJava') { dependsOn compileOrionExports }
+tasks.withType(Jar).configureEach {
+    if (name in ['sourcesJar', 'clientSourcesJar']) dependsOn compileOrionExports
+}
+
+processResources {
+    from('blockbench/orion_texture.png') { into 'assets/tears-of-ink/textures/entity' }
+}
+
+def orionChecks = sourceSets.create('orionChecks') {
+    java.srcDir('tools/tests/orion')
+    compileClasspath += sourceSets.main.output + sourceSets.main.compileClasspath
+    runtimeClasspath += sourceSets.main.output + sourceSets.main.runtimeClasspath
+}
+def verifyOrionCombat = tasks.register('verifyOrionCombat', JavaExec) {
+    classpath = orionChecks.runtimeClasspath
+    mainClass = 'com.tarkrakov.tearsofink.entity.orion.OrionCombatTest'
+}
+tasks.named('check') { dependsOn verifyOrionCombat }

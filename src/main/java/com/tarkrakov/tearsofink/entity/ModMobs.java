@@ -1,6 +1,7 @@
 package com.tarkrakov.tearsofink.entity;
 
 import com.tarkrakov.tearsofink.TearsOfInk;
+import com.tarkrakov.tearsofink.entity.orion.OrionEntity;
 import com.tarkrakov.tearsofink.world.ModBiomes;
 import net.fabricmc.fabric.api.biome.v1.BiomeModifications;
 import net.fabricmc.fabric.api.biome.v1.BiomeSelectors;
@@ -81,9 +82,14 @@ public final class ModMobs {
 			EntityType.Builder.<com.tarkrakov.tearsofink.entity.patrol.PaleBoltEntity>of(com.tarkrakov.tearsofink.entity.patrol.PaleBoltEntity::new, MobCategory.MISC)
 					.sized(0.5f, 0.5f).clientTrackingRange(4).updateInterval(20).build("pale_bolt"));
 
+	public static final EntityType<OrionEntity> ORION = Registry.register(BuiltInRegistries.ENTITY_TYPE,
+			TearsOfInk.id("orion"), EntityType.Builder.of(OrionEntity::new, MobCategory.MISC)
+					.sized(1.38f, 2.84f).clientTrackingRange(12).updateInterval(1).build("orion"));
+
 	private ModMobs() {}
 
 	public static void init() {
+		FabricDefaultAttributeRegistry.register(ORION, OrionEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(CATERPILLAR, CaterpillarEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_OWL, PaleOwlEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_STRIDER, PaleStriderEntity.createAttributes());

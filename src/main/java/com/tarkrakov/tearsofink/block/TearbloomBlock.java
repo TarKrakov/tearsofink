@@ -1,6 +1,8 @@
 package com.tarkrakov.tearsofink.block;
 
 import com.tarkrakov.tearsofink.particle.ModParticles;
+import com.tarkrakov.tearsofink.pantheon.PantheonTemple;
+import net.minecraft.world.level.BlockGetter;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.util.RandomSource;
@@ -16,6 +18,12 @@ public class TearbloomBlock extends FlowerBlock {
 
 	public TearbloomBlock(Holder<MobEffect> effect, float seconds, Properties properties) {
 		super(effect, seconds, properties);
+	}
+
+	@Override
+	protected boolean mayPlaceOn(BlockState floor, BlockGetter level, BlockPos pos) {
+		return super.mayPlaceOn(floor, level, pos)
+				|| level instanceof Level world && PantheonTemple.isTemple(world) && floor.is(ModBlocks.ASHEN_PATH);
 	}
 
 	@Override

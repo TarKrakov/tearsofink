@@ -221,7 +221,7 @@ final class PantheonEditor {
         if (active()) return fail(source, "Редактор уже открыт или повреждён журнал. edit status.");
         if (level == null || !(source.getEntity() instanceof ServerPlayer sp) || sp.level() != level || !sp.isCreative())
             return fail(source, "Войдите в Пантеон в творческом режиме.");
-        if (!PantheonTemple.ready(level) || PantheonCombat.active() || !PantheonArena.neutralReady()
+        if (!PantheonTemple.ready(level) || PantheonCombat.sceneOwned() || !PantheonArena.neutralReady()
                 || level.players().size() != 1)
             return fail(source, "Нужен готовый нейтральный Пантеон без испытания и других игроков.");
         try {

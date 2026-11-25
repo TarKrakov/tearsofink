@@ -23,6 +23,8 @@ import com.tarkrakov.tearsofink.effect.ModEffects;
 import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.weapon.ModEntities;
 import com.tarkrakov.tearsofink.entity.ModMobs;
+import com.tarkrakov.tearsofink.client.entity.orion.OrionModel;
+import com.tarkrakov.tearsofink.client.entity.orion.OrionRenderer;
 import com.tarkrakov.tearsofink.client.entity.CaterpillarModel;
 import com.tarkrakov.tearsofink.client.entity.CaterpillarRenderer;
 import net.fabricmc.fabric.api.client.rendering.v1.EntityModelLayerRegistry;
@@ -174,6 +176,8 @@ public class TearsOfInkClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModMobs.PALE_DEER, com.tarkrakov.tearsofink.client.entity.PaleDeerRenderer::new);
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.entity.PaleStriderModel.LAYER,
 				com.tarkrakov.tearsofink.client.entity.PaleStriderModel::createBodyLayer);
+		EntityModelLayerRegistry.registerModelLayer(OrionModel.LAYER, OrionModel::createBodyLayer);
+		EntityRendererRegistry.register(ModMobs.ORION, OrionRenderer::new);
 		EntityRendererRegistry.register(ModMobs.PALE_STRIDER, com.tarkrakov.tearsofink.client.entity.PaleStriderRenderer::new);
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.entity.PaleSpearmanModel.LAYER,
 				com.tarkrakov.tearsofink.client.entity.PaleSpearmanModel::createBodyLayer);
