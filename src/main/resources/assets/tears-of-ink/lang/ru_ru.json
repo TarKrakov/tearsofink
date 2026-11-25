@@ -1,4 +1,11 @@
 {
+  "key.tears-of-ink.loadout": "Сменить комплект оружия",
+  "gui.tears-of-ink.loadout.reserve": "Запасной комплект",
+  "gui.tears-of-ink.loadout.active_label": "Активный комплект",
+  "gui.tears-of-ink.loadout.active": "Активный комплект: выбранная ячейка и вторая рука",
+  "gui.tears-of-ink.loadout.hand.0": "Запасная главная рука",
+  "gui.tears-of-ink.loadout.hand.1": "Запасная вторая рука",
+  "message.tears-of-ink.loadout.invalid": "В обоих комплектах допустимы оружие и щиты Tears of Ink или пустые руки.",
   "entity.tears-of-ink.pale_owl": "Бледная сова",
   "entity.tears-of-ink.pale_deer": "Бледный олень",
   "entity.tears-of-ink.pale_strider": "Скиталец",

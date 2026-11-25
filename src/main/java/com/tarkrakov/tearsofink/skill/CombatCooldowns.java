@@ -37,12 +37,13 @@ public final class CombatCooldowns {
             return new Entry(id,Math.max(0,left),Math.max(1,Math.max(left,length)),state);
         }
     }
-    public record Snapshot(Entry move, Entry r, Entry rmb, Entry shiftR) implements CustomPacketPayload {
+    public record Snapshot(Entry move, Entry r, Entry rmb, Entry shiftR, Entry loadout) implements CustomPacketPayload {
         public static final Type<Snapshot> TYPE = new Type<>(TearsOfInk.id("combat_cooldowns"));
         public static final StreamCodec<ByteBuf, Snapshot> CODEC = StreamCodec.composite(
                 Entry.CODEC, Snapshot::move, Entry.CODEC, Snapshot::r,
-                Entry.CODEC, Snapshot::rmb, Entry.CODEC, Snapshot::shiftR, Snapshot::new);
-        public static final Snapshot EMPTY = new Snapshot(Entry.EMPTY,Entry.EMPTY,Entry.EMPTY,Entry.EMPTY);
+                Entry.CODEC, Snapshot::rmb, Entry.CODEC, Snapshot::shiftR,
+                Entry.CODEC, Snapshot::loadout, Snapshot::new);
+        public static final Snapshot EMPTY = new Snapshot(Entry.EMPTY,Entry.EMPTY,Entry.EMPTY,Entry.EMPTY,Entry.EMPTY);
         @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
     }
     private static final Map<UUID,Snapshot> LAST = new HashMap<>();
@@ -125,11 +126,13 @@ public final class CombatCooldowns {
         return e;
     }
     private static Snapshot snapshot(ServerPlayer p) {
-        if (!p.isAlive() || p.isSpectator() || p.isCreative() || !ModDimensions.hasLandsRules(p.level()) || !InkPowers.get(p).inside()) return Snapshot.EMPTY;
+        if (!p.isAlive() || p.isSpectator() || p.isCreative() || !ModDimensions.hasLandsRules(p.level())) return Snapshot.EMPTY;
+        Entry loadout = WeaponLoadouts.hud(p);
+        if (!InkPowers.get(p).inside()) return new Snapshot(Entry.EMPTY,Entry.EMPTY,Entry.EMPTY,Entry.EMPTY,loadout);
         Skill move = Skills.mobility(p);
         Entry m = Skills.knows(p,move) ? generic(p,move,false) : Entry.EMPTY;
         if (!m.id().isEmpty() && (p.isFallFlying() || p.isPassenger() || p.isSleeping()))
             m = Entry.of(m.id(),m.remaining(),m.total(),BLOCKED);
-        return new Snapshot(m,r(p,false),rmb(p),r(p,true));
+        return new Snapshot(m,r(p,false),rmb(p),r(p,true),loadout);
     }
 }

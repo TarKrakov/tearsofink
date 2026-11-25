@@ -27,10 +27,10 @@ public final class CombatCooldownHud {
         if (mc.player == null || mc.level == null || mc.screen != null || mc.options.hideGui ||
                 mc.getDebugOverlay().showDebugScreen() || !mc.player.isAlive() || mc.player.isSpectator() ||
                 mc.gameMode == null || !mc.gameMode.canHurtPlayer() || !ModDimensions.hasLandsRules(mc.level)) return;
-        Entry[] slots = {view.move(),view.r(),view.rmb(),view.shiftR()};
+        Entry[] slots = {view.move(),view.r(),view.rmb(),view.shiftR(),view.loadout()};
         String r = SkillKeys.weaponKeyLabel().getString();
         String shift = mc.options.keyShift.getTranslatedKeyMessage().getString();
-        String[] keys = {SkillKeys.mobilityKeyLabel().getString(),r,mc.options.keyUse.getTranslatedKeyMessage().getString(),shift+"+"+r};
+        String[] keys = {SkillKeys.mobilityKeyLabel().getString(),r,mc.options.keyUse.getTranslatedKeyMessage().getString(),shift+"+"+r,SkillKeys.loadoutKeyLabel().getString()};
         int count=0; for (Entry e:slots) if (!e.id().isEmpty()) count++;
         if(count==0) return;
         int edge = g.guiWidth()/2-94;
@@ -84,6 +84,7 @@ public final class CombatCooldownHud {
                 id.startsWith("blood")||id.contains("dussak")||id.contains("talwar")?0xffe49090:0xffc6b6e2;
     }
     private static String icon(String id) {
+        if(id.equals("loadout"))return "swap";
         if(id.equals("dash")||id.equals("mighty_stride"))return "boot";
         if(id.equals("shield_resonance"))return "resonance";
         if(id.equals("mercy"))return "heal";
@@ -100,6 +101,7 @@ public final class CombatCooldownHud {
     }
     private static String[] glyph(String icon) {
         return switch(icon) {
+            case "swap" -> new String[]{"....#...",".....#..","#######.",".....#..","..#.....",".#######","..#.....","...#...."};
             case "boot" -> new String[]{"..###...","..###...","..###...","..####..","..######","..######","........","........"};
             case "wave" -> new String[]{"......#.",".....##.","....###.","...###..","..###...","#####...","###.....","........"};
             case "parry" -> new String[]{"#......#",".#....#.","..#..#..","...##...","..####..",".#....#.","##....##","........"};

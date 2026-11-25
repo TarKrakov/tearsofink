@@ -1,5 +1,6 @@
 package com.tarkrakov.tearsofink.client.mixin;
 
+import com.tarkrakov.tearsofink.client.SkillKeys;
 import com.tarkrakov.tearsofink.client.combat.CombatClient;
 import com.tarkrakov.tearsofink.weapon.combat.Archetype;
 import net.minecraft.client.Minecraft;
@@ -28,6 +29,11 @@ public abstract class MinecraftAttackMixin {
 		if (Archetype.of(player.getMainHandItem()) == Archetype.BASTION && !com.tarkrakov.tearsofink.weapon.combat.Combat.bastion(player)) return;
 		CombatClient.requestSwing();
 		cir.setReturnValue(false);
+	}
+
+	@Inject(method = "startUseItem", at = @At("HEAD"), cancellable = true)
+	private void tearsofink$releaseBeforeUsingNewLoadout(CallbackInfo ci) {
+		if (SkillKeys.suppressHeldUse((Minecraft) (Object) this)) ci.cancel();
 	}
 
 	@Inject(method = "continueAttack", at = @At("HEAD"), cancellable = true)

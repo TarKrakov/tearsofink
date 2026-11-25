@@ -97,8 +97,10 @@ public class TearsOfInkJei implements IModPlugin {
 		registration.addGuiContainerHandler(InventoryScreen.class, new IGuiContainerHandler<InventoryScreen>() {
 			@Override
 			public List<Rect2i> getGuiExtraAreas(InventoryScreen screen) {
-				var area = ((PersonalPanelBounds) screen).tearsofink$personalPanelBounds();
-				return area == null ? List.of() : List.of(area);
+				var bounds = (PersonalPanelBounds) screen;
+				var personal = bounds.tearsofink$personalPanelBounds();
+				var loadout = bounds.tearsofink$loadoutPanelBounds();
+				return personal == null ? List.of(loadout) : List.of(personal, loadout);
 			}
 		});
 		registration.addRecipeClickArea(InkAnvilScreen.class, 90, 35, 26, 17, FORGING);

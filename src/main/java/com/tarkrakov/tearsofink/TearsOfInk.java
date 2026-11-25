@@ -79,6 +79,7 @@ public class TearsOfInk implements ModInitializer {
 		ModAlchemy.init();
 		InkPowers.init();
 		Skills.init();
+		com.tarkrakov.tearsofink.weapon.combat.WeaponLoadouts.init();
 		ModEntities.init();
 		ModMobs.init();
 		WeaponAbilities.init();

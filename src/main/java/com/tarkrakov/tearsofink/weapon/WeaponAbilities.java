@@ -443,6 +443,15 @@ public final class WeaponAbilities {
 		public boolean isActive(ServerPlayer player) {
 			return active.containsKey(player.getUUID());
 		}
+		public void equipmentChanged(ServerPlayer player) {
+			Aura aura = active.get(player.getUUID());
+			if (aura != null && !holdsShield(player, aura)) stop(player);
+		}
+
+		private static boolean holdsShield(ServerPlayer player, Aura aura) {
+			return player.getMainHandItem() == aura.shield() || player.getOffhandItem() == aura.shield();
+		}
+
 		public int lockoutRemaining(ServerPlayer p) {
 			return Math.max(0, lockedUntil.getOrDefault(p.getUUID(), 0) - p.server.getTickCount());
 		}
@@ -472,7 +481,7 @@ public final class WeaponAbilities {
 				var data = com.tarkrakov.tearsofink.ink.InkPowers.get(player);
 				boolean creative = player.getAbilities().instabuild;
 				float drain = SOUL_PER_SECOND / 20f;
-				if (!player.isAlive() || !data.inside() || !(player.getMainHandItem() == aura.shield() || player.getOffhandItem() == aura.shield()) || (!creative && data.soul() < drain)) {
+				if (!player.isAlive() || !data.inside() || !holdsShield(player, aura) || (!creative && data.soul() < drain)) {
 					stop(player);
 					continue;
 				}

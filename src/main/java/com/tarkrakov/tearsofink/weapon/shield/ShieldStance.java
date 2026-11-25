@@ -140,6 +140,11 @@ public final class ShieldStance {
 				&& !(target instanceof OwnableEntity owned && owned.getOwnerUUID() != null);
 	}
 
+	public static void equipmentChanged(ServerPlayer p) {
+		validatePair(p);
+		rock(p, inStance(p));
+	}
+
 	private static void validatePair(ServerPlayer p) {
 		HeldPair pair = PAIRS.get(p.getUUID());
 		if (pair != null && (!p.isAlive() || !ModDimensions.hasLandsRules(p.level()) || p.getMainHandItem() != pair.main() || p.getOffhandItem() != pair.off())) {

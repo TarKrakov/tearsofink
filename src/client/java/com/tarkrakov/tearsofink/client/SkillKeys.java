@@ -3,10 +3,13 @@ package com.tarkrakov.tearsofink.client;
 import com.tarkrakov.tearsofink.skill.ModSkills;
 import com.tarkrakov.tearsofink.skill.Skill;
 import com.tarkrakov.tearsofink.skill.SkillPayloads;
+import com.tarkrakov.tearsofink.weapon.combat.WeaponLoadouts;
+import net.minecraft.network.chat.Component;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -24,6 +27,9 @@ public final class SkillKeys {
 	private static final Map<KeyMapping, Skill> KEYS = new LinkedHashMap<>();
 	/** Абилка оружия: R — правая рука, Shift+R — левая (щит). */
 	private static KeyMapping WEAPON_KEY;
+	private static KeyMapping loadoutKey;
+	private static boolean loadoutWasDown;
+	private static boolean suppressHeldUse;
 
 	private SkillKeys() {}
 
@@ -35,9 +41,18 @@ public final class SkillKeys {
 		return WEAPON_KEY == null ? net.minecraft.network.chat.Component.literal("R") : WEAPON_KEY.getTranslatedKeyMessage();
 	}
 
+	public static Component loadoutKeyLabel() {
+		return loadoutKey.getTranslatedKeyMessage();
+	}
+
 	public static void init() {
 		bind(ModSkills.DASH, "key.tears-of-ink.dash", GLFW.GLFW_KEY_LEFT_ALT);
 		WEAPON_KEY = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tears-of-ink.weapon_ability", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, CATEGORY));
+		loadoutKey = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tears-of-ink.loadout",
+				InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, CATEGORY));
+		ClientPlayNetworking.registerGlobalReceiver(WeaponLoadouts.Swapped.TYPE, (packet, context) ->
+				context.client().execute(() -> suppressHeldUse = context.client().options.keyUse.isDown()));
+		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> suppressHeldUse = false);
 		ClientTickEvents.END_CLIENT_TICK.register(SkillKeys::tick);
 	}
 
@@ -71,9 +86,22 @@ public final class SkillKeys {
 		groundWas = ground;
 	}
 
+	/** A held block or charge must not start a new right-click action with the incoming weapon. */
+	public static boolean suppressHeldUse(Minecraft mc) {
+		return suppressHeldUse && mc.options.keyUse.isDown();
+	}
+
 	private static void tick(Minecraft mc) {
+		if (!mc.options.keyUse.isDown()) suppressHeldUse = false;
 		LocalPlayer player = mc.player;
 		if (player != null) jumps(mc, player);
+		boolean pressed = loadoutKey.consumeClick();
+		while (loadoutKey.consumeClick()) { /* Discard the excess repeats. */ }
+		if (pressed && !loadoutWasDown && player != null && mc.screen == null
+				&& ClientPlayNetworking.canSend(WeaponLoadouts.Swap.TYPE)) {
+			ClientPlayNetworking.send(WeaponLoadouts.Swap.INSTANCE);
+		}
+		loadoutWasDown = loadoutKey.isDown();
 		while (WEAPON_KEY.consumeClick()) {
 			if (player == null || mc.screen != null) continue;
 			ClientPlayNetworking.send(new SkillPayloads.UseWeapon(player.isShiftKeyDown(),

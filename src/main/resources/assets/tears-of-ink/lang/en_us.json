@@ -1,4 +1,11 @@
 {
+  "key.tears-of-ink.loadout": "Swap weapon loadouts",
+  "gui.tears-of-ink.loadout.reserve": "Reserve loadout",
+  "gui.tears-of-ink.loadout.active_label": "Active loadout",
+  "gui.tears-of-ink.loadout.active": "Active loadout: selected hotbar slot and off hand",
+  "gui.tears-of-ink.loadout.hand.0": "Reserve main hand",
+  "gui.tears-of-ink.loadout.hand.1": "Reserve off hand",
+  "message.tears-of-ink.loadout.invalid": "Both sets must contain Tears of Ink weapons, shields, or empty hands.",
   "entity.tears-of-ink.pale_owl": "Pale Owl",
   "entity.tears-of-ink.pale_deer": "Pale Deer",
   "entity.tears-of-ink.pale_strider": "Pale Strider",
