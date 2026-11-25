@@ -244,7 +244,7 @@ public final class WeaponAbilities {
 				Radiance state = e.getValue();
 				int left = state.left() - 1;
 				boolean held = player != null && (player.getMainHandItem() == state.shield()
-						|| player.getOffhandItem() == state.shield());
+						|| !com.tarkrakov.tearsofink.weapon.ranged.RangedCombat.blocksOffhand(player) && player.getOffhandItem() == state.shield());
 				if (!held || !player.isAlive() || !com.tarkrakov.tearsofink.world.ModDimensions.hasLandsRules(player.level()) || left <= 0) {
 					// Only our short pulse expires. Never remove another source of resistance.
 					it.remove();
@@ -451,7 +451,7 @@ public final class WeaponAbilities {
 		}
 
 		private static boolean holdsShield(ServerPlayer player, Aura aura) {
-			return player.getMainHandItem() == aura.shield() || player.getOffhandItem() == aura.shield();
+			return player.getMainHandItem() == aura.shield() || !com.tarkrakov.tearsofink.weapon.ranged.RangedCombat.blocksOffhand(player) && player.getOffhandItem() == aura.shield();
 		}
 
 		public int lockoutRemaining(ServerPlayer p) {

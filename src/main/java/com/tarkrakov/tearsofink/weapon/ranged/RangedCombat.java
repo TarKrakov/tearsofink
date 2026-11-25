@@ -40,13 +40,50 @@ public final class RangedCombat {
     private static final String LOADED="toi_ranged_loaded", EMPOWERED="toi_ranged_empowered";
     private static final net.minecraft.resources.ResourceLocation SLOW=TearsOfInk.id("ranged_reload_slow");
     private static final Map<UUID,State> STATES=new HashMap<>();
-    private static final class Job { ItemStack stack=ItemStack.EMPTY; int ticks; }
-    private static final class State { final Job main=new Job(), off=new Job(); long nextMain, nextOff; double slow; }
+    private static final class Job { ItemStack stack=ItemStack.EMPTY; int ticks, duration; }
+    private static final class State { final Job main=new Job(), off=new Job(); long nextMain, nextOff; double slow; boolean aim; ItemStack aimStack=ItemStack.EMPTY; }
     private RangedCombat(){}
     public record Fire(boolean off,boolean aimed) implements CustomPacketPayload {
         public static final Type<Fire> TYPE=new Type<>(TearsOfInk.id("ranged_fire"));
         public static final StreamCodec<ByteBuf,Fire> CODEC=StreamCodec.composite(ByteBufCodecs.BOOL,Fire::off,ByteBufCodecs.BOOL,Fire::aimed,Fire::new);
         @Override public Type<Fire> type(){return TYPE;}
+    }
+    public record Aim(boolean active) implements CustomPacketPayload {
+        public static final Type<Aim> TYPE=new Type<>(TearsOfInk.id("ranged_aim"));
+        public static final StreamCodec<ByteBuf,Aim> CODEC=StreamCodec.composite(ByteBufCodecs.BOOL,Aim::active,Aim::new);
+        @Override public Type<Aim> type(){return TYPE;}
+    }
+    public record AimPose(int entity,boolean active) implements CustomPacketPayload {
+        public static final Type<AimPose> TYPE=new Type<>(TearsOfInk.id("ranged_aim_pose"));
+        public static final StreamCodec<ByteBuf,AimPose> CODEC=StreamCodec.composite(ByteBufCodecs.VAR_INT,AimPose::entity,ByteBufCodecs.BOOL,AimPose::active,AimPose::new);
+        @Override public Type<AimPose> type(){return TYPE;}
+    }
+    public record ReloadView(int main,int mainMax,int off,int offMax) implements CustomPacketPayload {
+        public static final Type<ReloadView> TYPE=new Type<>(TearsOfInk.id("ranged_reload_view"));
+        public static final StreamCodec<ByteBuf,ReloadView> CODEC=StreamCodec.composite(ByteBufCodecs.VAR_INT,ReloadView::main,ByteBufCodecs.VAR_INT,ReloadView::mainMax,ByteBufCodecs.VAR_INT,ReloadView::off,ByteBufCodecs.VAR_INT,ReloadView::offMax,ReloadView::new);
+        @Override public Type<ReloadView> type(){return TYPE;}
+    }
+    public static boolean canAim(Player p){
+        Kind k=RangedItem.kind(p.getMainHandItem());
+        return k==Kind.CROSSBOW||k==Kind.PISTOL;
+    }
+    private static void broadcastAim(ServerPlayer p,boolean active){
+        AimPose packet=new AimPose(p.getId(),active);
+        for(ServerPlayer viewer:p.serverLevel().players())
+            if(viewer.distanceToSqr(p)<128*128&&ServerPlayNetworking.canSend(viewer,AimPose.TYPE))ServerPlayNetworking.send(viewer,packet);
+    }
+    private static void aim(ServerPlayer p,boolean active){
+        State s=STATES.get(p.getUUID());
+        if(!active||!valid(p)||!canAim(p)){
+            if(s!=null&&s.aim){s.aim=false;s.aimStack=ItemStack.EMPTY;broadcastAim(p,false);}
+            return;
+        }
+        if(s==null){s=new State();STATES.put(p.getUUID(),s);}
+        s.aim=true;s.aimStack=p.getMainHandItem();broadcastAim(p,true);
+    }
+    private static void sendReload(ServerPlayer p,State s){
+        if(ServerPlayNetworking.canSend(p,ReloadView.TYPE))
+            ServerPlayNetworking.send(p,new ReloadView(s.main.ticks,s.main.duration,s.off.ticks,s.off.duration));
     }
     public static boolean loaded(ItemStack s){return flag(s,LOADED);}
     public static boolean empowered(ItemStack s){return flag(s,EMPOWERED);}
@@ -58,6 +95,10 @@ public final class RangedCombat {
         &&p.containerMenu==p.inventoryMenu&&ModDimensions.hasLandsRules(p.level());}
     public static void init(){
         PayloadTypeRegistry.playC2S().register(Fire.TYPE,Fire.CODEC);
+        PayloadTypeRegistry.playC2S().register(Aim.TYPE,Aim.CODEC);
+        PayloadTypeRegistry.playS2C().register(AimPose.TYPE,AimPose.CODEC);
+        PayloadTypeRegistry.playS2C().register(ReloadView.TYPE,ReloadView.CODEC);
+        ServerPlayNetworking.registerGlobalReceiver(Aim.TYPE,(packet,ctx)->ctx.player().server.execute(()->aim(ctx.player(),packet.active())));
         ServerPlayNetworking.registerGlobalReceiver(Fire.TYPE,(packet,ctx)->ctx.player().server.execute(()->fire(ctx.player(),packet.off(),packet.aimed(),false)));
         ServerTickEvents.END_SERVER_TICK.register(server->{for(ServerPlayer p:server.getPlayerList().getPlayers()) tick(p);});
         ServerPlayConnectionEvents.DISCONNECT.register((h,s)->STATES.remove(h.getPlayer().getUUID()));
@@ -72,7 +113,10 @@ public final class RangedCombat {
         || RangedItem.kind(p.getItemInHand(hand))!=null;}
     public static void resetReload(ServerPlayer p){
         State s=STATES.get(p.getUUID());
-        if(s!=null){s.main.stack=ItemStack.EMPTY;s.main.ticks=0;s.off.stack=ItemStack.EMPTY;s.off.ticks=0;slow(p,s,0);}
+        if(s!=null){
+            aim(p,false);s.main.stack=ItemStack.EMPTY;s.main.ticks=s.main.duration=0;
+            s.off.stack=ItemStack.EMPTY;s.off.ticks=s.off.duration=0;slow(p,s,0);sendReload(p,s);
+        }
     }
     private static void slow(ServerPlayer p,State s,double value){
         var a=p.getAttribute(Attributes.MOVEMENT_SPEED);
@@ -88,25 +132,29 @@ public final class RangedCombat {
         if(!has&&s==null)return;
         if(s==null){s=new State();STATES.put(p.getUUID(),s);}
         if(!valid(p)){resetReload(p);return;}
+        if(s.aim&&(!canAim(p)||s.aimStack!=p.getMainHandItem()))aim(p,false);
         boolean blocked=blocksOffhand(p);
         if(blocked&&p.isUsingItem()&&p.getUsedItemHand()==InteractionHand.OFF_HAND)p.stopUsingItem();
         boolean pair=paired(p,Kind.PISTOL);
         boolean m=reload(p,s.main,p.getMainHandItem(),false,pair);
         boolean o=reload(p,s.off,p.getOffhandItem(),true,pair);
         slow(p,s,m&&blocked?.50:m||o?.18:0);
+        if(p.tickCount%4==0||!has)sendReload(p,s);
         if(!has)STATES.remove(p.getUUID());
     }
     private static boolean reload(ServerPlayer p,Job job,ItemStack stack,boolean off,boolean pair){
         Kind kind=RangedItem.kind(stack);
         if(job.stack!=stack){job.stack=stack;job.ticks=0;}
+        job.duration=0;
         if(kind==null||kind==Kind.DAGGER||loaded(stack)||(off&&(blocksOffhand(p)||kind==Kind.CROSSBOW))){
             job.ticks=0;return false;
         }
         if(!p.getAbilities().instabuild&&RangedSupply.available(p,kind)<(pair?2:1)){job.ticks=0;return false;}
         int duration=kind==Kind.CROSSBOW?46:pair?60:38;
+        job.duration=duration;
         if(++job.ticks>=duration){
-            flag(stack,LOADED,true);job.ticks=0;
-            p.level().playSound(null,p.blockPosition(),SoundEvents.CROSSBOW_LOADING_END,SoundSource.PLAYERS,.5f,1f);
+            flag(stack,LOADED,true);job.ticks=job.duration=0;
+            p.level().playSound(null,p.blockPosition(),SoundEvents.CROSSBOW_LOADING_END.value(),SoundSource.PLAYERS,.5f,1f);
             return false;
         }
         return true;
@@ -122,6 +170,7 @@ public final class RangedCombat {
         ItemStack second=pair?p.getOffhandItem():ItemStack.EMPTY;
         State s=STATES.computeIfAbsent(p.getUUID(),k->new State());
         long now=p.serverLevel().getGameTime();
+        aimed=aimed&&s.aim&&s.aimStack==p.getMainHandItem();
         if(now<(off?s.nextOff:s.nextMain)||pair&&now<s.nextOff)return false;
         int n=pair?2:1;
         if(kind==Kind.DAGGER){
@@ -139,7 +188,7 @@ public final class RangedCombat {
         if(off)s.nextOff=now+gap;else s.nextMain=now+gap;
         if(pair)s.nextOff=now+gap;
         p.getInventory().setChanged();
-        p.level().playSound(null,p.blockPosition(),kind==Kind.DAGGER?SoundEvents.TRIDENT_THROW:SoundEvents.CROSSBOW_SHOOT,SoundSource.PLAYERS,.85f,kind==Kind.PISTOL?.65f:1f);
+        p.level().playSound(null,p.blockPosition(),kind==Kind.DAGGER?SoundEvents.TRIDENT_THROW.value():SoundEvents.CROSSBOW_SHOOT,SoundSource.PLAYERS,.85f,kind==Kind.PISTOL?.65f:1f);
         return true;
     }
     private static void launch(ServerPlayer p,ItemStack stack,Kind kind,boolean off,boolean aimed,boolean special,Map<UUID,Long> hits){
@@ -155,7 +204,8 @@ public final class RangedCombat {
         Vec3 start=p.getEyePosition().add(right.scale(side*.22)).add(0,-.15,0);
         shot.setPos(start.x,start.y,start.z);
         float spread=kind==Kind.CROSSBOW?(aimed?.5f:3f):kind==Kind.PISTOL?(aimed?3f:8f):1.7f;
-        shot.shoot(look.x,look.y,look.z,kind==Kind.DAGGER?1.7f:kind==Kind.PISTOL?3.2f:2.7f,spread);
+        Vec3 direction=aimed&&kind!=Kind.DAGGER?p.getEyePosition().add(look.scale(24)).subtract(start).normalize():look;
+        shot.shoot(direction.x,direction.y,direction.z,kind==Kind.DAGGER?1.7f:kind==Kind.PISTOL?3.2f:2.7f,spread);
         p.serverLevel().addFreshEntity(shot);
     }
     private static ItemStack held(ServerPlayer p,SkillInput input){return input.sneaking()?p.getOffhandItem():p.getMainHandItem();}
@@ -184,7 +234,7 @@ public final class RangedCombat {
             }
             p.setDeltaMovement(p.getDeltaMovement().add(look.scale(-.75)).add(0,.14,0));p.hurtMarked=true;
             p.serverLevel().sendParticles(ParticleTypes.POOF,p.getX()+look.x,p.getY()+1.15,p.getZ()+look.z,18,.4,.3,.4,.06);
-            p.level().playSound(null,p.blockPosition(),SoundEvents.GENERIC_EXPLODE,SoundSource.PLAYERS,.6f,1.3f);
+            p.level().playSound(null,p.blockPosition(),SoundEvents.GENERIC_EXPLODE.value(),SoundSource.PLAYERS,.6f,1.3f);
             return true;
         }
     };

@@ -20,7 +20,14 @@ public abstract class ItemInHandLayerMixin {
 	@org.spongepowered.asm.mixin.Final
 	private net.minecraft.client.renderer.ItemInHandRenderer itemInHandRenderer;
 
-	/** Ореол щитов Души парой (после самого щита). */
+	@Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)
+    private void tearsofink$rangedOffhand(LivingEntity entity, ItemStack stack, ItemDisplayContext context, HumanoidArm arm, PoseStack pose,
+                                          MultiBufferSource buffers, int light, CallbackInfo ci) {
+        if (entity instanceof net.minecraft.world.entity.player.Player p && arm != p.getMainArm()
+                && com.tarkrakov.tearsofink.weapon.ranged.RangedCombat.blocksOffhand(p)) ci.cancel();
+    }
+
+    /** Ореол щитов Души парой (после самого щита). */
 	@Inject(method = "renderArmWithItem", at = @At(value = "INVOKE", shift = At.Shift.AFTER,
 			target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"))
 	private void tearsofink$shieldHalo(LivingEntity entity, ItemStack stack, ItemDisplayContext context, HumanoidArm arm, PoseStack pose,

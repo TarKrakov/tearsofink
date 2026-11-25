@@ -41,7 +41,23 @@ public abstract class ItemInHandRendererMixin {
 	@Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$ownMotion(AbstractClientPlayer player, float partialTicks, float pitch, InteractionHand hand, float swingProgress,
 									  ItemStack stack, float equippedProgress, PoseStack poseStack, MultiBufferSource buffer, int light, CallbackInfo ci) {
-		Archetype archetype = Archetype.of(stack);
+		if (hand == InteractionHand.OFF_HAND && com.tarkrakov.tearsofink.weapon.ranged.RangedCombat.blocksOffhand(player)) {
+            ci.cancel(); return;
+        }
+        if (!tearsofink$inner && com.tarkrakov.tearsofink.weapon.ranged.RangedItem.kind(stack) != null
+                && com.tarkrakov.tearsofink.client.RangedClient.aimsHand(player, hand == InteractionHand.OFF_HAND)) {
+            boolean left = (hand == InteractionHand.MAIN_HAND) == (player.getMainArm() == net.minecraft.world.entity.HumanoidArm.LEFT);
+            tearsofink$inner = true;
+            poseStack.pushPose();
+            try {
+                poseStack.translate(left ? .23 : -.23, .10, -.12);
+                ((ItemInHandRendererInvoker) this).tearsofink$renderArmWithItem(player, partialTicks, pitch, hand, 0, stack, 0, poseStack, buffer, light);
+            } finally {
+                poseStack.popPose(); tearsofink$inner = false;
+            }
+            ci.cancel(); return;
+        }
+        Archetype archetype = Archetype.of(stack);
 		if (tearsofink$inner || archetype == null) return;
 		// Preserve the legacy contract. Custom pale poses also need equip=0:
 		// otherwise cooldown lowers the main hand independently of the off hand.
