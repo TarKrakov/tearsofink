@@ -74,12 +74,12 @@ public final class OrionCombatTest {
 
     private static void verifyDamageAndSpinReach() {
         require(PHASE_DAMAGE == 1, "phase two has no damage multiplier");
-        require(SLASH.get(0).damage() <= 9 * 2f / 3
-                && SLASH.get(1).damage() <= 10 * 2f / 3
-                && SLASH.get(2).damage() <= 10 * 2f / 3, "all slash hits reduced by at least a third");
-        require(SPIN.damage() <= 9.5f * 2 / 3 && CLEAVE.damage() <= 16 * 2f / 3
-                && SPIN_LIGHT_DAMAGE <= 8 * 2f / 3 && WAVE_DAMAGE <= 8 * 2f / 3
-                && CLEAVE_IMPACT_DAMAGE <= 11 * 2f / 3, "all other damage reduced by at least a third");
+        require(damageReduced(SLASH.get(0).damage(), 9)
+                && damageReduced(SLASH.get(1).damage(), 10)
+                && damageReduced(SLASH.get(2).damage(), 10), "slash hits reduced by 20-25 percent");
+        require(damageReduced(SPIN.damage(), 9.5f) && damageReduced(CLEAVE.damage(), 16)
+                && damageReduced(SPIN_LIGHT_DAMAGE, 8) && damageReduced(WAVE_DAMAGE, 8)
+                && damageReduced(CLEAVE_IMPACT_DAMAGE, 11), "other base damage reduced by 20-25 percent");
         require(Math.abs(SPIN_MARGIN - .68 * .75) < .000001
                 && Math.abs(SPIN_LIGHT_RADIUS - LIGHT_RADIUS * .75) < .000001,
                 "spin contact margin and radiant radius reduced by a quarter");
@@ -89,6 +89,10 @@ public final class OrionCombatTest {
         require(blade.contact(close, SPIN_MARGIN) != null, "nearby target still hit");
         require(blade.contact(outer, .68) != null && blade.contact(outer, SPIN_MARGIN) == null,
                 "old excessive side margin no longer hits");
+    }
+
+    private static boolean damageReduced(float damage, float original) {
+        return damage >= original * .75f - .00001f && damage <= original * .80f + .00001f;
     }
 
     private static void verifyAnimationPlayback() {

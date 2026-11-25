@@ -32,7 +32,7 @@ public final class OrionCombat {
     static final float CLEAVE_BRACE_START = 1.5f, CLEAVE_IMPACT = 3.15f;
     static final int WAVE_DELAY = 12, WAVE_TICKS = 11;
     static final double WAVE_SPEED = .69, WAVE_HALF_WIDTH = 1.45;
-    static final float WAVE_DAMAGE = 5, SPIN_LIGHT_DAMAGE = 5, CLEAVE_IMPACT_DAMAGE = 7;
+    static final float WAVE_DAMAGE = 6.25f, SPIN_LIGHT_DAMAGE = 6.25f, CLEAVE_IMPACT_DAMAGE = 8.5f;
     static final float SPIN_LIGHT = .68f;
     static final float EMPOWER_AFTER_SLASH = 3.04f, EMPOWER_AFTER_SPIN = 1.12f;
     static final float DEADLY_CLEAVE_EDGE = .88f;
@@ -60,10 +60,10 @@ public final class OrionCombat {
         boolean touches(float previous, float current) { return current >= from && previous < to; }
     }
 
-    static final List<Window> SLASH = List.of(new Window(1.05f, 1.28f, 6),
-            new Window(1.91f, 2.14f, 6.5f), new Window(2.60f, 2.89f, 6.5f));
-    static final Window SPIN = new Window(.22f, .94f, 6.25f);
-    static final Window CLEAVE = new Window(3.10f, 3.19f, 10.5f);
+    static final List<Window> SLASH = List.of(new Window(1.05f, 1.28f, 7),
+            new Window(1.91f, 2.14f, 8), new Window(2.60f, 2.89f, 8));
+    static final Window SPIN = new Window(.22f, .94f, 7.5f);
+    static final Window CLEAVE = new Window(3.10f, 3.19f, 12.5f);
 
     enum Combo {
         BASIC(0, 29, 8, 0, 6, Technique.SLASH, Technique.SPIN),
