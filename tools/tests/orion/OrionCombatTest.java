@@ -49,7 +49,6 @@ public final class OrionCombatTest {
             assertWindow(Clip.CLEAVE, phaseTwo, CLEAVE);
             assertWindow(Clip.SPIN_DASH, phaseTwo, SPIN);
             assertCrossing(Clip.CLEAVE, phaseTwo, CLEAVE_IMPACT);
-            assertCrossing(Clip.SPIN_DASH, phaseTwo, SPIN_LIGHT);
             assertCrossing(Clip.DEATH, phaseTwo, Clip.DEATH.length());
             assertCrossing(Clip.EMPOWER, phaseTwo, Clip.EMPOWER.length());
         }
@@ -57,9 +56,9 @@ public final class OrionCombatTest {
                 && Clip.EMPOWER.length() == 2.5 && Clip.EMPOWER.rate(true) == 1, "authored finale lengths");
         require(movementProgress(DASH_START, DASH_START, DASH_END) == 0
                 && movementProgress(DASH_END, DASH_START, DASH_END) == 1, "dash translation stays inside the spin");
-        require(spinAdvance(DASH_END_PHASE_TWO, true) == 1 && DASH_END_PHASE_TWO < SPIN_LIGHT
-                && SPIN_LIGHT < SPIN.to(), "phase-two spin arrives before light pulse and contact ends");
-        require(spinAdvance(SPIN_LIGHT, false) < 1 && spinAdvance(DASH_END, false) == 1,
+        require(spinAdvance(DASH_END_PHASE_TWO, true) == 1 && DASH_END_PHASE_TWO > SPIN.from()
+                && DASH_END_PHASE_TWO < SPIN.to(), "phase-two spin arrives during blade contact");
+        require(spinAdvance(DASH_END_PHASE_TWO, false) < 1 && spinAdvance(DASH_END, false) == 1,
                 "phase-one motion timing is unchanged");
         require(spinAdvance(.45f, true) > spinAdvance(.45f, false), "phase-two translation leads the spin");
         require(LINK_WAIT * ALIGN_TURN + ALIGN_TOLERANCE >= 180, "link can face a target behind the completed dash");
@@ -90,12 +89,10 @@ public final class OrionCombatTest {
         requireDamage(CLEAVE.damage(), 16);
         requireDamage(WAVE_DAMAGE, 8);
         requireDamage(CLEAVE_IMPACT_DAMAGE, 11);
-        require(Math.abs(SPIN_LIGHT_DAMAGE - 8 * .60f) < .0001f, "phase-two spin light damage");
         require(Math.abs(DEADLY_CLEAVE_DAMAGE - 16 * .88f * .60f) < .0001f,
                 "retain the distinct deadly cleave contact with the new phase-two nerf");
-        require(Math.abs(SPIN_MARGIN - .68 * .75) < .000001
-                && Math.abs(SPIN_LIGHT_RADIUS - LIGHT_RADIUS * .75) < .000001,
-                "spin contact margin and radiant radius reduced by a quarter");
+        require(Math.abs(SPIN_MARGIN - .68 * .75) < .000001,
+                "spin blade contact margin reduced by a quarter");
         var blade = new OrionBlade.Segment(Vec3.ZERO, new Vec3(0, 0, 2));
         var close = new AABB(.35, -.1, .5, .95, 1.7, 1.1);
         var outer = new AABB(.60, -.1, .5, 1.20, 1.7, 1.1);

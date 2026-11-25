@@ -461,8 +461,6 @@ public final class OrionEntity extends PathfinderMob {
             for (int i = 0; i < SLASH.size(); i++) sweep(server, players, SLASH.get(i), i, to, old);
         } else if (technique == Technique.SPIN) {
             sweep(server, players, SPIN, 0, to, old);
-            if (phaseTwo && crossed(previousTime, to, SPIN_LIGHT))
-                shockwave(server, players, position(), SPIN_LIGHT_RADIUS, SPIN_LIGHT_DAMAGE, hit.getFirst(), true);
         } else if (technique == Technique.CLEAVE) {
             sweep(server, players, CLEAVE, 0, to, old);
             if (crossed(previousTime, to, CLEAVE_IMPACT)) {

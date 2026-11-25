@@ -20,7 +20,6 @@ public final class OrionCombat {
     static final double SLASH_ADVANCE = 2.35, SLASH_ADVANCE_PHASE_TWO = 3.20;
     static final double SLASH_STOP_RANGE = 1.80, SLASH_START_RANGE = 5.3;
     static final double SLASH_MARGIN = .58, SPIN_MARGIN = .51;
-    static final double SPIN_LIGHT_RADIUS = 1.9125;
     static final double DASH_MIN = 2.7, DASH_THROUGH = .85, DASH_CONFIRM = .75;
     static final double ENGAGE_RANGE = 14, ENGAGE_RANGE_PHASE_TWO = 17;
     static final float SLASH_TURN = 8, ALIGN_TURN = 22, ALIGN_TOLERANCE = 23, SWEEP_STEP = .015f;
@@ -33,8 +32,6 @@ public final class OrionCombat {
     static final int WAVE_DELAY = 12, WAVE_TICKS = 11;
     static final double WAVE_SPEED = .69, WAVE_HALF_WIDTH = 1.45;
     static final Damage WAVE_DAMAGE = new Damage(5.6f, 4.8f), CLEAVE_IMPACT_DAMAGE = new Damage(7.7f, 6.6f);
-    static final float SPIN_LIGHT_DAMAGE = 4.8f;
-    static final float SPIN_LIGHT = .68f;
     static final float EMPOWER_AFTER_SLASH = 3.04f, EMPOWER_AFTER_SPIN = 1.12f;
     // Retain the pre-existing softer blade contact in DEADLY, without runtime scaling.
     static final float DEADLY_CLEAVE_DAMAGE = 8.448f;
@@ -150,7 +147,7 @@ public final class OrionCombat {
         return Math.clamp(targetDistance + DASH_THROUGH, DASH_MIN, limit);
     }
 
-    // Phase II reaches the committed destination before the radiant spin pulse.
+    // Phase II reaches the committed destination during the blade's active contact window.
     static float spinAdvance(float time, boolean phaseTwo) {
         return movementProgress(time, DASH_START, phaseTwo ? DASH_END_PHASE_TWO : DASH_END);
     }
