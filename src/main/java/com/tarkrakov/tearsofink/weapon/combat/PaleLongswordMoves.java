@@ -48,7 +48,6 @@ public final class PaleLongswordMoves {
     private record Context(ServerPlayer player, ItemStack stack) {}
     private static final Map<UUID, State> STATES = new HashMap<>();
     private static final ThreadLocal<Context> DAMAGE = new ThreadLocal<>();
-    private static boolean passingGuard;
     private PaleLongswordMoves() {}
 
     public static final Skill SINGLE = new Skill(TearsOfInk.id("pale_longsword_strike"), 0, 0,
@@ -83,6 +82,7 @@ public final class PaleLongswordMoves {
         else s.phase = Phase.IDLE;
         if (p.isUsingItem() && isWeapon(p.getUseItem())) p.stopUsingItem();
     }
+    public static void cancelParryForSwing(ServerPlayer p) { releaseGuard(p); }
     public static boolean locked(ServerPlayer p) {
         State s = STATES.get(p.getUUID());
         return s != null && s.phase != Phase.IDLE && valid(p,s) && available(p);
@@ -114,6 +114,7 @@ public final class PaleLongswordMoves {
     }
     public static int[] hudTimer(ServerPlayer p, boolean guard) {
         State s = STATES.get(p.getUUID());
+        if (guard) return PaleParry.hud(p, s != null && valid(p,s) && available(p) && s.phase == Phase.GUARD && PaleParry.active(now(p), s.until));
         if (s == null) return new int[]{0,1,0};
         boolean pair = dual(p);
         long ready = guard ? s.guardReady : pair ? s.dualReady : s.singleReady;
@@ -149,13 +150,11 @@ public final class PaleLongswordMoves {
     public static boolean beginGuard(ServerPlayer p) {
         if (!available(p) || !dual(p)) return false;
         State s = state(p);
-        if (s.phase == Phase.GUARD && valid(p,s)) return true;
+        if (!PaleParry.tryStart(p)) return false;
         CombatTransitions.begin(p, false);
         long time = now(p);
         capture(p,s); s.left = false; s.paired = true; s.phase = Phase.GUARD;
-        s.until = time+PaleLongswordTuning.BLOCK_START;
-        s.guardLength = 0;
-        s.guardReady = time+s.guardLength;
+        s.until = time + PaleParry.WINDOW_TICKS;
         playPair(p,"bb_author_dual_block_start",PaleLongswordTuning.BLOCK_START,PaleLongswordTuning.BLOCK_TRANSITION_TEMPO);
         wear(p,s.main);
         return true;
@@ -165,9 +164,7 @@ public final class PaleLongswordMoves {
         if (s == null || s.phase != Phase.GUARD) return;
         s.phase = Phase.IDLE;
         if (available(p) && valid(p,s)) playPair(p,"bb_author_dual_block_end",PaleLongswordTuning.BLOCK_END,PaleLongswordTuning.BLOCK_TRANSITION_TEMPO);
-    }
-    private static boolean holding(ServerPlayer p, State s) {
-        return p.isUsingItem() && p.getUseItem() == s.main;
+        if (p.isUsingItem() && p.getUseItem() == s.main) p.stopUsingItem();
     }
     private static Vec3 flat(ServerPlayer p) {
         Vec3 v = p.getLookAngle().multiply(1,0,1);
@@ -208,15 +205,13 @@ public final class PaleLongswordMoves {
             }
         });
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity,source,amount) -> {
-            if (passingGuard || !(entity instanceof ServerPlayer p) || amount<=0) return true;
+            if (!(entity instanceof ServerPlayer p) || amount<=0) return true;
             State s = STATES.get(p.getUUID());
-            if (s==null || s.phase!=Phase.GUARD || !available(p) || !valid(p,s) || !holding(p,s)
+            if (s==null || s.phase!=Phase.GUARD || !available(p) || !valid(p,s) || !PaleParry.active(now(p), s.until)
                     || source.is(DamageTypeTags.BYPASSES_SHIELD) || source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)
                     || !facing(p,source)) return true;
-            passingGuard = true;
-            try { p.hurt(source,amount*(1f-PaleLongswordTuning.BLOCK_REDUCTION)); }
-            finally { passingGuard = false; }
-            p.serverLevel().playSound(null,p.blockPosition(),SoundEvents.SHIELD_BLOCK,SoundSource.PLAYERS,.7f,1.05f);
+            releaseGuard(p); // consume the single parry before returning from the event
+            PaleParry.success(p);
             return false;
         });
         ServerTickEvents.END_SERVER_TICK.register(server -> {
@@ -237,11 +232,9 @@ public final class PaleLongswordMoves {
                 if (s.phase==Phase.STRIKE) {
                     if (!s.hit && time>=s.hitAt) { s.hit=true; strike(p,s); }
                     if (time>=s.until) s.phase=Phase.IDLE;
-                } else if (!holding(p,s)) releaseGuard(p);
-                else if (time>=s.until) {
-                    playPair(p,"bb_author_dual_block_loop",PaleLongswordTuning.BLOCK_LOOP,1f);
-                    s.until=time+PaleLongswordTuning.BLOCK_LOOP;
-                }
+                } else if (time>=s.until) releaseGuard(p);
+                else if (time == s.until - (PaleParry.WINDOW_TICKS - PaleLongswordTuning.BLOCK_START))
+                    playPair(p,"bb_author_dual_block_loop",PaleParry.WINDOW_TICKS-PaleLongswordTuning.BLOCK_START,1f);
             }
         });
     }

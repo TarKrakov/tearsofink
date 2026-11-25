@@ -22,7 +22,7 @@ public final class PaleGreatswordBalance {
                         float slamDamageMultiplier, double slamReach, double slamKnockback) {}
     public record DualCharge(int cooldownTicks, double dashDistance, float minDamageMultiplier,
                              float maxDamageMultiplier) {}
-    /** Toggleable forward-facing guard; reduction is the blocked share of incoming damage. */
+    /** Legacy guard data: arcs remain active; old reduction/cooldown fields are retained for datapack compatibility only. */
     public record ShiftGuard(float singleReduction, float dualReduction, double singleArc, double dualArc,
                              int singleCooldownTicks, int dualCooldownTicks) {}
     public record Tuning(SingleR singleR, Backstep backstep, DualR dualR, DualCharge dualCharge,

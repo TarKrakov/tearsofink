@@ -170,6 +170,8 @@ public final class Combat {
 
 	private static void swing(ServerPlayer p) {
 		if (!p.isAlive() || p.isSpectator()) return;
+		PaleGreatswordMoves.cancelParryForSwing(p);
+		PaleLongswordMoves.cancelParryForSwing(p);
 		if (PaleGreatswordMoves.locked(p) || PaleLongswordMoves.locked(p)) return;
 		ItemStack weapon = p.getMainHandItem();
 		Archetype a = Archetype.of(weapon);

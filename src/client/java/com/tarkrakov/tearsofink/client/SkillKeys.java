@@ -30,6 +30,7 @@ public final class SkillKeys {
 	private static KeyMapping loadoutKey;
 	private static boolean loadoutWasDown;
 	private static boolean suppressHeldUse;
+	private static boolean weaponWasDown;
 
 	private SkillKeys() {}
 
@@ -87,6 +88,8 @@ public final class SkillKeys {
 	}
 
 	/** A held block or charge must not start a new right-click action with the incoming weapon. */
+	public static void suppressUseUntilRelease(Minecraft mc) { suppressHeldUse = mc.options.keyUse.isDown(); }
+
 	public static boolean suppressHeldUse(Minecraft mc) {
 		return suppressHeldUse && mc.options.keyUse.isDown();
 	}
@@ -102,11 +105,16 @@ public final class SkillKeys {
 			ClientPlayNetworking.send(WeaponLoadouts.Swap.INSTANCE);
 		}
 		loadoutWasDown = loadoutKey.isDown();
+		boolean sentParry = false;
 		while (WEAPON_KEY.consumeClick()) {
 			if (player == null || mc.screen != null) continue;
+			boolean parry = player.isShiftKeyDown() && com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.dual(player);
+			if (parry && (weaponWasDown || sentParry)) continue;
+			if (parry) sentParry = true;
 			ClientPlayNetworking.send(new SkillPayloads.UseWeapon(player.isShiftKeyDown(),
 					player.input.leftImpulse, player.input.forwardImpulse));
 		}
+		weaponWasDown = WEAPON_KEY.isDown();
 		for (Map.Entry<KeyMapping, Skill> e : KEYS.entrySet()) {
 			while (e.getKey().consumeClick()) {
 				if (player == null || mc.screen != null) continue;

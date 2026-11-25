@@ -51,11 +51,10 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
 		if (hand == net.minecraft.world.InteractionHand.MAIN_HAND
                 && com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(player.getItemInHand(hand))) {
             var stack = player.getItemInHand(hand);
-            // Одиночный ПКМ — защита, пока игрок держит кнопку.
-            // Ванильное использование предмета само синхронизирует отпускание ПКМ с сервером.
-            // Парный ПКМ выше остался прежней заряжаемой атакой.
-            if (player instanceof net.minecraft.server.level.ServerPlayer sp)
-                com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.holdGuard(sp);
+            // Solo RMB is a one-shot parry. Dual RMB above remains the charge.
+            if (player instanceof net.minecraft.server.level.ServerPlayer sp
+                    && !com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.holdGuard(sp))
+                return net.minecraft.world.InteractionResultHolder.fail(stack);
             player.startUsingItem(hand);
             return net.minecraft.world.InteractionResultHolder.consume(stack);
         }
@@ -71,7 +70,7 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
 		}
 		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(stack)) {
 			if (entity instanceof net.minecraft.server.level.ServerPlayer sp) {
-				// Одиночная защита удерживается, пока игрок не отпустит ПКМ.
+				// Solo parry has its own fixed server window.
 				// Лимит времени существует только для прежней парной заряжаемой атаки.
 				if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.dual(sp)
 						&& getUseDuration(stack, entity) - remaining >= 50) sp.releaseUsingItem();
@@ -85,12 +84,11 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
 	public void releaseUsing(net.minecraft.world.item.ItemStack stack, net.minecraft.world.level.Level level,
 			net.minecraft.world.entity.LivingEntity entity, int timeLeft) {
 		if (com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.isWeapon(stack)) {
-			if (entity instanceof net.minecraft.server.level.ServerPlayer sp) com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.releaseGuard(sp);
+			// Releasing RMB does not shorten or renew the fixed parry window.
 			return;
 		}
 		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(stack)) {
 			if (entity instanceof net.minecraft.server.level.ServerPlayer sp) {
-				com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.releaseHeldGuard(sp);
 				com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.release(sp);
 			}
 			return;

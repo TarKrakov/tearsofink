@@ -36,7 +36,6 @@ import java.util.UUID;
 
 /** Server-owned phases. No energy cost; continuations bypass the entry cooldown, never its validation. */
 public final class PaleGreatswordMoves {
-    private static final int GUARD_REFRESH_TICKS = 30; // held-pose refresh, not a gameplay duration
     private static final Archetype ARCH = Archetype.PALE_LINEAR_GREATSWORD;
     private static final TagKey<Block> SOFT = TagKey.create(Registries.BLOCK, TearsOfInk.id("pale_dash_soft"));
     private enum Phase { IDLE, SINGLE_WINDOW, SINGLE_DASH, BACKSTEP, GUARD, LEAP_START, LEAP, SLAM, CHARGE, DUAL_DASH, RECOVER }
@@ -56,9 +55,6 @@ public final class PaleGreatswordMoves {
         final Set<UUID> hit = new HashSet<>();
     }
     private static final Map<UUID, State> STATES = new HashMap<>();
-    // This guard lets the original hit be replaced with one smaller hit. Damage events
-    // fire again for that nested call, just as they do in ShieldStance.
-    private static boolean passingGuardDamage;
     private record DamageWeapon(ServerPlayer player, ItemStack stack) {}
     private static final ThreadLocal<DamageWeapon> DAMAGE_WEAPON = new ThreadLocal<>();
 
@@ -140,26 +136,13 @@ public final class PaleGreatswordMoves {
         ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
             if (!(entity instanceof ServerPlayer p)) return true;
             State s = STATES.get(p.getUUID());
-            net.minecraft.world.entity.Entity attacker = source.getEntity() != null
-                    ? source.getEntity() : source.getDirectEntity();
-            // Shift+R is a damage-reducing block, NOT a full parry: it never
-            // triggers the counter or cancels the hit's knockback. Only incoming
-            // attacks in front of the guarding blades are reduced.
-            if (!passingGuardDamage && s != null && s.phase == Phase.GUARD
-                    && available(p) && valid(p, s) && amount > 0
+            if (s != null && s.phase == Phase.GUARD
+                    && available(p) && valid(p, s) && amount > 0 && PaleParry.active(now(p), s.until)
                     && !source.is(DamageTypeTags.BYPASSES_SHIELD)
                     && !source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)
                     && guardFacing(p, source)) {
-                var guard = s.tuning.shiftGuard();
-                float reduction = s.paired ? guard.dualReduction() : guard.singleReduction();
-                passingGuardDamage = true;
-                try {
-                    p.hurt(source, amount * (1f - reduction));
-                } finally {
-                    passingGuardDamage = false;
-                }
-                p.serverLevel().playSound(null, p.blockPosition(), net.minecraft.sounds.SoundEvents.SHIELD_BLOCK,
-                        net.minecraft.sounds.SoundSource.PLAYERS, 0.65f, s.paired ? 0.95f : 1.1f);
+                lowerGuard(p, s);
+                PaleParry.success(p);
                 return false;
             }
             return true;
@@ -243,17 +226,7 @@ public final class PaleGreatswordMoves {
                         }
                         if (time >= s.until) s.phase = Phase.IDLE;
                     }
-                    case GUARD -> {
-                        // Только одиночный ПКМ: отпускание или прерванное использование
-                        // сразу опускает защиту. Парный Shift+R не меняем.
-                        if (!s.paired && !s.left && (!p.isUsingItem() || p.getUseItem() != s.main)) {
-                            lowerGuard(p, s);
-                        } else if (time >= s.until) {
-                            play(p, s, s.paired ? "bb_author_dual_guard_hold" : s.left ? "guard_hold" : "bb_author_guard_hold",
-                                    s.paired ? "bb_author_dual_guard_hold_off" : null, GUARD_REFRESH_TICKS);
-                            s.until = time + GUARD_REFRESH_TICKS;
-                        }
-                    }
+                    case GUARD -> { if (time >= s.until) lowerGuard(p, s); }
                     case RECOVER -> { if (time >= s.until) s.phase = Phase.IDLE; }
                     default -> {}
                 }
@@ -261,37 +234,24 @@ public final class PaleGreatswordMoves {
         });
     }
 
-    /** Одиночный ПКМ: поднять защиту без переключения повторным вызовом. */
-    public static void holdGuard(ServerPlayer p) {
-        if (!isWeapon(p.getMainHandItem()) || dual(p)) return;
-        guard(p, false);
+    /** Solo RMB opens a fixed parry window; dual RMB remains the charge attack. */
+    public static boolean holdGuard(ServerPlayer p) {
+        return isWeapon(p.getMainHandItem()) && !dual(p) && beginParry(p);
     }
 
-    /** Отпускание одиночного ПКМ: защита отключается без ожидания cooldown. */
-    public static void releaseHeldGuard(ServerPlayer p) {
-        State s = STATES.get(p.getUUID());
-        if (s != null && s.phase == Phase.GUARD && !s.paired && !s.left) lowerGuard(p, s);
-    }
+    /** Dual Shift+R opens a parry, not a toggle. */
+    public static void guard(ServerPlayer p) { beginParry(p); }
 
-    /** Парный Shift+R остаётся переключаемым. */
-    public static void guard(ServerPlayer p) {
-        guard(p, true);
-    }
-
-    private static void guard(ServerPlayer p, boolean toggle) {
-        if (!available(p)) return;
+    private static boolean beginParry(ServerPlayer p) {
+        if (!available(p)) return false;
         boolean main = isWeapon(p.getMainHandItem());
         boolean off = isWeapon(p.getOffhandItem());
-        if (!main && !off) return;
+        if (!main && !off) return false;
         State s = state(p);
         if (s.phase != Phase.IDLE && !valid(p, s)) cancel(p, s);
-        if (s.phase == Phase.GUARD) {
-            if (toggle) lowerGuard(p, s);
-            return;
-        }
+        if (!PaleParry.tryStart(p)) return false;
         CombatTransitions.begin(p, false);
         var tune = PaleGreatswordBalance.get();
-        var block = tune.shiftGuard();
         boolean pair = main && off;
         boolean left = !main;
 
@@ -299,12 +259,9 @@ public final class PaleGreatswordMoves {
         s.owner = p; s.level = p.serverLevel();
         s.main = p.getMainHandItem(); s.off = p.getOffhandItem();
         s.left = left; s.paired = pair; s.started = now(p);
-        s.phase = Phase.GUARD; s.until = now(p) + GUARD_REFRESH_TICKS;
-        // Блок без перезарядки.
-        s.guardLength = 0;
-        s.guardReady = now(p);
+        s.phase = Phase.GUARD; s.until = now(p) + PaleParry.WINDOW_TICKS;
         play(p, s, pair ? "bb_author_dual_guard_start" : left ? "guard" : "bb_author_guard_start",
-                pair ? "bb_author_dual_guard_start_off" : null, GUARD_REFRESH_TICKS);
+                pair ? "bb_author_dual_guard_start_off" : null, PaleParry.WINDOW_TICKS);
         // Free ordinary technique; the existing weapon-wear economy still applies.
         ItemStack sword = left ? s.off : s.main;
         com.tarkrakov.tearsofink.weapon.forge.Gear.wear(p, sword,
@@ -313,12 +270,19 @@ public final class PaleGreatswordMoves {
         p.serverLevel().playSound(null, p.blockPosition(),
                 net.minecraft.sounds.SoundEvents.ARMOR_EQUIP_IRON.value(),
                 net.minecraft.sounds.SoundSource.PLAYERS, 0.65f, pair ? 0.9f : 1.1f);
+        return true;
+    }
+
+    public static void cancelParryForSwing(ServerPlayer p) {
+        State s = STATES.get(p.getUUID());
+        if (s != null && s.phase == Phase.GUARD) lowerGuard(p,s);
     }
 
     private static void lowerGuard(ServerPlayer p, State s) {
         s.phase = Phase.IDLE; // protection ends immediately; return pose can blend into another action
-        play(p, s, s.paired ? "bb_author_dual_guard_end" : s.left ? "guard_release" : "bb_author_guard_end",
+        if (available(p) && valid(p,s)) play(p, s, s.paired ? "bb_author_dual_guard_end" : s.left ? "guard_release" : "bb_author_guard_end",
                 s.paired ? "bb_author_dual_guard_end_off" : null, s.paired || s.left ? 10 : 4);
+        if (!s.paired && !s.left && p.isUsingItem() && p.getUseItem() == s.main) p.stopUsingItem();
     }
 
     private static boolean guardFacing(ServerPlayer p, net.minecraft.world.damagesource.DamageSource source) {
@@ -459,6 +423,7 @@ public final class PaleGreatswordMoves {
     // Read-only HUD view of the actual independent technique timers.
     public static int[] hudTimer(ServerPlayer p, int action, boolean left) {
         State s = STATES.get(p.getUUID());
+        if (action == 1) return PaleParry.hud(p, s != null && valid(p,s) && available(p) && s.phase == Phase.GUARD && PaleParry.active(now(p), s.until));
         if (s == null) return new int[]{0, 1, action == 0 && dual(p) && (!p.onGround() || p.isInWater() || p.isFallFlying()) ? 1 : 0};
         boolean pair = dual(p);
         long ready = action == 1 ? s.guardReady : action == 2 ? s.chargeReady : pair ? s.dualReady : s.singleReady;

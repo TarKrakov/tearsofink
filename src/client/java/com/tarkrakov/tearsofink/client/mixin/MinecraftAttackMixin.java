@@ -36,6 +36,15 @@ public abstract class MinecraftAttackMixin {
 		if (SkillKeys.suppressHeldUse((Minecraft) (Object) this)) ci.cancel();
 	}
 
+	@Inject(method = "startUseItem", at = @At("TAIL"))
+	private void tearsofink$singleParryPerPress(CallbackInfo ci) {
+		if (player == null || !player.isUsingItem()) return;
+		if (com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.dual(player)
+				|| (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(player.getMainHandItem())
+				&& !com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.dual(player)))
+			SkillKeys.suppressUseUntilRelease((Minecraft) (Object) this);
+	}
+
 	@Inject(method = "continueAttack", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$holdToMine(boolean leftClick, CallbackInfo ci) {
 		if (!leftClick || player == null || Archetype.of(player.getMainHandItem()) == null) return;

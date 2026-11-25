@@ -10,6 +10,10 @@ import static com.tarkrakov.tearsofink.entity.orion.OrionCombat.*;
 
 public final class OrionCombatTest {
     public static void main(String[] args) {
+        require(com.tarkrakov.tearsofink.weapon.combat.PaleParry.WINDOW_TICKS == 8 && com.tarkrakov.tearsofink.weapon.combat.PaleParry.COOLDOWN_TICKS == 20, "pale parry timing");
+        for (long tick=100; tick<108; tick++) require(com.tarkrakov.tearsofink.weapon.combat.PaleParry.active(tick,108), "eight active parry ticks");
+        require(!com.tarkrakov.tearsofink.weapon.combat.PaleParry.active(108,108), "parry expires at tick eight");
+        require(!com.tarkrakov.tearsofink.weapon.combat.PaleParry.ready(119,120) && com.tarkrakov.tearsofink.weapon.combat.PaleParry.ready(120,120), "parry cooldown boundary");
         List<List<Technique>> steps = List.of(List.of(Technique.SLASH, Technique.SPIN), List.of(Technique.SPIN, Technique.CLEAVE), List.of(Technique.SLASH, Technique.SPIN, Technique.CLEAVE),
                 List.of(Technique.DODGE, Technique.SPIN, Technique.DODGE, Technique.SPIN, Technique.SLASH), List.of(Technique.SPIN, Technique.CLEAVE, Technique.SPIN, Technique.CLEAVE, Technique.SPIN, Technique.CLEAVE),
                 List.of(Technique.SPIN, Technique.SPIN, Technique.SPIN, Technique.SPIN));

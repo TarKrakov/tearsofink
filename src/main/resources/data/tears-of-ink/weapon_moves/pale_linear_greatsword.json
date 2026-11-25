@@ -1,5 +1,5 @@
 {
-  "_comment": "Баланс Бледного двуручника, /reload. Уроны = базовый атрибут × множитель; 20 тиков = 1 с. Одиночный отскок на ПКМ больше недоступен: его конфигурация сохранена временно для старых datapack. Одиночный ПКМ — удерживаемый блок (защита только пока держишь кнопку), R — взмах и рывок.",
+  "_comment": "Баланс Бледного двуручника, /reload. Уроны = базовый атрибут × множитель; 20 тиков = 1 с. Одиночный отскок на ПКМ больше недоступен: его конфигурация сохранена временно для старых datapack. Одиночный ПКМ — парирование 8 тиков, R — взмах и рывок.",
   "single_r": {
     "damage_multiplier": 0.7,
     "reach": 3.4,
@@ -39,7 +39,7 @@
     "max_damage_multiplier": 1.8
   },
   "shift_guard": {
-    "_comment": "Solo RMB holds guard only while pressed; dual Shift+R still toggles. reduction = blocked damage share; arc = full forward sector. Guard has no cooldown; legacy cooldown fields are ignored.",
+    "_comment": "Solo RMB / dual Shift+R: one hit parry, 8 ticks, shared 20 tick cooldown in PaleParry. arc = full forward sector. Legacy reduction and cooldown fields are ignored.",
     "single_reduction": 0.45,
     "dual_reduction": 0.6,
     "single_arc": 120,
