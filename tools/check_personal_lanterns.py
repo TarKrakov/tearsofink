@@ -73,8 +73,11 @@ print("D-106: personal slots, left-hand inventory panel, collection and reserved
 
 # D-033 / D-106: hidden panels must also disable their slots and JEI areas.
 assert "if (index == PANTHEON_KEY) return fullPanel(player);" in slots
-assert "return PersonalSlots.fullPanel(container.owner());" in menu
-assert "isActive() && container.stillValid(player)" in menu
+assert "WeaponLoadouts.Items reserveItems" in menu
+assert "return PersonalSlots.fullPanel(reserveItems.owner());" in menu
+assert "isActive() && reserveItems.canPlaceItem(index, stack)" in menu
+assert "container.owner()" not in menu, "Slot.container has the base Container type"
+assert "isActive() && reserveItems.stillValid(player)" in menu
 assert "tearsofink$denyHiddenSlots" in menu_mixin
 assert "PersonalSlots.available(server, PersonalSlots.PANTHEON_KEY)" in menu_mixin
 assert "if (bounds == null) return;" in screen
