@@ -41,7 +41,7 @@ public final class RangedCombat {
     private static final net.minecraft.resources.ResourceLocation SLOW=TearsOfInk.id("ranged_reload_slow");
     private static final Map<UUID,State> STATES=new HashMap<>();
     private static final class Job { ItemStack stack=ItemStack.EMPTY; int ticks, duration; }
-    private static final class State { final Job main=new Job(), off=new Job(); long nextMain, nextOff; double slow; boolean aim; ItemStack aimStack=ItemStack.EMPTY; }
+    private static final class State { final Job main=new Job(), off=new Job(); long nextMain, nextOff; double slow; boolean aim, hadPistol; ItemStack aimStack=ItemStack.EMPTY; }
     private RangedCombat(){}
     public record Fire(boolean off,boolean aimed) implements CustomPacketPayload {
         public static final Type<Fire> TYPE=new Type<>(TearsOfInk.id("ranged_fire"));
@@ -57,6 +57,22 @@ public final class RangedCombat {
         public static final Type<AimPose> TYPE=new Type<>(TearsOfInk.id("ranged_aim_pose"));
         public static final StreamCodec<ByteBuf,AimPose> CODEC=StreamCodec.composite(ByteBufCodecs.VAR_INT,AimPose::entity,ByteBufCodecs.BOOL,AimPose::active,AimPose::new);
         @Override public Type<AimPose> type(){return TYPE;}
+    }
+    /** Accepted shot/ability, for visual playback only. */
+    public record PistolShot(int entity,boolean off,boolean pair,boolean aimed,boolean wild) implements CustomPacketPayload {
+        public static final Type<PistolShot> TYPE=new Type<>(TearsOfInk.id("pistol_shot_pose"));
+        public static final StreamCodec<ByteBuf,PistolShot> CODEC=StreamCodec.composite(ByteBufCodecs.VAR_INT,PistolShot::entity,ByteBufCodecs.BOOL,PistolShot::off,ByteBufCodecs.BOOL,PistolShot::pair,ByteBufCodecs.BOOL,PistolShot::aimed,ByteBufCodecs.BOOL,PistolShot::wild,PistolShot::new);
+        @Override public Type<PistolShot> type(){return TYPE;}
+    }
+    public record PistolReload(int entity,int main,int mainMax,int off,int offMax) implements CustomPacketPayload {
+        public static final Type<PistolReload> TYPE=new Type<>(TearsOfInk.id("pistol_reload_pose"));
+        public static final StreamCodec<ByteBuf,PistolReload> CODEC=StreamCodec.composite(ByteBufCodecs.VAR_INT,PistolReload::entity,ByteBufCodecs.VAR_INT,PistolReload::main,ByteBufCodecs.VAR_INT,PistolReload::mainMax,ByteBufCodecs.VAR_INT,PistolReload::off,ByteBufCodecs.VAR_INT,PistolReload::offMax,PistolReload::new);
+        @Override public Type<PistolReload> type(){return TYPE;}
+    }
+    private static void pistolShot(ServerPlayer p,boolean off,boolean pair,boolean aimed,boolean wild){
+        var packet=new PistolShot(p.getId(),off,pair,aimed,wild);
+        for(ServerPlayer viewer:p.serverLevel().players())
+            if(viewer.distanceToSqr(p)<128*128&&ServerPlayNetworking.canSend(viewer,PistolShot.TYPE))ServerPlayNetworking.send(viewer,packet);
     }
     public record ReloadView(int main,int mainMax,int off,int offMax) implements CustomPacketPayload {
         public static final Type<ReloadView> TYPE=new Type<>(TearsOfInk.id("ranged_reload_view"));
@@ -84,6 +100,12 @@ public final class RangedCombat {
     private static void sendReload(ServerPlayer p,State s){
         if(ServerPlayNetworking.canSend(p,ReloadView.TYPE))
             ServerPlayNetworking.send(p,new ReloadView(s.main.ticks,s.main.duration,s.off.ticks,s.off.duration));
+        boolean main=RangedItem.kind(p.getMainHandItem())==Kind.PISTOL,off=RangedItem.kind(p.getOffhandItem())==Kind.PISTOL&&!blocksOffhand(p);
+        if(main||off||s.hadPistol){
+            var packet=new PistolReload(p.getId(),main?s.main.ticks:0,main?s.main.duration:0,off?s.off.ticks:0,off?s.off.duration:0);
+            for(ServerPlayer viewer:p.serverLevel().players())if(viewer.distanceToSqr(p)<128*128&&ServerPlayNetworking.canSend(viewer,PistolReload.TYPE))ServerPlayNetworking.send(viewer,packet);
+        }
+        s.hadPistol=main||off;
     }
     public static boolean loaded(ItemStack s){return flag(s,LOADED);}
     public static boolean empowered(ItemStack s){return flag(s,EMPOWERED);}
@@ -98,6 +120,8 @@ public final class RangedCombat {
         PayloadTypeRegistry.playC2S().register(Aim.TYPE,Aim.CODEC);
         PayloadTypeRegistry.playS2C().register(AimPose.TYPE,AimPose.CODEC);
         PayloadTypeRegistry.playS2C().register(ReloadView.TYPE,ReloadView.CODEC);
+        PayloadTypeRegistry.playS2C().register(PistolShot.TYPE,PistolShot.CODEC);
+        PayloadTypeRegistry.playS2C().register(PistolReload.TYPE,PistolReload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(Aim.TYPE,(packet,ctx)->ctx.player().server.execute(()->aim(ctx.player(),packet.active())));
         ServerPlayNetworking.registerGlobalReceiver(Fire.TYPE,(packet,ctx)->ctx.player().server.execute(()->fire(ctx.player(),packet.off(),packet.aimed(),false)));
         ServerTickEvents.END_SERVER_TICK.register(server->{for(ServerPlayer p:server.getPlayerList().getPlayers()) tick(p);});
@@ -184,6 +208,7 @@ public final class RangedCombat {
         Map<UUID,Long> hits=pair?RangedProjectile.pair():null;
         launch(p,first,kind,off,aimed&&!off,special,hits);
         if(pair)launch(p,second,kind,true,aimed,special,hits);
+        if(kind==Kind.PISTOL)pistolShot(p,off,pair,aimed&&!off,false);
         int gap=kind==Kind.DAGGER?12:5;
         if(off)s.nextOff=now+gap;else s.nextMain=now+gap;
         if(pair)s.nextOff=now+gap;
@@ -224,6 +249,7 @@ public final class RangedCombat {
             ItemStack s=held(p,input);
             if(!valid(p)||input.sneaking()&&blocksOffhand(p)||RangedItem.kind(s)!=Kind.PISTOL||!loaded(s)||!RangedSupply.take(p,Kind.PISTOL,2))return false;
             flag(s,LOADED,false);
+            pistolShot(p,input.sneaking(),false,false,true);
             Vec3 look=p.getLookAngle().multiply(1,0,1).normalize();
             if(look.lengthSqr()<1e-5)look=Vec3.directionFromRotation(0,p.getYRot());
             for(LivingEntity t:p.serverLevel().getEntitiesOfClass(LivingEntity.class,p.getBoundingBox().inflate(3.3),e->e!=p&&e.isAlive())){

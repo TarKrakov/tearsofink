@@ -44,6 +44,17 @@ public abstract class ItemInHandRendererMixin {
 		if (hand == InteractionHand.OFF_HAND && com.tarkrakov.tearsofink.weapon.ranged.RangedCombat.blocksOffhand(player)) {
             ci.cancel(); return;
         }
+        if (!tearsofink$inner && com.tarkrakov.tearsofink.client.PistolAnims.isPistol(stack)) {
+            var side = hand==InteractionHand.MAIN_HAND?player.getMainArm():player.getMainArm().getOpposite();
+            var motion = com.tarkrakov.tearsofink.client.PistolAnims.motion(player,side);
+            if(motion!=null){
+                tearsofink$inner=true;
+                try {
+                    ((ItemInHandRendererInvoker)this).tearsofink$renderArmWithItem(player,partialTicks,pitch,hand,0,stack,0,poseStack,buffer,light);
+                } finally {tearsofink$inner=false;}
+                ci.cancel();return;
+            }
+        }
         if (!tearsofink$inner && com.tarkrakov.tearsofink.weapon.ranged.RangedItem.kind(stack) != null
                 && com.tarkrakov.tearsofink.client.RangedClient.aimsHand(player, hand == InteractionHand.OFF_HAND)) {
             boolean left = (hand == InteractionHand.MAIN_HAND) == (player.getMainArm() == net.minecraft.world.entity.HumanoidArm.LEFT);

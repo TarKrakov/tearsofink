@@ -70,15 +70,21 @@ public final class WeaponAnims {
 	private static final Map<String, Vector3f> IDLE_OFFSET = new HashMap<>();
 
 	public static ThirdTune thirdTune(Archetype a) {
-		return THIRD.getOrDefault(a.id, ThirdTune.DEFAULT);
+		return thirdTune(a.id);
 	}
 
 	@org.jetbrains.annotations.Nullable
 	public static Vector3f grip(Archetype a) {
-		return GRIP.get(a.id);
+		return grip(a.id);
 	}
 
-	/** smooth: сколько секунд новое движение перетекает из позы, где клинок реально был (без скачка между ударами). */
+	public static ThirdTune thirdTune(String id) { return THIRD.getOrDefault(id,ThirdTune.DEFAULT); }
+    public static Vector3f grip(String id) { return GRIP.get(id); }
+    public static Clip clip(String id,String name) {
+        Map<String,Clip> clips=CLIPS.get(id);
+        return clips==null?null:clips.get(name);
+    }
+    /** smooth: сколько секунд новое движение перетекает из позы, где клинок реально был (без скачка между ударами). */
 	private static final float BLEND = 0.12f;
 	private static float blend(Playing p) {
 		// Author-baked poses already include their own interpolation; only bridge cut boundaries.
@@ -136,26 +142,40 @@ public final class WeaponAnims {
 				FIRST_PERSON_OFFSET.clear();
 				IDLE_OFFSET.clear();
 				ThirdPerson.clear();
-				for (Archetype a : Archetype.values()) {
-					var res = manager.getResource(TearsOfInk.id("weapon_anims/" + a.id + ".json"));
+				List<String> animationIds = new ArrayList<>();
+                for (Archetype a : Archetype.values()) animationIds.add(a.id);
+                animationIds.add("holy_pistol");
+                for (String id : animationIds) {
+					var res = manager.getResource(TearsOfInk.id("weapon_anims/" + id + ".json"));
 					if (res.isEmpty()) continue;
 					try (Reader r = res.get().openAsReader()) {
 						JsonObject root = JsonParser.parseReader(r).getAsJsonObject();
-						CLIPS.put(a.id, parse(root));
-						if (root.has("firstperson_offset")) FIRST_PERSON_OFFSET.put(a.id, vec(root, "firstperson_offset", new Vector3f()));
-						if (root.has("firstperson_idle_offset")) IDLE_OFFSET.put(a.id, vec(root, "firstperson_idle_offset", new Vector3f()));
-						if (root.has("grip")) GRIP.put(a.id, vec(root, "grip", new Vector3f(8, 8, 8)));
+						CLIPS.put(id, parse(root));
+						if (root.has("firstperson_offset")) FIRST_PERSON_OFFSET.put(id, vec(root, "firstperson_offset", new Vector3f()));
+						if (root.has("firstperson_idle_offset")) IDLE_OFFSET.put(id, vec(root, "firstperson_idle_offset", new Vector3f()));
+						if (root.has("grip")) GRIP.put(id, vec(root, "grip", new Vector3f(8, 8, 8)));
 						if (root.has("third")) {
 							JsonObject t = root.getAsJsonObject("third");
 							ThirdTune d = ThirdTune.DEFAULT;
-							THIRD.put(a.id, new ThirdTune(f(t, "reach", d.reach()), f(t, "lead", d.lead()), f(t, "body", d.body()), f(t, "look", d.look()),
+							THIRD.put(id, new ThirdTune(f(t, "reach", d.reach()), f(t, "lead", d.lead()), f(t, "body", d.body()), f(t, "look", d.look()),
 									t.has("centre") && t.get("centre").getAsBoolean(), f(t, "push", d.push())));
 						}
 					} catch (Exception e) {
-						TearsOfInk.LOGGER.error("Движения {} не прочитались: {}", a.id, e.toString());
+						TearsOfInk.LOGGER.error("Движения {} не прочитались: {}", id, e.toString());
 					}
 				}
-				// Отдельная тестовая библиотека Blockbench: никогда не заменяет принятые клипы.
+				// Ranged author clips use the same baked format, but are not melee archetypes.
+                var pistol = manager.getResource(TearsOfInk.id("weapon_anims/holy_pistol_bb_author.json"));
+                if (pistol.isPresent() && CLIPS.containsKey("holy_pistol")) {
+                    try (Reader r = pistol.get().openAsReader()) {
+                        Map<String,Clip> imported=parse(JsonParser.parseReader(r).getAsJsonObject());
+                        var active=CLIPS.get("holy_pistol");
+                        if(imported.keySet().stream().anyMatch(n->!n.startsWith("bb_author_")||active.containsKey(n)))
+                            throw new IllegalArgumentException("Invalid or duplicate pistol clip");
+                        active.putAll(imported);
+                    } catch(Exception e){ TearsOfInk.LOGGER.error("Pistol clips could not be loaded: {}",e.toString()); }
+                }
+                // Отдельная тестовая библиотека Blockbench: никогда не заменяет принятые клипы.
 				var pilot = manager.getResource(TearsOfInk.id("weapon_anims/pale_linear_greatsword_bb_test.json"));
 				if (pilot.isPresent()) {
 					try (Reader r = pilot.get().openAsReader()) {
@@ -303,7 +323,21 @@ public final class WeaponAnims {
 		if (ctx == ItemDisplayContext.FIRST_PERSON_RIGHT_HAND) arm = HumanoidArm.RIGHT;
 		else if (ctx == ItemDisplayContext.FIRST_PERSON_LEFT_HAND) arm = HumanoidArm.LEFT;
 		else return false;
-		// This mount also applies when no clip is playing, so idle/attack/ability
+		if (com.tarkrakov.tearsofink.client.PistolAnims.isPistol(stack)) {
+            var player=net.minecraft.client.Minecraft.getInstance().player;
+            var motion=player==null?null:com.tarkrakov.tearsofink.client.PistolAnims.motion(player,arm);
+            if(motion==null) return false;
+            Clip c=motion.clip();
+            Key key=sample(c,motion.time());
+            if(motion.previous()!=null && motion.blend()<1){
+                Key old=sample(motion.previous(),motion.previousTime());
+                float u=motion.blend();
+                key=new Key(0,rotationMix(old.rot(),key.rot(),u),lerp(old.pos(),key.pos(),u),lerp(old.scale(),key.scale(),u),Ease.LINEAR);
+            }
+            put(c,grip("holy_pistol"),rest,left,pose,key.rot(),key.pos(),key.scale());
+            return true;
+        }
+        // This mount also applies when no clip is playing, so idle/attack/ability
 		// transitions share the same camera frame without a composition pop.
 		Archetype held = Archetype.of(stack);
 		Vector3f offset = held == null ? null : FIRST_PERSON_OFFSET.get(held.id);

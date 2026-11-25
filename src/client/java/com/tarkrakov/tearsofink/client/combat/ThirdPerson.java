@@ -87,6 +87,7 @@ public final class ThirdPerson {
 	private static final Map<Integer, Playing[]> PLAYING = new HashMap<>();
 	/** id сущности → последняя показанная поза рук (для перетекания и для кисти). */
 	private static final Map<Integer, Pose[]> SHOWN = new HashMap<>();
+    private static final Map<Integer,Pose[]> PISTOL_SHOWN=new HashMap<>();
 
 	private ThirdPerson() {}
 
@@ -105,6 +106,7 @@ public final class ThirdPerson {
 	public static void clear() {
 		PLAYING.clear();
 		SHOWN.clear();
+        PISTOL_SHOWN.clear();
 		AXES.clear();
 	}
 
@@ -143,7 +145,7 @@ public final class ThirdPerson {
 			}
 			playing++;
 			float t = p.time();
-			Solved s = solve(model, entity, stack, side, p.clip, t, p.authored);
+			Solved s = solve(model, entity, stack, side, p.clip, t, p.authored, p.archetype.id, false);
 			float w = weight(p, t);
 			ModelPart arm = arm(model, side);
 			float x = Mth.lerp(w, arm.xRot, s.x), y = Mth.lerp(w, arm.yRot, s.y), z = Mth.lerp(w, arm.zRot, s.z);
@@ -199,7 +201,7 @@ public final class ThirdPerson {
 	/** ItemInHandLayer: перед рисованием оружия повернуть его «кистью» (только когда идёт удар). */
 	public static void wrist(LivingEntity entity, HumanoidArm side, PoseStack pose) {
 		if (!ENABLED) return;
-		Pose[] shown = SHOWN.get(entity.getId());
+		Pose[] shown = com.tarkrakov.tearsofink.client.PistolAnims.isPistol(stackIn(entity,side)) ? PISTOL_SHOWN.get(entity.getId()) : SHOWN.get(entity.getId());
 		if (shown == null) return;
 		Pose p = shown[side.ordinal()];
 		if (p == null) return;
@@ -209,7 +211,34 @@ public final class ThirdPerson {
 		pose.translate(-p.pivot.x, -p.pivot.y, -p.pivot.z);
 	}
 
-	private static ItemStack stackIn(LivingEntity e, HumanoidArm side) {
+	/** Pistol clips are sampled by state, not by the melee combo timer. */
+    public static void pistol(HumanoidModel<?> model,net.minecraft.world.entity.player.Player player) {
+        int id=player.getId();
+        PISTOL_SHOWN.remove(id);
+        if(!ENABLED||!ModDimensions.hasLandsRules(player.level())) return;
+        Pose[] shown=new Pose[2];
+        boolean active=false;
+        for(HumanoidArm side:HumanoidArm.values()){
+            ItemStack stack=stackIn(player,side);
+            if(!com.tarkrakov.tearsofink.client.PistolAnims.isPistol(stack))continue;
+            var motion=com.tarkrakov.tearsofink.client.PistolAnims.motion(player,side);
+            if(motion==null)continue;
+            Solved pose=solve(model,player,stack,side,motion.clip(),motion.time(),true,"holy_pistol",motion.mirrorWrist());
+            float x=pose.x,y=pose.y,z=pose.z;
+            Quaternionf wrist=pose.wrist;
+            if(motion.previous()!=null&&motion.blend()<1){
+                Solved prev=solve(model,player,stack,side,motion.previous(),motion.previousTime(),true,"holy_pistol",motion.previousMirrorWrist());
+                float u=motion.blend();
+                x=Mth.lerp(u,prev.x,x);y=Mth.lerp(u,prev.y,y);z=Mth.lerp(u,prev.z,z);
+                wrist=new Quaternionf(prev.wrist).slerp(wrist,u);
+            }
+            ModelPart arm=arm(model,side);arm.xRot=x;arm.yRot=y;arm.zRot=z;
+            shown[side.ordinal()]=new Pose(x,y,z,wrist,pose.pivot,pose.push);
+            active=true;
+        }
+        if(active)PISTOL_SHOWN.put(id,shown);
+    }
+    private static ItemStack stackIn(LivingEntity e, HumanoidArm side) {
 		return side == e.getMainArm() ? e.getMainHandItem() : e.getOffhandItem();
 	}
 
@@ -232,16 +261,15 @@ public final class ThirdPerson {
 
 	private record Solved(float x, float y, float z, Quaternionf wrist, Vector3f pivot, float body, Vector3f hand, float push) {}
 
-	private static Solved solve(HumanoidModel<?> model, LivingEntity entity, ItemStack stack, HumanoidArm side, WeaponAnims.Clip clip, float t, boolean authored) {
+	private static Solved solve(HumanoidModel<?> model, LivingEntity entity, ItemStack stack, HumanoidArm side, WeaponAnims.Clip clip, float t, boolean authored, String visualId, boolean mirrorWrist) {
 		boolean left = side == HumanoidArm.LEFT;
 		float m = left ? -1 : 1;
-		Archetype archetype = Archetype.of(stack);
-		WeaponAnims.ThirdTune tune = WeaponAnims.thirdTune(archetype);
+		WeaponAnims.ThirdTune tune = WeaponAnims.thirdTune(visualId);
 		WeaponAnims.ThirdFix fix = clip.third();
 		BakedModel baked = Minecraft.getInstance().getItemRenderer().getModel(stack, entity.level(), entity, entity.getId());
 		ItemTransforms tr = baked.getTransforms();
 		ItemTransform tp = tr.getTransform(left ? ItemDisplayContext.THIRD_PERSON_LEFT_HAND : ItemDisplayContext.THIRD_PERSON_RIGHT_HAND);
-		Vector3f grip = WeaponAnims.grip(archetype);
+		Vector3f grip = WeaponAnims.grip(visualId);
 		// щит держат за середину (centre): рука тянется к середине, кисть крутит вокруг неё
 		Vector3f[] ax = tune.centre() ? centre(baked) : axis(baked, tr.getTransform(ItemDisplayContext.FIRST_PERSON_RIGHT_HAND), grip);
 		// mirror: левая рука считается как правая и отражается — парный удар синхронно
@@ -250,7 +278,7 @@ public final class ThirdPerson {
 		WeaponAnims.Clip pose = clip;
 		float poseTime = t;
 		if (fix.source() != null) { // третье лицо — по другому движению
-			WeaponAnims.Clip src = WeaponAnims.clip(archetype, fix.source());
+			WeaponAnims.Clip src = WeaponAnims.clip(visualId, fix.source());
 			if (src != null) {
 				pose = src;
 				// Старые F5-источники короче авторских FP-фаз: проигрывать всю дугу, а не бросать руку посреди удара.
@@ -271,11 +299,12 @@ public final class ThirdPerson {
 			// Model head origin is at 1.501 blocks, standing camera at 1.62.
 			hand.set(-hand.x, -hand.y - .119f, hand.z);
 			Quaternionf wrist = new Quaternionf();
-			WeaponAnims.Clip wristClip = fix.wristSource() == null ? null : WeaponAnims.clip(archetype, fix.wristSource());
+			WeaponAnims.Clip wristClip = fix.wristSource() == null ? null : WeaponAnims.clip(visualId, fix.wristSource());
 			if (wristClip != null) {
 				Vector3f rotation = WeaponAnims.sample(wristClip, t).rot();
 				if (fix.wristXYZ()) {
-					wrist.rotationXYZ(rotation.x * Mth.DEG_TO_RAD, rotation.y * Mth.DEG_TO_RAD, rotation.z * Mth.DEG_TO_RAD);
+					float sign=mirrorWrist?-1:1;
+                    wrist.rotationXYZ(rotation.x * Mth.DEG_TO_RAD, sign*rotation.y * Mth.DEG_TO_RAD, sign*rotation.z * Mth.DEG_TO_RAD);
 				} else {
 					Vector3f blade = at(ax[1], tp, m).sub(at(ax[0], tp, m)).normalize();
 					wrist.rotationAxis(rotation.x * Mth.DEG_TO_RAD, blade);

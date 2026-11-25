@@ -45,6 +45,8 @@ jobs:
           java -cp /tmp/toi-equipment-test EquipmentAffinityTest
       - name: validate Blockbench workspace and automatic F5
         run: node tools/blockbench/test_workspace.js
+      - name: validate authored pistol export
+        run: node tools/blockbench/export_holy_pistol.js --check
       - name: validate final author scene and active Pale clip mapping
         run: node tools/blockbench/check_final_pale.js
       - name: validate authored armor BB models, texture names and item previews

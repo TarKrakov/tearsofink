@@ -45,7 +45,10 @@ public final class RangedClient {
     }
     /** Temporary F5 stance only; the final art uses authored clips. */
     public static void pose(HumanoidModel<?> model,Player p){
-        if(!aiming(p))return;
+        if(aiming(p))fallbackPose(model,p);
+        com.tarkrakov.tearsofink.client.combat.ThirdPerson.pistol(model,p);
+    }
+    private static void fallbackPose(HumanoidModel<?> model,Player p){
         boolean right=p.getMainArm()==HumanoidArm.RIGHT;
         var main=right?model.rightArm:model.leftArm;
         var second=right?model.leftArm:model.rightArm;
@@ -59,6 +62,7 @@ public final class RangedClient {
         }
     }
     public static void init(){
+        PistolAnims.init();
         off=KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tears-of-ink.ranged_offhand", InputConstants.Type.MOUSE,GLFW.GLFW_MOUSE_BUTTON_4,SkillKeys.CATEGORY));
         ClientPlayNetworking.registerGlobalReceiver(RangedCombat.AimPose.TYPE,(v,ctx)->ctx.client().execute(()->{
             if(v.active()&&ctx.client().level!=null)REMOTE_AIM.put(v.entity(),ctx.client().level.getGameTime()+45);
