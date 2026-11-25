@@ -87,6 +87,12 @@ public final class Resonance {
 	private static final Map<UUID, float[]> HALO = new HashMap<>();
 
 	private Resonance() {}
+	public static boolean cancelWindup(ServerPlayer p) {
+		PENDING.remove(p.getUUID());
+		boolean moving = DASH.remove(p.getUUID()) != null;
+		if (moving) PHALANX_UNTIL.remove(p.getUUID());
+		return moving;
+	}
 
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(Resonance::tick);

@@ -33,7 +33,7 @@ public final class PaleGreatswordBalance {
             new Backstep(new Sweep(.35f, 2.8, 110, .45), 3, 12, 70, .42, .12),
             new DualR(240, .92, .30, 1.25f, 3.1, .6),
             new DualCharge(260, 5.5, 1.10f, 1.8f),
-            new ShiftGuard(.45f, .60f, 120, 150, 110, 160));
+            new ShiftGuard(.45f, .60f, 120, 150, 0, 0));
     private static Tuning current = DEFAULT;
     private PaleGreatswordBalance() {}
     public static Tuning get() { return current; }
@@ -83,8 +83,7 @@ public final class PaleGreatswordBalance {
                 (float) number(g,"dual_reduction",gd.dualReduction(),0,.95),
                 number(g,"single_arc",gd.singleArc(),1,360),
                 number(g,"dual_arc",gd.dualArc(),1,360),
-                ticks(g,"single_cooldown_ticks",gd.singleCooldownTicks()),
-                ticks(g,"dual_cooldown_ticks",gd.dualCooldownTicks()));
+                0, 0);
         if (back.hitTicks() >= back.durationTicks()) throw new IllegalArgumentException("backstep hit_ticks must be before duration_ticks");
         if (dualCharge.minDamageMultiplier() > dualCharge.maxDamageMultiplier())
             throw new IllegalArgumentException("dual_charge min_damage_multiplier must not exceed max_damage_multiplier");

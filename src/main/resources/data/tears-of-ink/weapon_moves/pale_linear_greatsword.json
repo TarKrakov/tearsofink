@@ -39,12 +39,12 @@
     "max_damage_multiplier": 1.8
   },
   "shift_guard": {
-    "_comment": "Solo RMB holds guard only while pressed; dual Shift+R still toggles. reduction = blocked damage share; arc = full forward sector. Cooldown gates entry only, never lowering.",
+    "_comment": "Solo RMB holds guard only while pressed; dual Shift+R still toggles. reduction = blocked damage share; arc = full forward sector. Guard has no cooldown; legacy cooldown fields are ignored.",
     "single_reduction": 0.45,
     "dual_reduction": 0.6,
     "single_arc": 120,
     "dual_arc": 150,
-    "single_cooldown_ticks": 110,
-    "dual_cooldown_ticks": 160
+    "single_cooldown_ticks": 0,
+    "dual_cooldown_ticks": 0
   }
 }

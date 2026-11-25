@@ -15,8 +15,8 @@ public final class ShieldTuning {
 	public static final float STORED_DAMAGE_CAP = 55f;
 	/** Против спама ПКМ: не чаще одного идеального блока каждые 12 тиков (0,6 сек). */
 	public static final int PERFECT_REPEAT_TICKS = 12;
-	/** Душа кончилась — щиты пробиты: опускаются и недоступны столько тиков (20 = 1 с). */
-	public static final int BREAK_TICKS = 60;
+	/** После пробоя щиты можно поднять сразу; обычный блок по-прежнему требует Душу. */
+	public static final int BREAK_TICKS = 0;
 	/** Спереди и с боков блок полный — в пределах стольких градусов от взгляда; со спины — доля урона. */
 	public static final float COVER_DEGREES = 120f, BACK_FRACTION = 0.5f;
 
@@ -65,6 +65,6 @@ public final class ShieldTuning {
 	public static final double PHANTOM_HIT_MARGIN = 0.25;
 	public static final int PHANTOM_MAX_TICKS = (int)Math.ceil(PHANTOM_RANGE / PHANTOM_SPEED);
 	public static final float PHANTOM_DAMAGE_MULT = 0.60f;
-	public static final int ABILITY_SHARED_TICKS = 20;
+	public static final int ABILITY_SHARED_TICKS = 0;
 	private ShieldTuning() {}
 }

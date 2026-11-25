@@ -15,6 +15,6 @@ public final class PaleLongswordTuning {
     public static final double BLOCK_ARC = 130;
     // Quick raise/lower, original breathing cycle while held.
     public static final float BLOCK_TRANSITION_TEMPO = 2f;
-    public static final int BLOCK_COOLDOWN = 80, BLOCK_START = Math.round(10 / BLOCK_TRANSITION_TEMPO),
+    public static final int BLOCK_COOLDOWN = 0, BLOCK_START = Math.round(10 / BLOCK_TRANSITION_TEMPO),
             BLOCK_LOOP = 10, BLOCK_END = Math.round(10 / BLOCK_TRANSITION_TEMPO);
 }

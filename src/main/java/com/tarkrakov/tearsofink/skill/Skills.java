@@ -142,7 +142,7 @@ public final class Skills {
 	 * @return сработал ли
 	 */
 	public static boolean activate(ServerPlayer player, Skill skill, SkillInput input) {
-		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.locked(player) || com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.locked(player)) return false;
+		if (!player.isAlive() || player.isSpectator() || player.isPassenger() || player.isSleeping()) return false;
 		InkData data = InkPowers.get(player);
 		if (!data.inside()) {
 			// снаружи силы спят — тихий «пшик»
@@ -150,7 +150,6 @@ public final class Skills {
 			return false;
 		}
 
-		if (com.tarkrakov.tearsofink.weapon.blood.Parry.active(player)) return false; // в стойке парирования — ничего другого
 		if (!com.tarkrakov.tearsofink.vow.Vows.allows(player, skill)) { // книга чужого пути спит
 			com.tarkrakov.tearsofink.vow.Vows.asleep(player, skill, false);
 			return false;
@@ -181,6 +180,13 @@ public final class Skills {
 			return false;
 		}
 
+		if (!com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.ownsSkill(skill)
+				&& skill != ModSkills.INK_JUMP && skill != ModSkills.ASCENSION) {
+			if ((skill == ModSkills.DASH || skill == ModSkills.STRIDE) && player.isFallFlying()) return false;
+			if (skill == com.tarkrakov.tearsofink.weapon.WeaponAbilities.MERCY
+					&& com.tarkrakov.tearsofink.weapon.WeaponAbilities.MERCY.lockoutRemaining(player) > 0) return false;
+			com.tarkrakov.tearsofink.weapon.combat.CombatTransitions.begin(player, skill == ModSkills.STRIDE);
+		}
 		if (!skill.activate(player, input)) return false;
 
 		if (!creative && healthCost > 0) { // заплатить кровью

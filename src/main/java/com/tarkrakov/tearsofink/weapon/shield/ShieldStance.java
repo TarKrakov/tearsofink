@@ -124,7 +124,7 @@ public final class ShieldStance {
 	/** Стоит в сомкнутой стойке прямо сейчас. */
 	public static boolean inStance(LivingEntity e) {
 		return e instanceof Player p && ModDimensions.hasLandsRules(p.level()) && dual(p) && p.isUsingItem()
-				&& p.getUseItem().getItem() instanceof SoulShieldItem && !p.getCooldowns().isOnCooldown(p.getUseItem().getItem());
+				&& p.getUseItem().getItem() instanceof SoulShieldItem;
 	}
 
 	public static int charge(Player p) {
@@ -254,10 +254,8 @@ public final class ShieldStance {
 		t.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, ticks, interrupted ? 3 : 1, false, false));
 	}
 
-	/** Душа кончилась — щиты пробиты: опускаются и недоступны, заряд сгорает. */
+	/** Душа кончилась — щиты опускаются, заряд сгорает; поднять снова можно сразу. */
 	private static void breakShields(ServerPlayer p) {
-		p.getCooldowns().addCooldown(p.getMainHandItem().getItem(), ShieldTuning.BREAK_TICKS);
-		p.getCooldowns().addCooldown(p.getOffhandItem().getItem(), ShieldTuning.BREAK_TICKS);
 		setCharge(p, 0);
 		RIPOSTE.remove(p.getUUID());
 		p.stopUsingItem();

@@ -116,10 +116,14 @@ public final class PaleGreatswordMoves {
         return s != null && s.phase != Phase.IDLE && s.phase != Phase.SINGLE_WINDOW;
     }
 
+    public static boolean ownsSkill(Skill skill) { return skill == SINGLE || skill == DUAL_R || skill == CHARGE || skill == BACKSTEP; }
+    public static void cancelForAction(ServerPlayer p) {
+        State s = STATES.get(p.getUUID());
+        if (s != null && s.phase != Phase.IDLE) cancel(p,s);
+    }
     private static boolean available(ServerPlayer p) {
         return p.isAlive() && !p.isSpectator() && !p.isPassenger() && !p.isSleeping()
-                && com.tarkrakov.tearsofink.ink.InkPowers.get(p).inside()
-                && !com.tarkrakov.tearsofink.weapon.blood.Parry.active(p);
+                && com.tarkrakov.tearsofink.ink.InkPowers.get(p).inside();
     }
 
     public static void init() {
@@ -279,30 +283,26 @@ public final class PaleGreatswordMoves {
         boolean main = isWeapon(p.getMainHandItem());
         boolean off = isWeapon(p.getOffhandItem());
         if (!main && !off) return;
-        // A different two-handed weapon in the main hand occupies the offhand.
-        if (!main && com.tarkrakov.tearsofink.weapon.InkGreatswordItem.twoHanded(p.getMainHandItem())) return;
         State s = state(p);
         if (s.phase != Phase.IDLE && !valid(p, s)) cancel(p, s);
         if (s.phase == Phase.GUARD) {
             if (toggle) lowerGuard(p, s);
             return;
         }
-        if (s.phase != Phase.IDLE || now(p) < s.guardReady) return;
+        CombatTransitions.begin(p, false);
         var tune = PaleGreatswordBalance.get();
         var block = tune.shiftGuard();
         boolean pair = main && off;
         boolean left = !main;
-        int cooldown = pair ? block.dualCooldownTicks() : block.singleCooldownTicks();
 
         s.tuning = tune;
         s.owner = p; s.level = p.serverLevel();
         s.main = p.getMainHandItem(); s.off = p.getOffhandItem();
         s.left = left; s.paired = pair; s.started = now(p);
         s.phase = Phase.GUARD; s.until = now(p) + GUARD_REFRESH_TICKS;
-        // Собственная перезарядка защиты ограничивает только новое поднятие,
-        // но не отпускание ПКМ и не обычный R.
-        s.guardLength = Math.round(cooldown * Awakening.cooldownMult(left ? s.off : s.main));
-        s.guardReady = now(p) + s.guardLength;
+        // Блок без перезарядки.
+        s.guardLength = 0;
+        s.guardReady = now(p);
         play(p, s, pair ? "bb_author_dual_guard_start" : left ? "guard" : "bb_author_guard_start",
                 pair ? "bb_author_dual_guard_start_off" : null, GUARD_REFRESH_TICKS);
         // Free ordinary technique; the existing weapon-wear economy still applies.
@@ -374,9 +374,11 @@ public final class PaleGreatswordMoves {
     private static boolean begin(ServerPlayer p, boolean pair, boolean charge, boolean left, boolean backstep) {
         if (!available(p) || (pair ? !dual(p) : !isWeapon(left ? p.getOffhandItem() : p.getMainHandItem()))) return false;
         State s = state(p);
-        if (backstep && now(p) >= s.backstepReady && s.phase == Phase.SINGLE_WINDOW) finish(p, s, false);
-        if (s.phase != Phase.IDLE) return false;
         if (pair && !charge && (!p.onGround() || p.isInWater() || p.isFallFlying())) return false;
+        if (now(p) < (backstep ? s.backstepReady : charge ? s.chargeReady : pair ? s.dualReady : s.singleReady)) return false;
+        if (charge && s.phase == Phase.CHARGE) return false;
+        if (!pair && !backstep && (s.phase == Phase.SINGLE_WINDOW || s.phase == Phase.SINGLE_DASH)) return false;
+        CombatTransitions.begin(p, false);
         if (now(p) < (backstep ? s.backstepReady : charge ? s.chargeReady : pair ? s.dualReady : s.singleReady)) return false;
         s.tuning = PaleGreatswordBalance.get();
         s.owner = p; s.level = p.serverLevel(); s.main = p.getMainHandItem(); s.off = p.getOffhandItem();
@@ -457,7 +459,7 @@ public final class PaleGreatswordMoves {
     // Read-only HUD view of the actual independent technique timers.
     public static int[] hudTimer(ServerPlayer p, int action, boolean left) {
         State s = STATES.get(p.getUUID());
-        if (s == null) return new int[]{0, 1, 0};
+        if (s == null) return new int[]{0, 1, action == 0 && dual(p) && (!p.onGround() || p.isInWater() || p.isFallFlying()) ? 1 : 0};
         boolean pair = dual(p);
         long ready = action == 1 ? s.guardReady : action == 2 ? s.chargeReady : pair ? s.dualReady : s.singleReady;
         int length = action == 1 ? s.guardLength : action == 2 ? s.chargeLength : pair ? s.dualLength : s.singleLength;
@@ -465,7 +467,7 @@ public final class PaleGreatswordMoves {
         if (valid(p, s) && s.phase != Phase.IDLE) {
             if (action == 0 && s.phase == Phase.SINGLE_WINDOW && s.left == left && now(p) >= s.started + 8 && now(p) <= s.until) state = 2;
             else if ((action == 1 && s.phase == Phase.GUARD) || (action == 2 && s.phase == Phase.CHARGE)) state = 2;
-            else state = 1;
+            else if ((action == 0 && (s.phase == Phase.SINGLE_WINDOW || s.phase == Phase.SINGLE_DASH || s.phase == Phase.LEAP_START || s.phase == Phase.LEAP || s.phase == Phase.SLAM)) || (action == 2 && s.phase == Phase.DUAL_DASH)) state = 1;
         }
         if (action == 0 && pair && (!p.onGround() || p.isInWater() || p.isFallFlying()) && state == 0) state = 1;
         return new int[]{(int)Math.max(0, ready - now(p)), Math.max(1, length), state};
@@ -482,7 +484,6 @@ public final class PaleGreatswordMoves {
 
     private static long cooldown(ServerPlayer p, State s, int ticks) {
         int duration = Math.round(ticks * Awakening.cooldownMult(s.left ? s.off : s.main));
-        p.getCooldowns().addCooldown(ModItems.PALE_LINEAR_GREATSWORD, duration);
         return now(p) + duration;
     }
 
@@ -523,7 +524,6 @@ public final class PaleGreatswordMoves {
                     && s.phase == Phase.DUAL_DASH && !s.killed) {
                 s.killed = true;
                 s.chargeReady = now(p) + Math.max(0, s.chargeReady - now(p)) / 2;
-                p.getCooldowns().addCooldown(ModItems.PALE_LINEAR_GREATSWORD, (int) (s.chargeReady - now(p)));
             }
             if (!p.isAlive()) return;
         }

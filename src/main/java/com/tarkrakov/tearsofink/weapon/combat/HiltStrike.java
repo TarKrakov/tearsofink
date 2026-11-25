@@ -52,11 +52,16 @@ public final class HiltStrike {
 	private record Pending(ServerPlayer player, long at) {}
 
 	private static final List<Pending> PENDING = new ArrayList<>();
+	private static final java.util.Map<java.util.UUID,Integer> READY_AT = new java.util.HashMap<>();
+	public static int remaining(ServerPlayer p) { return Math.max(0,READY_AT.getOrDefault(p.getUUID(),0)-p.server.getTickCount()); }
+	public static void cancelForAction(ServerPlayer p) { PENDING.removeIf(h -> h.player == p); }
 
 	private HiltStrike() {}
 
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(HiltStrike::tick);
+		net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.DISCONNECT.register((h,s)->READY_AT.remove(h.getPlayer().getUUID()));
+		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(s->{READY_AT.clear(); PENDING.clear();});
 	}
 
 	/** Подходит ли сейчас удар эфесом (одинаково у игрока и на сервере). */
@@ -88,11 +93,10 @@ public final class HiltStrike {
 
 	/** Нажатие ПКМ на сервере. false — не вышло (перезарядка, клинок посреди удара). */
 	public static boolean use(ServerPlayer p, ItemStack stack) {
-		if (PaleLongswordMoves.locked(p) || p.getCooldowns().isOnCooldown(stack.getItem())) return false;
-		if (com.tarkrakov.tearsofink.weapon.blood.Parry.active(p)) return false;
-		if (Combat.hitPending(p)) return false; // удар связки ещё не дошёл — не рвём его
+		if (remaining(p) > 0) return false;
+		CombatTransitions.begin(p,false);
 		Archetype a = Archetype.of(stack);
-		p.getCooldowns().addCooldown(stack.getItem(), COOLDOWN);
+		READY_AT.put(p.getUUID(),p.server.getTickCount()+COOLDOWN);
 		Combat.play(p, a, "hilt", null, ANIM_TICKS);
 		long now = p.serverLevel().getGameTime();
 		PENDING.add(new Pending(p, now + HIT_TICK));

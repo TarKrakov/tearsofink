@@ -70,62 +70,51 @@ public final class CombatCooldowns {
             default -> WeaponAbilities.FLOURISH;
         };
     }
-    private static boolean locked(ServerPlayer p) {
-        return PaleGreatswordMoves.locked(p) || PaleLongswordMoves.locked(p) || Parry.active(p);
-    }
     private static Entry generic(ServerPlayer p,Skill skill,boolean shield) {
         if (skill == null || !Vows.allows(p,skill)) return Entry.EMPTY;
         String id = skill.id().getPath();
-        if (skill == WeaponAbilities.MERCY && WeaponAbilities.MERCY.isActive(p) && !PaleLongswordMoves.locked(p))
+        if (skill == WeaponAbilities.MERCY && WeaponAbilities.MERCY.isActive(p))
             return Entry.of(id,0,1,ACTIVE);
         int left = Skills.remaining(p,skill), total = Skills.cooldownLength(p,skill);
-        if (shield && WeaponAbilities.shieldCooldownRemaining(p) > left) {
-            left = WeaponAbilities.shieldCooldownRemaining(p);
-            total = ShieldTuning.ABILITY_SHARED_TICKS;
-        }
         if (skill == WeaponAbilities.MERCY && WeaponAbilities.MERCY.lockoutRemaining(p) > left) {
             left = WeaponAbilities.MERCY.lockoutRemaining(p);
             total = WeaponAbilities.MercyAbility.LOCKOUT_TICKS;
         }
-        int state = locked(p) ? BLOCKED : !Skills.resourceReady(p,skill) ? NO_RESOURCE : READY;
+        int state = !Skills.resourceReady(p,skill) ? NO_RESOURCE : READY;
         return Entry.of(id,left,total,state);
     }
     private static Entry special(ServerPlayer p,String id,int[] timer,boolean otherLock) {
         int state = timer[2];
-        if (otherLock || Parry.active(p)) state = BLOCKED;
         return Entry.of(id,timer[0],timer[1],state);
     }
     private static Entry r(ServerPlayer p,boolean left) {
         if (ShieldStance.dual(p)) return generic(p,WeaponAbilities.boundAbility(p,left),true);
         ItemStack main = p.getMainHandItem(), stack = left ? p.getOffhandItem() : main;
         if (left && PaleGreatswordMoves.dual(p))
-            return special(p,"pale_guard",PaleGreatswordMoves.hudTimer(p,1,false),PaleLongswordMoves.locked(p));
-        if (left && InkGreatswordItem.twoHanded(main)) return Entry.EMPTY;
+            return special(p,"pale_guard",PaleGreatswordMoves.hudTimer(p,1,false),false);
         if (PaleLongswordMoves.isWeapon(stack)) {
             if (left && PaleLongswordMoves.dual(p)) return Entry.EMPTY;
-            return special(p,"pale_longsword_strike",PaleLongswordMoves.hudTimer(p,false),PaleGreatswordMoves.locked(p));
+            return special(p,"pale_longsword_strike",PaleLongswordMoves.hudTimer(p,false),false);
         }
         if (PaleGreatswordMoves.isWeapon(stack))
             return special(p,PaleGreatswordMoves.dual(p) ? "pale_pair_parry" : "pale_sweep",
-                    PaleGreatswordMoves.hudTimer(p,0,left),PaleLongswordMoves.locked(p));
+                    PaleGreatswordMoves.hudTimer(p,0,left),false);
         return generic(p,WeaponAbilities.boundAbility(p,left),stack.getItem() instanceof SoulShieldItem);
     }
     private static Entry rmb(ServerPlayer p) {
         ItemStack main = p.getMainHandItem(), off = p.getOffhandItem();
         if (ShieldStance.dual(p)) return Entry.EMPTY;
         if (PaleLongswordMoves.dual(p))
-            return special(p,"pale_guard",PaleLongswordMoves.hudTimer(p,true),PaleGreatswordMoves.locked(p));
+            return special(p,"pale_guard",PaleLongswordMoves.hudTimer(p,true),false);
         if (PaleGreatswordMoves.isWeapon(main))
             return special(p,PaleGreatswordMoves.dual(p) ? "pale_pair_charge" : "pale_guard",
-                    PaleGreatswordMoves.hudTimer(p,PaleGreatswordMoves.dual(p)?2:1,false),PaleLongswordMoves.locked(p));
+                    PaleGreatswordMoves.hudTimer(p,PaleGreatswordMoves.dual(p)?2:1,false),false);
         if (!(main.getItem() instanceof InkGreatswordItem) || main.getItem() instanceof SoulShieldItem) return Entry.EMPTY;
         Archetype a = Archetype.of(main);
         if (a == null) return Entry.EMPTY;
         // Aiming at a block is only a temporary input diversion, not loss of the hilt technique.
         if (!InkGreatswordItem.twoHanded(main) && off.isEmpty()) {
-            float pct = p.getCooldowns().getCooldownPercent(main.getItem(),0f);
-            return Entry.of("hilt",Math.round(pct*1000),1000,
-                    PaleLongswordMoves.locked(p)||Parry.active(p)||Combat.hitPending(p) ? BLOCKED : READY);
+            return Entry.of("hilt",HiltStrike.remaining(p),HiltStrike.COOLDOWN,READY);
         }
         if (a != Archetype.of(off) || main.getItem() instanceof OrdinaryWeaponItem) return Entry.EMPTY;
         Skill skill = pairedSkill(a);

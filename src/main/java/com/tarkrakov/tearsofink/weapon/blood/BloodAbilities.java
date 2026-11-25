@@ -88,7 +88,6 @@ public final class BloodAbilities {
 
 		@Override
 		public boolean activate(ServerPlayer player, SkillInput input) {
-			if (Parry.active(player)) return false;
 			// Дуссак в левой (Shift+R), в правой другое — стойка левой рукой
 			boolean off = com.tarkrakov.tearsofink.weapon.combat.Archetype.of(player.getMainHandItem()) != com.tarkrakov.tearsofink.weapon.combat.Archetype.DUSSAK
 					&& com.tarkrakov.tearsofink.weapon.combat.Archetype.of(player.getOffhandItem()) == com.tarkrakov.tearsofink.weapon.combat.Archetype.DUSSAK;
@@ -110,7 +109,6 @@ public final class BloodAbilities {
 
 		@Override
 		public boolean activate(ServerPlayer player, SkillInput input) {
-			if (Parry.active(player)) return false;
 			Parry.start(player, true);
 			return true;
 		}

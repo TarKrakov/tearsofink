@@ -63,15 +63,11 @@ public final class Parry {
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(Parry::tick);
 		net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry.playS2C().register(Lock.TYPE, Lock.CODEC);
-		var FAIL = net.minecraft.world.InteractionResult.FAIL;
-		var PASS = net.minecraft.world.InteractionResult.PASS;
-		// в стойке бить нельзя (даже оружием или щитом в другой руке): либо время выйдет, либо спарировал и ответил
-		net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register((player, world, hand, entity, hit) -> locked(player, world) ? FAIL : PASS);
-		net.fabricmc.fabric.api.event.player.AttackBlockCallback.EVENT.register((player, world, hand, pos, dir) -> locked(player, world) ? FAIL : PASS);
-		net.fabricmc.fabric.api.event.player.UseBlockCallback.EVENT.register((player, world, hand, hit) -> locked(player, world) ? FAIL : PASS);
-		net.fabricmc.fabric.api.event.player.UseItemCallback.EVENT.register((player, world, hand) ->
-				locked(player, world) ? net.minecraft.world.InteractionResultHolder.fail(player.getItemInHand(hand)) : net.minecraft.world.InteractionResultHolder.pass(player.getItemInHand(hand)));
-		net.fabricmc.fabric.api.event.player.UseEntityCallback.EVENT.register((player, world, hand, entity, hit) -> locked(player, world) ? FAIL : PASS);
+		// A parry can be interrupted by another technique; no blanket input lock.
+		net.fabricmc.fabric.api.event.player.AttackEntityCallback.EVENT.register((player, world, hand, entity, hit) -> {
+			if (player instanceof ServerPlayer p) cancelForAction(p);
+			return net.minecraft.world.InteractionResult.PASS;
+		});
 		ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, source, amount) -> {
 			if (STANCE.isEmpty()) return true;
 			State s = STANCE.get(entity.getUUID());
@@ -89,6 +85,13 @@ public final class Parry {
 				&& by.distanceTo(p) <= BloodTuning.RIPOSTE_REACH + 1;
 	}
 
+	public static void cancelForAction(ServerPlayer p) {
+		State s = STANCE.remove(p.getUUID());
+		if (s != null) {
+			net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(p, new Lock(false));
+			anim(p,s,"parry_release",4);
+		}
+	}
 	public static boolean active(LivingEntity e) {
 		return STANCE.containsKey(e.getUUID());
 	}

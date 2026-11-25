@@ -59,8 +59,6 @@ public class OrdinaryWeaponItem extends InkGreatswordItem {
             player.startUsingItem(hand);
             return net.minecraft.world.InteractionResultHolder.consume(stack);
         }
-		if (player instanceof net.minecraft.server.level.ServerPlayer sp && com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.locked(sp))
-			return net.minecraft.world.InteractionResultHolder.fail(player.getItemInHand(hand));
 		return super.use(level, player, hand);
 	}
 

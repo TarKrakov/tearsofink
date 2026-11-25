@@ -62,7 +62,7 @@ public final class PaleLongswordMoves {
     private static long now(ServerPlayer p) { return p.server.getTickCount(); }
     private static boolean available(ServerPlayer p) {
         return p.isAlive() && !p.isSpectator() && !p.isPassenger() && !p.isSleeping()
-                && ModDimensions.hasLandsRules(p.level()) && !com.tarkrakov.tearsofink.weapon.blood.Parry.active(p);
+                && ModDimensions.hasLandsRules(p.level());
     }
     private static boolean valid(ServerPlayer p, State s) {
         return p == s.owner && p.serverLevel() == s.level && p.getMainHandItem() == s.main
@@ -75,6 +75,13 @@ public final class PaleLongswordMoves {
     }
     private static void capture(ServerPlayer p, State s) {
         s.owner = p; s.level = p.serverLevel(); s.main = p.getMainHandItem(); s.off = p.getOffhandItem();
+    }
+    public static void cancelForAction(ServerPlayer p) {
+        State s = STATES.get(p.getUUID());
+        if (s == null || s.phase == Phase.IDLE) return;
+        if (s.phase == Phase.GUARD) releaseGuard(p);
+        else s.phase = Phase.IDLE;
+        if (p.isUsingItem() && isWeapon(p.getUseItem())) p.stopUsingItem();
     }
     public static boolean locked(ServerPlayer p) {
         State s = STATES.get(p.getUUID());
@@ -107,27 +114,24 @@ public final class PaleLongswordMoves {
     }
     public static int[] hudTimer(ServerPlayer p, boolean guard) {
         State s = STATES.get(p.getUUID());
-        if (s == null) return new int[]{0,1,Combat.hitPending(p) ? 1 : 0};
+        if (s == null) return new int[]{0,1,0};
         boolean pair = dual(p);
         long ready = guard ? s.guardReady : pair ? s.dualReady : s.singleReady;
         int length = guard ? s.guardLength : pair ? s.dualLength : s.singleLength;
-        int state = valid(p,s) && s.phase != Phase.IDLE ? (guard && s.phase == Phase.GUARD ? 2 : 1) : Combat.hitPending(p) ? 1 : 0;
+        int state = valid(p,s) && guard && s.phase == Phase.GUARD ? 2 : 0;
         return new int[]{(int)Math.max(0,ready-now(p)),Math.max(1,length),state};
     }
 
     public static boolean useR(ServerPlayer p, boolean left) {
-        if (!available(p) || PaleGreatswordMoves.locked(p) || Combat.hitPending(p)) return false;
-        if (left && (dual(p) || InkGreatswordItem.twoHanded(p.getMainHandItem()))) return false;
+        if (!available(p)) return false;
+        if (left && dual(p)) return false;
         ItemStack sword = left ? p.getOffhandItem() : p.getMainHandItem();
         if (!isWeapon(sword)) return false;
         State s = state(p);
-        if (s.phase != Phase.IDLE) {
-            if (valid(p,s)) return false;
-            s.phase = Phase.IDLE;
-        }
         boolean pair = dual(p);
         long time = now(p);
         if (time < (pair ? s.dualReady : s.singleReady)) return false;
+        CombatTransitions.begin(p, false);
         var tune = pair ? PaleLongswordTuning.DUAL : PaleLongswordTuning.SINGLE;
         capture(p,s); s.left = left; s.paired = pair; s.strike = tune;
         s.damage = (float) attackDamage(p,sword); s.hit = false;
@@ -143,17 +147,14 @@ public final class PaleLongswordMoves {
         return true;
     }
     public static boolean beginGuard(ServerPlayer p) {
-        if (!available(p) || !dual(p) || PaleGreatswordMoves.locked(p) || Combat.hitPending(p)) return false;
+        if (!available(p) || !dual(p)) return false;
         State s = state(p);
-        if (s.phase != Phase.IDLE) {
-            if (valid(p,s)) return false;
-            s.phase = Phase.IDLE;
-        }
+        if (s.phase == Phase.GUARD && valid(p,s)) return true;
+        CombatTransitions.begin(p, false);
         long time = now(p);
-        if (time < s.guardReady) return false;
         capture(p,s); s.left = false; s.paired = true; s.phase = Phase.GUARD;
         s.until = time+PaleLongswordTuning.BLOCK_START;
-        s.guardLength = Math.round(PaleLongswordTuning.BLOCK_COOLDOWN*Awakening.cooldownMult(s.main));
+        s.guardLength = 0;
         s.guardReady = time+s.guardLength;
         playPair(p,"bb_author_dual_block_start",PaleLongswordTuning.BLOCK_START,PaleLongswordTuning.BLOCK_TRANSITION_TEMPO);
         wear(p,s.main);

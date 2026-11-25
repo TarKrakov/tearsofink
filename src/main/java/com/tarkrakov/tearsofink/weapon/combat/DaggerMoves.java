@@ -48,6 +48,10 @@ public final class DaggerMoves {
 	private static final Map<UUID, Object[]> RIPS = new HashMap<>();
 
 	private DaggerMoves() {}
+	public static boolean cancelWindup(ServerPlayer p) {
+		RIPS.remove(p.getUUID());
+		return DASHING.remove(p.getUUID()) != null;
+	}
 
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(DaggerMoves::tick);

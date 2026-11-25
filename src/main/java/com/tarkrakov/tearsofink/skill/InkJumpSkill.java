@@ -40,6 +40,7 @@ public class InkJumpSkill extends Skill {
 	@Override
 	public boolean activate(ServerPlayer player, SkillInput input) {
 		if (player.onGround() || player.isFallFlying() || player.isInWater() || player.onClimbable() || used.contains(player.getUUID())) return false;
+		com.tarkrakov.tearsofink.weapon.combat.CombatTransitions.begin(player, false);
 		used.add(player.getUUID());
 		ServerPlayNetworking.send(player, new SkillPayloads.Boost((float) UP)); // скорость игрока знает клиент — толкает он
 		player.resetFallDistance();

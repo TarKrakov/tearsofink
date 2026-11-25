@@ -154,6 +154,14 @@ public final class Combat {
 		return com.tarkrakov.tearsofink.weapon.shield.ShieldStance.dual(p) && com.tarkrakov.tearsofink.world.ModDimensions.hasLandsRules(p.level());
 	}
 
+	/** Cancel an unfinished combo, not the attack-strength timer. */
+	public static void cancelForAction(ServerPlayer p) {
+		State s = STATES.get(p.getUUID());
+		if (s == null) return;
+		s.hitAt = -1; s.extra.clear(); s.firstHit.clear(); s.queued = false; s.next = 0;
+		s.busyUntil = p.serverLevel().getGameTime(); s.lastEnd = s.busyUntil;
+		s.paleMain = s.paleOff = null;
+	}
 	/** Сейчас идёт удар или приём (клинок занят). */
 	public static boolean busy(ServerPlayer p) {
 		State s = STATES.get(p.getUUID());
@@ -162,7 +170,6 @@ public final class Combat {
 
 	private static void swing(ServerPlayer p) {
 		if (!p.isAlive() || p.isSpectator()) return;
-		if (com.tarkrakov.tearsofink.weapon.blood.Parry.active(p)) return; // в стойке парирования бить нельзя
 		if (PaleGreatswordMoves.locked(p) || PaleLongswordMoves.locked(p)) return;
 		ItemStack weapon = p.getMainHandItem();
 		Archetype a = Archetype.of(weapon);
@@ -185,6 +192,7 @@ public final class Combat {
 			}
 			if (now < s.busyUntil) return; // ещё машет — клик мимо, но связку не рвём
 		}
+		if (com.tarkrakov.tearsofink.weapon.blood.Parry.active(p)) CombatTransitions.begin(p,false);
 		start(p, s, a, combo, strength, now);
 	}
 

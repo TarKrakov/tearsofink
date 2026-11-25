@@ -68,6 +68,11 @@ public final class AxeMoves {
 	private static final Set<UUID> ROARED = new HashSet<>();
 
 	private AxeMoves() {}
+	public static boolean cancelWindup(ServerPlayer p) {
+		HITS.remove(p.getUUID());
+		ROARED.remove(p.getUUID());
+		return RUSHING.remove(p.getUUID()) != null;
+	}
 
 	public static void init() {
 		ServerTickEvents.END_SERVER_TICK.register(AxeMoves::tick);

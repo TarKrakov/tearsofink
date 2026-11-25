@@ -48,6 +48,7 @@ public class SpiritAscensionSkill extends Skill {
 	@Override
 	public boolean activate(ServerPlayer player, SkillInput input) {
 		if (player.onGround() || player.isFallFlying() || player.isInWater()) return false; // только на взлёте (клиент шлёт сразу после отрыва)
+		com.tarkrakov.tearsofink.weapon.combat.CombatTransitions.begin(player, false);
 		net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking.send(player, new SkillPayloads.Boost((float) UP));
 		player.resetFallDistance();
 		ServerLevel level = player.serverLevel();

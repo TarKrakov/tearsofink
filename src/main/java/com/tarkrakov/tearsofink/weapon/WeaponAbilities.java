@@ -42,7 +42,7 @@ public final class WeaponAbilities {
 	public static final DimWaveAbility DIM_WAVE = new DimWaveAbility();
 	public static final CleaveAbility CLEAVE = new CleaveAbility();
 	/** Двуручный клинок в ЛЕВОЙ руке (когда в правой одноручный): урон его абилки ×это. */
-	public static final float OFFHAND_TWO_HANDED_POWER = 0.6f;
+	public static final float OFFHAND_TWO_HANDED_POWER = 1f;
 	/** Сила текущей абилки для игрока (1 — полная). Ставится перед запуском, абилки читают при срабатывании. */
 	private static final Map<UUID, Float> POWER = new HashMap<>();
 
@@ -62,7 +62,6 @@ public final class WeaponAbilities {
 	public static void init() {
 		ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
 			POWER.clear();
-			SHIELD_ABILITY_UNTIL.clear();
 			RAM.active.clear();
 			RADIANCE.active.clear();
 			CLEAVE.pending.clear();
@@ -74,7 +73,6 @@ public final class WeaponAbilities {
 		ServerPlayNetworking.registerGlobalReceiver(SkillPayloads.UseWeapon.TYPE, (payload, context) ->
 				context.player().server.execute(() -> use(context.player(), payload)));
 		ServerTickEvents.END_SERVER_TICK.register(server -> {
-			SHIELD_ABILITY_UNTIL.values().removeIf(until -> until <= server.getTickCount());
 			RAM.tick(server);
 			RADIANCE.tick(server);
 			CLEAVE.tick(server);
@@ -83,28 +81,24 @@ public final class WeaponAbilities {
 		});
 	}
 
-	private static final Map<UUID, Integer> SHIELD_ABILITY_UNTIL = new HashMap<>();
-	public static int shieldCooldownRemaining(ServerPlayer p) {
-		return Math.max(0, SHIELD_ABILITY_UNTIL.getOrDefault(p.getUUID(), 0) - p.server.getTickCount());
+	public static boolean cancelWindup(ServerPlayer p) {
+		CLEAVE.pending.remove(p.getUUID());
+		return RAM.active.remove(p.getUUID()) != null;
 	}
 	public static Skill boundAbility(ServerPlayer p, boolean left) {
 		if (com.tarkrakov.tearsofink.weapon.shield.ShieldStance.dual(p))
 			return left ? ((SoulShieldItem)p.getOffhandItem().getItem()).ability() : com.tarkrakov.tearsofink.weapon.shield.Resonance.SKILL;
-		if (left && InkGreatswordItem.twoHanded(p.getMainHandItem())) return null;
 		ItemStack stack = left ? p.getOffhandItem() : p.getMainHandItem();
 		return stack.getItem() instanceof AbilityWeapon w ? w.ability() : null;
 	}
 
 	private static void use(ServerPlayer player, SkillPayloads.UseWeapon payload) {
-		if (!player.isAlive() || player.isSpectator() || com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.locked(player)) return;
+		if (!player.isAlive() || player.isSpectator() || player.isPassenger() || player.isSleeping()) return;
 		// два щита Души: R — Резонанс, Shift+R — способность левого щита
 		if (com.tarkrakov.tearsofink.weapon.shield.ShieldStance.dual(player)) {
 			Skill ability = boundAbility(player, payload.offhand());
 			if (ability == MERCY && MERCY.isActive(player)) { MERCY.stop(player); return; }
-			int now = player.server.getTickCount();
-			if (now < SHIELD_ABILITY_UNTIL.getOrDefault(player.getUUID(), 0)) return;
-			if (Skills.activate(player, ability, new SkillInput(payload.strafe(), payload.forward(), payload.offhand())))
-				SHIELD_ABILITY_UNTIL.put(player.getUUID(), now + com.tarkrakov.tearsofink.weapon.shield.ShieldTuning.ABILITY_SHARED_TICKS);
+			Skills.activate(player, ability, new SkillInput(payload.strafe(), payload.forward(), payload.offhand()));
 			return;
 		}
 		// Shift+R is a separate defensive action for the Pale Linear Greatsword.
@@ -120,32 +114,23 @@ public final class WeaponAbilities {
 			return;
 		}
 		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.isWeapon(stack)) {
-			if (payload.offhand() && InkGreatswordItem.twoHanded(player.getMainHandItem())) return;
-			POWER.put(player.getUUID(), payload.offhand() ? OFFHAND_TWO_HANDED_POWER : 1f);
+			POWER.put(player.getUUID(), 1f);
 			com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.useR(player, payload.offhand());
 			return;
 		}
-		if (com.tarkrakov.tearsofink.weapon.combat.PaleGreatswordMoves.locked(player)) return;
 		if (!(stack.getItem() instanceof AbilityWeapon weapon) || weapon.ability() == null) return;
-		// двуручник (Палачи) занимает обе руки: щит в левой молчит
-		if (payload.offhand() && InkGreatswordItem.twoHanded(player.getMainHandItem())) return;
 		// аура Милосердия гасится повторным нажатием — бесплатно и без проверок
 		if (weapon.ability() == MERCY && MERCY.isActive(player)) {
 			MERCY.stop(player);
 			return;
 		}
 		SkillInput input = new SkillInput(payload.strafe(), payload.forward(), payload.offhand());
-		// двуручник в левой (в правой одноручный) — можно, но абилка слабее
-		POWER.put(player.getUUID(), payload.offhand() && InkGreatswordItem.twoHanded(stack) ? OFFHAND_TWO_HANDED_POWER : 1f);
+		POWER.put(player.getUUID(), 1f);
 		if (stack.getItem() instanceof SoulShieldItem) {
-			int now = player.server.getTickCount();
-			if (now < SHIELD_ABILITY_UNTIL.getOrDefault(player.getUUID(), 0)) return;
-			if (Skills.activate(player, weapon.ability(), input)) SHIELD_ABILITY_UNTIL.put(player.getUUID(), now + com.tarkrakov.tearsofink.weapon.shield.ShieldTuning.ABILITY_SHARED_TICKS);
+			Skills.activate(player, weapon.ability(), input);
 			return;
 		}
 		if (Skills.activate(player, weapon.ability(), input) && stack.getItem() instanceof InkGreatswordItem) {
-			// белая «шторка» перезарядки на иконке меча
-			player.getCooldowns().addCooldown(stack.getItem(), weapon.ability().cooldownTicks());
 			com.tarkrakov.tearsofink.weapon.combat.Combat.ability(player, stack); // движение приёма у всех
 		}
 	}
@@ -257,7 +242,7 @@ public final class WeaponAbilities {
 				Radiance state = e.getValue();
 				int left = state.left() - 1;
 				boolean held = player != null && (player.getMainHandItem() == state.shield()
-						|| player.getOffhandItem() == state.shield() && !InkGreatswordItem.twoHanded(player.getMainHandItem()));
+						|| player.getOffhandItem() == state.shield());
 				if (!held || !player.isAlive() || !com.tarkrakov.tearsofink.world.ModDimensions.hasLandsRules(player.level()) || left <= 0) {
 					// Only our short pulse expires. Never remove another source of resistance.
 					it.remove();
@@ -487,7 +472,7 @@ public final class WeaponAbilities {
 				var data = com.tarkrakov.tearsofink.ink.InkPowers.get(player);
 				boolean creative = player.getAbilities().instabuild;
 				float drain = SOUL_PER_SECOND / 20f;
-				if (!player.isAlive() || !data.inside() || !(player.getMainHandItem() == aura.shield() || player.getOffhandItem() == aura.shield() && !InkGreatswordItem.twoHanded(player.getMainHandItem())) || (!creative && data.soul() < drain)) {
+				if (!player.isAlive() || !data.inside() || !(player.getMainHandItem() == aura.shield() || player.getOffhandItem() == aura.shield()) || (!creative && data.soul() < drain)) {
 					stop(player);
 					continue;
 				}

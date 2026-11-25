@@ -42,6 +42,7 @@ public class MightyStrideSkill extends Skill {
 	private record Step(double dx, double dz, int ticksLeft, Set<UUID> hit) {}
 
 	private final Map<UUID, Step> active = new HashMap<>();
+	public boolean cancelForAction(ServerPlayer p) { return active.remove(p.getUUID()) != null; }
 
 	public MightyStrideSkill(ResourceLocation id, int inkCost, int soulCost, int cooldownTicks) {
 		super(id, inkCost, soulCost, cooldownTicks);

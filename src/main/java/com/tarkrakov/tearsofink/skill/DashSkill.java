@@ -36,6 +36,7 @@ public class DashSkill extends Skill {
 	private record Dash(double dx, double dz, int ticksLeft, int invulnerableLeft, boolean dodged) {}
 
 	private final Map<UUID, Dash> active = new HashMap<>();
+	public boolean cancelForAction(ServerPlayer p) { return active.remove(p.getUUID()) != null; }
 
 	public DashSkill(ResourceLocation id, int inkCost, int soulCost, int cooldownTicks) {
 		super(id, inkCost, soulCost, cooldownTicks);
