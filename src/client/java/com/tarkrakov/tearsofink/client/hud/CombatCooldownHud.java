@@ -32,18 +32,18 @@ public final class CombatCooldownHud {
         String[] keys = {SkillKeys.mobilityKeyLabel().getString(),r,mc.options.keyUse.getTranslatedKeyMessage().getString(),shift+"+"+r,SkillKeys.loadoutKeyLabel().getString()};
         int count=0; for (Entry e:slots) if (!e.id().isEmpty()) count++;
         if(count==0) return;
-        // Draw in the original logical coordinates, then halve the whole HUD.
+        // Draw in logical coordinates at the compact HUD scale.
         // Its right edge aligns with the left-hand slot instead of the health bar.
-        final float scale = 0.5f;
+        final float scale = 0.625f;
         final int rowHeight = 19;
         int edge = g.guiWidth()/2-100;
         int available = edge-3;
         // With insufficient room beside the hotbar, keep clear of the heart rows.
-        boolean narrow = available < 27;
-        int width = narrow ? 54 : Math.min(76,available*2);
-        int x = narrow ? 3 : edge-(width+1)/2;
+        boolean narrow = available < (int)Math.ceil(54*scale);
+        int width = narrow ? 54 : Math.min(76,(int)Math.floor(available/scale));
+        int x = narrow ? 3 : edge-(int)Math.ceil(width*scale);
         int bottom = g.guiHeight() - (narrow ? 80 : 25);
-        int top = Math.max(3,bottom-(count*rowHeight+1)/2);
+        int top = Math.max(3,bottom-(int)Math.ceil(count*rowHeight*scale));
         g.pose().pushPose();
         g.pose().translate(x,top,0);
         g.pose().scale(scale,scale,1f);
