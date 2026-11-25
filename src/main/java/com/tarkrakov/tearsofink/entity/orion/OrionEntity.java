@@ -445,14 +445,14 @@ public final class OrionEntity extends PathfinderMob {
         } else if (technique == Technique.SPIN) {
             sweep(server, players, SPIN, 0, to, old);
             if (phaseTwo && crossed(previousTime, to, SPIN_LIGHT))
-                shockwave(server, players, position(), LIGHT_RADIUS, 8, hit.getFirst(), true);
+                shockwave(server, players, position(), SPIN_LIGHT_RADIUS, SPIN_LIGHT_DAMAGE, hit.getFirst(), true);
         } else if (technique == Technique.CLEAVE) {
             sweep(server, players, CLEAVE, 0, to, old);
             if (crossed(previousTime, to, CLEAVE_IMPACT)) {
                 Vec3 tip = OrionBlade.sample(clip, CLEAVE_IMPACT, position(), getYRot()).tip();
                 Vec3 ground = new Vec3(tip.x, getY() + .08, tip.z);
                 shockwave(server, players, ground, phaseTwo ? LIGHT_RADIUS : CLEAVE_RADIUS,
-                        phaseTwo ? 13 : 11, hit.getFirst(), phaseTwo);
+                        CLEAVE_IMPACT_DAMAGE, hit.getFirst(), phaseTwo);
                 launchWave(server, ground, now);
             }
         }
