@@ -112,3 +112,16 @@ const pasted=copyClip(template,imported[5],changedIds);
 assert(Object.keys(pasted.animators).every(id=>id.startsWith('new-')));assert.equal(Object.keys(pasted.animators).length,Object.keys(imported[5].animators).length);
 const wrongGame=clone(gameBase);wrongGame.grip[0]+=1;assert.throws(()=>importGame(template,gameLibrary([wrongGame]),[{right:'axe_dual_chop'}]),/grip/);
 console.log('TOI reverse import: current 3 single and 5 paired steps, independent F5, both hands and cross-rig copy passed');
+
+ // Right->left mirror is a selected-clip operation, not a new animation.
+ const mirrorInput=clone(single);
+ const mirrorBefore=JSON.stringify(mirrorInput);
+ const mirrored=build.planMirrorRight(template,mirrorInput);
+ assert.deepEqual(mirrored.views,['FP']);
+ assert(Object.keys(mirrored.animators).every(id=>template.groups.find(g=>g.uuid===id).name.startsWith('FP_left_')));
+ assert.equal(JSON.stringify(mirrorInput),mirrorBefore);
+ const mirrorPair={...mirrorInput,animators:{...mirrorInput.animators,...mirrored.animators}};
+ assert.deepEqual(build.planF5(template,mirrorPair).sides,['right','left']);
+ assert(build.planMirrorRight(template,mirrorPair).replaced>0);
+ assert.deepEqual(build.planMirrorRight(template,template.animations[0]).views,['FP','F5']);
+ console.log('TOI Mirror R→L: source unchanged, both sides, replacement detection and F5 passed');

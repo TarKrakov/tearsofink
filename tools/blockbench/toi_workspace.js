@@ -400,6 +400,58 @@
       }
       return out;
     }
+    // Reflect the motion about the player's midline, relative to each hand's
+    // own calibrated rest. Euler sign flips alone are not valid for a pistol's
+    // rotated weapon bone. Preserve sparse curves when algebraically exact.
+    function planMirrorRight(project,clip){
+      const r=rig(project,clip,true),M=[[-1,0,0],[0,1,0],[0,0,1]],animators={},views=[];
+      const mirror=(v,signs)=>v.map((x,i)=>x*signs[i]);
+      const clone=x=>JSON.parse(JSON.stringify(x));
+      const eqMatrix=(a,b)=>a.every((row,i)=>near(row,b[i]));
+      let replaced=0,count=0,baked=0;
+      for(const view of ['FP','F5']){
+        const src=r.sides[0][view].chain,dst=r.sides[1][view].chain;
+        if(!src.some(g=>r.fpChannels.has(g.uuid)))continue;
+        views.push(view);
+        for(let i=0;i<3;i++){
+          const a=src[i],b=dst[i],track=r.tracks[a.uuid],cs=r.fpChannels.get(a.uuid);
+          const existing=r.tracks[b.uuid]?.keyframes?.length||0;
+          replaced+=existing;
+          if(!cs&&!existing)continue;
+          const out={name:b.name,type:'bone',rotation_global:false,quaternion_interpolation:false,keyframes:[]};
+          const ar=vec(a.rotation),br=vec(b.rotation);
+          const A=rot(ar),B=rot(br);
+          const exact=eqMatrix(B,mm(mm(M,A),M))&&near(br,mirror(ar,[1,-1,-1]));
+          for(const k of track?.keyframes||[]){
+            if(k.channel==='rotation'&&!exact)continue;
+            const signs=k.channel==='position'?[-1,1,1]:k.channel==='rotation'?[1,-1,-1]:[1,1,1];
+            const cp=clone(k);delete cp.uuid;
+            const v=mirror(vec(cp.data_points[0],k.channel==='scale'?1:0),signs);
+            cp.data_points=[{x:String(v[0]),y:String(v[1]),z:String(v[2])}];
+            for(const field of ['bezier_left_value','bezier_right_value'])if(cp[field]!=null)
+              cp[field]=mirror(vec(cp[field]),signs);
+            out.keyframes.push(cp);
+          }
+          if(!exact&&cs?.rotation?.length){
+            const ks=cs.rotation,times=new Set([0,r.length,...ks.map(k=>timeKey(k.time))]);
+            for(let n=0;n/60<r.length;n++)times.add(timeKey(n/60));
+            for(let j=1;j<ks.length;j++)if(ks[j-1].kind==='step')times.add(timeKey(Math.max(ks[j-1].time,ks[j].time-.000001)));
+            let prev=br;
+            // R_left = M R_right R_right_rest^-1 M R_left_rest.
+            for(const t of [...times].sort((x,y)=>x-y)){
+              const R=rot(add(ar,sample(ks,t)));
+              const reflected=mm(mm(mm(mm(M,R),tr(A)),M),B);
+              prev=euler(reflected,prev);
+              out.keyframes.push(key(t,sub(prev,br)));
+            }
+            baked++;
+          }
+          count+=out.keyframes.length;animators[b.uuid]=out;
+        }
+      }
+      if(!views.length)err('Нет ключей правой руки в выбранном клипе');
+      return {animators,views,replaced,count,baked};
+    }
     function copyClip(source,clip,target){
       const allowed=/^(FP|F5)_(right|left)_(shoulder|arm|sword)$/,src=new Map(source.groups.map(g=>[g.uuid,g.name])),dst=new Map(target.groups.map(g=>[g.name,g.uuid])),animators={};
       for(const [id,a] of Object.entries(clip.animators||{})){
@@ -474,7 +526,7 @@
       return {animations:out,autoF5:auto,samples:sorted.length,maxGripError,maxRotationError};
     }
 
-    return {planF5,planTiming,existingF5,rot,euler,importGame,gameLibrary,defaultGameRequests,copyClip,gameSample,bakeGame};
+    return {planF5,planTiming,existingF5,rot,euler,importGame,gameLibrary,defaultGameRequests,copyClip,gameSample,bakeGame,planMirrorRight};
   })();
 
 
@@ -672,6 +724,43 @@
     Animator.preview();Blockbench.showQuickMessage('Добавлено анимаций: '+added.length+' · Ctrl+Z — отмена');
   }
   function requireAnimate(){if(!isWorkspace()||!Modes.animate)throw Error('Открой TOI-сцену во вкладке Animate');}
+  function mirrorRight(){
+    try{
+      requireAnimate();
+      const animation=Animation.selected,owner=Project;
+      if(!animation)throw Error('Выбери анимацию слева');
+      const plan=f5math.planMirrorRight(compiledProject(),animation.getUndoCopy());
+      const run=()=>{
+        try{
+          if(Project!==owner||Animation.selected!==animation)throw Error('Сцена или клип изменились — повтори действие');
+          const fresh=f5math.planMirrorRight(compiledProject(),animation.getUndoCopy());
+          for(const uid of Object.keys(fresh.animators)){
+            const group=Group.all.find(g=>g.uuid===uid);
+            if(!group)throw Error('Кость исчезла: '+uid);
+            animation.getBoneAnimator(group);
+          }
+          Undo.initEdit({animations:[animation]});
+          try{
+            const animators={};
+            for(const [uid,a] of Object.entries(fresh.animators))
+              animators[uid]={...a,keyframes:a.keyframes.map(k=>({...k,uuid:guid()}))};
+            animation.extend({animators});
+            Undo.finishEdit('TOI: Mirror right to left');
+          }catch(e){Undo.cancelEdit(true);throw e;}
+          if(typeof Timeline!=='undefined'&&Array.isArray(Timeline.selected))Timeline.selected.splice(0);
+          setup(mode,true,angle);
+          for(const uid of Object.keys(fresh.animators)){
+            const a=animation.animators[uid];
+            if(a?.keyframes?.length)a.addToTimeline(true);
+          }
+          Animator.preview();
+          Blockbench.showQuickMessage('Mirror R→L: '+fresh.views.join(' + ')+' · '+fresh.count+' ключей · Ctrl+Z — отмена');
+        }catch(e){failDialog(e);}
+      };
+      if(plan.replaced)Blockbench.showMessageBox({title:'Tears of Ink — Mirror R→L',message:'Заменить ключи левой руки ('+plan.replaced+') в '+plan.views.join(' + ')+'? Правая рука и остальные клипы останутся без изменений. Ctrl+Z отменяет действие.',buttons:['Заменить','Отмена'],confirm:0,cancel:1},i=>{if(i===0)run();});
+      else run();
+    }catch(e){failDialog(e);}
+  }
   function copyTOIClip(){
     try{requireAnimate();if(!Animation.selected)throw Error('Выбери анимацию слева');
       const p=compiledProject();clipClipboard={groups:JSON.parse(JSON.stringify(p.groups)),meta:p.toi_workspace,clip:Animation.selected.getUndoCopy()};
@@ -761,11 +850,11 @@
     for (const [label,v,p,f] of [['FP 1','FP',false,'front'],['FP 2','FP',true,'front'],['F5 1 front','F5',false,'front'],['F5 2 front','F5',true,'front'],['F5 back','F5',true,'back']]) {
       let b=document.createElement('button');b.textContent=label;b.style.cssText='font-size:11px;padding:4px;min-width:0;width:auto';b.onclick=()=>setup(v,p,f);bar.append(b);
     }
-    for(const [label,click] of [['New weapon',newWeapon],['Save for game',saveForGame],['Generate F5',()=>generateF5(false)],['Generate all F5',()=>generateF5(true)],['Sync timing',syncF5Timing],['Import from game',importFromGame],['Copy clip',copyTOIClip],['Paste clip',pasteTOIClip]]){const b=document.createElement('button');b.textContent=label;b.style.cssText='font-size:11px;padding:4px;min-width:0;width:auto';b.onclick=click;bar.append(b);}
+    for(const [label,click] of [['New weapon',newWeapon],['Save for game',saveForGame],['Generate F5',()=>generateF5(false)],['Generate all F5',()=>generateF5(true)],['Sync timing',syncF5Timing],['Import from game',importFromGame],['Copy clip',copyTOIClip],['Paste clip',pasteTOIClip],['Mirror R→L',mirrorRight]]){const b=document.createElement('button');b.textContent=label;b.style.cssText='font-size:11px;padding:4px;min-width:0;width:auto';b.onclick=click;bar.append(b);}
     Interface.preview.append(bar); setup('FP',true,'front');
   }
   BBPlugin.register('toi_workspace', {
-    title:'Tears of Ink Weapon Workspace',author:'Tears of Ink',icon:'sports_martial_arts',version:'2.2.2',min_version:'5.0.0',variant:'both',
+    title:'Tears of Ink Weapon Workspace',author:'Tears of Ink',icon:'sports_martial_arts',version:'2.2.3',min_version:'5.0.0',variant:'both',
     description:'Separate FP/F5 rigs, automatic F5 from FP, safe batch generation and 16:9 preview.',
     onload() {
       let parsed=e=>{if(e.model.toi_workspace&&Project){const meta=copyMeta(e.model.toi_workspace);Project.toiWorkspaceCalibration=meta;projectMetadata.set(Project,meta);}setTimeout(installBar,100);};
@@ -775,7 +864,7 @@
       callbacks=[()=>Codecs.project.removeListener('parsed',parsed),()=>Codecs.project.removeListener('compile',compiled),()=>{if(subscription?.delete)subscription.delete();else Blockbench.removeListener?.('select_project',selected);}];
       let action=new Action('toi_workspace_reset',{name:'Tears of Ink: restore split workspace',icon:'view_column',click:installBar});
       MenuBar.addAction(action,'view');actions.push(action);
-      for(const [id,name,click] of [['toi_weapon_new','Tears of Ink: new weapon',newWeapon],['toi_weapon_save','Tears of Ink: save animation project for game',saveForGame],['toi_generate_f5','Tears of Ink: Generate F5',()=>generateF5(false)],['toi_generate_all_f5','Tears of Ink: Generate all F5',()=>generateF5(true)],['toi_sync_f5_timing','Tears of Ink: Sync timing',syncF5Timing],['toi_import_game','Tears of Ink: Import from game',importFromGame],['toi_copy_clip','Tears of Ink: Copy clip',copyTOIClip],['toi_paste_clip','Tears of Ink: Paste clip',pasteTOIClip]]){const a=new Action(id,{name,icon:'sports_martial_arts',condition:isWorkspace,click});MenuBar.addAction(a,'view');actions.push(a);}
+      for(const [id,name,click] of [['toi_weapon_new','Tears of Ink: new weapon',newWeapon],['toi_weapon_save','Tears of Ink: save animation project for game',saveForGame],['toi_generate_f5','Tears of Ink: Generate F5',()=>generateF5(false)],['toi_generate_all_f5','Tears of Ink: Generate all F5',()=>generateF5(true)],['toi_sync_f5_timing','Tears of Ink: Sync timing',syncF5Timing],['toi_import_game','Tears of Ink: Import from game',importFromGame],['toi_copy_clip','Tears of Ink: Copy clip',copyTOIClip],['toi_paste_clip','Tears of Ink: Paste clip',pasteTOIClip],['toi_mirror_right','Tears of Ink: Mirror right to left',mirrorRight]]){const a=new Action(id,{name,icon:'sports_martial_arts',condition:isWorkspace,click});MenuBar.addAction(a,'view');actions.push(a);}
       if(isWorkspace()) setTimeout(installBar,100);
     },
     onunload() { callbacks.forEach(f=>f());actions.forEach(a=>a.delete());clearBar(); }

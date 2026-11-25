@@ -61,6 +61,35 @@ if(process.argv.includes('--check')){
  const ids=new Set(template.groups.filter(g=>g.name.startsWith('FP_')).map(g=>g.uuid));
  const clip=(i,name)=>({...template.animations[i],name,animators:Object.fromEntries(Object.entries(template.animations[i].animators).filter(([id])=>ids.has(id)))});
  scene.animations=[clip(0,'aim_enter'),clip(1,'dual_shoot')];
+ // Pistol's asymmetric rest angles need matrix reflection, including wrist.
+ const originalSingle=scene.animations[0],beforeMirror=JSON.stringify(originalSingle);
+ const mirrored=build.planMirrorRight(scene,originalSingle);
+ const paired={...originalSingle,animators:{...originalSingle.animators,...mirrored.animators}};
+ assert.equal(JSON.stringify(originalSingle),beforeMirror);
+ assert.deepEqual(mirrored.views,['FP']);
+ assert.deepEqual(build.planF5(scene,paired).sides,['right','left']);
+ assert(build.planMirrorRight(scene,paired).replaced>0);
+ const synthetic={name:'mirror_test',length:1,loop:'once',snapping:30,animators:{}};
+ const rg=scene.groups.find(g=>g.name==='FP_right_sword'),lg=scene.groups.find(g=>g.name==='FP_left_sword');
+ const k=(time,channel,v)=>({time,channel,interpolation:'linear',data_points:[{x:String(v[0]),y:String(v[1]),z:String(v[2])}]});
+ synthetic.animators[rg.uuid]={name:rg.name,type:'bone',keyframes:[k(0,'rotation',[0,0,0]),k(1,'rotation',[31,-44,67]),k(0,'position',[0,0,0]),k(1,'position',[2,3,4])]};
+ const reflected=build.planMirrorRight(scene,synthetic).animators[lg.uuid].keyframes;
+ const mulM=(a,b)=>a.map(row=>b[0].map((_,j)=>row.reduce((s,v,i)=>s+v*b[i][j],0)));
+ const transpose=a=>a[0].map((_,i)=>a.map(row=>row[i]));
+ const M=[[-1,0,0],[0,1,0],[0,0,1]],A=build.rot(rg.rotation),B=build.rot(lg.rotation);
+ const value=k=>['x','y','z'].map(n=>Number(k.data_points[0][n]));
+ for(const t of [0,.25,.5,.75,1]){
+  const actual=reflected.find(k=>k.channel==='rotation'&&Math.abs(k.time-t)<1e-7);
+  assert(actual);
+  const source=build.rot(add(rg.rotation,[31*t,-44*t,67*t]));
+  const expected=mulM(mulM(mulM(mulM(M,source),transpose(A)),M),B);
+  const got=build.rot(add(lg.rotation,value(actual)));
+  assert(got.every((row,i)=>near(row,expected[i])),'Pistol mirror at '+t);
+ }
+ assert.deepEqual(value(reflected.find(k=>k.channel==='position'&&k.time===1)),[-2,3,4]);
+ const pairedBake=build.bakeGame(scene,paired,'bb_author_dual_aim_enter',60);
+ assert(pairedBake.animations.bb_author_dual_aim_enter_off);
+ console.log('Pistol mirror: calibrated wrist matrix, position, both hands and game bake passed');
  for(const a of scene.animations){
   const baked=build.bakeGame(scene,a,'bb_author_'+a.name,60);
   assert(baked.maxGripError<1e-5);assert(baked.maxRotationError<1e-5);
