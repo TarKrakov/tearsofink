@@ -10,6 +10,12 @@ assert.equal(m?.archetype,'holy_pistol');assert.deepEqual(m.grip,base.grip);
 assert.deepEqual(m.fp_mount,base.firstperson_offset);assert.deepEqual(m.fp_idle_offset,base.firstperson_idle_offset);
 for(const name of ['firstperson_righthand','firstperson_lefthand','thirdperson_righthand','thirdperson_lefthand'])
  assert.deepEqual(m.display[name],model.display[name]);
+// Compare the calibrated source geometry and explicit UVs, not the artist's animation keys.
+const canonical=JSON.parse(fs.readFileSync(path.join(assets,'models/item/holy_pistol.bbmodel'),'utf8'));
+const signature=e=>JSON.stringify([e.from,e.to,e.origin,e.rotation||[0,0,0],
+ Object.entries(e.faces).sort(([a],[b])=>a.localeCompare(b)).map(([k,v])=>[k,v.uv,v.rotation||0,v.texture])]);
+assert.deepEqual(m.source_resolution,canonical.resolution);
+assert.deepEqual(m.source_cubes.map(signature).sort(),canonical.elements.map(signature).sort(),'Pistol geometry/UV changed; rebuild the workspace before importing');
 const allowed=new Set(['aim_enter','aim_exit','shoot','shoot_aimed','reload','wild_shot','dual_aim_enter','dual_aim_exit','dual_shoot','dual_shoot_aimed','dual_reload']);
 const animations={};
 for(const a of p.animations||[]){

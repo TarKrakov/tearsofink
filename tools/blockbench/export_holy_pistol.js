@@ -52,3 +52,28 @@ assert.deepEqual(r.model.display.thirdperson_righthand,original.display.thirdper
 const texture=fs.readFileSync(path.join(assets,'textures/item/holy_pistol_texture.png'));
 assert(texture.equals(Buffer.from(original.textures[0].source.split(',')[1],'base64')));
 console.log('Pistol: '+r.model.elements.length+' cubes, exact authored UV/texture/right display, mirrored left display');
+
+if(process.argv.includes('--check')){
+ const build=require('./toi_workspace.js');
+ const template=JSON.parse(fs.readFileSync(path.join(__dirname,'pale_animation_workspace.bbmodel'),'utf8'));
+ let uid=0;
+ const cfg={archetype:'holy_pistol',grip:[10,6.5,11],display:r.source.display,fp_mount:[0,0,0],fp_idle_offset:[0,0,0],makeId:()=>`pistol-test-${++uid}`};
+ const atlas={width:96,height:64,itemWidth:64,itemHeight:64,textureIds:[0],source:'data:image/png;base64,test'};
+ const scene=build(template,r.source,cfg,atlas);
+ assert.equal(scene.elements.filter(e=>/_sword_cube_\d+$/.test(e.name)).length,56);
+ const ids=new Set(template.groups.filter(g=>g.name.startsWith('FP_')).map(g=>g.uuid));
+ const clip=(i,name)=>({...template.animations[i],name,animators:Object.fromEntries(Object.entries(template.animations[i].animators).filter(([id])=>ids.has(id)))});
+ scene.animations=[clip(0,'aim_enter'),clip(1,'dual_shoot')];
+ for(const a of scene.animations){
+  const baked=build.bakeGame(scene,a,'bb_author_'+a.name,60);
+  assert(baked.maxGripError<1e-5);assert(baked.maxRotationError<1e-5);
+  assert(baked.animations['bb_author_'+a.name]);
+  if(a.name.startsWith('dual_'))assert(baked.animations['bb_author_'+a.name+'_off']);
+ }
+ const tmp=fs.mkdtempSync(path.join(require('node:os').tmpdir(),'toi-pistol-'));
+ try{
+  const file=path.join(tmp,'holy_pistol_animation.bbmodel');fs.writeFileSync(file,JSON.stringify(scene));
+  require('node:child_process').execFileSync(process.execPath,[path.join(__dirname,'import_holy_pistol.js'),file],{stdio:'inherit'});
+ }finally{fs.rmSync(tmp,{recursive:true,force:true});}
+ console.log('Pistol workspace: FP/F5 single and dual dry-run bake succeeded');
+}
