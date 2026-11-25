@@ -110,7 +110,7 @@ public final class PersonalSlots {
 
     public static boolean available(Player player, int index) {
         if (index < 0 || index >= COUNT) return false;
-        if (index == PANTHEON_KEY) return fullPanel(player) || holds(player, index);
+        if (index == PANTHEON_KEY) return fullPanel(player);
         return fullPanel(player) && (index != MIRROR || ModDimensions.isLands(player.level()));
     }
 

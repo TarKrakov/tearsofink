@@ -47,8 +47,9 @@ public abstract class InventoryMenuMixin extends AbstractContainerMenu {
     @Unique
     private Slot tearsofink$reserveSlot(WeaponLoadouts.Items container, int index, int x) {
         return new Slot(container, index, x, WeaponLoadouts.SLOT_Y) {
-            @Override public boolean mayPlace(ItemStack stack) { return container.canPlaceItem(index, stack); }
-            @Override public boolean mayPickup(Player player) { return container.stillValid(player); }
+            @Override public boolean isActive() { return PersonalSlots.fullPanel(container.owner()); }
+            @Override public boolean mayPlace(ItemStack stack) { return isActive() && container.canPlaceItem(index, stack); }
+            @Override public boolean mayPickup(Player player) { return isActive() && container.stillValid(player); }
             @Override public int getMaxStackSize() { return 1; }
         };
     }

@@ -5,6 +5,7 @@ import com.tarkrakov.tearsofink.pantheon.PantheonGatekeeper;
 import com.tarkrakov.tearsofink.pantheon.PantheonAltar;
 import com.tarkrakov.tearsofink.travel.Travel;
 import com.tarkrakov.tearsofink.prologue.PersonalSlots;
+import com.tarkrakov.tearsofink.weapon.combat.WeaponLoadouts;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
@@ -28,9 +29,18 @@ public abstract class ContainerMenuMixin {
 		if ((Object) this != player.inventoryMenu || slot != PersonalSlots.INVENTORY_MENU_START + PersonalSlots.PANTHEON_KEY) return;
 		ci.cancel();
 		if (type == ClickType.PICKUP && button == 1 && getCarried().isEmpty()
-				&& player instanceof ServerPlayer server && server.containerMenu == server.inventoryMenu) {
+				&& player instanceof ServerPlayer server && server.containerMenu == server.inventoryMenu
+				&& PersonalSlots.available(server, PersonalSlots.PANTHEON_KEY)) {
 			PantheonGatekeeper.useKey(server);
 		}
+	}
+
+	/** Hidden extra slots cannot be operated through a forged/stale inventory click. */
+	@Inject(method = "clicked", at = @At("HEAD"), cancellable = true)
+	private void tearsofink$denyHiddenSlots(int slot, int button, ClickType type, Player player, CallbackInfo ci) {
+		if ((Object) this == player.inventoryMenu
+				&& slot >= PersonalSlots.INVENTORY_MENU_START && slot < WeaponLoadouts.MENU_START + 2
+				&& !PersonalSlots.fullPanel(player)) ci.cancel();
 	}
 
 	/** Also prevent shift-click merging into any pre-existing non-relic stack. */

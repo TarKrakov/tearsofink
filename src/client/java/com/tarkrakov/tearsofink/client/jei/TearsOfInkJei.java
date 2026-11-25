@@ -100,7 +100,8 @@ public class TearsOfInkJei implements IModPlugin {
 				var bounds = (PersonalPanelBounds) screen;
 				var personal = bounds.tearsofink$personalPanelBounds();
 				var loadout = bounds.tearsofink$loadoutPanelBounds();
-				return personal == null ? List.of(loadout) : List.of(personal, loadout);
+				if (personal == null) return loadout == null ? List.of() : List.of(loadout);
+				return loadout == null ? List.of(personal) : List.of(personal, loadout);
 			}
 		});
 		registration.addRecipeClickArea(InkAnvilScreen.class, 90, 35, 26, 17, FORGING);

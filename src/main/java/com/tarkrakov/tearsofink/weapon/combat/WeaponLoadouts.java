@@ -157,7 +157,7 @@ public final class WeaponLoadouts {
         }
         @Override public void setChanged() {}
         @Override public boolean stillValid(Player player) { return player == owner; }
-        @Override public boolean canPlaceItem(int index, ItemStack stack) { return accepts(stack); }
+        @Override public boolean canPlaceItem(int index, ItemStack stack) { return PersonalSlots.fullPanel(owner) && accepts(stack); }
         @Override public void clearContent() { owner.removeAttached(RESERVE); }
     }
 }

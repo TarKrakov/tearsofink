@@ -35,8 +35,7 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
         graphics.fill(x, y, x + PersonalSlots.PANEL_WIDTH, y + 1, 0xFFAC9272);
         graphics.fill(x, bottom - 1, x + PersonalSlots.PANEL_WIDTH, bottom, 0xFFAC9272);
         graphics.drawString(font, Component.translatable("gui.tears-of-ink.personal"), x + 4, y + 3, 0xE5D6BF, false);
-        int first = PersonalSlots.fullPanel(minecraft.player) ? 0 : PersonalSlots.PANTHEON_KEY;
-        for (int i = first; i < PersonalSlots.COUNT; i++) {
+        for (int i = 0; i < PersonalSlots.COUNT; i++) {
             int sx = leftPos + PersonalSlots.SLOT_X;
             int sy = topPos + PersonalSlots.SLOT_Y + PersonalSlots.SLOT_STEP * i;
             graphics.fill(sx - 1, sy - 1, sx + 18, sy + 18, 0xFF8A7967);
@@ -50,6 +49,7 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
     private void tearsofink$drawLoadout(GuiGraphics graphics) {
         int y = topPos + WeaponLoadouts.SLOT_Y;
         Rect2i bounds = tearsofink$loadoutPanelBounds();
+        if (bounds == null) return;
         graphics.fill(leftPos, bounds.getY(), leftPos + imageWidth, bounds.getY() + bounds.getHeight(), 0xFF27222C);
         graphics.fill(leftPos, bounds.getY(), leftPos + imageWidth, bounds.getY() + 1, 0xFFAC9272);
         graphics.drawString(font, Component.translatable("gui.tears-of-ink.loadout.active_label"),
@@ -65,7 +65,7 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
 
     @Inject(method = "render", at = @At("TAIL"))
     private void tearsofink$loadoutHelp(GuiGraphics graphics, int mouseX, int mouseY, float partial, CallbackInfo ci) {
-        if (!menu.getCarried().isEmpty() || mouseY < topPos + WeaponLoadouts.SLOT_Y
+        if (tearsofink$loadoutPanelBounds() == null || !menu.getCarried().isEmpty() || mouseY < topPos + WeaponLoadouts.SLOT_Y
                 || mouseY >= topPos + WeaponLoadouts.SLOT_Y + 16) return;
         int x = mouseX - leftPos;
         if (x >= 7 && x < WeaponLoadouts.MAIN_X - 2) {
@@ -80,23 +80,23 @@ public abstract class InventoryScreenMixin extends EffectRenderingInventoryScree
 
     @Override
     public Rect2i tearsofink$loadoutPanelBounds() {
+        if (minecraft == null || minecraft.player == null || !PersonalSlots.fullPanel(minecraft.player)) return null;
         return new Rect2i(leftPos, topPos + WeaponLoadouts.SLOT_Y - 5, imageWidth, 26);
     }
 
     @Override
     public Rect2i tearsofink$personalPanelBounds() {
         if (minecraft == null || minecraft.player == null
-                || !PersonalSlots.available(minecraft.player, PersonalSlots.PANTHEON_KEY)) return null;
-        int offset = PersonalSlots.fullPanel(minecraft.player) ? 0 : PersonalSlots.PANTHEON_KEY * PersonalSlots.SLOT_STEP;
-        return new Rect2i(leftPos + PersonalSlots.PANEL_X, topPos + PersonalSlots.PANEL_Y + offset,
-                PersonalSlots.PANEL_WIDTH, PersonalSlots.PANEL_HEIGHT - offset);
+                || !PersonalSlots.fullPanel(minecraft.player)) return null;
+        return new Rect2i(leftPos + PersonalSlots.PANEL_X, topPos + PersonalSlots.PANEL_Y,
+                PersonalSlots.PANEL_WIDTH, PersonalSlots.PANEL_HEIGHT);
     }
 
     /** The personal panel must not be mistaken for an outside-inventory drop zone. */
     @Inject(method = "hasClickedOutside", at = @At("HEAD"), cancellable = true)
     private void tearsofink$panelIsInside(double x, double y, int left, int top, int button, CallbackInfoReturnable<Boolean> cir) {
         Rect2i loadout = tearsofink$loadoutPanelBounds();
-        if (x >= loadout.getX() && x < loadout.getX() + loadout.getWidth()
+        if (loadout != null && x >= loadout.getX() && x < loadout.getX() + loadout.getWidth()
                 && y >= loadout.getY() && y < loadout.getY() + loadout.getHeight()) {
             cir.setReturnValue(false);
             return;

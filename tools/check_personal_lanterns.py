@@ -70,3 +70,16 @@ assert "mouseX >= leftPos + PersonalSlots.SLOT_X" in screen
 assert "mouseY >= topPos + PersonalSlots.SLOT_Y" in screen
 assert "leftPos + 178" not in screen
 print("D-106: personal slots, left-hand inventory panel, collection and reserved author art verified")
+
+# D-033 / D-106: hidden panels must also disable their slots and JEI areas.
+assert "if (index == PANTHEON_KEY) return fullPanel(player);" in slots
+assert "return PersonalSlots.fullPanel(container.owner());" in menu
+assert "isActive() && container.stillValid(player)" in menu
+assert "tearsofink$denyHiddenSlots" in menu_mixin
+assert "PersonalSlots.available(server, PersonalSlots.PANTHEON_KEY)" in menu_mixin
+assert "if (bounds == null) return;" in screen
+assert "if (loadout != null &&" in screen
+assert "tearsofink$loadoutPanelBounds() == null" in screen
+jei = (client / "jei/TearsOfInkJei.java").read_text()
+assert "loadout == null ? List.of() : List.of(loadout)" in jei
+print("Inventory panels are restricted to mod dimensions")

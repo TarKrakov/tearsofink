@@ -5,5 +5,5 @@ import org.jetbrains.annotations.Nullable;
 
 public interface PersonalPanelBounds {
     @Nullable Rect2i tearsofink$personalPanelBounds();
-    Rect2i tearsofink$loadoutPanelBounds();
+    @Nullable Rect2i tearsofink$loadoutPanelBounds();
 }
