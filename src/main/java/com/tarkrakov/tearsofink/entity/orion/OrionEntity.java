@@ -469,7 +469,7 @@ public final class OrionEntity extends PathfinderMob {
                 Vec3 tip = OrionBlade.sample(clip, CLEAVE_IMPACT, position(), getYRot()).tip();
                 Vec3 ground = new Vec3(tip.x, getY() + .08, tip.z);
                 shockwave(server, players, ground, phaseTwo ? LIGHT_RADIUS : CLEAVE_RADIUS,
-                        CLEAVE_IMPACT_DAMAGE, hit.getFirst(), phaseTwo);
+                        CLEAVE_IMPACT_DAMAGE.at(phaseTwo), hit.getFirst(), phaseTwo);
                 launchWave(server, ground, now);
             }
         }
@@ -561,7 +561,7 @@ public final class OrionEntity extends PathfinderMob {
 
     private float bladeDamage(Window window) {
         return technique == Technique.CLEAVE && combo == Combo.DEADLY
-                ? window.damage() * DEADLY_CLEAVE_EDGE : window.damage();
+                ? DEADLY_CLEAVE_DAMAGE : window.damage().at(phaseTwo);
     }
 
     private void shockwave(ServerLevel server, List<ServerPlayer> players, Vec3 at, double radius, float damage,
@@ -617,7 +617,7 @@ public final class OrionEntity extends PathfinderMob {
             if (Math.abs(offset.y) > 1.12 || Math.abs(offset.dot(wave.lateral())) > width
                     || forward < distance - .67 || forward > distance + speed * .55) continue;
             if (!clearLine(server, origin, player.position().add(0, .38, 0))) continue;
-            strike(player, WAVE_DAMAGE, wave.hit(), source);
+            strike(player, WAVE_DAMAGE.at(wave.radiant()), wave.hit(), source);
         }
     }
 
@@ -638,7 +638,7 @@ public final class OrionEntity extends PathfinderMob {
 
     private void strike(ServerPlayer player, float damage, HitWindow affected, DamageSource source) {
         if (!PantheonCombat.fighter(player) || !affected.register(player.getUUID())) return;
-        if (player.hurt(source, damage * (phaseTwo ? PHASE_DAMAGE : 1)))
+        if (player.hurt(source, damage))
             lastContact = level().getGameTime();
     }
 

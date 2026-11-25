@@ -74,13 +74,16 @@ public final class OrionCombatTest {
     }
 
     private static void verifyDamageAndSpinReach() {
-        require(PHASE_DAMAGE == 1, "phase two has no damage multiplier");
-        require(damageReduced(SLASH.get(0).damage(), 9)
-                && damageReduced(SLASH.get(1).damage(), 10)
-                && damageReduced(SLASH.get(2).damage(), 10), "slash hits reduced by 20-25 percent");
-        require(damageReduced(SPIN.damage(), 9.5f) && damageReduced(CLEAVE.damage(), 16)
-                && damageReduced(SPIN_LIGHT_DAMAGE, 8) && damageReduced(WAVE_DAMAGE, 8)
-                && damageReduced(CLEAVE_IMPACT_DAMAGE, 11), "other base damage reduced by 20-25 percent");
+        requireDamage(SLASH.get(0).damage(), 9);
+        requireDamage(SLASH.get(1).damage(), 10);
+        requireDamage(SLASH.get(2).damage(), 10);
+        requireDamage(SPIN.damage(), 9.5f);
+        requireDamage(CLEAVE.damage(), 16);
+        requireDamage(WAVE_DAMAGE, 8);
+        requireDamage(CLEAVE_IMPACT_DAMAGE, 11);
+        require(Math.abs(SPIN_LIGHT_DAMAGE - 8 * .95f) < .0001f, "phase-two spin light damage");
+        require(Math.abs(DEADLY_CLEAVE_DAMAGE - 16 * .88f * .95f) < .0001f,
+                "retain the distinct deadly cleave contact with the new phase-two nerf");
         require(Math.abs(SPIN_MARGIN - .68 * .75) < .000001
                 && Math.abs(SPIN_LIGHT_RADIUS - LIGHT_RADIUS * .75) < .000001,
                 "spin contact margin and radiant radius reduced by a quarter");
@@ -92,8 +95,10 @@ public final class OrionCombatTest {
                 "old excessive side margin no longer hits");
     }
 
-    private static boolean damageReduced(float damage, float original) {
-        return damage >= original * .75f - .00001f && damage <= original * .80f + .00001f;
+    private static void requireDamage(Damage damage, float original) {
+        require(Math.abs(damage.at(false) - original * .75f) < .0001f
+                && Math.abs(damage.at(true) - original * .95f) < .0001f,
+                "fixed phase damage is 75/95 percent of original base");
     }
 
     private static void verifyAnimationPlayback() {
