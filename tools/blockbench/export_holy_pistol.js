@@ -1,7 +1,7 @@
 // Exact export of the author's original pistol. Run from any directory with Node.
 // No author source is overwritten; validate both derived files with --check.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
-const {normalizePistolSource}=require('./toi_workspace.js');
+const {normalizePistolSource,pistolLeft}=require('./toi_workspace.js');
 function convert(source){
  const j=normalizePistolSource(source);
  const model={credit:"Author's holy_pistol.bbmodel; quarter rotations baked without geometry/UV changes",textures:{"0":"tears-of-ink:item/holy_pistol_texture",particle:"tears-of-ink:item/holy_pistol_texture"},elements:j.elements.map(e=>{
@@ -40,6 +40,24 @@ if(process.argv.includes('--check')){
  assert.equal(JSON.stringify(original),originalSnapshot);
  assert.deepEqual(scene.toi_workspace.source_cubes,build(template,r.source,cfg,atlas).toi_workspace.source_cubes);
  assert.equal(scene.elements.filter(e=>/_sword_cube_\d+$/.test(e.name)).length,56);
+ // Check physical mirror, not just matching JSON. World reflection X and
+ // local reflection Z around the true grip must match both muzzle and grip.
+ const reflect=v=>[-v[0],v[1],v[2]];
+ const near=(a,b)=>a.every((v,i)=>Math.abs(v-b[i])<1e-5);
+ const add=(a,b)=>a.map((v,i)=>v+b[i]);
+ const mul=(m,v)=>m.map(row=>row.reduce((s,x,i)=>s+x*v[i],0));
+ const grip=cfg.grip;
+ for(const view of ['FP','F5']){
+  const right=scene.toi_workspace.bindings[view+'_right'],left=scene.toi_workspace.bindings[view+'_left'];
+  assert(near(left.grip_position,reflect(right.grip_position)),view+' grip mirror');
+  for(const v of [[1,0,0],[0,1,0],[0,0,1],[12.5,3.5,0]]){
+   const local=[v[0],v[1],-v[2]];
+   assert(near(mul(left.item_rotation,local),reflect(mul(right.item_rotation,v))),view+' muzzle/up/side mirror');
+  }
+ }
+ const explicit=JSON.parse(JSON.stringify(original));
+ explicit.display.firstperson_lefthand={rotation:[1,2,3],translation:[4,5,6]};
+ assert.deepEqual(normalizePistolSource(explicit).display.firstperson_lefthand,explicit.display.firstperson_lefthand);
  const ids=new Set(template.groups.filter(g=>g.name.startsWith('FP_')).map(g=>g.uuid));
  const clip=(i,name)=>({...template.animations[i],name,animators:Object.fromEntries(Object.entries(template.animations[i].animators).filter(([id])=>ids.has(id)))});
  scene.animations=[clip(0,'aim_enter'),clip(1,'dual_shoot')];

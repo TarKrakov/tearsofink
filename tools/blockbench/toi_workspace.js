@@ -3,6 +3,20 @@
   const projectMetadata=new WeakMap();
   let bar, frame, actions = [], callbacks = [], frameObserver;
   // Same exact quarter-turn bake as the registered pistol model export.
+  function pistolLeft(d,grip=[10,6.5,11]){
+ const copy=x=>JSON.parse(JSON.stringify(x));
+ const out=copy(d),[x,y,z]=d.rotation||[0,0,0],t=d.translation||[0,0,0],scale=d.scale||[1,1,1];
+ // Java left-hand applies M R M to stored XYZ and M to translation.
+ // The pistol's barrel runs along +X, its bilateral width is Z.
+ // Reflect the world in X and the unmirrored model in Z around its grip:
+ // R_left = M R_right S_z. Preserve the grip even when it is off model center.
+ const a=x*Math.PI/180,b=y*Math.PI/180;
+ const dz=2*(grip[2]-8)*scale[2],dir=[Math.sin(b),-Math.sin(a)*Math.cos(b),Math.cos(a)*Math.cos(b)];
+ const round=v=>Math.round(v*1e8)/1e8;
+ out.rotation=[x,y-180,-z].map(round);
+ out.translation=t.map((v,i)=>round(v+dz*dir[i]));
+ return out;
+}
   function normalizePistolSource(source){
  const copy=x=>JSON.parse(JSON.stringify(x));
  const j=copy(source);
@@ -30,13 +44,16 @@
  }
  for(const view of ["firstperson","thirdperson"]){
    const d=j.display[view+"_righthand"];if(!d)throw Error("right display missing");
-   j.display[view+"_lefthand"]=copy(d); // Minecraft applies mirrored left transform (x translation, y/z rotation).
+   const key=view+"_lefthand",left=j.display[key];
+   // Keep explicitly authored left Display; migrate only missing/legacy copied poses.
+   const legacy=left&&JSON.stringify(left)===JSON.stringify(d);
+   if(!left||legacy)j.display[key]=pistolLeft(d);
  }
  return j;
 }
 
   function buildWeaponProject(template,source,cfg,atlas) {
- if(cfg.archetype==='holy_pistol')source=normalizePistolSource(source);
+ if(cfg.archetype==='holy_pistol'){source=normalizePistolSource(source);cfg={...cfg,display:source.display};}
  const cp=x=>JSON.parse(JSON.stringify(x)), fail=m=>{throw Error(m)}, vec=(v,n)=>{if(!Array.isArray(v)||v.length!==3||v.some(x=>typeof x!=='number'||!Number.isFinite(x)))fail('Invalid '+n);return v;};
  const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),mul=(a,k)=>a.map(x=>x*k);
  const mm=(a,b)=>a.map(row=>b[0].map((_,j)=>row.reduce((v,x,k)=>v+x*b[k][j],0))),mv=(a,v)=>a.map(row=>row.reduce((z,x,i)=>z+x*v[i],0));
@@ -505,7 +522,7 @@
     return null;
   }
 
-  if(typeof BBPlugin==='undefined'&&typeof module!=='undefined'){module.exports=Object.assign(buildWeaponProject,f5math,{recoverMetadata,compatibleMetadata,normalizePistolSource});return;}
+  if(typeof BBPlugin==='undefined'&&typeof module!=='undefined'){module.exports=Object.assign(buildWeaponProject,f5math,{recoverMetadata,compatibleMetadata,normalizePistolSource,pistolLeft});return;}
 
   function attachCalibration(model){
     if(!Project||!model.groups||!model.elements)return model;
@@ -748,7 +765,7 @@
     Interface.preview.append(bar); setup('FP',true,'front');
   }
   BBPlugin.register('toi_workspace', {
-    title:'Tears of Ink Weapon Workspace',author:'Tears of Ink',icon:'sports_martial_arts',version:'2.2.1',min_version:'5.0.0',variant:'both',
+    title:'Tears of Ink Weapon Workspace',author:'Tears of Ink',icon:'sports_martial_arts',version:'2.2.2',min_version:'5.0.0',variant:'both',
     description:'Separate FP/F5 rigs, automatic F5 from FP, safe batch generation and 16:9 preview.',
     onload() {
       let parsed=e=>{if(e.model.toi_workspace&&Project){const meta=copyMeta(e.model.toi_workspace);Project.toiWorkspaceCalibration=meta;projectMetadata.set(Project,meta);}setTimeout(installBar,100);};
