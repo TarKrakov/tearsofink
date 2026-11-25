@@ -84,13 +84,22 @@ public final class WeaponAbilities {
 	}
 
 	private static final Map<UUID, Integer> SHIELD_ABILITY_UNTIL = new HashMap<>();
+	public static int shieldCooldownRemaining(ServerPlayer p) {
+		return Math.max(0, SHIELD_ABILITY_UNTIL.getOrDefault(p.getUUID(), 0) - p.server.getTickCount());
+	}
+	public static Skill boundAbility(ServerPlayer p, boolean left) {
+		if (com.tarkrakov.tearsofink.weapon.shield.ShieldStance.dual(p))
+			return left ? ((SoulShieldItem)p.getOffhandItem().getItem()).ability() : com.tarkrakov.tearsofink.weapon.shield.Resonance.SKILL;
+		if (left && InkGreatswordItem.twoHanded(p.getMainHandItem())) return null;
+		ItemStack stack = left ? p.getOffhandItem() : p.getMainHandItem();
+		return stack.getItem() instanceof AbilityWeapon w ? w.ability() : null;
+	}
 
 	private static void use(ServerPlayer player, SkillPayloads.UseWeapon payload) {
 		if (!player.isAlive() || player.isSpectator() || com.tarkrakov.tearsofink.weapon.combat.PaleLongswordMoves.locked(player)) return;
 		// два щита Души: R — Резонанс, Shift+R — способность левого щита
 		if (com.tarkrakov.tearsofink.weapon.shield.ShieldStance.dual(player)) {
-			Skill ability = payload.offhand() ? ((SoulShieldItem)player.getOffhandItem().getItem()).ability()
-					: com.tarkrakov.tearsofink.weapon.shield.Resonance.SKILL;
+			Skill ability = boundAbility(player, payload.offhand());
 			if (ability == MERCY && MERCY.isActive(player)) { MERCY.stop(player); return; }
 			int now = player.server.getTickCount();
 			if (now < SHIELD_ABILITY_UNTIL.getOrDefault(player.getUUID(), 0)) return;
@@ -448,6 +457,9 @@ public final class WeaponAbilities {
 
 		public boolean isActive(ServerPlayer player) {
 			return active.containsKey(player.getUUID());
+		}
+		public int lockoutRemaining(ServerPlayer p) {
+			return Math.max(0, lockedUntil.getOrDefault(p.getUUID(), 0) - p.server.getTickCount());
 		}
 
 		void stop(ServerPlayer player) {

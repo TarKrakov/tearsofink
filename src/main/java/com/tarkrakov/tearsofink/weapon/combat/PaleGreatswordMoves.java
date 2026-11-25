@@ -43,6 +43,7 @@ public final class PaleGreatswordMoves {
     private static final class State {
         Phase phase = Phase.IDLE;
         long until, started, nextLeapLoop, singleReady, dualReady, chargeReady, backstepReady, guardReady;
+        int singleLength, dualLength, chargeLength, guardLength;
         PaleGreatswordBalance.Tuning tuning;
         boolean left, paired, killed, airborne, slammed;
         int broken;
@@ -300,7 +301,8 @@ public final class PaleGreatswordMoves {
         s.phase = Phase.GUARD; s.until = now(p) + GUARD_REFRESH_TICKS;
         // Собственная перезарядка защиты ограничивает только новое поднятие,
         // но не отпускание ПКМ и не обычный R.
-        s.guardReady = now(p) + Math.round(cooldown * Awakening.cooldownMult(left ? s.off : s.main));
+        s.guardLength = Math.round(cooldown * Awakening.cooldownMult(left ? s.off : s.main));
+        s.guardReady = now(p) + s.guardLength;
         play(p, s, pair ? "bb_author_dual_guard_start" : left ? "guard" : "bb_author_guard_start",
                 pair ? "bb_author_dual_guard_start_off" : null, GUARD_REFRESH_TICKS);
         // Free ordinary technique; the existing weapon-wear economy still applies.
@@ -400,7 +402,7 @@ public final class PaleGreatswordMoves {
                     net.minecraft.sounds.SoundSource.PLAYERS, 0.9f, 0.65f);
         } else if (pair) {
             s.phase = Phase.LEAP_START; s.until = now(p) + 25;
-            s.dualReady = cooldown(p, s, s.tuning.dualR().cooldownTicks());
+            s.dualReady = hudCooldown(p, s, s.tuning.dualR().cooldownTicks(), 1);
             play(p, s, "bb_author_dual_r_start", "bb_author_dual_r_start_off", 25);
         } else {
             s.phase = Phase.SINGLE_WINDOW; s.until = now(p) + s.tuning.singleR().windowTicks();
@@ -417,7 +419,7 @@ public final class PaleGreatswordMoves {
         float charge = Mth.clamp((now(p) - s.started) / 50f, 0, 1);
         s.phase = Phase.DUAL_DASH;
         var charged = s.tuning.dualCharge();
-        s.chargeReady = cooldown(p, s, charged.cooldownTicks());
+        s.chargeReady = hudCooldown(p, s, charged.cooldownTicks(), 2);
         startDash(p, s, charged.dashDistance(),
                 Mth.lerp(charge, charged.minDamageMultiplier(), charged.maxDamageMultiplier()));
         play(p, s, "dual_rush", "dual_rush_off", 18);
@@ -445,11 +447,37 @@ public final class PaleGreatswordMoves {
         if (s.phase == Phase.GUARD) { lowerGuard(p, s); return; }
         if (s.phase == Phase.SINGLE_WINDOW || s.phase == Phase.SINGLE_DASH) finish(p, s, false);
         else if (s.phase == Phase.LEAP_START || s.phase == Phase.LEAP || s.phase == Phase.SLAM) finish(p, s, true);
-        else if (s.phase == Phase.CHARGE) s.chargeReady = cooldown(p, s, s.tuning.dualCharge().cooldownTicks());
+        else if (s.phase == Phase.CHARGE) s.chargeReady = hudCooldown(p, s, s.tuning.dualCharge().cooldownTicks(), 2);
         Combat.play(p, ARCH, !s.paired && !s.left ? "bb_author_r_recover" : "recover", s.paired || s.left ? "recover" : null, 4);
         s.phase = Phase.IDLE;
         if (p.isUsingItem() && isWeapon(p.getUseItem())) p.stopUsingItem();
         p.setDeltaMovement(0, p.getDeltaMovement().y, 0); p.hurtMarked = true;
+    }
+
+    // Read-only HUD view of the actual independent technique timers.
+    public static int[] hudTimer(ServerPlayer p, int action, boolean left) {
+        State s = STATES.get(p.getUUID());
+        if (s == null) return new int[]{0, 1, 0};
+        boolean pair = dual(p);
+        long ready = action == 1 ? s.guardReady : action == 2 ? s.chargeReady : pair ? s.dualReady : s.singleReady;
+        int length = action == 1 ? s.guardLength : action == 2 ? s.chargeLength : pair ? s.dualLength : s.singleLength;
+        int state = 0;
+        if (valid(p, s) && s.phase != Phase.IDLE) {
+            if (action == 0 && s.phase == Phase.SINGLE_WINDOW && s.left == left && now(p) >= s.started + 8 && now(p) <= s.until) state = 2;
+            else if ((action == 1 && s.phase == Phase.GUARD) || (action == 2 && s.phase == Phase.CHARGE)) state = 2;
+            else state = 1;
+        }
+        if (action == 0 && pair && (!p.onGround() || p.isInWater() || p.isFallFlying()) && state == 0) state = 1;
+        return new int[]{(int)Math.max(0, ready - now(p)), Math.max(1, length), state};
+    }
+
+    private static long hudCooldown(ServerPlayer p, State s, int ticks, int action) {
+        long ready = cooldown(p, s, ticks);
+        int length = (int)(ready - now(p));
+        if (action == 0) s.singleLength = length;
+        else if (action == 1) s.dualLength = length;
+        else s.chargeLength = length;
+        return ready;
     }
 
     private static long cooldown(ServerPlayer p, State s, int ticks) {
@@ -460,8 +488,8 @@ public final class PaleGreatswordMoves {
 
     private static void finish(ServerPlayer p, State s, boolean pair) {
         if (pair) {
-            if (s.dualReady <= now(p)) s.dualReady = cooldown(p, s, s.tuning.dualR().cooldownTicks());
-        } else s.singleReady = cooldown(p, s, s.tuning.singleR().cooldownTicks());
+            if (s.dualReady <= now(p)) s.dualReady = hudCooldown(p, s, s.tuning.dualR().cooldownTicks(), 1);
+        } else s.singleReady = hudCooldown(p, s, s.tuning.singleR().cooldownTicks(), 0);
         s.phase = Phase.IDLE;
     }
 
@@ -530,7 +558,7 @@ public final class PaleGreatswordMoves {
         boolean pair = s.phase == Phase.DUAL_DASH;
         Vec3 velocity = p.getDeltaMovement();
         p.setDeltaMovement(0, velocity.y, 0); p.hurtMarked = true;
-        if (!pair) s.singleReady = cooldown(p, s, s.tuning.singleR().cooldownTicks());
+        if (!pair) s.singleReady = hudCooldown(p, s, s.tuning.singleR().cooldownTicks(), 0);
         s.phase = Phase.RECOVER; s.until = now(p) + 5;
         play(p, s, pair ? "dual_recover" : s.left ? "recover" : "bb_author_r_recover",
                 pair ? "dual_recover_off" : null, 10);

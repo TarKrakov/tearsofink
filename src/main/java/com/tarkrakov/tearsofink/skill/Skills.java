@@ -39,6 +39,27 @@ public final class Skills {
 
 	/** Перезарядки: игрок → навык → тик сервера, когда снова можно. В память, не сохраняются. */
 	private static final Map<UUID, Map<ResourceLocation, Integer>> COOLDOWNS = new HashMap<>();
+	private static final Map<UUID, Map<ResourceLocation, Integer>> COOLDOWN_LENGTHS = new HashMap<>();
+
+	public static int remaining(ServerPlayer p, Skill skill) {
+		var map = COOLDOWNS.get(p.getUUID());
+		return map == null ? 0 : Math.max(0, map.getOrDefault(skill.id(), 0) - p.server.getTickCount());
+	}
+	public static int cooldownLength(ServerPlayer p, Skill skill) {
+		var map = COOLDOWN_LENGTHS.get(p.getUUID());
+		return Math.max(1, map == null ? skill.cooldownTicks() : map.getOrDefault(skill.id(), skill.cooldownTicks()));
+	}
+	public static Skill mobility(ServerPlayer p) {
+		return com.tarkrakov.tearsofink.vow.Vows.vow(p) == com.tarkrakov.tearsofink.vow.Vow.SOUL
+				&& knows(p, ModSkills.STRIDE) ? ModSkills.STRIDE : ModSkills.DASH;
+	}
+	public static boolean resourceReady(ServerPlayer p, Skill skill) {
+		if (p.getAbilities().instabuild) return true;
+		InkData data = InkPowers.get(p);
+		float mult = com.tarkrakov.tearsofink.weapon.forge.Awakening.costMult(weaponOf(p, skill));
+		return data.ink() >= skill.inkCost() * mult && data.soul() >= skill.soulCost()
+				&& (skill.healthCost() <= 0 || p.getHealth() > skill.healthCost() * mult);
+	}
 
 	/** Срезать оставшуюся перезарядку навыка: keep — какая доля остаётся (0,5 — вдвое короче). */
 	public static void cutCooldown(ServerPlayer player, Skill skill, float keep) {
@@ -70,7 +91,14 @@ public final class Skills {
 		PayloadTypeRegistry.playS2C().register(SkillPayloads.Boost.TYPE, SkillPayloads.Boost.CODEC);
 		ServerPlayNetworking.registerGlobalReceiver(SkillPayloads.Use.TYPE, (payload, context) ->
 				context.player().server.execute(() -> use(context.player(), payload)));
-		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> COOLDOWNS.remove(handler.getPlayer().getUUID()));
+		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+			COOLDOWNS.remove(handler.getPlayer().getUUID());
+			COOLDOWN_LENGTHS.remove(handler.getPlayer().getUUID());
+		});
+		net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(server -> {
+			COOLDOWNS.clear(); COOLDOWN_LENGTHS.clear();
+		});
+		CombatCooldowns.init();
 		ModSkills.init();
 	}
 
@@ -101,8 +129,7 @@ public final class Skills {
 	private static void use(ServerPlayer player, SkillPayloads.Use payload) {
 		Skill skill = get(payload.skill());
 		// одна клавиша — у каждого пути своё: на Пути Души рывок — Могучая поступь
-		if (skill == ModSkills.DASH && com.tarkrakov.tearsofink.vow.Vows.vow(player) == com.tarkrakov.tearsofink.vow.Vow.SOUL
-				&& knows(player, ModSkills.STRIDE)) skill = ModSkills.STRIDE;
+		if (skill == ModSkills.DASH) skill = mobility(player);
 		if (skill == null || !skill.isActive() || !knows(player, skill)) return;
 		if (!player.isAlive() || player.isSpectator() || player.isPassenger() || player.isSleeping()) return;
 
@@ -169,8 +196,10 @@ public final class Skills {
 			else if (inkRank.atLeast(com.tarkrakov.tearsofink.vow.InkRank.MARKED))
 				baseCooldown = com.tarkrakov.tearsofink.ink.InkTuning.MARKED_DASH_COOLDOWN;
 		}
-		cooldowns.put(skill.id(), now + Math.round(baseCooldown
-				* com.tarkrakov.tearsofink.weapon.forge.Awakening.cooldownMult(gearWeapon)));
+		int duration = Math.round(baseCooldown
+				* com.tarkrakov.tearsofink.weapon.forge.Awakening.cooldownMult(gearWeapon));
+		cooldowns.put(skill.id(), now + duration);
+		COOLDOWN_LENGTHS.computeIfAbsent(player.getUUID(), k -> new HashMap<>()).put(skill.id(), duration);
 		if (gearWeapon != null) { // приёмы оружия тупят клинок (Gear) и открывают окно «Разящего приёма»
 			com.tarkrakov.tearsofink.weapon.forge.Gear.wear(player, gearWeapon, com.tarkrakov.tearsofink.weapon.forge.Gear.WEAR_ABILITY);
 			com.tarkrakov.tearsofink.weapon.forge.Awakening.abilityUsed(player);

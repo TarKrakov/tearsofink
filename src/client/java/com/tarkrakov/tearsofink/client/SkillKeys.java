@@ -27,6 +27,10 @@ public final class SkillKeys {
 
 	private SkillKeys() {}
 
+	public static net.minecraft.network.chat.Component mobilityKeyLabel() {
+		for (var e : KEYS.entrySet()) if (e.getValue() == ModSkills.DASH) return e.getKey().getTranslatedKeyMessage();
+		return net.minecraft.network.chat.Component.literal("Alt");
+	}
 	public static net.minecraft.network.chat.Component weaponKeyLabel() {
 		return WEAPON_KEY == null ? net.minecraft.network.chat.Component.literal("R") : WEAPON_KEY.getTranslatedKeyMessage();
 	}

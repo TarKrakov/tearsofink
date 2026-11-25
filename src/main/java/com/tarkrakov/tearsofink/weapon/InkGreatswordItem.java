@@ -129,7 +129,7 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 		if (a == com.tarkrakov.tearsofink.weapon.combat.Archetype.EXECUTIONER) {
 			// Гильотина: держать ПКМ
 			if (player instanceof net.minecraft.server.level.ServerPlayer sp
-					&& !com.tarkrakov.tearsofink.skill.Skills.activate(sp, WeaponAbilities.GUILLOTINE, input)) {
+					&& !com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.skill.CombatCooldowns.pairedSkill(a), input)) {
 				return net.minecraft.world.InteractionResultHolder.fail(stack);
 			}
 			player.startUsingItem(hand);
@@ -137,12 +137,12 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 		}
 		if (a == com.tarkrakov.tearsofink.weapon.combat.Archetype.DAGGER) { // рывок с двумя клинками
 			if (player instanceof net.minecraft.server.level.ServerPlayer sp)
-				com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.weapon.combat.DaggerMoves.DUAL_RUSH, input);
+				com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.skill.CombatCooldowns.pairedSkill(a), input);
 			return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
 		}
 		if (a == com.tarkrakov.tearsofink.weapon.combat.Archetype.AXE) { // казнь: держать — топоры расходятся, отпустил — прыжок и двойной удар
 			if (player instanceof net.minecraft.server.level.ServerPlayer sp
-					&& !com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.weapon.combat.AxeMoves.EXECUTION, input)) {
+					&& !com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.skill.CombatCooldowns.pairedSkill(a), input)) {
 				return net.minecraft.world.InteractionResultHolder.fail(stack);
 			}
 			player.startUsingItem(hand);
@@ -150,19 +150,19 @@ public class InkGreatswordItem extends SwordItem implements AbilityWeapon {
 		}
 		if (a == com.tarkrakov.tearsofink.weapon.combat.Archetype.DUSSAK) { // усиленная стойка парирования
 			if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
-				com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.weapon.blood.BloodAbilities.DOUBLE_PARRY, input);
+				com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.skill.CombatCooldowns.pairedSkill(a), input);
 			}
 			return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
 		}
 		if (a == com.tarkrakov.tearsofink.weapon.combat.Archetype.TALWAR) { // крест-накрест кровью и отскок
 			if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
-				com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.weapon.blood.BloodAbilities.TALWAR_CROSS, input);
+				com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.skill.CombatCooldowns.pairedSkill(a), input);
 			}
 			return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
 		}
 		// Чернильный Росчерк: одно нажатие
 		if (player instanceof net.minecraft.server.level.ServerPlayer sp) {
-			com.tarkrakov.tearsofink.skill.Skills.activate(sp, WeaponAbilities.FLOURISH, input);
+			com.tarkrakov.tearsofink.skill.Skills.activate(sp, com.tarkrakov.tearsofink.skill.CombatCooldowns.pairedSkill(a), input);
 		}
 		return net.minecraft.world.InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
 	}

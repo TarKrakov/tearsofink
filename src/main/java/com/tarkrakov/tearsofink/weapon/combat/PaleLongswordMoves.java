@@ -37,6 +37,7 @@ public final class PaleLongswordMoves {
     private static final class State {
         Phase phase = Phase.IDLE;
         long singleReady, dualReady, guardReady, hitAt, until;
+        int singleLength, dualLength, guardLength;
         ServerPlayer owner;
         ServerLevel level;
         ItemStack main, off;
@@ -104,6 +105,16 @@ public final class PaleLongswordMoves {
     private static void playPair(ServerPlayer p, String name, int ticks, float tempo) {
         Combat.play(p,ARCH,name,name+"_off",ticks,tempo);
     }
+    public static int[] hudTimer(ServerPlayer p, boolean guard) {
+        State s = STATES.get(p.getUUID());
+        if (s == null) return new int[]{0,1,Combat.hitPending(p) ? 1 : 0};
+        boolean pair = dual(p);
+        long ready = guard ? s.guardReady : pair ? s.dualReady : s.singleReady;
+        int length = guard ? s.guardLength : pair ? s.dualLength : s.singleLength;
+        int state = valid(p,s) && s.phase != Phase.IDLE ? (guard && s.phase == Phase.GUARD ? 2 : 1) : Combat.hitPending(p) ? 1 : 0;
+        return new int[]{(int)Math.max(0,ready-now(p)),Math.max(1,length),state};
+    }
+
     public static boolean useR(ServerPlayer p, boolean left) {
         if (!available(p) || PaleGreatswordMoves.locked(p) || Combat.hitPending(p)) return false;
         if (left && (dual(p) || InkGreatswordItem.twoHanded(p.getMainHandItem()))) return false;
@@ -122,7 +133,8 @@ public final class PaleLongswordMoves {
         s.damage = (float) attackDamage(p,sword); s.hit = false;
         s.phase = Phase.STRIKE; s.hitAt = time+tune.hit(); s.until = time+tune.duration();
         long ready = time+Math.round(tune.cooldown()*Awakening.cooldownMult(sword));
-        if (pair) s.dualReady = ready; else s.singleReady = ready;
+        if (pair) { s.dualReady = ready; s.dualLength = (int)(ready-time); }
+        else { s.singleReady = ready; s.singleLength = (int)(ready-time); }
         String name = pair ? "bb_author_dual_r_ability" : "bb_author_r_ability";
         if (pair) playPair(p,name,tune.duration(),tune.tempo());
         else Combat.play(p,ARCH,left?null:name,left?name:null,tune.duration(),tune.tempo());
@@ -141,7 +153,8 @@ public final class PaleLongswordMoves {
         if (time < s.guardReady) return false;
         capture(p,s); s.left = false; s.paired = true; s.phase = Phase.GUARD;
         s.until = time+PaleLongswordTuning.BLOCK_START;
-        s.guardReady = time+Math.round(PaleLongswordTuning.BLOCK_COOLDOWN*Awakening.cooldownMult(s.main));
+        s.guardLength = Math.round(PaleLongswordTuning.BLOCK_COOLDOWN*Awakening.cooldownMult(s.main));
+        s.guardReady = time+s.guardLength;
         playPair(p,"bb_author_dual_block_start",PaleLongswordTuning.BLOCK_START,PaleLongswordTuning.BLOCK_TRANSITION_TEMPO);
         wear(p,s.main);
         return true;

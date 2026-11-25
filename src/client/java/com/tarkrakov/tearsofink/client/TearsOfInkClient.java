@@ -93,6 +93,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 		ClientPlayConnectionEvents.DISCONNECT.register(
 				(handler, client) -> com.tarkrakov.tearsofink.client.fog.BattlefieldClarity.reset());
 		HudRenderCallback.EVENT.register(InkHud::render);
+		com.tarkrakov.tearsofink.client.hud.CombatCooldownHud.init();
 		com.tarkrakov.tearsofink.client.hud.FateHud.init();
 		ClientPlayNetworking.registerGlobalReceiver(SkillPayloads.NotEnough.TYPE, (payload, context) -> context.client().execute(() -> InkHud.pulse(payload.soul())));
 
