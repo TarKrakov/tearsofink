@@ -9,6 +9,7 @@
     "TempleLayoutVersionMixin",
     "TempleWorldStorageMixin",
     "PlayerEatMixin",
+    "ArenaFoodMixin",
     "HealEffectsMixin",
     "VisibilityMixin",
     "NaturalSpawnerMixin",
