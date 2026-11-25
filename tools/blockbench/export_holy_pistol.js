@@ -1,35 +1,9 @@
 // Exact export of the author's original pistol. Run from any directory with Node.
 // No author source is overwritten; validate both derived files with --check.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
+const {normalizePistolSource}=require('./toi_workspace.js');
 function convert(source){
- const copy=x=>JSON.parse(JSON.stringify(x));
- const j=copy(source);
- // FaceInfo corner order in vanilla Java. Quarter turns preserve the four UV corners.
- const faces={down:[[0,0,1],[0,0,0],[1,0,0],[1,0,1]],up:[[0,1,0],[0,1,1],[1,1,1],[1,1,0]],north:[[1,1,0],[1,0,0],[0,0,0],[0,1,0]],south:[[0,1,1],[0,0,1],[1,0,1],[1,1,1]],west:[[0,1,0],[0,0,0],[0,0,1],[0,1,1]],east:[[1,1,1],[1,0,1],[1,0,0],[1,1,0]]};
- const corner=(e,v)=>v.map((n,i)=>n?e.to[i]:e.from[i]);
- const round=x=>Math.round(x*1e8)/1e8;
- function rotate(v,r,p){let [x,y,z]=v.map((n,i)=>n-p[i]);let c,s;for(let i=0;i<3;i++){let a=r[i]*Math.PI/180;c=Math.cos(a);s=Math.sin(a);if(i===0)[y,z]=[y*c-z*s,y*s+z*c];if(i===1)[x,z]=[x*c+z*s,-x*s+z*c];if(i===2)[x,y]=[x*c-y*s,x*s+y*c];}return [x,y,z].map((n,i)=>round(n+p[i]));}
- const equal=(a,b)=>a.every((x,i)=>Math.abs(x-b[i])<1e-7);
- for(const e of j.elements){
-   const old=copy(e),r=old.rotation||[0,0,0];
-   if(r.every(a=>a%90===0)&&r.some(a=>a!==0)){
-     const points=Object.values(faces).flat().map(v=>rotate(corner(old,v),r,old.origin));
-     e.from=[0,1,2].map(i=>Math.min(...points.map(v=>v[i])));e.to=[0,1,2].map(i=>Math.max(...points.map(v=>v[i])));e.rotation=[0,0,0];e.faces={};
-     for(const [name,oldFace] of Object.entries(old.faces)){
-       const transformed=faces[name].map(v=>rotate(corner(old,v),r,old.origin));
-       const dest=Object.keys(faces).find(k=>faces[k].map(v=>corner(e,v)).every(v=>transformed.some(w=>equal(v,w))));
-       if(!dest)throw Error("face missing "+name);
-       const perm=faces[dest].map(v=>transformed.findIndex(w=>equal(w,corner(e,v))));
-       if(!perm.every((n,i)=>n===(perm[0]+i)%4))throw Error("UV orientation "+perm);
-       const next=copy(oldFace);const shift=((oldFace.rotation||0)+90*perm[0])%360;
-       if(shift)next.rotation=shift;else delete next.rotation;e.faces[dest]=next;
-     }
-   }else if(r.filter(a=>a!==0).length>1)throw Error("non-quarter compound rotation");
- }
- for(const view of ["firstperson","thirdperson"]){
-   const d=j.display[view+"_righthand"];if(!d)throw Error("right display missing");
-   j.display[view+"_lefthand"]=copy(d); // Minecraft applies mirrored left transform (x translation, y/z rotation).
- }
+ const j=normalizePistolSource(source);
  const model={credit:"Author's holy_pistol.bbmodel; quarter rotations baked without geometry/UV changes",textures:{"0":"tears-of-ink:item/holy_pistol_texture",particle:"tears-of-ink:item/holy_pistol_texture"},elements:j.elements.map(e=>{
    const out={name:e.name,from:e.from,to:e.to};
    const a=(e.rotation||[]).findIndex(n=>n!==0);
@@ -59,7 +33,12 @@ if(process.argv.includes('--check')){
  let uid=0;
  const cfg={archetype:'holy_pistol',grip:[10,6.5,11],display:r.source.display,fp_mount:[0,0,0],fp_idle_offset:[0,0,0],makeId:()=>`pistol-test-${++uid}`};
  const atlas={width:96,height:64,itemWidth:64,itemHeight:64,textureIds:[0],source:'data:image/png;base64,test'};
- const scene=build(template,r.source,cfg,atlas);
+ assert.deepEqual(normalizePistolSource(original),r.source);
+ assert.deepEqual(normalizePistolSource(r.source),r.source);
+ const originalSnapshot=JSON.stringify(original);
+ const scene=build(template,original,{...cfg,display:normalizePistolSource(original).display},atlas);
+ assert.equal(JSON.stringify(original),originalSnapshot);
+ assert.deepEqual(scene.toi_workspace.source_cubes,build(template,r.source,cfg,atlas).toi_workspace.source_cubes);
  assert.equal(scene.elements.filter(e=>/_sword_cube_\d+$/.test(e.name)).length,56);
  const ids=new Set(template.groups.filter(g=>g.name.startsWith('FP_')).map(g=>g.uuid));
  const clip=(i,name)=>({...template.animations[i],name,animators:Object.fromEntries(Object.entries(template.animations[i].animators).filter(([id])=>ids.has(id)))});

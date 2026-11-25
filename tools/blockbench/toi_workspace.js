@@ -2,7 +2,41 @@
 (function () {
   const projectMetadata=new WeakMap();
   let bar, frame, actions = [], callbacks = [], frameObserver;
+  // Same exact quarter-turn bake as the registered pistol model export.
+  function normalizePistolSource(source){
+ const copy=x=>JSON.parse(JSON.stringify(x));
+ const j=copy(source);
+ // FaceInfo corner order in vanilla Java. Quarter turns preserve the four UV corners.
+ const faces={down:[[0,0,1],[0,0,0],[1,0,0],[1,0,1]],up:[[0,1,0],[0,1,1],[1,1,1],[1,1,0]],north:[[1,1,0],[1,0,0],[0,0,0],[0,1,0]],south:[[0,1,1],[0,0,1],[1,0,1],[1,1,1]],west:[[0,1,0],[0,0,0],[0,0,1],[0,1,1]],east:[[1,1,1],[1,0,1],[1,0,0],[1,1,0]]};
+ const corner=(e,v)=>v.map((n,i)=>n?e.to[i]:e.from[i]);
+ const round=x=>Math.round(x*1e8)/1e8;
+ function rotate(v,r,p){let [x,y,z]=v.map((n,i)=>n-p[i]);let c,s;for(let i=0;i<3;i++){let a=r[i]*Math.PI/180;c=Math.cos(a);s=Math.sin(a);if(i===0)[y,z]=[y*c-z*s,y*s+z*c];if(i===1)[x,z]=[x*c+z*s,-x*s+z*c];if(i===2)[x,y]=[x*c-y*s,x*s+y*c];}return [x,y,z].map((n,i)=>round(n+p[i]));}
+ const equal=(a,b)=>a.every((x,i)=>Math.abs(x-b[i])<1e-7);
+ for(const e of j.elements){
+   const old=copy(e),r=old.rotation||[0,0,0];
+   if(r.every(a=>a%90===0)&&r.some(a=>a!==0)){
+     const points=Object.values(faces).flat().map(v=>rotate(corner(old,v),r,old.origin));
+     e.from=[0,1,2].map(i=>Math.min(...points.map(v=>v[i])));e.to=[0,1,2].map(i=>Math.max(...points.map(v=>v[i])));e.rotation=[0,0,0];e.faces={};
+     for(const [name,oldFace] of Object.entries(old.faces)){
+       const transformed=faces[name].map(v=>rotate(corner(old,v),r,old.origin));
+       const dest=Object.keys(faces).find(k=>faces[k].map(v=>corner(e,v)).every(v=>transformed.some(w=>equal(v,w))));
+       if(!dest)throw Error("face missing "+name);
+       const perm=faces[dest].map(v=>transformed.findIndex(w=>equal(w,corner(e,v))));
+       if(!perm.every((n,i)=>n===(perm[0]+i)%4))throw Error("UV orientation "+perm);
+       const next=copy(oldFace);const shift=((oldFace.rotation||0)+90*perm[0])%360;
+       if(shift)next.rotation=shift;else delete next.rotation;e.faces[dest]=next;
+     }
+   }else if(r.filter(a=>a!==0).length>1)throw Error("non-quarter compound rotation");
+ }
+ for(const view of ["firstperson","thirdperson"]){
+   const d=j.display[view+"_righthand"];if(!d)throw Error("right display missing");
+   j.display[view+"_lefthand"]=copy(d); // Minecraft applies mirrored left transform (x translation, y/z rotation).
+ }
+ return j;
+}
+
   function buildWeaponProject(template,source,cfg,atlas) {
+ if(cfg.archetype==='holy_pistol')source=normalizePistolSource(source);
  const cp=x=>JSON.parse(JSON.stringify(x)), fail=m=>{throw Error(m)}, vec=(v,n)=>{if(!Array.isArray(v)||v.length!==3||v.some(x=>typeof x!=='number'||!Number.isFinite(x)))fail('Invalid '+n);return v;};
  const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),mul=(a,k)=>a.map(x=>x*k);
  const mm=(a,b)=>a.map(row=>b[0].map((_,j)=>row.reduce((v,x,k)=>v+x*b[k][j],0))),mv=(a,v)=>a.map(row=>row.reduce((z,x,i)=>z+x*v[i],0));
@@ -17,7 +51,9 @@
  if(!source.elements?.length||source.elements.length>2000)fail('Unsupported item size');
  if((source.groups||[]).some(g=>(g.rotation||[]).some(n=>Math.abs(n)>1e-8)))fail('Bake rotated groups into cubes first');
  const raw=source.elements.filter(e=>e.export!==false);
- if(!raw.length||raw.some(e=>e.type!=='cube'||e.box_uv||e.rescale||(e.inflate||0)!==0||(e.rotation||[]).filter(n=>Math.abs(n)>1e-8).length>1))fail('Use Java cubes with face UV and single-axis rotations');
+ if(!raw.length)fail('Нет экспортируемых кубов');
+ const bad=raw.find(e=>e.type!=='cube'||e.box_uv||e.rescale||(e.inflate||0)!==0||(e.rotation||[]).filter(n=>Math.abs(n)>1e-8).length>1);
+ if(bad)fail('Неподдерживаемый куб: '+(bad.name||bad.uuid)+'; rotation '+JSON.stringify(bad.rotation||[0,0,0])+'. Нужен Java cube с Face UV, без inflate/rescale и со вращением по одной оси.');
  if(!source.resolution||source.resolution.width<=0||source.resolution.height<=0)fail('Invalid UV resolution');
  // Identical duplicate textures and identical cubes may occur after merging author models.
  // Normalize only the generated copy; never discard any distinct geometry or UV.
@@ -469,7 +505,7 @@
     return null;
   }
 
-  if(typeof BBPlugin==='undefined'&&typeof module!=='undefined'){module.exports=Object.assign(buildWeaponProject,f5math,{recoverMetadata,compatibleMetadata});return;}
+  if(typeof BBPlugin==='undefined'&&typeof module!=='undefined'){module.exports=Object.assign(buildWeaponProject,f5math,{recoverMetadata,compatibleMetadata,normalizePistolSource});return;}
 
   function attachCalibration(model){
     if(!Project||!model.groups||!model.elements)return model;
@@ -517,12 +553,14 @@
           const base=(file.name||source.name||'weapon').replace(/\.bbmodel$/i,'').toLowerCase(),arch=aliases[base]||base.replace(/[^a-z0-9_]/g,'_'),config=readConfig(file,arch);
           const dialog=new Dialog('toi_weapon_create',{title:'Tears of Ink — Новое оружие',form:{
             archetype:{label:'ID анимаций',type:'text',value:arch},
-            grip:{label:'Хват X, Y, Z (пиксели исходной модели)',type:'text',value:config?.grip?.join(', ')||''},
+            grip:{label:'Хват X, Y, Z (пиксели исходной модели)',type:'text',value:config?.grip?.join(', ')||(arch==='holy_pistol'?'10, 6.5, 11':'')},
             mount:{label:'FP offset X, Y, Z',type:'text',value:(config?.firstperson_offset||[0,0,0]).join(', ')},
             idle:{label:'FP idle X, Y, Z',type:'text',value:(config?.firstperson_idle_offset||[0,0,0]).join(', ')}
           },onConfirm(form){dialog.hide();(async()=>{
             const cfg={archetype:form.archetype.trim(),grip:parseVector(form.grip),fp_mount:parseVector(form.mount),fp_idle_offset:parseVector(form.idle),display:source.display||{},makeId:()=>guid()};
-            const model=buildWeaponProject(template,source,cfg,await makeAtlas(source));saveSeparate(model,model.name);
+            const prepared=cfg.archetype==='holy_pistol'?normalizePistolSource(source):source;
+            cfg.display=prepared.display||{};
+            const model=buildWeaponProject(template,prepared,cfg,await makeAtlas(prepared));saveSeparate(model,model.name);
             Blockbench.showQuickMessage('Сохрани и открой новый .bbmodel. Исходник не изменён.');
           })().catch(failDialog);}});dialog.show();
         }catch(e){failDialog(e);}
@@ -710,7 +748,7 @@
     Interface.preview.append(bar); setup('FP',true,'front');
   }
   BBPlugin.register('toi_workspace', {
-    title:'Tears of Ink Weapon Workspace',author:'Tears of Ink',icon:'sports_martial_arts',version:'2.2.0',min_version:'5.0.0',variant:'both',
+    title:'Tears of Ink Weapon Workspace',author:'Tears of Ink',icon:'sports_martial_arts',version:'2.2.1',min_version:'5.0.0',variant:'both',
     description:'Separate FP/F5 rigs, automatic F5 from FP, safe batch generation and 16:9 preview.',
     onload() {
       let parsed=e=>{if(e.model.toi_workspace&&Project){const meta=copyMeta(e.model.toi_workspace);Project.toiWorkspaceCalibration=meta;projectMetadata.set(Project,meta);}setTimeout(installBar,100);};
