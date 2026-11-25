@@ -4,7 +4,7 @@ package com.tarkrakov.tearsofink.weapon.shield;
 public final class ShieldTuning {
 	// ===== Блок =====
 	/** Сколько Души стоит принятый удар: столько за единицу урона (2 = сердце). */
-	public static final float SOUL_PER_DAMAGE = 1.0f;
+	public static final float SOUL_PER_DAMAGE = 0.5f;
 	/** Стойкий (115 максимума): расход на обычный блок ×0.9. */
 	public static final float STEADFAST_COST_MULT = 0.9f;
 	/** Светлый (130 максимума): за один успешный идеальный блок — 2 заряда. */

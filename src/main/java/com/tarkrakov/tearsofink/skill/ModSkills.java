@@ -4,8 +4,8 @@ import com.tarkrakov.tearsofink.TearsOfInk;
 
 /** Все навыки мода. */
 public final class ModSkills {
-	/** Рывок: 5 Чернил, перезарядка 25 тиков (1.25 с). */
-	public static final DashSkill DASH = Skills.register(new DashSkill(TearsOfInk.id("dash"), 5, 0, 25));
+	/** Рывок: бесплатный, базовая перезарядка 18 тиков (0,9 с). */
+	public static final DashSkill DASH = Skills.register(new DashSkill(TearsOfInk.id("dash"), com.tarkrakov.tearsofink.ink.InkTuning.DASH_COST, 0, com.tarkrakov.tearsofink.ink.InkTuning.DASH_COOLDOWN));
 
 	/** Могучая поступь (белая книга, Путь Души; зеркало Рывка, та же клавиша): 5 Души. */
 	public static final MightyStrideSkill STRIDE = Skills.register(new MightyStrideSkill(TearsOfInk.id("mighty_stride"), 0, 5, 30));
