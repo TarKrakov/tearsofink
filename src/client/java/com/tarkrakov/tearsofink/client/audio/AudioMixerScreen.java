@@ -9,6 +9,7 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundSource;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -134,6 +135,7 @@ final class AudioMixerScreen extends Screen {
 
     private void play(AudioMixer.Entry entry) {
         stopPreview();
+        if (entry.source() == SoundSource.MUSIC && OrionMusicClient.ownsMusic(minecraft)) return;
         // A near-source audition using the usual base level, without world distance or a specific mob's pitch.
         preview = new SimpleSoundInstance(entry.id(), entry.source(), entry.previewVolume(), 1f,
                 SoundInstance.createUnseededRandom(), false, 0, SoundInstance.Attenuation.NONE, 0, 0, 0, true);
@@ -143,6 +145,12 @@ final class AudioMixerScreen extends Screen {
     private void stopPreview() {
         if (preview != null && minecraft != null) minecraft.getSoundManager().stop(preview);
         preview = null;
+    }
+
+    @Override public void tick() {
+        super.tick();
+        if (preview != null && preview.getSource() == SoundSource.MUSIC
+                && OrionMusicClient.ownsMusic(minecraft)) stopPreview();
     }
 
     @Override public boolean isPauseScreen() { return false; }

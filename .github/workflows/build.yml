@@ -84,6 +84,8 @@ jobs:
           java -cp /tmp/toi-jaber-test JaberPathTest
       - name: build
         run: ./gradlew build
+      - name: verify approved Orion V2 music inside the game JAR
+        run: python3 tools/check_orion_music.py
       # The original Claude previewer validates the real model/pivot and can render
       # synchronized first-person and F5 animations from the actual weapon JSON.
       - name: install preview dependencies
