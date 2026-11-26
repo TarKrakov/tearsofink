@@ -1,0 +1,23 @@
+{
+  "grip": [
+    7,
+    2,
+    7
+  ],
+  "firstperson_offset": [
+    0,
+    0,
+    0
+  ],
+  "firstperson_idle_offset": [
+    0,
+    0,
+    0
+  ],
+  "third": {
+    "look": 1,
+    "body": 0,
+    "lead": 0
+  },
+  "animations": {}
+}

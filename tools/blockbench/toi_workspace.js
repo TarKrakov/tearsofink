@@ -52,8 +52,27 @@
  return j;
 }
 
+  // The dagger blade is in the YZ plane, symmetric about local X=7.
+  // Vanilla left-handed transforms mirror X around model centre 8; compensate
+  // the displaced symmetry plane in stored (right-space) translation.
+  function normalizeThrowknifeSource(source){
+    const j=JSON.parse(JSON.stringify(source)),g=[7,2,7],rad=Math.PI/180;
+    for(const view of ['firstperson','thirdperson']){
+      const right=j.display[view+'_righthand'],key=view+'_lefthand';
+      if(!right)throw Error('right display missing');
+      if(j.display[key])continue;
+      const d=JSON.parse(JSON.stringify(right)),[x,y,z]=(d.rotation||[0,0,0]).map(a=>a*rad);
+      const k=2*(g[0]-8)*(d.scale||[1,1,1])[0];
+      const direction=[Math.cos(y)*Math.cos(z),Math.cos(x)*Math.sin(z)+Math.sin(x)*Math.sin(y)*Math.cos(z),Math.sin(x)*Math.sin(z)-Math.cos(x)*Math.sin(y)*Math.cos(z)];
+      d.translation=(d.translation||[0,0,0]).map((v,i)=>Math.round((v+k*direction[i])*1e8)/1e8);
+      j.display[key]=d;
+    }
+    return j;
+  }
+
   function buildWeaponProject(template,source,cfg,atlas) {
  if(cfg.archetype==='holy_pistol'){source=normalizePistolSource(source);cfg={...cfg,display:source.display};}
+ if(cfg.archetype==='blood_throwing_dagger'){source=normalizeThrowknifeSource(source);cfg={...cfg,display:source.display};}
  const cp=x=>JSON.parse(JSON.stringify(x)), fail=m=>{throw Error(m)}, vec=(v,n)=>{if(!Array.isArray(v)||v.length!==3||v.some(x=>typeof x!=='number'||!Number.isFinite(x)))fail('Invalid '+n);return v;};
  const add=(a,b)=>a.map((x,i)=>x+b[i]),sub=(a,b)=>a.map((x,i)=>x-b[i]),mul=(a,k)=>a.map(x=>x*k);
  const mm=(a,b)=>a.map(row=>b[0].map((_,j)=>row.reduce((v,x,k)=>v+x*b[k][j],0))),mv=(a,v)=>a.map(row=>row.reduce((z,x,i)=>z+x*v[i],0));
@@ -574,7 +593,7 @@
     return null;
   }
 
-  if(typeof BBPlugin==='undefined'&&typeof module!=='undefined'){module.exports=Object.assign(buildWeaponProject,f5math,{recoverMetadata,compatibleMetadata,normalizePistolSource,pistolLeft});return;}
+  if(typeof BBPlugin==='undefined'&&typeof module!=='undefined'){module.exports=Object.assign(buildWeaponProject,f5math,{recoverMetadata,compatibleMetadata,normalizePistolSource,pistolLeft,normalizeThrowknifeSource});return;}
 
   function attachCalibration(model){
     if(!Project||!model.groups||!model.elements)return model;
@@ -618,16 +637,16 @@
     try{const template=compiledProject();
       Blockbench.import({extensions:['bbmodel'],type:'Java weapon project',multiple:false,readtype:'text'},files=>{
         try{if(!files?.length)return;const file=files[0],source=JSON.parse(file.content);
-          const aliases={pale_linear_great:'pale_linear_greatsword',blood_talvar:'talwar',blood_dussak:'dussak',spire_torturer_greatsword:'executioner',spire_roaring_axe:'axe',spire_rapid_knife:'dagger',spire_shadow_scimitar:'scimitar'};
+          const aliases={blood_throwknife:'blood_throwing_dagger',pale_linear_great:'pale_linear_greatsword',blood_talvar:'talwar',blood_dussak:'dussak',spire_torturer_greatsword:'executioner',spire_roaring_axe:'axe',spire_rapid_knife:'dagger',spire_shadow_scimitar:'scimitar'};
           const base=(file.name||source.name||'weapon').replace(/\.bbmodel$/i,'').toLowerCase(),arch=aliases[base]||base.replace(/[^a-z0-9_]/g,'_'),config=readConfig(file,arch);
           const dialog=new Dialog('toi_weapon_create',{title:'Tears of Ink — Новое оружие',form:{
             archetype:{label:'ID анимаций',type:'text',value:arch},
-            grip:{label:'Хват X, Y, Z (пиксели исходной модели)',type:'text',value:config?.grip?.join(', ')||(arch==='holy_pistol'?'10, 6.5, 11':'')},
+            grip:{label:'Хват X, Y, Z (пиксели исходной модели)',type:'text',value:config?.grip?.join(', ')||(arch==='holy_pistol'?'10, 6.5, 11':arch==='blood_throwing_dagger'?'7, 2, 7':'')},
             mount:{label:'FP offset X, Y, Z',type:'text',value:(config?.firstperson_offset||[0,0,0]).join(', ')},
             idle:{label:'FP idle X, Y, Z',type:'text',value:(config?.firstperson_idle_offset||[0,0,0]).join(', ')}
           },onConfirm(form){dialog.hide();(async()=>{
             const cfg={archetype:form.archetype.trim(),grip:parseVector(form.grip),fp_mount:parseVector(form.mount),fp_idle_offset:parseVector(form.idle),display:source.display||{},makeId:()=>guid()};
-            const prepared=cfg.archetype==='holy_pistol'?normalizePistolSource(source):source;
+            const prepared=cfg.archetype==='holy_pistol'?normalizePistolSource(source):cfg.archetype==='blood_throwing_dagger'?normalizeThrowknifeSource(source):source;
             cfg.display=prepared.display||{};
             const model=buildWeaponProject(template,prepared,cfg,await makeAtlas(prepared));saveSeparate(model,model.name);
             Blockbench.showQuickMessage('Сохрани и открой новый .bbmodel. Исходник не изменён.');
@@ -854,7 +873,7 @@
     Interface.preview.append(bar); setup('FP',true,'front');
   }
   BBPlugin.register('toi_workspace', {
-    title:'Tears of Ink Weapon Workspace',author:'Tears of Ink',icon:'sports_martial_arts',version:'2.2.3',min_version:'5.0.0',variant:'both',
+    title:'Tears of Ink Weapon Workspace',author:'Tears of Ink',icon:'sports_martial_arts',version:'2.2.4',min_version:'5.0.0',variant:'both',
     description:'Separate FP/F5 rigs, automatic F5 from FP, safe batch generation and 16:9 preview.',
     onload() {
       let parsed=e=>{if(e.model.toi_workspace&&Project){const meta=copyMeta(e.model.toi_workspace);Project.toiWorkspaceCalibration=meta;projectMetadata.set(Project,meta);}setTimeout(installBar,100);};
