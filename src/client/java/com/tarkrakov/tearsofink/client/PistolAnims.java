@@ -29,6 +29,7 @@ public final class PistolAnims {
         long aimAt,shotAt,reloadAt,transitionAt;
         String shot;
         int reloadTicks,reloadMax;
+        float shotLength,reloadOverlap;
         Sample shown,previous;
     }
     private record Sample(WeaponAnims.Clip clip,float time,boolean mirrorWrist){}
@@ -39,8 +40,16 @@ public final class PistolAnims {
     private static long now(){return System.nanoTime();}
     private static float elapsed(long then,long now){return Math.max(0,(now-then)/1e9f);}
     private static Hands state(int id,long time){Hands h=PLAYERS.computeIfAbsent(id,k->new Hands());h.touched=time;return h;}
-    private static void shot(Hand h,String name,long time){h.shot=name;h.shotAt=time;}
+    private static void shot(Hand h,String name,long time){
+        h.shot=name;h.shotAt=time;
+        var c=WeaponAnims.clip(ID,PREFIX+name);
+        h.shotLength=c==null?0:c.length();
+    }
     private static void reload(Hand h,int ticks,int max,long time){
+        if(max>0&&(h.reloadMax!=max||ticks<h.reloadTicks)){
+            h.reloadOverlap=Math.clamp(h.shotLength-elapsed(h.shotAt,time)+ticks/20f,0f,Math.max(0,max/20f-.05f));
+        }
+        if(max==0)h.reloadOverlap=0;
         h.reloadTicks=ticks;h.reloadMax=max;h.reloadAt=time;
     }
     public static void init(){
@@ -71,7 +80,7 @@ public final class PistolAnims {
         });
     }
     private static void reset(Hand h){
-        h.aiming=h.hadAim=false;h.shot=null;h.reloadTicks=h.reloadMax=0;h.shown=h.previous=null;
+        h.aiming=h.hadAim=false;h.shot=null;h.reloadTicks=h.reloadMax=0;h.shotLength=h.reloadOverlap=0;h.shown=h.previous=null;
     }
     private static Sample sample(String name,boolean second,HumanoidArm physical,float seconds,boolean fraction,boolean hold){
         if(name==null)return null;
@@ -100,11 +109,12 @@ public final class PistolAnims {
         if(next==null)h.shot=null;
         boolean reloading=h.reloadMax>0&&elapsed(h.reloadAt,t)<.6f&&!RangedCombat.loaded(second?p.getOffhandItem():p.getMainHandItem());
         if(next==null&&reloading){
-            float progress=Math.clamp((h.reloadTicks+20*elapsed(h.reloadAt,t))/h.reloadMax,0f,1f);
+            float progress=Math.clamp((h.reloadTicks/20f+elapsed(h.reloadAt,t)-h.reloadOverlap)/Math.max(.05f,h.reloadMax/20f-h.reloadOverlap),0f,1f);
             next=sample(pair?"dual_reload":"reload",second,side,progress,true,true);
         }
         if(next==null&&aim)next=sample(pair?"dual_aim_enter":"aim_enter",second,side,elapsed(h.aimAt,t),false,true);
         if(next==null&&!aim&&h.hadAim)next=sample(h.dualAim?"dual_aim_exit":"aim_exit",second,side,elapsed(h.aimAt,t),false,false);
+        if(next==null)next=sample("idle",second,side,0,false,true);
         if(next==null){h.shown=h.previous=null;return null;}
         if(h.shown!=null&&h.shown.clip!=next.clip){h.previous=h.shown;h.transitionAt=t;}
         h.shown=next;
