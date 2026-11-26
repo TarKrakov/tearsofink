@@ -5,6 +5,7 @@ from pathlib import Path
 root=Path("src/main/resources/data/tears-of-ink/loot_table/chests")
 tiers=("poor","common","rich")
 names={"ruins_start","ruins_poor","ruins_common","ruins_rich","ruins_inkwood","temple_pale_reward","temple_blood_supply","temple_blood_reward","settlement_supplies","settlement_pantry","gate_supplies","camp_supplies"}
+names|={"ruins_scattered_"+t for t in (*tiers,"inkwood")}
 names|={pre+t for pre in ("gate_","gate_cache_","camp_cache_","watchtower_cache_","temple_pale_supply_") for t in tiers}
 tables={p.stem:json.loads(p.read_text()) for p in root.glob("*.json")}
 assert set(tables)==names
@@ -41,6 +42,8 @@ for name,table in tables.items():
     ink_range=(2,4) if name.endswith("_reward") else (2,3) if (
         name.endswith("_rich") or name in {"ruins_inkwood","settlement_pantry"}) else (
         (1,3) if name.endswith("_common") or name=="temple_blood_supply" else (1,2))
+    if name.startswith("ruins_scattered_"):
+        ink_range={"poor":(3,6),"common":(3,9),"rich":(6,9),"inkwood":(6,9)}[name.removeprefix("ruins_scattered_")]
     ink_pools=[p for p in table["pools"] if any(e.get("name")==prefix+"ink" for e in p["entries"])]
     assert len(ink_pools)==1, name
     ip=ink_pools[0]
@@ -70,8 +73,8 @@ for name,table in tables.items():
         for c in pool.get("conditions",[]):
             if c["condition"]=="minecraft:random_chance": assert 0<=c["chance"]<=1
     assert rare_pools<=1
-    if name!="ruins_inkwood": assert expected(name,"raw_ink_metal")==0
-    if name not in {"temple_blood_supply","temple_blood_reward","settlement_supplies","settlement_pantry","ruins_poor","ruins_common","ruins_rich"}: assert expected(name,"raw_blood_metal")==0
+    if name not in {"ruins_inkwood","ruins_scattered_inkwood"}: assert expected(name,"raw_ink_metal")==0
+    if name not in {"temple_blood_supply","temple_blood_reward","settlement_supplies","settlement_pantry","ruins_poor","ruins_common","ruins_rich","ruins_scattered_poor","ruins_scattered_common","ruins_scattered_rich"}: assert expected(name,"raw_blood_metal")==0
     if name.startswith(("gate_","camp_","watchtower_","settlement_","temple_pale_supply_")) or name=="temple_blood_supply": assert rare_pools==0
 for name in ("gate_supplies","camp_supplies","settlement_supplies","settlement_pantry"):
     assert any_item(name,valuable-({"raw_blood_metal"} if name.startswith("settlement_") else set()))==0
@@ -104,7 +107,7 @@ for tier,ore,pig in zip(tiers,(1.0,1.275,1.9),(.05,.08,.10)):
     assert expected("ruins_"+tier,"blood_clot")==.05
 assert expected("ruins_inkwood","pigment")==.10
 for name in tables:
-    if name!="ruins_inkwood":
+    if name not in {"ruins_inkwood","ruins_scattered_inkwood"}:
         assert expected(name,"tearbloom_brew")==0 and expected(name,"strong_tearbloom_brew")==0, name
     if name.startswith("temple_pale") or name=="ruins_start":
         assert expected(name,"blood_clot")==0
@@ -121,6 +124,26 @@ for tier, chance in zip(tiers,(.05,.08,.12)):
     name="ruins_"+tier
     assert abs(expected(name,"raw_blood_metal")-chance)<1e-9
     assert expected(name,"raw_blood_metal")<expected(name,"raw_pale_metal")
+# New scattered ruins: guaranteed local metal, triple pigment probability,
+# legacy and military tables remain covered by the original assertions.
+for tier,metal,ore,pig in (
+    ("poor","raw_pale_metal",3.5,.15),("common","raw_pale_metal",4.5,.24),
+    ("rich","raw_pale_metal",6.0,.30),("inkwood","raw_ink_metal",4.0,.30)):
+    name="ruins_scattered_"+tier
+    old="ruins_"+tier
+    assert abs(expected(name,metal)-ore)<1e-9
+    assert abs(expected(name,"pigment")-pig)<1e-9
+    assert abs(expected(name,"ink")-3*expected(old,"ink"))<1e-9
+    assert abs(any_item(name,rare)-any_item(old,rare)-(.01 if tier=="common" else 0))<1e-9
+    metal_pool=next(p for p in tables[name]["pools"] if any(e.get("name")==prefix+metal for e in p["entries"]))
+    assert not metal_pool.get("conditions") and metal_pool["rolls"]==1 and len(metal_pool["entries"])==1
+    assert expected(name,"raw_blood_metal")==expected(old,"raw_blood_metal")
+    assert expected(name,"blood_clot")==expected(old,"blood_clot")
+piece=(java/"world/ruins/RuinPiece.java").read_text()
+assert 'tag.getBoolean("EnrichedScattered")' in piece and 'tag.putBoolean("EnrichedScattered",true)' in piece
+assert "enrichedScattered ? (pale ? Ruins.SCATTERED_LOOT[tier] : Ruins.SCATTERED_INKWOOD_LOOT)" in piece
+structure=(java/"world/ruins/RuinStructure.java").read_text()
+assert "!site.temple() && !ScatteredRuinDensity.keep" in structure
 dimension=root.parent.parent/"dimension_type"
 assert json.loads((dimension/"ink_lands.json").read_text())["fixed_time"]==6000
 for mob in ("pale_spearman","pale_crossbowman","pale_shieldbearer"):

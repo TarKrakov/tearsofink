@@ -71,6 +71,10 @@ public final class Ruins {
 	public static final float[] CHEST_CHANCE = {0.25f, 0.45f, 0.65f};
 	public static final ResourceLocation[] CHEST_LOOT = {
 			TearsOfInk.id("chests/ruins_poor"), TearsOfInk.id("chests/ruins_common"), TearsOfInk.id("chests/ruins_rich")};
+	// New scattered starts only; legacy ruins and temples keep their original tables.
+	public static final ResourceLocation[] SCATTERED_LOOT = {
+			TearsOfInk.id("chests/ruins_scattered_poor"), TearsOfInk.id("chests/ruins_scattered_common"), TearsOfInk.id("chests/ruins_scattered_rich")};
+	public static final ResourceLocation SCATTERED_INKWOOD_LOOT = TearsOfInk.id("chests/ruins_scattered_inkwood");
 	// Legacy gate_poor/common/rich tables are retained for unopened old chests.
 	public static final ResourceLocation[] GATE_LOOT = {TearsOfInk.id("chests/gate_cache_poor"), TearsOfInk.id("chests/gate_cache_common"), TearsOfInk.id("chests/gate_cache_rich")};
 	public static final ResourceLocation[] CAMP_LOOT = {TearsOfInk.id("chests/camp_cache_poor"), TearsOfInk.id("chests/camp_cache_common"), TearsOfInk.id("chests/camp_cache_rich")};

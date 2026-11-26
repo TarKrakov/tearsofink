@@ -1,0 +1,228 @@
+{
+  "type": "minecraft:chest",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:ink",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 6,
+                "max": 9
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:cooked_caterpillar_meat",
+          "weight": 30,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 4
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:tearbloom_brew",
+          "weight": 30
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:strong_tearbloom_brew",
+          "weight": 15
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:tarweed_extract",
+          "weight": 12
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:waterbloom_juice",
+          "weight": 13
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:raw_ink_metal",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 6
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 2,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:asphoda",
+          "weight": 40,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 5
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:stick",
+          "weight": 40,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 3
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:iron_ingot",
+          "weight": 20,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 2
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:pigment",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": 1
+            }
+          ]
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:random_chance",
+          "chance": 0.3
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:skill_book_dash",
+          "weight": 4
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:skill_book_ink_jump",
+          "weight": 4
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:skill_book_stride",
+          "weight": 4
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:skill_book_ascension",
+          "weight": 4
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:hand_lantern",
+          "weight": 5
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:bright_hand_lantern",
+          "weight": 3
+        },
+        {
+          "type": "minecraft:item",
+          "name": "tears-of-ink:atonement",
+          "weight": 4
+        },
+        {
+          "type": "minecraft:empty",
+          "weight": 72
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:torch",
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 2,
+                "max": 4
+              }
+            }
+          ]
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:random_chance",
+          "chance": 0.4
+        }
+      ]
+    }
+  ],
+  "random_sequence": "tears-of-ink:chests/ruins_scattered_inkwood"
+}

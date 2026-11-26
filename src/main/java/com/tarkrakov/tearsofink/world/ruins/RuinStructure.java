@@ -52,6 +52,9 @@ public class RuinStructure extends Structure {
 	protected Optional<GenerationStub> findGenerationPoint(GenerationContext context) {
 		Site site = findSite(context);
 		if (site == null) return Optional.empty();
+		// Keep the original placement/reservation grid for old worlds and other structures.
+		// Only new scattered starts are thinned; do not consume the placement RNG.
+		if (!site.temple() && !ScatteredRuinDensity.keep(site.layout().seed(), context.chunkPos().x, context.chunkPos().z)) return Optional.empty();
 		ChunkGenerator generator = context.chunkGenerator();
 		InkLandsLayout layout = site.layout();
 		int x = site.x(), z = site.z(), half = site.half();
@@ -92,7 +95,7 @@ public class RuinStructure extends Structure {
 				.getNoiseBiome(x>>2,y>>2,z>>2,context.randomState().sampler())
 				.is(com.tarkrakov.tearsofink.world.ModBiomes.PALE_FOREST)) return Optional.empty();
 		return Optional.of(new GenerationStub(center, builder ->
-				builder.addPiece(new RuinPiece(context.structureTemplateManager(), chosen, center, site.rotation(), tier, start, site.pale(),bloodTemple))));
+				builder.addPiece(new RuinPiece(context.structureTemplateManager(), chosen, center, site.rotation(), tier, start, site.pale(),bloodTemple,!site.temple()))));
 	}
 
 	/** Conservatively reserves the original scattered ruin, including its foundation and terrain adaptation. */

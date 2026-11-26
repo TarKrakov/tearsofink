@@ -45,18 +45,24 @@ public class RuinPiece extends TemplateStructurePiece {
 	/** Стоит в Бледнолесье (решается при выборе места — в postProcess соседние чанки могут быть ещё не готовы). */
 	private final boolean pale;
 	private final boolean bloodTemple;
+	private final boolean enrichedScattered;
 
 	public RuinPiece(StructureTemplateManager manager, ResourceLocation template, BlockPos center, Rotation rotation, int tier, boolean start, boolean pale) {
 		this(manager,template,center,rotation,tier,start,pale,false);
 	}
 
 	public RuinPiece(StructureTemplateManager manager, ResourceLocation template, BlockPos center, Rotation rotation, int tier, boolean start, boolean pale,boolean bloodTemple) {
+		this(manager,template,center,rotation,tier,start,pale,bloodTemple,false);
+	}
+
+	public RuinPiece(StructureTemplateManager manager, ResourceLocation template, BlockPos center, Rotation rotation, int tier, boolean start, boolean pale,boolean bloodTemple,boolean enrichedScattered) {
 		super(Ruins.PIECE_TYPE, 0, manager, template, template.toString(), settings(rotation, manager, template), corner(manager, template, center, rotation));
 		this.rotation = rotation;
 		this.tier = tier;
 		this.start = start;
 		this.pale = pale;
 		this.bloodTemple=bloodTemple;
+		this.enrichedScattered=enrichedScattered;
 	}
 
 	public RuinPiece(StructureTemplateManager manager, CompoundTag tag) {
@@ -66,6 +72,7 @@ public class RuinPiece extends TemplateStructurePiece {
 		this.start = tag.getBoolean("Start");
 		this.pale = tag.getBoolean("Pale");
 		this.bloodTemple=tag.getBoolean("BloodTemple");
+		this.enrichedScattered=tag.getBoolean("EnrichedScattered");
 	}
 
 	private static StructurePlaceSettings settings(Rotation rotation, StructureTemplateManager manager, ResourceLocation id) {
@@ -100,6 +107,7 @@ public class RuinPiece extends TemplateStructurePiece {
 		tag.putBoolean("Start", start);
 		tag.putBoolean("Pale", pale);
 		if (bloodTemple) tag.putBoolean("BloodTemple",true);
+		if (enrichedScattered) tag.putBoolean("EnrichedScattered",true);
 	}
 
 	@Override
@@ -116,9 +124,10 @@ public class RuinPiece extends TemplateStructurePiece {
 				templatePosition, placeSettings.copy().setBoundingBox(null), Blocks.CHEST);
 		ResourceKey<LootTable> loot = ResourceKey.create(Registries.LOOT_TABLE,
 				start ? Ruins.START_LOOT : bloodTemple ? Ruins.BLOOD_TEMPLE_LOOT
+						: enrichedScattered ? (pale ? Ruins.SCATTERED_LOOT[tier] : Ruins.SCATTERED_INKWOOD_LOOT)
 						: !pale ? Ruins.INKWOOD_LOOT : !allAuthorChests.isEmpty()
 						? Ruins.PALE_TEMPLE_SUPPLIES[tier] : Ruins.CHEST_LOOT[tier]);
-		BlockPos rewardChest = !start && (pale || bloodTemple) && !allAuthorChests.isEmpty()
+		BlockPos rewardChest = !enrichedScattered && !start && (pale || bloodTemple) && !allAuthorChests.isEmpty()
 				? allAuthorChests.getFirst().pos() : null;
 		ResourceKey<LootTable> rewardLoot = ResourceKey.create(Registries.LOOT_TABLE,
 				bloodTemple ? Ruins.BLOOD_TEMPLE_REWARD : Ruins.PALE_TEMPLE_REWARD);
