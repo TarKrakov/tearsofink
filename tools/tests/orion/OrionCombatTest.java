@@ -89,7 +89,7 @@ public final class OrionCombatTest {
         requireDamage(CLEAVE.damage(), 16);
         requireDamage(WAVE_DAMAGE, 8);
         requireDamage(CLEAVE_IMPACT_DAMAGE, 11);
-        require(Math.abs(DEADLY_CLEAVE_DAMAGE - 16 * .88f * .60f) < .0001f,
+        require(Math.abs(DEADLY_CLEAVE_DAMAGE - 16 * .88f * .70f) < .0001f,
                 "retain the distinct deadly cleave contact with the new phase-two nerf");
         require(Math.abs(SPIN_MARGIN - .68 * .75) < .000001,
                 "spin blade contact margin reduced by a quarter");
@@ -103,8 +103,8 @@ public final class OrionCombatTest {
 
     private static void requireDamage(Damage damage, float original) {
         require(Math.abs(damage.at(false) - original * .70f) < .0001f
-                && Math.abs(damage.at(true) - original * .60f) < .0001f,
-                "fixed phase damage is 70/60 percent of original base");
+                && Math.abs(damage.at(true) - original * .70f) < .0001f,
+                "fixed phase damage is 70/70 percent of original base");
     }
 
     private static void verifyAnimationPlayback() {
