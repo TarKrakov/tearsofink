@@ -30,6 +30,15 @@ public abstract class ItemInHandLayerMixin {
                 && com.tarkrakov.tearsofink.weapon.ranged.RangedCombat.blocksOffhand(p)) ci.cancel();
     }
 
+    @com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation(method = "renderArmWithItem",
+        at = @At(value="INVOKE",target="Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"))
+    private void tearsofink$crossbow(net.minecraft.client.renderer.ItemInHandRenderer renderer,LivingEntity entity,ItemStack stack,ItemDisplayContext context,boolean left,PoseStack pose,MultiBufferSource buffers,int light,com.llamalad7.mixinextras.injector.wrapoperation.Operation<Void> original){
+        if(entity instanceof net.minecraft.world.entity.player.Player p
+            && com.tarkrakov.tearsofink.client.CrossbowAnims.isCrossbow(stack)
+            && com.tarkrakov.tearsofink.client.CrossbowAnims.renderThird(p,stack,context,left,pose,buffers,light))return;
+        original.call(renderer,entity,stack,context,left,pose,buffers,light);
+    }
+
     /** Ореол щитов Души парой (после самого щита). */
 	@Inject(method = "renderArmWithItem", at = @At(value = "INVOKE", shift = At.Shift.AFTER,
 			target = "Lnet/minecraft/client/renderer/ItemInHandRenderer;renderItem(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/world/item/ItemDisplayContext;ZLcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;I)V"))

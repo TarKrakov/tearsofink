@@ -57,6 +57,7 @@ public final class RangedClient {
     }
     /** Temporary F5 stance only; the final art uses authored clips. */
     public static void pose(HumanoidModel<?> model,Player p){
+        if(CrossbowAnims.holds(p)){CrossbowAnims.pose(model,p);return;}
         if(aiming(p))fallbackPose(model,p);
         com.tarkrakov.tearsofink.client.combat.ThirdPerson.pistol(model,p);
     }
@@ -76,6 +77,7 @@ public final class RangedClient {
     public static void init(){
         PistolAnims.init();
         KnifeAnims.init();
+        CrossbowAnims.init();
         off=KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tears-of-ink.ranged_offhand", InputConstants.Type.MOUSE,GLFW.GLFW_MOUSE_BUTTON_4,SkillKeys.CATEGORY));
         ClientPlayNetworking.registerGlobalReceiver(RangedCombat.AimPose.TYPE,(v,ctx)->ctx.client().execute(()->{
             if(v.active()&&ctx.client().level!=null)REMOTE_AIM.put(v.entity(),ctx.client().level.getGameTime()+45);
@@ -119,6 +121,7 @@ public final class RangedClient {
         Minecraft mc=Minecraft.getInstance();
         if(mc.player==null||mc.player.isSpectator()||!ClientPlayNetworking.canSend(RangedCombat.Fire.TYPE))return;
         if(RangedItem.kind(secondary?mc.player.getOffhandItem():mc.player.getMainHandItem())==null)return;
+        if(!secondary&&CrossbowAnims.holds(mc.player)&&(!localAim(mc)||!CrossbowAnims.canFire(mc.player)))return;
         syncAim(mc,false);
         ClientPlayNetworking.send(new RangedCombat.Fire(secondary,!secondary&&localAim(mc)));
     }

@@ -1,0 +1,96 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "layer0": "tears-of-ink:item/ink_crossbow",
+    "particle": "tears-of-ink:item/ink_crossbow"
+  },
+  "elements": [
+    {
+      "from": [
+        8,
+        12,
+        2
+      ],
+      "to": [
+        8.25,
+        12.25,
+        9
+      ],
+      "faces": {
+        "north": {
+          "texture": "#layer0",
+          "uv": [
+            0.75,
+            9.75,
+            0.875,
+            9.875
+          ]
+        },
+        "east": {
+          "texture": "#layer0",
+          "uv": [
+            8,
+            4.75,
+            9.75,
+            4.875
+          ]
+        },
+        "south": {
+          "texture": "#layer0",
+          "uv": [
+            9.75,
+            0.75,
+            9.875,
+            0.875
+          ]
+        },
+        "west": {
+          "texture": "#layer0",
+          "uv": [
+            8,
+            5,
+            9.75,
+            5.125
+          ]
+        },
+        "up": {
+          "texture": "#layer0",
+          "uv": [
+            5.25,
+            8,
+            5.375,
+            9.75
+          ]
+        },
+        "down": {
+          "texture": "#layer0",
+          "uv": [
+            5.5,
+            8,
+            5.625,
+            9.75
+          ]
+        }
+      }
+    }
+  ],
+  "display": {
+    "fixed": {
+      "rotation": [
+        0,
+        0,
+        0
+      ],
+      "translation": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    }
+  }
+}

@@ -52,6 +52,11 @@ public abstract class ItemInHandRendererMixin {
                 ci.cancel(); return;
             }
         }
+        if (!tearsofink$inner && hand==InteractionHand.MAIN_HAND
+                && com.tarkrakov.tearsofink.client.CrossbowAnims.isCrossbow(stack)
+                && com.tarkrakov.tearsofink.client.CrossbowAnims.renderFirst(player,stack,partialTicks,poseStack,buffer,light)){
+            ci.cancel();return;
+        }
         if (!tearsofink$inner && com.tarkrakov.tearsofink.client.KnifeAnims.isKnife(stack)) {
             var side=hand==InteractionHand.MAIN_HAND?player.getMainArm():player.getMainArm().getOpposite();
             var motion=com.tarkrakov.tearsofink.client.KnifeAnims.motion(player,side);

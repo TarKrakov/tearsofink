@@ -127,6 +127,12 @@ public final class ModItems {
 	public static final Item INK_CROSSBOW = register("ink_crossbow", new com.tarkrakov.tearsofink.weapon.ranged.RangedItem(com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.CROSSBOW));
 	/** Internal render-only stack; quiver refill and projectile data continue to use vanilla arrows. */
 	public static final Item INK_CROSSBOW_BOLT_VISUAL = register("ink_crossbow_bolt_visual", new Item(new Item.Properties()));
+	// Internal render pieces, not creative tab items or ammunition.
+	public static final Item CROSSBOW_PART_BODY = register("ink_crossbow_part_body", new Item(new Item.Properties()));
+	public static final Item CROSSBOW_PART_LEVER = register("ink_crossbow_part_lever", new Item(new Item.Properties()));
+	public static final Item CROSSBOW_PART_STRING_CENTER = register("ink_crossbow_part_string_center", new Item(new Item.Properties()));
+	public static final Item CROSSBOW_PART_STRING_LEFT = register("ink_crossbow_part_string_left", new Item(new Item.Properties()));
+	public static final Item CROSSBOW_PART_STRING_RIGHT = register("ink_crossbow_part_string_right", new Item(new Item.Properties()));
 	public static final Item BLOOD_THROWING_DAGGER = register("blood_throwing_dagger", new com.tarkrakov.tearsofink.weapon.ranged.RangedItem(com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.DAGGER));
 	public static final Item HOLY_PISTOL = register("holy_pistol", new com.tarkrakov.tearsofink.weapon.ranged.RangedItem(com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.PISTOL));
 	public static final Item INK_QUIVER = register("ink_quiver", new com.tarkrakov.tearsofink.weapon.ranged.RangedSupply(64));
