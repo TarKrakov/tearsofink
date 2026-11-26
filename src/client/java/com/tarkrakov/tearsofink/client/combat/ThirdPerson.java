@@ -201,7 +201,7 @@ public final class ThirdPerson {
 	/** ItemInHandLayer: перед рисованием оружия повернуть его «кистью» (только когда идёт удар). */
 	public static void wrist(LivingEntity entity, HumanoidArm side, PoseStack pose) {
 		if (!ENABLED) return;
-		Pose[] shown = com.tarkrakov.tearsofink.client.PistolAnims.isPistol(stackIn(entity,side)) ? PISTOL_SHOWN.get(entity.getId()) : SHOWN.get(entity.getId());
+		Pose[] shown = (com.tarkrakov.tearsofink.client.PistolAnims.isPistol(stackIn(entity,side))||com.tarkrakov.tearsofink.client.KnifeAnims.isKnife(stackIn(entity,side))) ? PISTOL_SHOWN.get(entity.getId()) : SHOWN.get(entity.getId());
 		if (shown == null) return;
 		Pose p = shown[side.ordinal()];
 		if (p == null) return;
@@ -220,6 +220,14 @@ public final class ThirdPerson {
         boolean active=false;
         for(HumanoidArm side:HumanoidArm.values()){
             ItemStack stack=stackIn(player,side);
+            if(com.tarkrakov.tearsofink.client.KnifeAnims.isKnife(stack)){
+                var motion=com.tarkrakov.tearsofink.client.KnifeAnims.motion(player,side);
+                if(motion==null)continue;
+                Solved q=solve(model,player,stack,side,motion.clip(),motion.time(),true,"blood_throwing_dagger",false);
+                ModelPart arm=arm(model,side);arm.xRot=q.x;arm.yRot=q.y;arm.zRot=q.z;
+                shown[side.ordinal()]=new Pose(q.x,q.y,q.z,q.wrist,q.pivot,q.push);
+                active=true;continue;
+            }
             if(!com.tarkrakov.tearsofink.client.PistolAnims.isPistol(stack))continue;
             var motion=com.tarkrakov.tearsofink.client.PistolAnims.motion(player,side);
             if(motion==null)continue;

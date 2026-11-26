@@ -52,6 +52,26 @@ public abstract class ItemInHandRendererMixin {
                 ci.cancel(); return;
             }
         }
+        if (!tearsofink$inner && com.tarkrakov.tearsofink.client.KnifeAnims.isKnife(stack)) {
+            var side=hand==InteractionHand.MAIN_HAND?player.getMainArm():player.getMainArm().getOpposite();
+            var motion=com.tarkrakov.tearsofink.client.KnifeAnims.motion(player,side);
+            if(motion!=null){
+                if(motion.hidden()){
+                    var key=com.tarkrakov.tearsofink.client.combat.WeaponAnims.sample(motion.clip(),motion.time());
+                    float m=side==net.minecraft.world.entity.HumanoidArm.LEFT?-1:1;
+                    poseStack.pushPose();
+                    try{
+                        poseStack.translate(m*key.pos().x/16f,key.pos().y/16f,key.pos().z/16f);
+                        ((ItemInHandRendererInvoker)this).tearsofink$renderPlayerArm(poseStack,buffer,light,0,0,side);
+                    }finally{poseStack.popPose();}
+                }else{
+                    tearsofink$inner=true;
+                    try{((ItemInHandRendererInvoker)this).tearsofink$renderArmWithItem(player,partialTicks,pitch,hand,0,stack,0,poseStack,buffer,light);}
+                    finally{tearsofink$inner=false;}
+                }
+                ci.cancel();return;
+            }
+        }
         if (!tearsofink$inner && com.tarkrakov.tearsofink.client.PistolAnims.isPistol(stack)) {
             var side = hand==InteractionHand.MAIN_HAND?player.getMainArm():player.getMainArm().getOpposite();
             var motion = com.tarkrakov.tearsofink.client.PistolAnims.motion(player,side);
