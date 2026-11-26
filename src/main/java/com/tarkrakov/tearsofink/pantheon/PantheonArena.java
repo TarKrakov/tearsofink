@@ -4,6 +4,8 @@ import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.block.BattlefieldBannerBlockEntity;
 import com.tarkrakov.tearsofink.block.BattlefieldSceneBlockEntity;
+import com.tarkrakov.tearsofink.block.BattlefieldRelicPatchBlockEntity;
+import com.tarkrakov.tearsofink.block.lantern.LanternBeaconBlockEntity;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentRegistry;
 import net.fabricmc.fabric.api.attachment.v1.AttachmentType;
 import com.mojang.serialization.Codec;
@@ -76,10 +78,16 @@ final class PantheonArena {
 
     private enum Phase { LOADING, CHECKING, APPLYING }
     private record Write(ServerLevel level, BlockPos pos, BlockState state) {}
-    private record Cell(BlockPos pos, BlockState[] states) {
+    private record Cell(BlockPos pos, BlockState[] states, BlockState oldBattlefield, BlockState oldBloom, boolean removableLantern) {
         BlockState state(Scene scene) { return states[scene.ordinal()]; }
 
         boolean accepts(BlockState state, Job job) {
+            // A held/restarting V1 scene may still contain the former floor and bloom.
+            // Accept only exact legacy states at their original coordinates.
+            if ((job.source == ORION_BATTLEFIELD_V1 || job.target == ORION_BATTLEFIELD_V1)
+                    && state.equals(oldBattlefield)) return true;
+            if ((job.source == ORION_BLOOM_V1 || job.target == ORION_BLOOM_V1)
+                    && state.equals(oldBloom)) return true;
             return state.equals(state(job.target)) || (job.source != null && state.equals(state(job.source)))
                     || (job.source == null && (state.equals(state(NEUTRAL))
                     || state.equals(state(FOREST)) || state.equals(state(ISLAND))));
@@ -174,6 +182,8 @@ final class PantheonArena {
 
     private static Layout inspect(PantheonTemple.Template template, boolean edited) throws Exception {
         var free = new boolean[WIDTH][DEPTH];
+        var orionFree = new boolean[WIDTH][DEPTH];
+        var original = edited ? PantheonTemple.load() : template;
         int columns = 0;
         for (int x = MIN_X; x <= MAX_X; x++) {
             for (int z = MIN_Z; z <= MAX_Z; z++) {
@@ -182,14 +192,17 @@ final class PantheonArena {
                     if (floor.hasBlockEntity() || !floor.getFluidState().isEmpty()
                             || !floor.isCollisionShapeFullBlock(EmptyBlockGetter.INSTANCE, new BlockPos(x, FLOOR, z))) continue;
                 } else if (!floor.is(ModBlocks.SANCTUM_FLOOR_TILE) && !floor.is(ModBlocks.SANCTUM_CARVED_TILE)) continue;
-                boolean clear = true;
+                boolean clear = true, battlefieldClear = true;
                 for (int y = 2; y <= 21; y++) {
-                    if (!PantheonTemple.authored(template, new BlockPos(x, y, z)).isAir()) {
+                    BlockPos at = new BlockPos(x, y, z);
+                    BlockState state = PantheonTemple.authored(template, at);
+                    if (!state.isAir()) {
                         clear = false;
-                        break;
+                        if (!OrionBattlefield.innerColumnPart(at, state, original)) battlefieldClear = false;
                     }
                 }
                 free[x - MIN_X][z - MIN_Z] = clear;
+                orionFree[x - MIN_X][z - MIN_Z] = battlefieldClear;
                 if (clear) columns++;
             }
         }
@@ -214,20 +227,32 @@ final class PantheonArena {
         Scene[] presets = Scene.values();
         for (int index = 0; index < VOLUME; index++) {
             BlockPos p = local(index);
-            if (!free[p.getX() - MIN_X][p.getZ() - MIN_Z]) continue;
+            boolean baseFree = free[p.getX() - MIN_X][p.getZ() - MIN_Z];
+            boolean battleFree = orionFree[p.getX() - MIN_X][p.getZ() - MIN_Z];
             BlockState neutral = PantheonTemple.authored(template, p);
+            boolean remove = OrionBattlefield.innerColumnPart(p, neutral, original);
+            if (!baseFree && !battleFree && !remove) continue;
+            boolean lantern = remove && neutral.is(ModBlocks.INK_LANTERN);
+            BlockState oldBattle = baseFree ? OrionBattlefield.legacyBlock(p, neutral, free, false) : neutral;
+            BlockState oldBloom = baseFree ? OrionBattlefield.legacyBlock(p, neutral, free, true) : neutral;
             BlockState[] states = new BlockState[presets.length];
             boolean changes = false;
             for (Scene preset : presets) {
-                BlockState state = preset.block(p, neutral, free);
-                if (neutral.hasBlockEntity() || state.hasBlockEntity() && !ownsDecorState(state, preset))
+                boolean orion = preset == ORION_BATTLEFIELD_V1 || preset == ORION_BLOOM_V1;
+                BlockState state = neutral;
+                if (orion && (battleFree || remove)) {
+                    BlockState stripped = remove ? Blocks.AIR.defaultBlockState() : neutral;
+                    state = battleFree ? preset.block(p, stripped, orionFree) : stripped;
+                } else if (!orion && baseFree) state = preset.block(p, neutral, free);
+                if (neutral.hasBlockEntity() && !lantern
+                        || state.hasBlockEntity() && !(lantern && state.equals(neutral)) && !ownsDecorState(state, preset))
                     throw new IOException("Блок-сущность в маске арены");
                 states[preset.ordinal()] = state;
                 changes |= !state.equals(neutral);
             }
-            if (!changes) continue;
+            if (!changes && oldBattle.equals(neutral) && oldBloom.equals(neutral)) continue;
             BlockPos world = PantheonTemple.world(p);
-            cells.add(new Cell(world, states));
+            cells.add(new Cell(world, states, oldBattle, oldBloom, lantern));
             chunks.add(new ChunkPos(world));
         }
         verifyBasin(template, cells);
@@ -419,7 +444,7 @@ final class PantheonArena {
             BlockPos pos = cell.pos();
             var chunk = active.chunks.get(ChunkPos.asLong(pos.getX() >> 4, pos.getZ() >> 4));
             BlockState existing = chunk.getBlockState(pos);
-            if (!cell.accepts(existing, active) || !ownedDecor(chunk, pos, existing)) {
+            if (!cell.accepts(existing, active) || !ownedDecor(chunk, pos, existing, cell.removableLantern())) {
                 fail(level, "посторонний блок " + pos.toShortString());
                 return;
             }
@@ -430,7 +455,7 @@ final class PantheonArena {
                     fail(level, "запись отклонена в " + pos.toShortString());
                     return;
                 }
-                if (target.hasBlockEntity() && !markDecor(level, pos, target)) {
+                if (target.hasBlockEntity() && !markDecor(level, pos, target, cell.removableLantern())) {
                     fail(level, "не создана декорация в " + pos.toShortString());
                     return;
                 }
@@ -474,22 +499,30 @@ final class PantheonArena {
 
     private static boolean ownsDecorState(BlockState state, Scene scene) {
         return (scene == ORION_BATTLEFIELD_V1 || scene == ORION_BLOOM_V1)
-                && (state.is(ModBlocks.BATTLEFIELD_BANNER) || state.is(ModBlocks.BATTLEFIELD_SCENE));
+                && (state.is(ModBlocks.BATTLEFIELD_BANNER) || state.is(ModBlocks.BATTLEFIELD_SCENE)
+                || state.is(ModBlocks.BATTLEFIELD_RELIC_PATCH));
     }
 
-    private static boolean ownedDecor(LevelChunk chunk, BlockPos pos, BlockState state) {
+    private static boolean ownedDecor(LevelChunk chunk, BlockPos pos, BlockState state, boolean removableLantern) {
         var entity = chunk.getBlockEntity(pos, LevelChunk.EntityCreationType.CHECK);
         if (!state.hasBlockEntity()) return entity == null;
+        if (removableLantern && state.is(ModBlocks.INK_LANTERN)) return entity instanceof LanternBeaconBlockEntity;
         if (entity == null || !ORION_PLAN.equals(entity.getAttached(SCENE_DECOR))) return false;
         if (state.is(ModBlocks.BATTLEFIELD_BANNER)) return entity instanceof BattlefieldBannerBlockEntity;
+        if (state.is(ModBlocks.BATTLEFIELD_RELIC_PATCH)) return entity instanceof BattlefieldRelicPatchBlockEntity
+                && Arrays.equals(entity.getUpdateTag(chunk.getLevel().registryAccess()).getIntArray("Contacts"),
+                        OrionBattlefield.patchContacts(state, pos));
         return state.is(ModBlocks.BATTLEFIELD_SCENE) && entity instanceof BattlefieldSceneBlockEntity
                 && Arrays.equals(entity.getUpdateTag(chunk.getLevel().registryAccess()).getIntArray("Contacts"),
                         OrionBattlefield.contacts(state));
     }
 
-    private static boolean markDecor(ServerLevel level, BlockPos pos, BlockState state) {
+    private static boolean markDecor(ServerLevel level, BlockPos pos, BlockState state, boolean removableLantern) {
         var entity = level.getBlockEntity(pos);
-        if (state.is(ModBlocks.BATTLEFIELD_SCENE) && entity instanceof BattlefieldSceneBlockEntity scene)
+        if (removableLantern && state.is(ModBlocks.INK_LANTERN)) return entity instanceof LanternBeaconBlockEntity;
+        if (state.is(ModBlocks.BATTLEFIELD_RELIC_PATCH) && entity instanceof BattlefieldRelicPatchBlockEntity patch)
+            patch.configure(OrionBattlefield.patchContacts(state, pos));
+        else if (state.is(ModBlocks.BATTLEFIELD_SCENE) && entity instanceof BattlefieldSceneBlockEntity scene)
             scene.configure(OrionBattlefield.contacts(state));
         else if (!state.is(ModBlocks.BATTLEFIELD_BANNER) || !(entity instanceof BattlefieldBannerBlockEntity))
             return false;
