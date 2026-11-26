@@ -112,7 +112,11 @@ public final class PantheonCombat {
         ServerTickEvents.START_WORLD_TICK.register(level -> {
             if (activeCombat() && PantheonTemple.isTemple(level)) enforcePlayers(level);
         });
-        ServerTickEvents.END_SERVER_TICK.register(PantheonCombat::tick);
+        OrionMusic.init();
+        ServerTickEvents.END_SERVER_TICK.register(server -> {
+            tick(server);
+            syncOrionMusic(server);
+        });
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> onArrival(handler.player));
         ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> forfeit(handler.player));
         ServerPlayerEvents.AFTER_RESPAWN.register((previous, next, alive) -> onArrival(next));
@@ -225,6 +229,16 @@ public final class PantheonCombat {
             case FINALE -> tickFinale(level);
             case RETAINED_WON, RETAINED_FAILED, RETAINED_STOPPED -> tickRetained(level);
             case RESETTING -> tickReset(level);
+        }
+    }
+
+    private static void syncOrionMusic(MinecraftServer server) {
+        ServerLevel level = server.getLevel(PantheonTemple.DIMENSION);
+        if (level != null && session != null && session.phase == Phase.FIGHT
+                && recoveryError == null && !reconciling && target(level) instanceof OrionEntity orion) {
+            OrionMusic.sync(server, session.id, orion.musicStage(), opponents(orion));
+        } else {
+            OrionMusic.sync(server, null, OrionMusic.Stage.OFF, List.of());
         }
     }
 

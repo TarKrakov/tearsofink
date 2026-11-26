@@ -1,4 +1,10 @@
 {
+  "orion_phase1": {
+    "sounds": [{"name": "tears-of-ink:orion_phase1_intro", "stream": true}]
+  },
+  "orion_phase2": {
+    "sounds": [{"name": "tears-of-ink:orion_phase2_intro", "stream": true}]
+  },
   "shield_choir": {
     "sounds": [
       "tears-of-ink:shield_choir"

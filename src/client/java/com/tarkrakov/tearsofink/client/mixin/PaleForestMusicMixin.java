@@ -18,7 +18,8 @@ public abstract class PaleForestMusicMixin {
 
     @Inject(method = "tick", at = @At("HEAD"), cancellable = true)
     private void tearsofink$replaceForestMusic(CallbackInfo ci) {
-        if (PaleForestAmbience.inForest(Minecraft.getInstance())) {
+        if (PaleForestAmbience.inForest(Minecraft.getInstance())
+                || com.tarkrakov.tearsofink.client.audio.OrionMusicClient.ownsMusic(Minecraft.getInstance())) {
             if (!tearsofink$forestMusic) stopPlaying();
             tearsofink$forestMusic = true;
             ci.cancel();

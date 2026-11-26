@@ -203,6 +203,16 @@ public final class OrionEntity extends PathfinderMob {
         super.setHealth(health);
     }
 
+    /** Read-only audio state; never delays a technique or the Soul threshold. */
+    public com.tarkrakov.tearsofink.pantheon.OrionMusic.Stage musicStage() {
+        var off = com.tarkrakov.tearsofink.pantheon.OrionMusic.Stage.OFF;
+        if (!fighting || pendingLethal) return off;
+        if (clip == Clip.EMPOWER) return com.tarkrakov.tearsofink.pantheon.OrionMusic.Stage.AWAKENING;
+        if (pendingEmpower) return com.tarkrakov.tearsofink.pantheon.OrionMusic.Stage.FADING;
+        return phaseTwo ? com.tarkrakov.tearsofink.pantheon.OrionMusic.Stage.SECOND
+                : com.tarkrakov.tearsofink.pantheon.OrionMusic.Stage.FIRST;
+    }
+
     public boolean lethalPending() { return pendingLethal; }
     public boolean finaleComplete() { return finaleComplete; }
 

@@ -47,6 +47,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		com.tarkrakov.tearsofink.client.armor.AuthoredArmorRenderer.init();
 		StriderSongClient.init();
+		com.tarkrakov.tearsofink.client.audio.OrionMusicClient.init();
 		PaleForestAmbience.init();
 		com.tarkrakov.tearsofink.client.audio.AudioMixer.init();
 		// /inkfog — выключить/включить туман Чернильных Земель у себя (удобно строить)
