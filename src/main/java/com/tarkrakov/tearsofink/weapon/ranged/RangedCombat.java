@@ -39,7 +39,7 @@ import java.util.*;
 public final class RangedCombat {
     // Game balance: one cartridge pays for a short-range spread, not six full hits.
     private static final int PELLETS=6, PELLET_LIFETIME=6;
-    private static final float PISTOL_DAMAGE=12f;
+    private static final float PISTOL_DAMAGE=8f, PISTOL_WILD_DAMAGE=10f; // HP per barrel, before target protection
     private static final String LOADED="toi_ranged_loaded", EMPOWERED="toi_ranged_empowered";
     private static final net.minecraft.resources.ResourceLocation SLOW=TearsOfInk.id("ranged_reload_slow");
     private static final Map<UUID,State> STATES=new HashMap<>();
@@ -319,7 +319,7 @@ public final class RangedCombat {
                 Vec3 d=t.position().subtract(p.position()).multiply(1,0,1);
                 if(d.lengthSqr()>10.89||d.lengthSqr()<1e-5||look.dot(d.normalize())<.45||!p.hasLineOfSight(t)
                     ||t.isAlliedTo(p)||!PantheonCombat.permitsInteraction(t,p))continue;
-                if(Gear.hurtModWave(t,p.damageSources().playerAttack(p),pair?30f:15f))t.knockback(1.1,p.getX()-t.getX(),p.getZ()-t.getZ());
+                if(Gear.hurtModWave(t,p.damageSources().playerAttack(p),PISTOL_WILD_DAMAGE*(pair?2:1)))t.knockback(1.1,p.getX()-t.getX(),p.getZ()-t.getZ());
             }
             p.setDeltaMovement(p.getDeltaMovement().add(look.scale(-.75)).add(0,.14,0));p.hurtMarked=true;
             wildFlash(p,off);
