@@ -1342,5 +1342,16 @@
   "ranged.tears-of-ink.knife_damage": "Урон ножа: %s HP",
   "ranged.tears-of-ink.knife_bleed": "Бросок: %s%% кровотечение · %s заряд · %s с",
   "ranged.tears-of-ink.knife_blood": "Кровавый снаряд (R): %s%% кровотечение · %s заряда · КД %s с",
-  "ranged.tears-of-ink.knife_refill": "Кровавый слиток: +%s зарядов (Чернильная наковальня)"
+  "ranged.tears-of-ink.knife_refill": "Кровавый слиток: +%s зарядов (Чернильная наковальня)",
+  "ranged.tears-of-ink.pistol_damage": "Залп: %s HP / парой %s HP (все дробины)",
+  "ranged.tears-of-ink.pistol_pellets": "Картечь: %s дробин по ~%s HP",
+  "ranged.tears-of-ink.pistol_reload": "Перезарядка: %s / %s с (один / пара) · замедление %s%%",
+  "ranged.tears-of-ink.pistol_spread": "Разброс: %s / %s (от бедра / прицел, коэффициент)",
+  "ranged.tears-of-ink.pistol_range": "Дальность полёта: до ~%s бл. · %s с",
+  "ranged.tears-of-ink.pistol_cost": "Выстрел: %s / %s заряда патронташа (один / пара)",
+  "ranged.tears-of-ink.pistol_wild_damage": "R — Шальной выстрел: %s / %s HP · до %s бл. перед собой",
+  "ranged.tears-of-ink.pistol_wild_cost": "R: %s / %s заряда · %s Души · базовый КД %s с",
+  "ranged.tears-of-ink.pistol_wild_recoil": "R: отбрасывает цели и самого стрелка",
+  "ranged.tears-of-ink.pistol_supply": "Патронташ: %s зарядов · полное пополнение: %s пуль",
+  "ranged.tears-of-ink.pistol_controls": "ПКМ — прицел · ЛКМ — залп · Mouse 4 — вторая рука"
 }

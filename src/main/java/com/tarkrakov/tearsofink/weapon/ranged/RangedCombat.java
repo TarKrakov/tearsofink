@@ -38,10 +38,8 @@ import java.util.*;
 
 public final class RangedCombat {
     // Game balance: one cartridge pays for a short-range spread, not six full hits.
-    private static final int PELLETS=6, PELLET_LIFETIME=6;
     public static final int KNIFE_RELEASE=5, KNIFE_RETURN=20, KNIFE_BLOOD_RETURN=10, KNIFE_DURATION=25, KNIFE_BLOOD_DURATION=15;
     public static final int KNIFE_START=0, KNIFE_FLY=1, KNIFE_REFORM=2, KNIFE_CANCEL=3;
-    private static final float PISTOL_DAMAGE=8f, PISTOL_WILD_DAMAGE=10f; // HP per barrel, before target protection
     private static final String LOADED="toi_ranged_loaded", EMPOWERED="toi_ranged_empowered";
     private static final net.minecraft.resources.ResourceLocation SLOW=TearsOfInk.id("ranged_reload_slow");
     private static final Map<UUID,State> STATES=new HashMap<>();
@@ -190,7 +188,7 @@ public final class RangedCombat {
         boolean pair=paired(p,Kind.PISTOL);
         boolean m=reload(p,s.main,p.getMainHandItem(),false,pair);
         boolean o=reload(p,s.off,p.getOffhandItem(),true,pair);
-        slow(p,s,m&&blocked?.50:m||o?.18:0);
+        slow(p,s,m&&blocked?.50:m||o?PistolTuning.RELOAD_SLOW:0);
         if(p.tickCount%4==0||!has)sendReload(p,s);
         if(!has)STATES.remove(p.getUUID());
     }
@@ -201,8 +199,8 @@ public final class RangedCombat {
         if(kind==null||kind==Kind.DAGGER||loaded(stack)||(off&&(blocksOffhand(p)||kind==Kind.CROSSBOW))){
             job.ticks=0;return false;
         }
-        if(!p.getAbilities().instabuild&&RangedSupply.available(p,kind)<(pair?2:1)){job.ticks=0;return false;}
-        int duration=kind==Kind.CROSSBOW?46:pair?60:38;
+        if(!p.getAbilities().instabuild&&RangedSupply.available(p,kind)<(pair?2:1)*(kind==Kind.PISTOL?PistolTuning.SHOT_COST:1)){job.ticks=0;return false;}
+        int duration=kind==Kind.CROSSBOW?46:pair?PistolTuning.DUAL_RELOAD:PistolTuning.RELOAD;
         job.duration=duration;
         if(++job.ticks>=duration){
             flag(stack,LOADED,true);job.ticks=job.duration=0;
@@ -224,7 +222,7 @@ public final class RangedCombat {
         long now=p.serverLevel().getGameTime();
         aimed=aimed&&s.aim&&s.aimStack==p.getMainHandItem();
         if(now<(off?s.nextOff:s.nextMain)||pair&&now<s.nextOff)return false;
-        int n=pair?2:1;
+        int n=(pair?2:1)*(kind==Kind.PISTOL?PistolTuning.SHOT_COST:1);
         if(kind==Kind.DAGGER){
             int cost=special?KnifeTuning.BLOOD_COST:KnifeTuning.COST;
             if(!p.getAbilities().instabuild&&(RangedSupply.amount(first)<cost||pair&&RangedSupply.amount(second)<cost))return false;
@@ -328,23 +326,23 @@ public final class RangedCombat {
         boolean ink=kind==Kind.CROSSBOW&&empowered(stack);
         if(ink)flag(stack,EMPOWERED,false);
         boolean pistol=kind==Kind.PISTOL;
-        float damage=kind==Kind.CROSSBOW?(ink?15:11):pistol?PISTOL_DAMAGE/PELLETS:KnifeTuning.DAMAGE;
+        float damage=kind==Kind.CROSSBOW?(ink?15:11):pistol?PistolTuning.DAMAGE/PistolTuning.PELLETS:KnifeTuning.DAMAGE;
         float bleed=kind==Kind.DAGGER?(special?KnifeTuning.BLOOD_BLEED_CHANCE:KnifeTuning.BLEED_CHANCE):0;
         Vec3 look=p.getLookAngle(),start=shotStart(p,off,pistol);
         // Do not place a projectile across an adjacent wall.
         var obstruction=p.level().clip(new net.minecraft.world.level.ClipContext(p.getEyePosition(),start,
             net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,p));
         if(obstruction.getType()!=net.minecraft.world.phys.HitResult.Type.MISS)start=p.getEyePosition();
-        float spread=kind==Kind.CROSSBOW?(aimed?.5f:3f):pistol?(aimed?10f:18f):KnifeTuning.SPREAD;
-        Vec3 direction=aimed&&kind!=Kind.DAGGER?p.getEyePosition().add(look.scale(pistol?8:24)).subtract(start).normalize():look;
-        int count=pistol?PELLETS:1;
+        float spread=kind==Kind.CROSSBOW?(aimed?.5f:3f):pistol?(aimed?PistolTuning.AIM_SPREAD:PistolTuning.HIP_SPREAD):KnifeTuning.SPREAD;
+        Vec3 direction=aimed&&kind!=Kind.DAGGER?p.getEyePosition().add(look.scale(pistol?PistolTuning.AIM_DISTANCE:24)).subtract(start).normalize():look;
+        int count=pistol?PistolTuning.PELLETS:1;
         for(int i=0;i<count;i++){
             RangedProjectile shot=new RangedProjectile(p.serverLevel(),p,damage,bleed,ink,hits);
             shot.setItem(new ItemStack(kind==Kind.DAGGER?ModItems.BLOOD_THROWING_DAGGER:pistol?ModItems.PALE_BULLET:Items.ARROW));
             shot.setPos(start.x,start.y,start.z);
-            if(pistol)shot.limitLifetime(PELLET_LIFETIME);
+            if(pistol)shot.limitLifetime(PistolTuning.PELLET_LIFETIME);
             else if(kind==Kind.DAGGER)shot.limitLifetime(KnifeTuning.LIFETIME);
-            shot.shoot(direction.x,direction.y,direction.z,kind==Kind.DAGGER?KnifeTuning.SPEED:pistol?3.2f:2.7f,spread);
+            shot.shoot(direction.x,direction.y,direction.z,kind==Kind.DAGGER?KnifeTuning.SPEED:pistol?PistolTuning.SPEED:2.7f,spread);
             p.serverLevel().addFreshEntity(shot);
         }
         if(pistol)muzzleFlash(p,off,false);
@@ -360,25 +358,25 @@ public final class RangedCombat {
     public static final Skill BLOOD_SHOT=new Skill(TearsOfInk.id("ranged_blood_shot"),0,0,KnifeTuning.BLOOD_COOLDOWN){
         @Override public boolean activate(ServerPlayer p,SkillInput input){return RangedItem.kind(held(p,input))==Kind.DAGGER&&fire(p,input.sneaking(),false,true);}
     };
-    public static final Skill WILD_SHOT=new Skill(TearsOfInk.id("ranged_wild_shot"),0,12,100){
+    public static final Skill WILD_SHOT=new Skill(TearsOfInk.id("ranged_wild_shot"),0,PistolTuning.WILD_SOUL,PistolTuning.WILD_COOLDOWN){
         @Override public boolean activate(ServerPlayer p,SkillInput input){
             boolean off=input.sneaking(),pair=!off&&paired(p,Kind.PISTOL);
             ItemStack s=held(p,input),other=p.getOffhandItem();
             if(!valid(p)||off&&blocksOffhand(p)||RangedItem.kind(s)!=Kind.PISTOL||!loaded(s)
-                ||pair&&!loaded(other)||!RangedSupply.take(p,Kind.PISTOL,pair?4:2))return false;
+                ||pair&&!loaded(other)||!RangedSupply.take(p,Kind.PISTOL,(pair?2:1)*PistolTuning.WILD_COST))return false;
             flag(s,LOADED,false);
             if(pair)flag(other,LOADED,false);
             pistolShot(p,off,pair,false,true);
             p.getInventory().setChanged();
             Vec3 look=p.getLookAngle().multiply(1,0,1).normalize();
             if(look.lengthSqr()<1e-5)look=Vec3.directionFromRotation(0,p.getYRot());
-            for(LivingEntity t:p.serverLevel().getEntitiesOfClass(LivingEntity.class,p.getBoundingBox().inflate(3.3),e->e!=p&&e.isAlive())){
+            for(LivingEntity t:p.serverLevel().getEntitiesOfClass(LivingEntity.class,p.getBoundingBox().inflate(PistolTuning.WILD_RANGE),e->e!=p&&e.isAlive())){
                 Vec3 d=t.position().subtract(p.position()).multiply(1,0,1);
-                if(d.lengthSqr()>10.89||d.lengthSqr()<1e-5||look.dot(d.normalize())<.45||!p.hasLineOfSight(t)
+                if(d.lengthSqr()>PistolTuning.WILD_RANGE_SQUARED||d.lengthSqr()<1e-5||look.dot(d.normalize())<PistolTuning.WILD_FORWARD_DOT||!p.hasLineOfSight(t)
                     ||t.isAlliedTo(p)||!PantheonCombat.permitsInteraction(t,p))continue;
-                if(Gear.hurtModWave(t,p.damageSources().playerAttack(p),PISTOL_WILD_DAMAGE*(pair?2:1)))t.knockback(1.1,p.getX()-t.getX(),p.getZ()-t.getZ());
+                if(Gear.hurtModWave(t,p.damageSources().playerAttack(p),PistolTuning.WILD_DAMAGE*(pair?2:1)))t.knockback(PistolTuning.WILD_KNOCKBACK,p.getX()-t.getX(),p.getZ()-t.getZ());
             }
-            p.setDeltaMovement(p.getDeltaMovement().add(look.scale(-.75)).add(0,.14,0));p.hurtMarked=true;
+            p.setDeltaMovement(p.getDeltaMovement().add(look.scale(-PistolTuning.WILD_RECOIL)).add(0,PistolTuning.WILD_LIFT,0));p.hurtMarked=true;
             wildFlash(p,off);
             if(pair)wildFlash(p,true);
             p.level().playSound(null,p.blockPosition(),SoundEvents.GENERIC_EXPLODE.value(),SoundSource.PLAYERS,pair?1.8f:1.45f,.85f);

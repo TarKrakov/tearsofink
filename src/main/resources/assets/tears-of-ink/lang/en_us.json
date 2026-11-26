@@ -1342,5 +1342,16 @@
   "ranged.tears-of-ink.knife_damage": "Damage per knife: %s HP",
   "ranged.tears-of-ink.knife_bleed": "Throw: %s%% bleed chance · %s charge · %s s",
   "ranged.tears-of-ink.knife_blood": "Blood Shot (R): %s%% bleed chance · %s charges · cooldown %s s",
-  "ranged.tears-of-ink.knife_refill": "Blood ingot: +%s charges (Ink Anvil)"
+  "ranged.tears-of-ink.knife_refill": "Blood ingot: +%s charges (Ink Anvil)",
+  "ranged.tears-of-ink.pistol_damage": "Volley: %s HP / dual %s HP (all pellets)",
+  "ranged.tears-of-ink.pistol_pellets": "Buckshot: %s pellets at ~%s HP each",
+  "ranged.tears-of-ink.pistol_reload": "Reload: %s / %s s (single / dual) · %s%% slowdown",
+  "ranged.tears-of-ink.pistol_spread": "Inaccuracy: %s / %s (hip / aimed)",
+  "ranged.tears-of-ink.pistol_range": "Flight range: up to ~%s blocks · %s s",
+  "ranged.tears-of-ink.pistol_cost": "Shot: %s / %s bandolier charges (single / dual)",
+  "ranged.tears-of-ink.pistol_wild_damage": "R — Wild Shot: %s / %s HP · up to %s blocks ahead",
+  "ranged.tears-of-ink.pistol_wild_cost": "R: %s / %s charges · %s Soul · base cooldown %s s",
+  "ranged.tears-of-ink.pistol_wild_recoil": "R: knocks back targets and the shooter",
+  "ranged.tears-of-ink.pistol_supply": "Bandolier: %s charges · full refill: %s bullets",
+  "ranged.tears-of-ink.pistol_controls": "RMB — aim · LMB — fire · Mouse 4 — offhand"
 }
