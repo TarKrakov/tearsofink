@@ -158,7 +158,7 @@ public final class CrossbowAnims {
         string(player,pose,buffers,light,pull,true);string(player,pose,buffers,light,pull,false);
         pose.pushPose();try{pose.translate(pull*PX,0,0);renderPart(player,ModItems.CROSSBOW_PART_STRING_CENTER,pose,buffers,light);}finally{pose.popPose();}
         if(f.bolt){
-            pose.pushPose();try{pose.translate(0,f.boltRaise*PX,0);renderPart(player,ModItems.INK_CROSSBOW_BOLT_VISUAL,pose,buffers,light);}finally{pose.popPose();}
+            pose.pushPose();try{pose.translate(0,f.boltRaise*PX,0);renderPart(player,RangedCombat.empowered(player.getMainHandItem())?ModItems.INK_CROSSBOW_BOLT_EMPOWERED_VISUAL:ModItems.INK_CROSSBOW_BOLT_VISUAL,pose,buffers,light);}finally{pose.popPose();}
         }
     }
     public static boolean renderFirst(AbstractClientPlayer player,ItemStack stack,float partial,PoseStack pose,MultiBufferSource buffers,int light){

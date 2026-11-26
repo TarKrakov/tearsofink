@@ -6,6 +6,7 @@ import com.tarkrakov.tearsofink.pantheon.PantheonCombat;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.particles.DustParticleOptions;
 import com.tarkrakov.tearsofink.item.ModItems;
+import com.tarkrakov.tearsofink.particle.ModParticles;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 import net.minecraft.server.level.ServerPlayer;
@@ -45,7 +46,8 @@ public final class RangedProjectile extends ThrowableItemProjectile {
         // Sample the real server-side path, including a hit before the first client render.
         boolean pellet=level() instanceof ServerLevel && getItem().is(ModItems.PALE_BULLET);
         boolean knife=level() instanceof ServerLevel && getItem().is(ModItems.BLOOD_THROWING_DAGGER);
-        Vec3 start=pellet||knife?position():null;
+        boolean ink=level() instanceof ServerLevel && getItem().is(ModItems.INK_CROSSBOW_BOLT_EMPOWERED_VISUAL);
+        Vec3 start=pellet||knife||ink?position():null;
         traceImpact=null;
         super.tick();
         if(pellet||knife){
@@ -59,6 +61,19 @@ public final class RangedProjectile extends ThrowableItemProjectile {
                     ((ServerLevel)level()).sendParticles(knife?KNIFE_TRACE:PELLET_TRACE,point.x,point.y,point.z,1,0,0,0,0);
                 }
             }
+        }
+        if(ink){
+            // Follow the actual server path, including impacts before a client can render.
+            Vec3 end=traceImpact!=null?traceImpact:position();
+            Vec3 delta=end.subtract(start);
+            int samples=Math.clamp((int)Math.ceil(delta.length()/.65),1,5);
+            ServerLevel server=(ServerLevel)level();
+            for(int i=0;i<samples;i++){
+                Vec3 at=start.add(delta.scale((i+.5)/samples));
+                server.sendParticles(ModParticles.INK_SPARK,at.x,at.y,at.z,2,.035,.035,.035,.015);
+            }
+            if(delta.lengthSqr()>.0025)
+                server.sendParticles(ModParticles.INK_SMOKE,end.x,end.y,end.z,1,0,0,0,0);
         }
         if(!level().isClientSide && tickCount>=lifetime) discard();
     }
@@ -80,5 +95,13 @@ public final class RangedProjectile extends ThrowableItemProjectile {
         if(slow) target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,60,0));
         if(bleed>0 && p.getRandom().nextFloat()<bleed) Bleeding.apply(target,p,1);
     }
-    @Override protected void onHit(HitResult result){ traceImpact=result.getLocation(); super.onHit(result); if(!level().isClientSide) discard(); }
+    @Override protected void onHit(HitResult result){
+        traceImpact=result.getLocation();
+        if(level() instanceof ServerLevel server && getItem().is(ModItems.INK_CROSSBOW_BOLT_EMPOWERED_VISUAL)){
+            server.sendParticles(ModParticles.INK_SPARK,traceImpact.x,traceImpact.y,traceImpact.z,12,.16,.16,.16,.08);
+            server.sendParticles(ModParticles.INK_SMOKE,traceImpact.x,traceImpact.y,traceImpact.z,3,.09,.09,.09,.025);
+        }
+        super.onHit(result);
+        if(!level().isClientSide) discard();
+    }
 }

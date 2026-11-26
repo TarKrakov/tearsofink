@@ -392,7 +392,7 @@ public final class RangedCombat {
         int count=pistol?PistolTuning.PELLETS:1;
         for(int i=0;i<count;i++){
             RangedProjectile shot=new RangedProjectile(p.serverLevel(),p,damage,bleed,ink,hits);
-            shot.setItem(new ItemStack(kind==Kind.DAGGER?ModItems.BLOOD_THROWING_DAGGER:pistol?ModItems.PALE_BULLET:Items.ARROW));
+            shot.setItem(new ItemStack(kind==Kind.DAGGER?ModItems.BLOOD_THROWING_DAGGER:pistol?ModItems.PALE_BULLET:ink?ModItems.INK_CROSSBOW_BOLT_EMPOWERED_VISUAL:Items.ARROW));
             shot.setPos(start.x,start.y,start.z);
             if(pistol)shot.limitLifetime(PistolTuning.PELLET_LIFETIME);
             else if(kind==Kind.DAGGER)shot.limitLifetime(aimed?KnifeTuning.AIM_LIFETIME:KnifeTuning.LIFETIME);
@@ -422,7 +422,7 @@ public final class RangedCombat {
         @Override public boolean activate(ServerPlayer p,SkillInput input){
             ItemStack s=held(p,input);
             if(input.sneaking()||RangedItem.kind(s)!=Kind.CROSSBOW||empowered(s))return false;
-            flag(s,EMPOWERED,true);return true;
+            flag(s,EMPOWERED,true);p.getInventory().setChanged();return true;
         }
     };
     public static final Skill BLOOD_SHOT=new Skill(TearsOfInk.id("ranged_blood_shot"),0,0,KnifeTuning.BLOOD_COOLDOWN){

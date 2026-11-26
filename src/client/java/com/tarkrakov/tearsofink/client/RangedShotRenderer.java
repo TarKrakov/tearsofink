@@ -19,9 +19,8 @@ public final class RangedShotRenderer extends ThrownItemRenderer<RangedProjectil
     private final ItemRenderer items;
     public RangedShotRenderer(EntityRendererProvider.Context context){super(context);items=context.getItemRenderer();}
     @Override public void render(RangedProjectile entity,float yaw,float partial,PoseStack pose,MultiBufferSource buffers,int light){
-        // Only this mod's ranged entity uses an arrow stack for an ink crossbow shot.
-        // Never replace the vanilla arrow item, ammo rules or vanilla arrow renderer.
-        if(entity.getItem().is(Items.ARROW)){
+        // Only this mod's ranged projectile uses these bolt visuals. Ammo stays vanilla.
+        if(entity.getItem().is(Items.ARROW)||entity.getItem().is(ModItems.INK_CROSSBOW_BOLT_EMPOWERED_VISUAL)){
             renderBolt(entity,pose,buffers,light);
             return;
         }
@@ -48,7 +47,8 @@ public final class RangedShotRenderer extends ThrownItemRenderer<RangedProjectil
             pose.mulPose(new Quaternionf().rotationTo(new Vector3f(1,0,0),direction));
             // Centre of bolt: X=8.045882, shaft Y=12.125, Z=9.5.
             pose.translate(-.045882f/16f,-4.125f/16f,-1.5f/16f);
-            items.renderStatic(new ItemStack(ModItems.INK_CROSSBOW_BOLT_VISUAL),ItemDisplayContext.FIXED,
+            var bolt=entity.getItem().is(ModItems.INK_CROSSBOW_BOLT_EMPOWERED_VISUAL)?ModItems.INK_CROSSBOW_BOLT_EMPOWERED_VISUAL:ModItems.INK_CROSSBOW_BOLT_VISUAL;
+            items.renderStatic(new ItemStack(bolt),ItemDisplayContext.FIXED,
                     light,OverlayTexture.NO_OVERLAY,pose,buffers,entity.level(),entity.getId());
         }finally{pose.popPose();}
     }
