@@ -1338,5 +1338,9 @@
   "ranged.tears-of-ink.loaded": "Заряжено",
   "ranged.tears-of-ink.unloaded": "Не заряжено",
   "ranged.tears-of-ink.refill_arrows": "До полного запаса: %s стрел (Чернильная наковальня)",
-  "ranged.tears-of-ink.refill_bullets": "До полного запаса: %s пуль (Чернильная наковальня)"
+  "ranged.tears-of-ink.refill_bullets": "До полного запаса: %s пуль (Чернильная наковальня)",
+  "ranged.tears-of-ink.knife_damage": "Урон ножа: %s HP",
+  "ranged.tears-of-ink.knife_bleed": "Бросок: %s%% кровотечение · %s заряд · %s с",
+  "ranged.tears-of-ink.knife_blood": "Кровавый снаряд (R): %s%% кровотечение · %s заряда · КД %s с",
+  "ranged.tears-of-ink.knife_refill": "Кровавый слиток: +%s зарядов (Чернильная наковальня)"
 }

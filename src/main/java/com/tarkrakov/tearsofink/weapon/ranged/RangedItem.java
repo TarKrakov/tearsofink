@@ -21,7 +21,13 @@ public final class RangedItem extends Item implements AbilityWeapon {
     @Override public int getBarWidth(ItemStack stack) { return Math.round(13f * RangedSupply.amount(stack) / RangedSupply.capacity(stack)); }
     @Override public int getBarColor(ItemStack stack) { return 0x9b3545; }
     @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        if (kind == Kind.DAGGER) tooltip.add(Component.translatable("ranged.tears-of-ink.charges", RangedSupply.amount(stack), RangedSupply.capacity(stack)));
+        if (kind == Kind.DAGGER) {
+            tooltip.add(Component.translatable("ranged.tears-of-ink.charges", RangedSupply.amount(stack), RangedSupply.capacity(stack)));
+            tooltip.add(Component.translatable("ranged.tears-of-ink.knife_damage", KnifeTuning.DAMAGE));
+            tooltip.add(Component.translatable("ranged.tears-of-ink.knife_bleed", Math.round(KnifeTuning.BLEED_CHANCE*100), KnifeTuning.COST, RangedCombat.KNIFE_DURATION/20f));
+            tooltip.add(Component.translatable("ranged.tears-of-ink.knife_blood", Math.round(KnifeTuning.BLOOD_BLEED_CHANCE*100), KnifeTuning.BLOOD_COST, KnifeTuning.BLOOD_COOLDOWN/20f));
+            tooltip.add(Component.translatable("ranged.tears-of-ink.knife_refill", KnifeTuning.REFILL_PER_INGOT));
+        }
         else tooltip.add(Component.translatable(RangedCombat.loaded(stack) ? "ranged.tears-of-ink.loaded" : "ranged.tears-of-ink.unloaded"));
         tooltip.add(Component.translatable(ability().nameKey()));
     }

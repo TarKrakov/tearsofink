@@ -1338,5 +1338,9 @@
   "ranged.tears-of-ink.loaded": "Loaded",
   "ranged.tears-of-ink.unloaded": "Unloaded",
   "ranged.tears-of-ink.refill_arrows": "Arrows to refill: %s (Ink Anvil)",
-  "ranged.tears-of-ink.refill_bullets": "Bullets to refill: %s (Ink Anvil)"
+  "ranged.tears-of-ink.refill_bullets": "Bullets to refill: %s (Ink Anvil)",
+  "ranged.tears-of-ink.knife_damage": "Damage per knife: %s HP",
+  "ranged.tears-of-ink.knife_bleed": "Throw: %s%% bleed chance · %s charge · %s s",
+  "ranged.tears-of-ink.knife_blood": "Blood Shot (R): %s%% bleed chance · %s charges · cooldown %s s",
+  "ranged.tears-of-ink.knife_refill": "Blood ingot: +%s charges (Ink Anvil)"
 }

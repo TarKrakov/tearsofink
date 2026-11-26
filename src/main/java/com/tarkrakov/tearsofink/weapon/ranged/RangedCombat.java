@@ -226,7 +226,7 @@ public final class RangedCombat {
         if(now<(off?s.nextOff:s.nextMain)||pair&&now<s.nextOff)return false;
         int n=pair?2:1;
         if(kind==Kind.DAGGER){
-            int cost=special?2:1;
+            int cost=special?KnifeTuning.BLOOD_COST:KnifeTuning.COST;
             if(!p.getAbilities().instabuild&&(RangedSupply.amount(first)<cost||pair&&RangedSupply.amount(second)<cost))return false;
             PendingKnife k=new PendingKnife(p,first,second,off,pair,special,now);
             if(off)s.offKnife=k;else s.mainKnife=k;
@@ -259,7 +259,7 @@ public final class RangedCombat {
         if(k.level!=p.serverLevel()||held!=k.first||k.off&&blocksOffhand(p)||k.pair&&p.getOffhandItem()!=k.second){knifePose(p,k,KNIFE_CANCEL);return null;}
         long elapsed=p.serverLevel().getGameTime()-k.start;
         if(!k.released&&elapsed>=KNIFE_RELEASE){
-            int cost=k.special?2:1;
+            int cost=k.special?KnifeTuning.BLOOD_COST:KnifeTuning.COST;
             if(!p.getAbilities().instabuild&&(RangedSupply.amount(k.first)<cost||k.pair&&RangedSupply.amount(k.second)<cost)){knifePose(p,k,KNIFE_CANCEL);return null;}
             if(!p.getAbilities().instabuild){RangedSupply.set(k.first,RangedSupply.amount(k.first)-cost);if(k.pair)RangedSupply.set(k.second,RangedSupply.amount(k.second)-cost);}
             Map<UUID,Long> hits=k.pair?RangedProjectile.pair():null;
@@ -328,14 +328,14 @@ public final class RangedCombat {
         boolean ink=kind==Kind.CROSSBOW&&empowered(stack);
         if(ink)flag(stack,EMPOWERED,false);
         boolean pistol=kind==Kind.PISTOL;
-        float damage=kind==Kind.CROSSBOW?(ink?15:11):pistol?PISTOL_DAMAGE/PELLETS:4.5f;
-        float bleed=kind==Kind.DAGGER?(special?.80f:.25f):0;
+        float damage=kind==Kind.CROSSBOW?(ink?15:11):pistol?PISTOL_DAMAGE/PELLETS:KnifeTuning.DAMAGE;
+        float bleed=kind==Kind.DAGGER?(special?KnifeTuning.BLOOD_BLEED_CHANCE:KnifeTuning.BLEED_CHANCE):0;
         Vec3 look=p.getLookAngle(),start=shotStart(p,off,pistol);
         // Do not place a projectile across an adjacent wall.
         var obstruction=p.level().clip(new net.minecraft.world.level.ClipContext(p.getEyePosition(),start,
             net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,p));
         if(obstruction.getType()!=net.minecraft.world.phys.HitResult.Type.MISS)start=p.getEyePosition();
-        float spread=kind==Kind.CROSSBOW?(aimed?.5f:3f):pistol?(aimed?10f:18f):1.7f;
+        float spread=kind==Kind.CROSSBOW?(aimed?.5f:3f):pistol?(aimed?10f:18f):KnifeTuning.SPREAD;
         Vec3 direction=aimed&&kind!=Kind.DAGGER?p.getEyePosition().add(look.scale(pistol?8:24)).subtract(start).normalize():look;
         int count=pistol?PELLETS:1;
         for(int i=0;i<count;i++){
@@ -343,7 +343,8 @@ public final class RangedCombat {
             shot.setItem(new ItemStack(kind==Kind.DAGGER?ModItems.BLOOD_THROWING_DAGGER:pistol?ModItems.PALE_BULLET:Items.ARROW));
             shot.setPos(start.x,start.y,start.z);
             if(pistol)shot.limitLifetime(PELLET_LIFETIME);
-            shot.shoot(direction.x,direction.y,direction.z,kind==Kind.DAGGER?1.7f:pistol?3.2f:2.7f,spread);
+            else if(kind==Kind.DAGGER)shot.limitLifetime(KnifeTuning.LIFETIME);
+            shot.shoot(direction.x,direction.y,direction.z,kind==Kind.DAGGER?KnifeTuning.SPEED:pistol?3.2f:2.7f,spread);
             p.serverLevel().addFreshEntity(shot);
         }
         if(pistol)muzzleFlash(p,off,false);
@@ -356,7 +357,7 @@ public final class RangedCombat {
             flag(s,EMPOWERED,true);return true;
         }
     };
-    public static final Skill BLOOD_SHOT=new Skill(TearsOfInk.id("ranged_blood_shot"),0,0,40){
+    public static final Skill BLOOD_SHOT=new Skill(TearsOfInk.id("ranged_blood_shot"),0,0,KnifeTuning.BLOOD_COOLDOWN){
         @Override public boolean activate(ServerPlayer p,SkillInput input){return RangedItem.kind(held(p,input))==Kind.DAGGER&&fire(p,input.sneaking(),false,true);}
     };
     public static final Skill WILD_SHOT=new Skill(TearsOfInk.id("ranged_wild_shot"),0,12,100){

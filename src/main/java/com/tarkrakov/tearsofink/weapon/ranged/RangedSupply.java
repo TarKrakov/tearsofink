@@ -16,7 +16,7 @@ public final class RangedSupply extends Item {
     public RangedSupply(int max) { super(new Properties().stacksTo(1)); this.max=max; }
     public static int capacity(ItemStack s) {
         if (s.getItem() instanceof RangedSupply supply) return supply.max;
-        return RangedItem.kind(s)==RangedItem.Kind.DAGGER ? 24 : 0;
+        return RangedItem.kind(s)==RangedItem.Kind.DAGGER ? KnifeTuning.CAPACITY : 0;
     }
     public static int amount(ItemStack s) {
         int max=capacity(s);
@@ -51,10 +51,9 @@ public final class RangedSupply extends Item {
     }
     public static final int FULL_REFILL_ITEMS=12;
     public record Refill(ItemStack result,int[] consume) {}
-    /** Full top-up using stacked ammo; cost is rounded up for the missing fraction.
-     * Dagger refill retains the existing one-ingot-per-occupied-cell rule. */
+    /** Stacked ammo tops up proportionally; stacked blood ingots add a fixed number of knife charges. */
     public static Refill refillPlan(Container grid) {
-        int size=grid.getContainerSize(),receiverSlot=-1,units=0,occupied=0;
+        int size=grid.getContainerSize(),receiverSlot=-1,units=0;
         ItemStack receiver=ItemStack.EMPTY;
         Item material=null;
         for(int i=0;i<size;i++){
@@ -65,7 +64,7 @@ public final class RangedSupply extends Item {
                 receiver=s;receiverSlot=i;
             }else{
                 if(material!=null&&material!=s.getItem())return null;
-                material=s.getItem();units+=s.getCount();occupied++;
+                material=s.getItem();units+=s.getCount();
             }
         }
         if(receiver.isEmpty()||units==0||amount(receiver)>=capacity(receiver))return null;
@@ -74,18 +73,19 @@ public final class RangedSupply extends Item {
         boolean dagger=RangedItem.kind(receiver)==RangedItem.Kind.DAGGER&&material==ModItems.BLOOD_INGOT;
         if(!ammo&&!dagger)return null;
         int max=capacity(receiver),missing=max-amount(receiver);
-        int needed=ammo?(missing*FULL_REFILL_ITEMS+max-1)/max:occupied;
+        int needed=ammo?(missing*FULL_REFILL_ITEMS+max-1)/max:
+            Math.min(units,(missing+KnifeTuning.REFILL_PER_INGOT-1)/KnifeTuning.REFILL_PER_INGOT);
         if(units<needed)return null;
         int[] consume=new int[size];consume[receiverSlot]=1;
         int left=needed;
         for(int i=0;i<size&&left>0;i++){
             if(i==receiverSlot||grid.getItem(i).isEmpty())continue;
-            int n=ammo?Math.min(left,grid.getItem(i).getCount()):1;
+            int n=Math.min(left,grid.getItem(i).getCount());
             consume[i]=n;left-=n;
         }
         if(left!=0)return null;
         ItemStack out=receiver.copyWithCount(1);
-        set(out,ammo?max:amount(out)+12*needed);
+        set(out,ammo?max:amount(out)+KnifeTuning.REFILL_PER_INGOT*needed);
         return new Refill(out,consume);
     }
     public static ItemStack refill(Container grid){
