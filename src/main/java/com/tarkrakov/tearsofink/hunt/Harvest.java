@@ -54,6 +54,8 @@ import java.util.UUID;
  * Павший участник не умирает — остаётся с вещами «за стеной». Перезарядка 30 мин на весь сервер (и при провале).
  */
 public final class Harvest {
+	/** Activity archived; keep registry IDs and legacy rewards for existing saves. */
+	public static final boolean ENABLED = false;
 	// ===== Настройки — крутить здесь (код → перезапуск) =====
 	public static final int COOLDOWN = 20 * 60 * 30, GATHER = 20 * 60 * 10, PREP = 20 * 30, BETWEEN = 20 * 5;
 	public static final int[] SIZES = {5, 7, 10};
@@ -88,6 +90,20 @@ public final class Harvest {
 	private Harvest() {}
 
 	public static void init() {
+		if (!ENABLED) {
+			// No raid ticks, spawning, arena boundaries or start/join commands.
+			CommandRegistrationCallback.EVENT.register((d, reg, env) -> d.register(Commands.literal("harvest")
+					.then(Commands.literal("claim").executes(c -> {
+						claim(c.getSource().getPlayerOrException());
+						return 1;
+					}))));
+			net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+				ServerPlayer p = handler.player;
+				int gifts = p.getAttachedOrCreate(GIFTS).size();
+				if (gifts > 0) p.sendSystemMessage(button(Component.translatable("harvest.tears-of-ink.claim", gifts), "/harvest claim"));
+			});
+			return;
+		}
 		ServerTickEvents.END_SERVER_TICK.register(Harvest::tick);
 		ServerLifecycleEvents.SERVER_STOPPED.register(s -> reset());
 		// участник Жатвы не умирает: остаётся с вещами «за стеной»
@@ -185,6 +201,7 @@ public final class Harvest {
 
 	// ===== Меню у Хранителя (чат с кнопками) =====
 	public static void menu(ServerPlayer p) {
+		if (!ENABLED) return;
 		com.tarkrakov.tearsofink.prologue.DiaryEntries.discover(p, "draft_harvest");
 		say(p, Component.translatable("harvest.tears-of-ink.keeper_hello"));
 		long now = p.server.getTickCount();
@@ -226,7 +243,7 @@ public final class Harvest {
 
 	// ===== Действия =====
 	static void start(ServerPlayer p, int diff, int slots) {
-		if (phase != Phase.IDLE || p.server.getTickCount() < cooldownUntil || !nearKeeper(p)) return;
+		if (!ENABLED || phase != Phase.IDLE || p.server.getTickCount() < cooldownUntil || !nearKeeper(p)) return;
 		ServerLevel lands = p.serverLevel();
 		phase = Phase.GATHER;
 		difficulty = diff;
@@ -278,7 +295,7 @@ public final class Harvest {
 	}
 
 	static void claim(ServerPlayer p) {
-		if (!nearKeeper(p)) return;
+		if (ENABLED && !nearKeeper(p)) return;
 		List<Integer> gifts = p.getAttachedOrCreate(GIFTS);
 		if (gifts.isEmpty()) return;
 		for (int g : gifts) {

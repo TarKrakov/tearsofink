@@ -151,7 +151,7 @@ public final class ModItems {
 	public static final Item INK_ECHO = register("ink_echo", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.UNCOMMON)));
 
 	// ===== Возвышение в Купели (16 ноя): ресурсы линий =====
-	/** Багряный Цветок — Кровь (Алая Жатва, позже). */
+	/** Багряный Цветок — Кровь (контракты с Кровавым охотником). */
 	public static final Item CRIMSON_FLOWER = register("crimson_flower", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)));
 	/** Символ Доблести — Шпиль (каждые 5 сложных контрактов). */
 	public static final Item VALOR_SIGIL = register("valor_sigil", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.RARE)));
@@ -216,7 +216,7 @@ public final class ModItems {
 	public static final Item SILK_THREAD = register("silk_thread", new Item(new Item.Properties()));
 	/** Сгусток крови (кровавые гусеницы, Кровосборник). */
 	public static final Item BLOOD_CLOT = register("blood_clot", new Item(new Item.Properties()));
-	/** Кристалл крови — редкая награда Жатвы и особых заказов (для усиления свойств). */
+	/** Кристалл крови — награда особых заказов (для усиления свойств). */
 	public static final Item BLOOD_CRYSTAL = register("blood_crystal", new Item(new Item.Properties().rarity(net.minecraft.world.item.Rarity.UNCOMMON)));
 	/** Чернила (чернильные гусеницы). */
 	public static final Item INK = register("ink", new Item(new Item.Properties()));

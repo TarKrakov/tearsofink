@@ -16,6 +16,15 @@ public class HarvestKeeperEntity extends SoulTraderEntity {
 	}
 
 	@Override
+	public void tick() {
+		if (!Harvest.ENABLED && !level().isClientSide) {
+			discard();
+			return;
+		}
+		super.tick();
+	}
+
+	@Override
 	protected boolean vanishes() {
 		return false;
 	}

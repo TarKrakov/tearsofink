@@ -895,8 +895,8 @@ public final class Hunt {
 		p.sendSystemMessage(Component.translatable("hunt.tears-of-ink.your_reward", contracts).withStyle(ChatFormatting.GOLD));
 		if (a.contract() && p.getUUID().equals(a.owner) && a.rank >= 1) {
 			com.tarkrakov.tearsofink.weapon.forge.AscensionFont.onContract(p, a.rank); // очки к Символу Доблести
-			// временно, до Арены: Кровавый охотник в среднем/сложном контракте — шанс на Багряный Цветок
-			if (a.type == HunterType.BLOOD && lands.random.nextFloat() < HuntTuning.TEMP_FLOWER_CHANCE)
+			// Основной источник Багряного Цветка после отключения Жатвы.
+			if (a.type == HunterType.BLOOD && lands.random.nextFloat() < HuntTuning.FLOWER_CHANCE[a.rank])
 				give(p, new ItemStack(ModItems.CRIMSON_FLOWER));
 		}
 		if (a.contract() && p.getUUID().equals(a.owner)) {
