@@ -11,22 +11,34 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-/** Preserve the food bar in the arena without refilling saturation or altering healing rates. */
+/** Sanctuary-wide food conservation, independent of the combat session or arena bounds. */
 @Mixin(FoodData.class)
 public abstract class ArenaFoodMixin {
     @Shadow private int foodLevel;
-    @Unique private int tearsofink$arenaFoodBefore = -1;
+    @Shadow private float saturationLevel;
+    @Shadow private float exhaustionLevel;
+    @Unique private int tearsofink$foodBefore = -1;
+    @Unique private float tearsofink$saturationBefore;
 
     @Inject(method = "tick", at = @At("HEAD"))
-    private void tearsofink$rememberArenaFood(Player player, CallbackInfo ci) {
-        tearsofink$arenaFoodBefore = player instanceof ServerPlayer serverPlayer
-                && PantheonCombat.preservesHunger(serverPlayer) ? foodLevel : -1;
+    private void tearsofink$rememberSanctuaryFood(Player player, CallbackInfo ci) {
+        tearsofink$foodBefore = -1;
+        if (player instanceof ServerPlayer serverPlayer && PantheonCombat.preservesHunger(serverPlayer)) {
+            tearsofink$foodBefore = foodLevel;
+            tearsofink$saturationBefore = saturationLevel;
+            // No accumulated exhaustion may consume food or saturation here.
+            exhaustionLevel = 0;
+        }
     }
 
     @Inject(method = "tick", at = @At("RETURN"))
-    private void tearsofink$preserveArenaFood(Player player, CallbackInfo ci) {
-        if (tearsofink$arenaFoodBefore >= 0)
-            foodLevel = Math.max(foodLevel, tearsofink$arenaFoodBefore);
-        tearsofink$arenaFoodBefore = -1;
+    private void tearsofink$preserveSanctuaryFood(Player player, CallbackInfo ci) {
+        if (tearsofink$foodBefore >= 0) {
+            foodLevel = Math.max(foodLevel, tearsofink$foodBefore);
+            saturationLevel = Math.max(saturationLevel, tearsofink$saturationBefore);
+            // FoodData's own natural regeneration adds exhaustion directly.
+            exhaustionLevel = 0;
+        }
+        tearsofink$foodBefore = -1;
     }
 }

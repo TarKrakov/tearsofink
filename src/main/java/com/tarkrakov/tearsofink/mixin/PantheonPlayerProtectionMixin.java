@@ -12,6 +12,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 @Mixin(Player.class)
 public abstract class PantheonPlayerProtectionMixin {
+    /** Block normal player exhaustion at its source, including between FoodData ticks. */
+    @Inject(method = "causeFoodExhaustion", at = @At("HEAD"), cancellable = true)
+    private void tearsofink$noSanctuaryExhaustion(float amount, CallbackInfo ci) {
+        if ((Object) this instanceof ServerPlayer player
+                && PantheonTemple.isTemple(player.level())) ci.cancel();
+    }
+
     @Inject(method = "dropEquipment", at = @At("HEAD"), cancellable = true)
     private void tearsofink$keepPantheonEquipment(CallbackInfo ci) {
         if (PantheonTemple.isTemple(((Player) (Object) this).level())) ci.cancel();

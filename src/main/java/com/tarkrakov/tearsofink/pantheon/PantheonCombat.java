@@ -499,9 +499,9 @@ public final class PantheonCombat {
         return player.isAlive() && !player.hasDisconnected() && (mode == GameType.SURVIVAL || mode == GameType.ADVENTURE);
     }
 
-    /** Arena only (not the outer Sanctuary hub or other dimensions). */
+    /** The entire Sanctuary, including its hub, regardless of scene or combat state. */
     public static boolean preservesHunger(ServerPlayer player) {
-        return PantheonTemple.isTemple(player.level()) && eligible(player) && inside(player);
+        return PantheonTemple.isTemple(player.level());
     }
 
     private static boolean inside(Entity entity) { return inside(entity.getX(), entity.getY(), entity.getZ()); }
