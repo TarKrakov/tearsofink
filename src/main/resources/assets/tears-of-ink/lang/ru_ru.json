@@ -1376,5 +1376,6 @@
   "equipment.tears-of-ink.ranged.blood_shot": "Кровотечение: шанс %s%% на нож",
   "equipment.tears-of-ink.ranged.blood_duration": "Длительность броска: %s с",
   "equipment.tears-of-ink.ranged.knife_refill": "Кровавый слиток восстанавливает %s зарядов на Чернильной наковальне.",
-  "equipment.tears-of-ink.ranged.ink_shot": "Усиливает следующий болт и замедляет цель."
+  "equipment.tears-of-ink.ranged.ink_shot": "Усиливает следующий болт и замедляет цель.",
+  "equipment.tears-of-ink.ranged.knife_aim_range": "Дальность: ~%s бл. · прицельно ~%s бл."
 }

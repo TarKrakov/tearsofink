@@ -1376,5 +1376,6 @@
   "equipment.tears-of-ink.ranged.blood_shot": "Bleed: %s%% chance per knife",
   "equipment.tears-of-ink.ranged.blood_duration": "Throw duration: %s s",
   "equipment.tears-of-ink.ranged.knife_refill": "Blood ingot restores %s charges at the Ink Anvil.",
-  "equipment.tears-of-ink.ranged.ink_shot": "Empowers the next bolt and slows its target."
+  "equipment.tears-of-ink.ranged.ink_shot": "Empowers the next bolt and slows its target.",
+  "equipment.tears-of-ink.ranged.knife_aim_range": "Range: ~%s blocks · aimed ~%s blocks"
 }

@@ -215,7 +215,7 @@ public final class WeaponStats {
 
         var options=Minecraft.getInstance().options;
         add(out, "ranged.fire_control", ChatFormatting.AQUA, options.keyAttack.getTranslatedKeyMessage());
-        if (!knife) add(out, "ranged.aim_control", ChatFormatting.GRAY, options.keyUse.getTranslatedKeyMessage());
+        add(out, "ranged.aim_control", ChatFormatting.GRAY, options.keyUse.getTranslatedKeyMessage());
         if (pistol || knife) {
             add(out, "ranged.offhand_control", ChatFormatting.GRAY, RangedClient.offhandKeyLabel(), t("offkey",SkillKeys.weaponKeyLabel()));
             if (pistol) {
@@ -229,7 +229,8 @@ public final class WeaponStats {
             } else {
                 add(out, "ranged.blood_shot", ChatFormatting.RED, fmt(KnifeTuning.BLOOD_BLEED_CHANCE*100));
                 add(out, "ranged.blood_duration", ChatFormatting.GRAY, fmt(RangedCombat.KNIFE_BLOOD_DURATION/20.0));
-                add(out, "ranged.range", ChatFormatting.GRAY, fmt(KnifeTuning.SPEED*KnifeTuning.LIFETIME));
+                add(out, "ranged.knife_aim_range", ChatFormatting.GRAY, fmt(KnifeTuning.SPEED*KnifeTuning.LIFETIME), fmt(KnifeTuning.AIM_DISTANCE));
+                add(out, "ranged.spread", ChatFormatting.GRAY, fmt(KnifeTuning.SPREAD), fmt(KnifeTuning.AIM_SPREAD));
                 add(out, "ranged.knife_refill", ChatFormatting.GRAY, KnifeTuning.REFILL_PER_INGOT);
             }
         } else add(out, "ranged.ink_shot", ChatFormatting.GRAY);

@@ -10,4 +10,9 @@ public final class KnifeTuning {
     // Initial speed in blocks/tick, vanilla projectile inaccuracy, maximum flight ticks.
     public static final float SPEED = 1.5f, SPREAD = 1.7f;
     public static final int LIFETIME = 10;
+    // Aimed flight: longer, flatter and converges to the eye ray; ordinary throws unchanged.
+    public static final float AIM_SPEED = 2.2f, AIM_SPREAD = .2f;
+    public static final int AIM_LIFETIME = 12;
+    public static final double AIM_DISTANCE = 24, AIM_GRAVITY_COMPENSATION = .03;
+    public static final float AIM_FOV = .88f;
 }

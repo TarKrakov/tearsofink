@@ -55,22 +55,29 @@ public abstract class ItemInHandRendererMixin {
         if (!tearsofink$inner && com.tarkrakov.tearsofink.client.KnifeAnims.isKnife(stack)) {
             var side=hand==InteractionHand.MAIN_HAND?player.getMainArm():player.getMainArm().getOpposite();
             var motion=com.tarkrakov.tearsofink.client.KnifeAnims.motion(player,side);
+            float aim=hand==InteractionHand.MAIN_HAND?com.tarkrakov.tearsofink.client.RangedClient.knifeAimAmount(player,partialTicks):0;
             if(motion!=null){
-                if(motion.hidden()){
+                // Preserve the author's throw arc; blend the aimed idle in/out at clip boundaries.
+                float edge=Math.min(motion.time(),motion.clip().length()-motion.time());
+                float w=1-net.minecraft.util.Mth.clamp(edge/.15f,0,1);
+                aim*=w*w*(3-2*w);
+            }
+            float m=side==net.minecraft.world.entity.HumanoidArm.LEFT?-1:1;
+            poseStack.pushPose();
+            try {
+                poseStack.translate(-m*.23*aim,.10*aim,-.12*aim);
+                if(motion!=null&&motion.hidden()){
                     var key=com.tarkrakov.tearsofink.client.combat.WeaponAnims.sample(motion.clip(),motion.time());
-                    float m=side==net.minecraft.world.entity.HumanoidArm.LEFT?-1:1;
-                    poseStack.pushPose();
-                    try{
-                        poseStack.translate(m*key.pos().x/16f,key.pos().y/16f,key.pos().z/16f);
-                        ((ItemInHandRendererInvoker)this).tearsofink$renderPlayerArm(poseStack,buffer,light,0,0,side);
-                    }finally{poseStack.popPose();}
+                    poseStack.translate(m*key.pos().x/16f,key.pos().y/16f,key.pos().z/16f);
+                    ((ItemInHandRendererInvoker)this).tearsofink$renderPlayerArm(poseStack,buffer,light,0,0,side);
                 }else{
+                    // Never let repeated vanilla itemUsed/equip resets shake a held knife.
                     tearsofink$inner=true;
                     try{((ItemInHandRendererInvoker)this).tearsofink$renderArmWithItem(player,partialTicks,pitch,hand,0,stack,0,poseStack,buffer,light);}
                     finally{tearsofink$inner=false;}
                 }
-                ci.cancel();return;
-            }
+            }finally{poseStack.popPose();}
+            ci.cancel();return;
         }
         if (!tearsofink$inner && com.tarkrakov.tearsofink.client.PistolAnims.isPistol(stack)) {
             var side = hand==InteractionHand.MAIN_HAND?player.getMainArm():player.getMainArm().getOpposite();

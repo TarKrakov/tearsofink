@@ -46,8 +46,10 @@ public abstract class MinecraftAttackMixin {
 
 	@Inject(method = "startUseItem", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$releaseBeforeUsingNewLoadout(CallbackInfo ci) {
+        Minecraft mc=(Minecraft)(Object)this;
+        if (SkillKeys.suppressHeldUse(mc)) {RangedClient.beginUseAttempt();ci.cancel();return;}
+        if (RangedClient.holdingKnifeAim(mc)) {ci.cancel();return;}
         RangedClient.beginUseAttempt();
-		if (SkillKeys.suppressHeldUse((Minecraft) (Object) this)) ci.cancel();
 	}
 
     // Vanilla tries entity and block interaction first. Only its fallback to

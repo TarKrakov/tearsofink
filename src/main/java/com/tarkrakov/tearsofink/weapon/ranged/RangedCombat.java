@@ -47,9 +47,9 @@ public final class RangedCombat {
     private static final class State { final Job main=new Job(), off=new Job(); long nextMain, nextOff; double slow; boolean aim, hadPistol; ItemStack aimStack=ItemStack.EMPTY; PendingKnife mainKnife, offKnife; }
     private static final class PendingKnife {
         final net.minecraft.server.level.ServerLevel level; final ItemStack first, second;
-        final boolean off, pair, special; final long start; boolean released, returned;
-        PendingKnife(ServerPlayer p, ItemStack first, ItemStack second, boolean off, boolean pair, boolean special, long start){
-            this.level=p.serverLevel();this.first=first;this.second=second;this.off=off;this.pair=pair;this.special=special;this.start=start;
+        final boolean off, pair, special, aimed; final long start; boolean released, returned;
+        PendingKnife(ServerPlayer p, ItemStack first, ItemStack second, boolean off, boolean pair, boolean special, boolean aimed, long start){
+            this.level=p.serverLevel();this.first=first;this.second=second;this.off=off;this.pair=pair;this.special=special;this.aimed=aimed;this.start=start;
         }
     }
     private RangedCombat(){}
@@ -101,7 +101,7 @@ public final class RangedCombat {
     }
     public static boolean canAim(Player p){
         Kind k=RangedItem.kind(p.getMainHandItem());
-        return k==Kind.CROSSBOW||k==Kind.PISTOL;
+        return k==Kind.CROSSBOW||k==Kind.PISTOL||k==Kind.DAGGER&&ModDimensions.hasLandsRules(p.level());
     }
     private static void broadcastAim(ServerPlayer p,boolean active){
         AimPose packet=new AimPose(p.getId(),active);
@@ -226,7 +226,7 @@ public final class RangedCombat {
         if(kind==Kind.DAGGER){
             int cost=special?KnifeTuning.BLOOD_COST:KnifeTuning.COST;
             if(!p.getAbilities().instabuild&&(RangedSupply.amount(first)<cost||pair&&RangedSupply.amount(second)<cost))return false;
-            PendingKnife k=new PendingKnife(p,first,second,off,pair,special,now);
+            PendingKnife k=new PendingKnife(p,first,second,off,pair,special,aimed&&!off,now);
             if(off)s.offKnife=k;else s.mainKnife=k;
             int duration=special?KNIFE_BLOOD_DURATION:KNIFE_DURATION;
             if(off)s.nextOff=now+duration;else s.nextMain=now+duration;
@@ -261,8 +261,8 @@ public final class RangedCombat {
             if(!p.getAbilities().instabuild&&(RangedSupply.amount(k.first)<cost||k.pair&&RangedSupply.amount(k.second)<cost)){knifePose(p,k,KNIFE_CANCEL);return null;}
             if(!p.getAbilities().instabuild){RangedSupply.set(k.first,RangedSupply.amount(k.first)-cost);if(k.pair)RangedSupply.set(k.second,RangedSupply.amount(k.second)-cost);}
             Map<UUID,Long> hits=k.pair?RangedProjectile.pair():null;
-            launch(p,k.first,Kind.DAGGER,k.off,false,k.special,hits);
-            if(k.pair)launch(p,k.second,Kind.DAGGER,true,false,k.special,hits);
+            launch(p,k.first,Kind.DAGGER,k.off,k.aimed,k.special,hits);
+            if(k.pair)launch(p,k.second,Kind.DAGGER,true,k.aimed,k.special,hits);
             k.released=true;p.getInventory().setChanged();
             knifePose(p,k,KNIFE_FLY);
             p.level().playSound(null,p.blockPosition(),SoundEvents.TRIDENT_THROW.value(),SoundSource.PLAYERS,.85f,1f);
@@ -333,19 +333,35 @@ public final class RangedCombat {
         var obstruction=p.level().clip(new net.minecraft.world.level.ClipContext(p.getEyePosition(),start,
             net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,p));
         if(obstruction.getType()!=net.minecraft.world.phys.HitResult.Type.MISS)start=p.getEyePosition();
-        float spread=kind==Kind.CROSSBOW?(aimed?.5f:3f):pistol?(aimed?PistolTuning.AIM_SPREAD:PistolTuning.HIP_SPREAD):KnifeTuning.SPREAD;
-        Vec3 direction=aimed&&kind!=Kind.DAGGER?p.getEyePosition().add(look.scale(pistol?PistolTuning.AIM_DISTANCE:24)).subtract(start).normalize():look;
+        float spread=kind==Kind.CROSSBOW?(aimed?.5f:3f):pistol?(aimed?PistolTuning.AIM_SPREAD:PistolTuning.HIP_SPREAD):(aimed?KnifeTuning.AIM_SPREAD:KnifeTuning.SPREAD);
+        Vec3 direction=aimed?(kind==Kind.DAGGER?aimedKnifeDirection(p,start,look):p.getEyePosition().add(look.scale(pistol?PistolTuning.AIM_DISTANCE:24)).subtract(start).normalize()):look;
         int count=pistol?PistolTuning.PELLETS:1;
         for(int i=0;i<count;i++){
             RangedProjectile shot=new RangedProjectile(p.serverLevel(),p,damage,bleed,ink,hits);
             shot.setItem(new ItemStack(kind==Kind.DAGGER?ModItems.BLOOD_THROWING_DAGGER:pistol?ModItems.PALE_BULLET:Items.ARROW));
             shot.setPos(start.x,start.y,start.z);
             if(pistol)shot.limitLifetime(PistolTuning.PELLET_LIFETIME);
-            else if(kind==Kind.DAGGER)shot.limitLifetime(KnifeTuning.LIFETIME);
-            shot.shoot(direction.x,direction.y,direction.z,kind==Kind.DAGGER?KnifeTuning.SPEED:pistol?PistolTuning.SPEED:2.7f,spread);
+            else if(kind==Kind.DAGGER)shot.limitLifetime(aimed?KnifeTuning.AIM_LIFETIME:KnifeTuning.LIFETIME);
+            shot.shoot(direction.x,direction.y,direction.z,kind==Kind.DAGGER?(aimed?KnifeTuning.AIM_SPEED:KnifeTuning.SPEED):pistol?PistolTuning.SPEED:2.7f,spread);
             p.serverLevel().addFreshEntity(shot);
         }
         if(pistol)muzzleFlash(p,off,false);
+    }
+    /** Converge on the visible crosshair point, with a small ballistic correction.
+     * Collision, gravity and damage still belong to the real projectile. */
+    private static Vec3 aimedKnifeDirection(ServerPlayer p,Vec3 start,Vec3 look){
+        Vec3 eye=p.getEyePosition(),end=eye.add(look.scale(KnifeTuning.AIM_DISTANCE));
+        var block=p.level().clip(new net.minecraft.world.level.ClipContext(eye,end,
+            net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,p));
+        if(block.getType()!=net.minecraft.world.phys.HitResult.Type.MISS)end=block.getLocation();
+        Vec3 ray=end.subtract(eye);
+        var hit=net.minecraft.world.entity.projectile.ProjectileUtil.getEntityHitResult(p,eye,end,
+            p.getBoundingBox().expandTowards(ray).inflate(1),e->e instanceof LivingEntity&&e.isPickable()&&!e.isSpectator(),eye.distanceToSqr(end));
+        if(hit!=null)end=hit.getLocation();
+        Vec3 delta=end.subtract(start);
+        if(delta.lengthSqr()<.04||delta.dot(look)<=0)return look;
+        double time=Math.min(KnifeTuning.AIM_LIFETIME,delta.length()/KnifeTuning.AIM_SPEED);
+        return delta.add(0,KnifeTuning.AIM_GRAVITY_COMPENSATION*time*time*.5,0).normalize();
     }
     private static ItemStack held(ServerPlayer p,SkillInput input){return input.sneaking()?p.getOffhandItem():p.getMainHandItem();}
     public static final Skill INK_SHOT=new Skill(TearsOfInk.id("ranged_ink_shot"),8,0,60){
@@ -356,7 +372,7 @@ public final class RangedCombat {
         }
     };
     public static final Skill BLOOD_SHOT=new Skill(TearsOfInk.id("ranged_blood_shot"),0,0,KnifeTuning.BLOOD_COOLDOWN){
-        @Override public boolean activate(ServerPlayer p,SkillInput input){return RangedItem.kind(held(p,input))==Kind.DAGGER&&fire(p,input.sneaking(),false,true);}
+        @Override public boolean activate(ServerPlayer p,SkillInput input){return RangedItem.kind(held(p,input))==Kind.DAGGER&&fire(p,input.sneaking(),!input.sneaking(),true);}
     };
     public static final Skill WILD_SHOT=new Skill(TearsOfInk.id("ranged_wild_shot"),0,PistolTuning.WILD_SOUL,PistolTuning.WILD_COOLDOWN){
         @Override public boolean activate(ServerPlayer p,SkillInput input){

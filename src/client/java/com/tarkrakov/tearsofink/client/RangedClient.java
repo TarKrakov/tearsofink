@@ -22,6 +22,14 @@ public final class RangedClient {
     private static KeyMapping off;
     public static Component offhandKeyLabel(){return off==null?Component.translatable("key.mouse.4"):off.getTranslatedKeyMessage();}
     private static boolean sentAim, aimRequested;
+    private static float knifeAimPrevious, knifeAimCurrent;
+    /** Hold an already accepted knife aim until key-up; do not restart vanilla use/equip. */
+    public static boolean holdingKnifeAim(Minecraft mc){return mc.player!=null&&KnifeAnims.isKnife(mc.player.getMainHandItem())&&localAim(mc);}
+    public static float knifeAimAmount(Player p,float partial){
+        if(p!=Minecraft.getInstance().player||!KnifeAnims.isKnife(p.getMainHandItem()))return 0;
+        float x=net.minecraft.util.Mth.lerp(net.minecraft.util.Mth.clamp(partial,0,1),knifeAimPrevious,knifeAimCurrent);
+        return x*x*(3-2*x);
+    }
     private static ItemStack lastMain=ItemStack.EMPTY;
     private static final Map<Integer,Long> REMOTE_AIM=new HashMap<>();
     private static RangedCombat.ReloadView reload=new RangedCombat.ReloadView(0,0,0,0);
@@ -55,7 +63,7 @@ public final class RangedClient {
         boolean right=p.getMainArm()==HumanoidArm.RIGHT;
         var main=right?model.rightArm:model.leftArm;
         var second=right?model.leftArm:model.rightArm;
-        main.xRot=-(float)Math.PI/2+model.head.xRot;
+        main.xRot=-(RangedItem.kind(p.getMainHandItem())==RangedItem.Kind.DAGGER?1.1f:(float)Math.PI/2)+model.head.xRot;
         main.yRot=model.head.yRot+(right?-.14f:.14f);
         main.zRot=0;
         if(RangedCombat.blocksOffhand(p)||aimsHand(p,true)){
@@ -73,9 +81,12 @@ public final class RangedClient {
             else REMOTE_AIM.remove(v.entity());
         }));
         ClientPlayNetworking.registerGlobalReceiver(RangedCombat.ReloadView.TYPE,(v,ctx)->ctx.client().execute(()->reload=v));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler,mc)->{REMOTE_AIM.clear();sentAim=false;aimRequested=false;lastMain=ItemStack.EMPTY;reload=new RangedCombat.ReloadView(0,0,0,0);});
+        ClientPlayConnectionEvents.DISCONNECT.register((handler,mc)->{REMOTE_AIM.clear();sentAim=false;aimRequested=false;knifeAimPrevious=knifeAimCurrent=0;lastMain=ItemStack.EMPTY;reload=new RangedCombat.ReloadView(0,0,0,0);});
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
             if(!mc.options.keyUse.isDown()||mc.screen!=null||mc.player==null||!RangedCombat.canAim(mc.player)||SkillKeys.suppressHeldUse(mc))aimRequested=false;
+            knifeAimPrevious=knifeAimCurrent;
+            if(mc.player==null||!KnifeAnims.isKnife(mc.player.getMainHandItem()))knifeAimPrevious=knifeAimCurrent=0;
+            else knifeAimCurrent=net.minecraft.util.Mth.clamp(knifeAimCurrent+(holdingKnifeAim(mc)?.25f:-.25f),0,1);
             if(mc.player!=null){syncAim(mc,mc.player.tickCount%20==0);if(mc.player.tickCount%40==0)REMOTE_AIM.values().removeIf(t->t<mc.player.level().getGameTime());}
             while(off.consumeClick()){if(mc.screen==null)fire(true);}
         });
