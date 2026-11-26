@@ -52,7 +52,8 @@ public final class RangedClient {
         sentAim=now;lastMain=main;
     }
     public static boolean aimsHand(Player p,boolean offHand){
-        return aiming(p)&&(!offHand||RangedItem.kind(p.getMainHandItem())==RangedItem.Kind.PISTOL&&RangedItem.kind(p.getOffhandItem())==RangedItem.Kind.PISTOL);
+        RangedItem.Kind main=RangedItem.kind(p.getMainHandItem());
+        return aiming(p)&&(!offHand||(main==RangedItem.Kind.PISTOL||main==RangedItem.Kind.DAGGER)&&RangedItem.kind(p.getOffhandItem())==main);
     }
     /** Temporary F5 stance only; the final art uses authored clips. */
     public static void pose(HumanoidModel<?> model,Player p){
