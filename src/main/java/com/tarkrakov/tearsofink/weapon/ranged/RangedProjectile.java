@@ -30,6 +30,8 @@ import java.util.UUID;
 /** Server-owned transient projectile, no pickup. Members of one accepted volley share a hit ledger. */
 public final class RangedProjectile extends ThrowableItemProjectile {
     private float damage, bleed;
+    private RangedShotPerks perks=RangedShotPerks.NONE;
+    void setPerks(RangedShotPerks value){perks=value;}
     private boolean slow;
     private int lifetime=100;
     private Map<UUID,Long> pairHits;
@@ -96,10 +98,13 @@ public final class RangedProjectile extends ThrowableItemProjectile {
         if(companion) target.invulnerableTime=0;
         Vec3 head=crossbowBolt()?CrossbowHeadshots.contact(this,target,collisionStart,collisionEnd):null;
         float finalDamage=head!=null?damage*CrossbowTuning.HEADSHOT_MULTIPLIER:damage;
+        if(com.tarkrakov.tearsofink.world.ModDimensions.hasLandsRules(level))finalDamage=perks.damage(p,target,finalDamage);
+        float before=target.getHealth();
         boolean accepted;
         try { accepted=target.hurt(damageSources().thrown(this,p),finalDamage); }
         finally { if(companion) target.invulnerableTime=Math.max(old,target.invulnerableTime); }
         if(!accepted) return;
+        if(com.tarkrakov.tearsofink.world.ModDimensions.hasLandsRules(level))perks.afterHit(p,Math.max(0,before-target.getHealth()));
         if(head!=null){
             level.sendParticles(ParticleTypes.CRIT,head.x,head.y,head.z,10,.12,.12,.12,.12);
             p.playNotifySound(SoundEvents.PLAYER_ATTACK_CRIT,SoundSource.PLAYERS,.9f,1.4f);

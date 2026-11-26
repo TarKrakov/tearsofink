@@ -52,7 +52,9 @@ public enum Awakening {
 	/** Урон приёмов. */
 	EDGE("edge", false, 0.10f, 0.18f, 0.25f),
 	/** Замедление от удара связки (тики). */
-	VISCOUS("viscous", false, 15, 25, 35);
+	VISCOUS("viscous", false, 15, 25, 35),
+    /** Ranged-only: lower projectile inaccuracy, not extra range or projectiles. */
+    PRECISION("precision", false, .08f, .14f, .20f);
 
 	// ===== Общие настройки =====
 	/** Свойство чужой линии работает на 60%. */
@@ -90,7 +92,15 @@ public enum Awakening {
 
 	/** «Впитывание» нельзя установить на охотничье/магическое оружие, даже чужой линией. */
 	public static boolean allowedOn(ItemStack weapon, Awakening awakening) {
-		return awakening != ABSORB || weapon.getItem() instanceof OrdinaryWeaponItem;
+		var kind=com.tarkrakov.tearsofink.weapon.ranged.RangedItem.kind(weapon);
+        if(kind!=null) return switch(awakening) {
+            case BLOODLETTING, THIRST -> kind==com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.DAGGER;
+            case THRIFT -> kind==com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.CROSSBOW;
+            case ABSORB, VISCOUS -> false;
+            default -> true;
+        };
+        if(awakening==PRECISION)return false;
+        return awakening != ABSORB || weapon.getItem() instanceof OrdinaryWeaponItem;
 	}
 
 	/** Подбор пробуждения с учётом предмета: запрет действует до траты реагентов. */
@@ -159,6 +169,7 @@ public enum Awakening {
 
 	/** Линия оружия «кровь» (иначе — Чернила: Шпиль и Чернила). */
 	public static boolean bloodWeapon(ItemStack stack) {
+		if (stack.getItem() instanceof com.tarkrakov.tearsofink.weapon.ranged.RangedItem r) return r.kind==com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.DAGGER;
 		if (stack.getItem() instanceof ArsenalWeaponItem a) return a.blood();
 		if (stack.getItem() instanceof OrdinaryWeaponItem o) return o.line() == HunterType.BLOOD;
 		if (stack.getItem() instanceof HunterWeaponItem) return HunterWeaponItem.line(stack) == HunterType.BLOOD;
@@ -174,11 +185,29 @@ public enum Awakening {
 		for (int i = 0; i < active; i++) {
 			Slot s = all.get(i);
 			if (s == null || s.awakening() != a) continue;
-			float v = a.power[s.level() - 1] * (a.blood == bloodWeapon(stack) ? 1f : CROSS_LINE);
+			float v = a.value(stack,s.level());
 			best = Math.max(best, v);
 		}
 		return best;
 	}
+
+    /** Preview a single rolled slot even before it is installed. */
+    public float value(ItemStack stack,int level){
+        return power[Math.clamp(level,1,MAX_LEVEL)-1]*(blood==bloodWeapon(stack)?1f:CROSS_LINE);
+    }
+
+    /** Shared descriptions for pending and installed properties. */
+    public Component description(ItemStack stack,int level){
+        float v=value(stack,level);
+        double n=this==VISCOUS?v/20.0:v*100.0;
+        String formatted=String.format(java.util.Locale.ROOT,"%.2f",n).replaceAll("0+$","").replaceAll("\\.$","");
+        String key="equipment.tears-of-ink.awakening."+id;
+        boolean ranged=com.tarkrakov.tearsofink.weapon.ranged.RangedItem.kind(stack)!=null;
+        if(ranged&&this==THIRST)key+=".ranged";
+        if(ranged&&this==BLOODLETTING)key+=".ranged";
+        if(this==FLOW)key+=".ability";
+        return Component.translatable(key,formatted).withStyle(ChatFormatting.GRAY);
+    }
 
 	// ===== Действие =====
 	public static float costMult(@Nullable ItemStack weapon) {

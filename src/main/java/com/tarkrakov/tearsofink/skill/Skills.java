@@ -161,6 +161,10 @@ public final class Skills {
 		boolean creative = player.getAbilities().instabuild;
 		// оружие приёма (Shift+R — левое) и его пробуждения: Скупость — дешевле, Поток — короче перезарядка
 		ItemStack gearWeapon = weaponOf(player, skill);
+        ItemStack selected=input.sneaking()?player.getOffhandItem():player.getMainHandItem();
+        if(selected.getItem() instanceof com.tarkrakov.tearsofink.weapon.ranged.RangedItem r&&r.ability()==skill)gearWeapon=selected;
+        boolean ranged=gearWeapon!=null&&gearWeapon.getItem() instanceof com.tarkrakov.tearsofink.weapon.ranged.RangedItem;
+        float rangedCooldown=com.tarkrakov.tearsofink.weapon.forge.Awakening.cooldownMult(gearWeapon);
 		float costMult = com.tarkrakov.tearsofink.weapon.forge.Awakening.costMult(gearWeapon);
 		float inkCost = skill.inkCost() * costMult, healthCost = skill.healthCost() * costMult;
 		// Ранги Пути Чернил усиливают мобильность, но не снижают цену охотничьих приёмов.
@@ -203,12 +207,13 @@ public final class Skills {
 				baseCooldown = com.tarkrakov.tearsofink.ink.InkTuning.MARKED_DASH_COOLDOWN;
 		}
 		int duration = Math.round(baseCooldown
-				* com.tarkrakov.tearsofink.weapon.forge.Awakening.cooldownMult(gearWeapon));
+				* (ranged?rangedCooldown:com.tarkrakov.tearsofink.weapon.forge.Awakening.cooldownMult(gearWeapon)));
 		cooldowns.put(skill.id(), now + duration);
 		COOLDOWN_LENGTHS.computeIfAbsent(player.getUUID(), k -> new HashMap<>()).put(skill.id(), duration);
 		if (gearWeapon != null) { // приёмы оружия тупят клинок (Gear) и открывают окно «Разящего приёма»
-			com.tarkrakov.tearsofink.weapon.forge.Gear.wear(player, gearWeapon, com.tarkrakov.tearsofink.weapon.forge.Gear.WEAR_ABILITY);
-			com.tarkrakov.tearsofink.weapon.forge.Awakening.abilityUsed(player);
+			if(!ranged||com.tarkrakov.tearsofink.weapon.ranged.RangedItem.kind(gearWeapon)==com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.CROSSBOW)
+                com.tarkrakov.tearsofink.weapon.forge.Gear.wear(player, gearWeapon, com.tarkrakov.tearsofink.weapon.forge.Gear.WEAR_ABILITY);
+            if(!ranged)com.tarkrakov.tearsofink.weapon.forge.Awakening.abilityUsed(player);
 		}
 		if (!creative) {
 			InkData fresh = InkPowers.get(player);

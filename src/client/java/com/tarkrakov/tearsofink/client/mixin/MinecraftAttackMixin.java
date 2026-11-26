@@ -48,7 +48,7 @@ public abstract class MinecraftAttackMixin {
 	private void tearsofink$releaseBeforeUsingNewLoadout(CallbackInfo ci) {
         Minecraft mc=(Minecraft)(Object)this;
         if (SkillKeys.suppressHeldUse(mc)) {RangedClient.beginUseAttempt();ci.cancel();return;}
-        if (RangedClient.holdingKnifeAim(mc)) {ci.cancel();return;}
+        if (RangedClient.holdingKnifeAim(mc) && !(player.isShiftKeyDown() && com.tarkrakov.tearsofink.weapon.forge.AscensionFont.clientInFont.test(player))) {ci.cancel();return;}
         RangedClient.beginUseAttempt();
 	}
 
@@ -58,6 +58,8 @@ public abstract class MinecraftAttackMixin {
         target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;useItem(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
     private InteractionResult tearsofink$aimAfterInteraction(MultiPlayerGameMode mode, Player actor, InteractionHand hand, Operation<InteractionResult> original) {
         if(hand==InteractionHand.MAIN_HAND&&RangedItem.kind(actor.getMainHandItem())!=null){
+            if(actor.isShiftKeyDown()&&com.tarkrakov.tearsofink.weapon.forge.AscensionFont.clientInFont.test(actor))
+                return original.call(mode,actor,hand);
             RangedClient.aimAfterInteraction((Minecraft)(Object)this);
             return InteractionResult.CONSUME;
         }

@@ -87,7 +87,8 @@ public final class Gear {
 
 	/** Наше оружие со ступенями и заточкой. */
 	public static boolean ours(ItemStack stack) {
-		return stack.getItem() instanceof InkGreatswordItem;
+		return stack != null && (stack.getItem() instanceof InkGreatswordItem
+                || stack.getItem() instanceof com.tarkrakov.tearsofink.weapon.ranged.RangedItem);
 	}
 
 	public static int tier(ItemStack stack) {
@@ -169,6 +170,14 @@ public final class Gear {
 	/** Wave uses the existing playerAttack DamageSource for blocking and kill attribution.
 	 * Preserve its provenance even if the caster switches hands before impact. */
 	private static final ThreadLocal<DamageSource> MOD_WAVE = new ThreadLocal<>();
+    private static final ThreadLocal<DamageSource> RANGED_HIT = new ThreadLocal<>();
+
+    /** RangedShotPerks already applies the firing weapon's snapshot, not the current hand. */
+    public static boolean hurtRanged(LivingEntity target, DamageSource source, float damage) {
+        DamageSource old=RANGED_HIT.get(); RANGED_HIT.set(source);
+        try { return target.hurt(source,damage); }
+        finally { if(old==null)RANGED_HIT.remove();else RANGED_HIT.set(old); }
+    }
 
 	public static boolean hurtModWave(LivingEntity target, DamageSource source, float damage) {
 		DamageSource previous = MOD_WAVE.get();
@@ -215,6 +224,8 @@ public final class Gear {
 			return amount * (float) EquipmentAffinity.multiplier(lands, true);
 		}
 
+		if (RANGED_HIT.get() == source || direct instanceof com.tarkrakov.tearsofink.weapon.ranged.RangedProjectile)
+			return amount * (float) EquipmentAffinity.multiplier(lands, true);
 		boolean wave = MOD_WAVE.get() == source;
 		boolean melee = direct == user && source.is(DamageTypes.PLAYER_ATTACK);
 		ItemStack weapon = held;

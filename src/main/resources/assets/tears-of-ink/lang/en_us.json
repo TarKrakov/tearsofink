@@ -1379,5 +1379,13 @@
   "equipment.tears-of-ink.ranged.headshot": "Headshot: ×%s damage",
   "equipment.tears-of-ink.ranged.headshot_damage": "Headshot damage: %s HP / ink %s HP",
   "equipment.tears-of-ink.ranged.ink_shot": "Empowers the next bolt and slows its target.",
-  "equipment.tears-of-ink.ranged.knife_aim_range": "Range: ~%s blocks · aimed ~%s blocks"
+  "equipment.tears-of-ink.ranged.knife_aim_range": "Range: ~%s blocks · aimed ~%s blocks",
+  "awakening.tears-of-ink.precision": "Precision",
+  "equipment.tears-of-ink.awakening.precision": "−%s%% projectile inaccuracy",
+  "equipment.tears-of-ink.awakening.thirst.ranged": "Healing: %s%% of actual health lost",
+  "equipment.tears-of-ink.awakening.bloodletting.ranged": "+%s percentage points to knife bleed chance",
+  "equipment.tears-of-ink.awakening.flow.ability": "−%s%% ability cooldown",
+  "equipment.tears-of-ink.ranged.sharp_wear": "Wear: shot −%s · technique −%s",
+  "altar.tears-of-ink.incompatible": "Incompatible with this weapon",
+  "altar.tears-of-ink.foreign": "Foreign line: 60% power (included)"
 }

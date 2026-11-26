@@ -6,6 +6,8 @@ import com.tarkrakov.tearsofink.weapon.forge.CursedAltarMenu;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import java.util.ArrayList;
+import java.util.List;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -99,9 +101,34 @@ public class CursedAltarScreen extends AbstractContainerScreen<CursedAltarMenu> 
 		g.blit(BACKGROUND, leftPos, topPos, 0, 0, imageWidth, imageHeight);
 	}
 
+    private void renderPropertyTooltip(GuiGraphics g,int x,int y){
+        ItemStack w=menu.weapon();
+        if(w.isEmpty())return;
+        Awakening.Slot slot=null;
+        int pending=menu.pending();
+        if(pending>=0&&pending<Awakening.values().length&&isHovering(34,59,136,14,x,y))
+            slot=new Awakening.Slot(Awakening.values()[pending],menu.pendingLevel());
+        else for(int i=0;i<3;i++){
+            if(slotButtons[i].visible&&isHovering(34,16+i*14,136,13,x,y)){slot=Awakening.get(w,i);break;}
+        }
+        if(slot==null)return;
+        Awakening a=slot.awakening();
+        List<Component> lines=new ArrayList<>();
+        lines.add(Component.translatable("awakening.tears-of-ink."+a.id).append(" ").append(Component.translatable("awakening.tears-of-ink.level."+slot.level())).withStyle(a.blood?ChatFormatting.RED:ChatFormatting.LIGHT_PURPLE));
+        if(!Awakening.allowedOn(w,a))lines.add(Component.translatable("altar.tears-of-ink.incompatible").withStyle(ChatFormatting.GRAY));
+        else {
+            lines.add(a.description(w,slot.level()));
+            if(a.blood!=Awakening.bloodWeapon(w))lines.add(Component.translatable("altar.tears-of-ink.foreign").withStyle(ChatFormatting.GRAY));
+        }
+        List<net.minecraft.util.FormattedCharSequence> wrapped=new ArrayList<>();
+        for(Component line:lines)wrapped.addAll(font.split(line,Math.max(48,Math.min(200,width-24))));
+        g.renderTooltip(font,wrapped,x,y);
+    }
+
 	@Override
 	public void render(GuiGraphics g, int mouseX, int mouseY, float partialTick) {
 		super.render(g, mouseX, mouseY, partialTick);
 		renderTooltip(g, mouseX, mouseY);
+        renderPropertyTooltip(g,mouseX,mouseY);
 	}
 }

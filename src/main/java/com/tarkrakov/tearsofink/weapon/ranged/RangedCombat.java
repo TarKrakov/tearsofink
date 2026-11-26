@@ -380,18 +380,21 @@ public final class RangedCombat {
         boolean ink=kind==Kind.CROSSBOW&&empowered(stack);
         if(ink)flag(stack,EMPOWERED,false);
         boolean pistol=kind==Kind.PISTOL;
+        RangedShotPerks perks=RangedShotPerks.capture(stack,ink||special);
         float damage=kind==Kind.CROSSBOW?(ink?CrossbowTuning.INK_DAMAGE:CrossbowTuning.DAMAGE):pistol?PistolTuning.DAMAGE/PistolTuning.PELLETS:KnifeTuning.DAMAGE;
-        float bleed=kind==Kind.DAGGER?(special?KnifeTuning.BLOOD_BLEED_CHANCE:KnifeTuning.BLEED_CHANCE):0;
+        float bleed=kind==Kind.DAGGER?Math.min(1f,(special?KnifeTuning.BLOOD_BLEED_CHANCE:KnifeTuning.BLEED_CHANCE)+perks.bleed()):0;
         Vec3 look=p.getLookAngle(),start=kind==Kind.CROSSBOW?p.getEyePosition().add(0,-.15,0):shotStart(p,off,pistol);
         // Do not place a projectile across an adjacent wall.
         var obstruction=p.level().clip(new net.minecraft.world.level.ClipContext(p.getEyePosition(),start,
             net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,p));
         if(obstruction.getType()!=net.minecraft.world.phys.HitResult.Type.MISS)start=p.getEyePosition();
         float spread=kind==Kind.CROSSBOW?(aimed?.5f:3f):pistol?(aimed?PistolTuning.AIM_SPREAD:PistolTuning.HIP_SPREAD):(aimed?KnifeTuning.AIM_SPREAD:KnifeTuning.SPREAD);
+        spread*=1-perks.precision();
         Vec3 direction=aimed?(kind==Kind.DAGGER?aimedKnifeDirection(p,start,look):p.getEyePosition().add(look.scale(pistol?PistolTuning.AIM_DISTANCE:24)).subtract(start).normalize()):look;
         int count=pistol?PistolTuning.PELLETS:1;
         for(int i=0;i<count;i++){
             RangedProjectile shot=new RangedProjectile(p.serverLevel(),p,damage,bleed,ink,hits);
+            shot.setPerks(perks);
             shot.setItem(new ItemStack(kind==Kind.DAGGER?ModItems.BLOOD_THROWING_DAGGER:pistol?ModItems.PALE_BULLET:ink?ModItems.INK_CROSSBOW_BOLT_EMPOWERED_VISUAL:Items.ARROW));
             shot.setPos(start.x,start.y,start.z);
             if(pistol)shot.limitLifetime(PistolTuning.PELLET_LIFETIME);
@@ -399,6 +402,8 @@ public final class RangedCombat {
             shot.shoot(direction.x,direction.y,direction.z,kind==Kind.DAGGER?(aimed?KnifeTuning.AIM_SPEED:KnifeTuning.SPEED):pistol?PistolTuning.SPEED:2.7f,spread);
             p.serverLevel().addFreshEntity(shot);
         }
+        Gear.wear(p,stack,special?Gear.WEAR_ABILITY:Gear.WEAR_HIT);
+        p.getInventory().setChanged();
         if(pistol)muzzleFlash(p,off,false);
     }
     /** Converge on the visible crosshair point, with a small ballistic correction.
@@ -434,6 +439,7 @@ public final class RangedCombat {
             ItemStack s=held(p,input),other=p.getOffhandItem();
             if(!valid(p)||off&&blocksOffhand(p)||RangedItem.kind(s)!=Kind.PISTOL||!loaded(s)
                 ||pair&&!loaded(other)||!RangedSupply.take(p,Kind.PISTOL,(pair?2:1)*PistolTuning.WILD_COST))return false;
+            RangedShotPerks firstPerks=RangedShotPerks.capture(s,true),secondPerks=pair?RangedShotPerks.capture(other,true):RangedShotPerks.NONE;
             flag(s,LOADED,false);
             if(pair)flag(other,LOADED,false);
             pistolShot(p,off,pair,false,true);
@@ -444,8 +450,11 @@ public final class RangedCombat {
                 Vec3 d=t.position().subtract(p.position()).multiply(1,0,1);
                 if(d.lengthSqr()>PistolTuning.WILD_RANGE_SQUARED||d.lengthSqr()<1e-5||look.dot(d.normalize())<PistolTuning.WILD_FORWARD_DOT||!p.hasLineOfSight(t)
                     ||t.isAlliedTo(p)||!PantheonCombat.permitsInteraction(t,p))continue;
-                if(Gear.hurtModWave(t,p.damageSources().playerAttack(p),PistolTuning.WILD_DAMAGE*(pair?2:1)))t.knockback(PistolTuning.WILD_KNOCKBACK,p.getX()-t.getX(),p.getZ()-t.getZ());
+                float damage=firstPerks.damage(p,t,PistolTuning.WILD_DAMAGE)+(pair?secondPerks.damage(p,t,PistolTuning.WILD_DAMAGE):0);
+                if(Gear.hurtRanged(t,p.damageSources().playerAttack(p),damage))t.knockback(PistolTuning.WILD_KNOCKBACK,p.getX()-t.getX(),p.getZ()-t.getZ());
             }
+            Gear.wear(p,s,Gear.WEAR_ABILITY);if(pair)Gear.wear(p,other,Gear.WEAR_ABILITY);
+            p.getInventory().setChanged();
             p.setDeltaMovement(p.getDeltaMovement().add(look.scale(-PistolTuning.WILD_RECOIL)).add(0,PistolTuning.WILD_LIFT,0));p.hurtMarked=true;
             wildFlash(p,off);
             if(pair)wildFlash(p,true);

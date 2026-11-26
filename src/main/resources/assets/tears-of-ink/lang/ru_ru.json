@@ -1379,5 +1379,13 @@
   "equipment.tears-of-ink.ranged.headshot": "Попадание в голову: ×%s урона",
   "equipment.tears-of-ink.ranged.headshot_damage": "Урон в голову: %s HP / чернильный %s HP",
   "equipment.tears-of-ink.ranged.ink_shot": "Усиливает следующий болт и замедляет цель.",
-  "equipment.tears-of-ink.ranged.knife_aim_range": "Дальность: ~%s бл. · прицельно ~%s бл."
+  "equipment.tears-of-ink.ranged.knife_aim_range": "Дальность: ~%s бл. · прицельно ~%s бл.",
+  "awakening.tears-of-ink.precision": "Выверенность",
+  "equipment.tears-of-ink.awakening.precision": "−%s%% разброса снарядов",
+  "equipment.tears-of-ink.awakening.thirst.ranged": "Лечение: %s%% фактически снятого здоровья",
+  "equipment.tears-of-ink.awakening.bloodletting.ranged": "+%s п.п. к шансу кровотечения ножа",
+  "equipment.tears-of-ink.awakening.flow.ability": "−%s%% кулдауна способности",
+  "equipment.tears-of-ink.ranged.sharp_wear": "Износ: выстрел −%s · приём −%s",
+  "altar.tears-of-ink.incompatible": "Свойство несовместимо с этим оружием",
+  "altar.tears-of-ink.foreign": "Чужая линия: 60% силы (учтено в числе)"
 }

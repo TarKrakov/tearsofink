@@ -247,6 +247,7 @@ public final class AscensionFont {
 		if (weapon.getItem() instanceof ArsenalWeaponItem a) line = a.line();
 		else if (weapon.getItem() instanceof OrdinaryWeaponItem o) line = o.line();
 		else if (weapon.getItem() instanceof HunterWeaponItem) line = HunterWeaponItem.line(weapon);
+        else if (weapon.getItem() instanceof com.tarkrakov.tearsofink.weapon.ranged.RangedItem r) line=switch(r.kind){case DAGGER->HunterType.BLOOD;case CROSSBOW->HunterType.INK;case PISTOL->HunterType.SPIRE;};
 		return switch (line) {
 			case BLOOD -> ModItems.CRIMSON_FLOWER;
 			case INK -> ModItems.HOPE_MOTE;

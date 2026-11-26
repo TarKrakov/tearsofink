@@ -129,17 +129,17 @@ public final class WeaponStats {
             }
         }
 
-        boolean upgrades = !(item instanceof RangedItem) && Gear.ours(stack) && Screen.hasControlDown();
+        boolean upgrades = Gear.ours(stack) && Screen.hasControlDown();
         boolean detail = Screen.hasShiftDown() && !upgrades;
         List<Component> out = new ArrayList<>();
         if (item instanceof OrdinaryArmorItem armor) armor(out, stack, armor, detail, inside);
-        else if (item instanceof RangedItem ranged) ranged(out, stack, ranged, detail);
+        else if (item instanceof RangedItem ranged) ranged(out, stack, ranged, detail,upgrades);
         else weapon(out, stack, (AbilityWeapon) item, detail, upgrades);
         if (mc.level != null && !inside && (item instanceof OrdinaryArmorItem || item instanceof SwordItem || item instanceof SoulShieldItem)) {
             add(out, item instanceof OrdinaryArmorItem ? "penalty.mod_armor" : "penalty.mod_weapon", ChatFormatting.RED,
                     fmt((1 - EquipmentAffinity.MOD_OUTSIDE_LANDS) * 100));
         }
-        add(out, detail || upgrades ? "summary_hint" : !(item instanceof RangedItem) && Gear.ours(stack) ? "views_hint" : item instanceof OrdinaryArmorItem ? "armor_hint" : "details_hint", ChatFormatting.GRAY);
+        add(out, detail || upgrades ? "summary_hint" : Gear.ours(stack) ? "views_hint" : item instanceof OrdinaryArmorItem ? "armor_hint" : "details_hint", ChatFormatting.GRAY);
         lines.addAll(Math.min(1, lines.size()), out);
         // Wrap by actual font pixel width, not a count of characters. Native tooltip positioning
         // stays responsible for the cursor and screen edges. Do not shrink the player's font.
@@ -161,27 +161,45 @@ public final class WeaponStats {
     }
 
     /** Ranged attacks are projectiles, not melee attribute damage or sharpenable blades. */
-    private static void ranged(List<Component> out, ItemStack stack, RangedItem item, boolean detail) {
+    private static void ranged(List<Component> out, ItemStack stack, RangedItem item, boolean detail,boolean upgrades) {
         boolean pistol = item.kind == RangedItem.Kind.PISTOL;
         boolean knife = item.kind == RangedItem.Kind.DAGGER;
         add(out, "weapon.type", ChatFormatting.GOLD, t("class.ranged"), t(pistol || knife ? "hands.one" : "hands.two"));
-        add(out, pistol ? "ranged.line_soul" : knife ? "line.blood" : "line.ink", ChatFormatting.GRAY);
+        add(out,"weapon.tier",ChatFormatting.GRAY,tier(Gear.tier(stack)),t(pistol?"ranged.line_soul":knife?"line.blood":"line.ink"));
+        float rank=Gear.TIER_MULT[Gear.tier(stack)];
+        if(upgrades){
+            int cap=Gear.SHARP_MAX[Gear.tier(stack)];
+            if(cap==0)add(out,"sharp.none",ChatFormatting.GRAY);
+            else {
+                add(out,"sharp.value",ChatFormatting.WHITE,Gear.sharp(stack),cap,Math.round(Gear.sharpFraction(stack)*100));
+                add(out,"ranged.sharp_wear",ChatFormatting.GRAY,Gear.WEAR_HIT,Gear.WEAR_ABILITY);
+                add(out,"sharp.degrade",ChatFormatting.GRAY,fmt(Gear.DEGRADE_AT*100));
+            }
+            awakenings(out,stack,true);
+            return;
+        }
         if (!detail) {
             if (pistol) {
-                add(out, "ranged.volley", ChatFormatting.WHITE, fmt(PistolTuning.DAMAGE), fmt(PistolTuning.DAMAGE*2));
+                add(out, "ranged.volley", ChatFormatting.WHITE, fmt(PistolTuning.DAMAGE*rank), fmt(PistolTuning.DAMAGE*rank*2));
                 add(out, "ranged.reload_pair", ChatFormatting.WHITE, fmt(PistolTuning.RELOAD/20.0), fmt(PistolTuning.DUAL_RELOAD/20.0));
-                add(out, "ranged.pellets", ChatFormatting.GRAY, PistolTuning.PELLETS, fmt(PistolTuning.DAMAGE/PistolTuning.PELLETS));
+                add(out, "ranged.pellets", ChatFormatting.GRAY, PistolTuning.PELLETS, fmt(PistolTuning.DAMAGE*rank/PistolTuning.PELLETS));
                 add(out, "ranged.shot_cost", ChatFormatting.GRAY, PistolTuning.SHOT_COST, PistolTuning.SHOT_COST*2);
             } else if (knife) {
-                add(out, "ranged.throw_damage", ChatFormatting.WHITE, fmt(KnifeTuning.DAMAGE), fmt(KnifeTuning.DAMAGE*2));
+                add(out, "ranged.throw_damage", ChatFormatting.WHITE, fmt(KnifeTuning.DAMAGE*rank), fmt(KnifeTuning.DAMAGE*rank*2));
                 add(out, "ranged.throw_interval", ChatFormatting.WHITE, fmt(RangedCombat.KNIFE_DURATION/20.0));
-                add(out, "passive.bleed", ChatFormatting.RED, fmt(KnifeTuning.BLEED_CHANCE*100));
+                add(out, "passive.bleed", ChatFormatting.RED, fmt(Math.min(1f,KnifeTuning.BLEED_CHANCE+Awakening.power(stack,Awakening.BLOODLETTING))*100));
                 add(out, "ranged.shot_cost", ChatFormatting.GRAY, KnifeTuning.COST, KnifeTuning.COST*2);
             } else {
-                add(out, "weapon.damage_lands", ChatFormatting.WHITE, fmt(com.tarkrakov.tearsofink.weapon.ranged.CrossbowTuning.DAMAGE));
+                add(out, "weapon.damage_lands", ChatFormatting.WHITE, fmt(CrossbowTuning.DAMAGE*rank));
                 add(out, "ranged.headshot", ChatFormatting.GOLD, fmt(com.tarkrakov.tearsofink.weapon.ranged.CrossbowTuning.HEADSHOT_MULTIPLIER));
                 add(out, "ranged.reload_single", ChatFormatting.WHITE, "2.3");
             }
+        }
+        if(!detail){
+            int cap=Gear.SHARP_MAX[Gear.tier(stack)];
+            if(cap==0)add(out,"sharp.none",ChatFormatting.GRAY);
+            else add(out,"sharp.value",Gear.sharpFraction(stack)<=Gear.WARN_AT?ChatFormatting.GOLD:ChatFormatting.GRAY,Gear.sharp(stack),cap,Math.round(Gear.sharpFraction(stack)*100));
+            awakenings(out,stack,false);
         }
         if (knife) {
             int charges = RangedSupply.amount(stack);
@@ -201,7 +219,7 @@ public final class WeaponStats {
         }
         if (ability.inkCost()>0) {
             if (pistol || knife) costs.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY));
-            costs.append(t("cost.ink",fmt(ability.inkCost())).withStyle(ChatFormatting.LIGHT_PURPLE));
+            costs.append(t("cost.ink",fmt(ability.inkCost()*Awakening.costMult(stack))).withStyle(ChatFormatting.LIGHT_PURPLE));
         }
         if (ability.soulCost()>0) {
             if (pistol || knife || ability.inkCost()>0) costs.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY));
@@ -220,25 +238,25 @@ public final class WeaponStats {
         if (pistol || knife) {
             add(out, "ranged.offhand_control", ChatFormatting.GRAY, RangedClient.offhandKeyLabel(), t("offkey",SkillKeys.weaponKeyLabel()));
             if (pistol) {
-                add(out, "ranged.wild", ChatFormatting.WHITE, fmt(PistolTuning.WILD_DAMAGE), fmt(PistolTuning.WILD_DAMAGE*2), fmt(PistolTuning.WILD_RANGE));
+                add(out, "ranged.wild", ChatFormatting.WHITE, fmt(PistolTuning.WILD_DAMAGE*rank), fmt(PistolTuning.WILD_DAMAGE*rank*2), fmt(PistolTuning.WILD_RANGE));
                 add(out, "ranged.wild_recoil", ChatFormatting.GRAY);
-                add(out, "ranged.spread", ChatFormatting.GRAY, fmt(PistolTuning.HIP_SPREAD), fmt(PistolTuning.AIM_SPREAD));
+                add(out, "ranged.spread", ChatFormatting.GRAY, fmt(PistolTuning.HIP_SPREAD*(1-Awakening.power(stack,Awakening.PRECISION))), fmt(PistolTuning.AIM_SPREAD*(1-Awakening.power(stack,Awakening.PRECISION))));
                 add(out, "ranged.range", ChatFormatting.GRAY, fmt(PistolTuning.SPEED*PistolTuning.PELLET_LIFETIME));
                 add(out, "ranged.reload_slow", ChatFormatting.RED, fmt(PistolTuning.RELOAD_SLOW*100));
                 add(out, "ranged.supply", ChatFormatting.GRAY,
                         RangedSupply.capacity(new ItemStack(ModItems.HOLY_BANDOLIER)), RangedSupply.FULL_REFILL_ITEMS);
             } else {
-                add(out, "ranged.blood_shot", ChatFormatting.RED, fmt(KnifeTuning.BLOOD_BLEED_CHANCE*100));
+                add(out, "ranged.blood_shot", ChatFormatting.RED, fmt(Math.min(1f,KnifeTuning.BLOOD_BLEED_CHANCE+Awakening.power(stack,Awakening.BLOODLETTING))*100));
                 add(out, "ranged.blood_duration", ChatFormatting.GRAY, fmt(RangedCombat.KNIFE_BLOOD_DURATION/20.0));
                 add(out, "ranged.knife_aim_range", ChatFormatting.GRAY, fmt(KnifeTuning.SPEED*KnifeTuning.LIFETIME), fmt(KnifeTuning.AIM_DISTANCE));
-                add(out, "ranged.spread", ChatFormatting.GRAY, fmt(KnifeTuning.SPREAD), fmt(KnifeTuning.AIM_SPREAD));
+                add(out, "ranged.spread", ChatFormatting.GRAY, fmt(KnifeTuning.SPREAD*(1-Awakening.power(stack,Awakening.PRECISION))), fmt(KnifeTuning.AIM_SPREAD*(1-Awakening.power(stack,Awakening.PRECISION))));
                 add(out, "ranged.knife_refill", ChatFormatting.GRAY, KnifeTuning.REFILL_PER_INGOT);
             }
         } else {
             add(out, "ranged.ink_shot", ChatFormatting.GRAY);
             add(out, "ranged.headshot_damage", ChatFormatting.GOLD,
-                fmt(com.tarkrakov.tearsofink.weapon.ranged.CrossbowTuning.DAMAGE*com.tarkrakov.tearsofink.weapon.ranged.CrossbowTuning.HEADSHOT_MULTIPLIER),
-                fmt(com.tarkrakov.tearsofink.weapon.ranged.CrossbowTuning.INK_DAMAGE*com.tarkrakov.tearsofink.weapon.ranged.CrossbowTuning.HEADSHOT_MULTIPLIER));
+                fmt(CrossbowTuning.DAMAGE*rank*CrossbowTuning.HEADSHOT_MULTIPLIER),
+                fmt(CrossbowTuning.INK_DAMAGE*rank*CrossbowTuning.HEADSHOT_MULTIPLIER));
         }
     }
 
@@ -457,8 +475,13 @@ public final class WeaponStats {
         if (detail) {
             for (Awakening a : Awakening.values()) {
                 float strength = Awakening.power(stack, a);
-                if (strength > 0) add(out, "awakening." + a.id, ChatFormatting.GRAY,
-                        fmt(a == Awakening.VISCOUS ? strength / 20.0 : strength * 100));
+                if(strength>0){
+                    int best=0;
+                    for(int i=0;i<Math.min(cap,slots.size());i++){
+                        var s=slots.get(i);if(s!=null&&s.awakening()==a)best=Math.max(best,s.level());
+                    }
+                    out.add(a.description(stack,best));
+                }
             }
         }
     }
