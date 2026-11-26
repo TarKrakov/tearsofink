@@ -55,7 +55,8 @@ public abstract class ItemInHandRendererMixin {
         if (!tearsofink$inner && com.tarkrakov.tearsofink.client.KnifeAnims.isKnife(stack)) {
             var side=hand==InteractionHand.MAIN_HAND?player.getMainArm():player.getMainArm().getOpposite();
             var motion=com.tarkrakov.tearsofink.client.KnifeAnims.motion(player,side);
-            float aim=hand==InteractionHand.MAIN_HAND?com.tarkrakov.tearsofink.client.RangedClient.knifeAimAmount(player,partialTicks):0;
+            // Both held knives share the smooth aim amount; knifeAimAmount requires a main-hand knife.
+            float aim=com.tarkrakov.tearsofink.client.RangedClient.knifeAimAmount(player,partialTicks);
             if(motion!=null){
                 // Preserve the author's throw arc; blend the aimed idle in/out at clip boundaries.
                 float edge=Math.min(motion.time(),motion.clip().length()-motion.time());
