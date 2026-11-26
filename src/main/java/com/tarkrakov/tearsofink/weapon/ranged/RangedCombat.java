@@ -219,7 +219,8 @@ public final class RangedCombat {
         if(kind==Kind.CROSSBOW&&state!=null&&state.crossbowShotStack==stack&&p.serverLevel().getGameTime()<state.crossbowShotUntil){job.ticks=0;return false;}
         int duration=kind==Kind.CROSSBOW?CROSSBOW_RELOAD_TICKS:pair?PistolTuning.DUAL_RELOAD:PistolTuning.RELOAD;
         job.duration=duration;
-        if(++job.ticks>=duration){
+        if(++job.ticks==1&&kind==Kind.CROSSBOW&&state!=null)sendCrossbow(p,state);
+        if(job.ticks>=duration){
             flag(stack,LOADED,true);job.ticks=job.duration=0;
             if(kind==Kind.CROSSBOW&&state!=null){state.aimSince=p.serverLevel().getGameTime();sendCrossbow(p,state);}
             p.level().playSound(null,p.blockPosition(),SoundEvents.CROSSBOW_LOADING_END.value(),SoundSource.PLAYERS,.5f,1f);
