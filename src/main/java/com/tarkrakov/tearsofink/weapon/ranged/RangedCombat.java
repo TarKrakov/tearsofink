@@ -380,7 +380,7 @@ public final class RangedCombat {
         boolean ink=kind==Kind.CROSSBOW&&empowered(stack);
         if(ink)flag(stack,EMPOWERED,false);
         boolean pistol=kind==Kind.PISTOL;
-        float damage=kind==Kind.CROSSBOW?(ink?15:11):pistol?PistolTuning.DAMAGE/PistolTuning.PELLETS:KnifeTuning.DAMAGE;
+        float damage=kind==Kind.CROSSBOW?(ink?CrossbowTuning.INK_DAMAGE:CrossbowTuning.DAMAGE):pistol?PistolTuning.DAMAGE/PistolTuning.PELLETS:KnifeTuning.DAMAGE;
         float bleed=kind==Kind.DAGGER?(special?KnifeTuning.BLOOD_BLEED_CHANCE:KnifeTuning.BLEED_CHANCE):0;
         Vec3 look=p.getLookAngle(),start=kind==Kind.CROSSBOW?p.getEyePosition().add(0,-.15,0):shotStart(p,off,pistol);
         // Do not place a projectile across an adjacent wall.

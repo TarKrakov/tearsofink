@@ -5,6 +5,9 @@ import com.tarkrakov.tearsofink.weapon.blood.Bleeding;
 import com.tarkrakov.tearsofink.pantheon.PantheonCombat;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import com.tarkrakov.tearsofink.item.ModItems;
 import com.tarkrakov.tearsofink.particle.ModParticles;
 import net.minecraft.world.phys.Vec3;
@@ -32,7 +35,8 @@ public final class RangedProjectile extends ThrowableItemProjectile {
     private Map<UUID,Long> pairHits;
     private static final DustParticleOptions PELLET_TRACE = new DustParticleOptions(new Vector3f(1f,.76f,.30f),.75f);
     public static final DustParticleOptions KNIFE_TRACE = new DustParticleOptions(new Vector3f(.55f,.025f,.045f),.65f);
-    private Vec3 traceImpact;
+    private Vec3 traceImpact, collisionStart, collisionEnd;
+    private boolean crossbowBolt(){return getItem().is(Items.ARROW)||getItem().is(ModItems.INK_CROSSBOW_BOLT_EMPOWERED_VISUAL);}
     public RangedProjectile(EntityType<? extends RangedProjectile> type, Level level) { super(type,level); }
     public RangedProjectile(ServerLevel level, ServerPlayer owner,float damage,float bleed,boolean slow,Map<UUID,Long> pairHits) {
         super(ModEntities.RANGED_SHOT,owner,level);
@@ -49,6 +53,9 @@ public final class RangedProjectile extends ThrowableItemProjectile {
         boolean ink=level() instanceof ServerLevel && getItem().is(ModItems.INK_CROSSBOW_BOLT_EMPOWERED_VISUAL);
         Vec3 start=pellet||knife||ink?position():null;
         traceImpact=null;
+        boolean bolt=level() instanceof ServerLevel&&crossbowBolt();
+        collisionStart=bolt?position():null;
+        collisionEnd=bolt?collisionStart.add(getDeltaMovement()):null;
         super.tick();
         if(pellet||knife){
             Vec3 end=traceImpact!=null?traceImpact:position();
@@ -87,10 +94,16 @@ public final class RangedProjectile extends ThrowableItemProjectile {
         int old=target.invulnerableTime;
         boolean companion=first!=null && level.getGameTime()-first<=4;
         if(companion) target.invulnerableTime=0;
+        Vec3 head=crossbowBolt()?CrossbowHeadshots.contact(this,target,collisionStart,collisionEnd):null;
+        float finalDamage=head!=null?damage*CrossbowTuning.HEADSHOT_MULTIPLIER:damage;
         boolean accepted;
-        try { accepted=target.hurt(damageSources().thrown(this,p),damage); }
+        try { accepted=target.hurt(damageSources().thrown(this,p),finalDamage); }
         finally { if(companion) target.invulnerableTime=Math.max(old,target.invulnerableTime); }
         if(!accepted) return;
+        if(head!=null){
+            level.sendParticles(ParticleTypes.CRIT,head.x,head.y,head.z,10,.12,.12,.12,.12);
+            p.playNotifySound(SoundEvents.PLAYER_ATTACK_CRIT,SoundSource.PLAYERS,.9f,1.4f);
+        }
         if(pairHits!=null) pairHits.put(target.getUUID(),level.getGameTime());
         if(slow) target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN,60,0));
         if(bleed>0 && p.getRandom().nextFloat()<bleed) Bleeding.apply(target,p,1);

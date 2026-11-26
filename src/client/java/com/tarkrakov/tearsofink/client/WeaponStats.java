@@ -178,7 +178,8 @@ public final class WeaponStats {
                 add(out, "passive.bleed", ChatFormatting.RED, fmt(KnifeTuning.BLEED_CHANCE*100));
                 add(out, "ranged.shot_cost", ChatFormatting.GRAY, KnifeTuning.COST, KnifeTuning.COST*2);
             } else {
-                add(out, "weapon.damage_lands", ChatFormatting.WHITE, "11");
+                add(out, "weapon.damage_lands", ChatFormatting.WHITE, fmt(com.tarkrakov.tearsofink.weapon.ranged.CrossbowTuning.DAMAGE));
+                add(out, "ranged.headshot", ChatFormatting.GOLD, fmt(com.tarkrakov.tearsofink.weapon.ranged.CrossbowTuning.HEADSHOT_MULTIPLIER));
                 add(out, "ranged.reload_single", ChatFormatting.WHITE, "2.3");
             }
         }
@@ -233,7 +234,12 @@ public final class WeaponStats {
                 add(out, "ranged.spread", ChatFormatting.GRAY, fmt(KnifeTuning.SPREAD), fmt(KnifeTuning.AIM_SPREAD));
                 add(out, "ranged.knife_refill", ChatFormatting.GRAY, KnifeTuning.REFILL_PER_INGOT);
             }
-        } else add(out, "ranged.ink_shot", ChatFormatting.GRAY);
+        } else {
+            add(out, "ranged.ink_shot", ChatFormatting.GRAY);
+            add(out, "ranged.headshot_damage", ChatFormatting.GOLD,
+                fmt(com.tarkrakov.tearsofink.weapon.ranged.CrossbowTuning.DAMAGE*com.tarkrakov.tearsofink.weapon.ranged.CrossbowTuning.HEADSHOT_MULTIPLIER),
+                fmt(com.tarkrakov.tearsofink.weapon.ranged.CrossbowTuning.INK_DAMAGE*com.tarkrakov.tearsofink.weapon.ranged.CrossbowTuning.HEADSHOT_MULTIPLIER));
+        }
     }
 
     private static void armor(List<Component> out, ItemStack stack, OrdinaryArmorItem armor, boolean detail, boolean inside) {
