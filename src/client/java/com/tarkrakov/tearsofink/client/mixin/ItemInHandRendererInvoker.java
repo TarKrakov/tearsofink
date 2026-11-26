@@ -11,6 +11,8 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 
 @Mixin(ItemInHandRenderer.class)
 public interface ItemInHandRendererInvoker {
+    @Invoker("renderPlayerArm")
+    void tearsofink$renderPlayerArm(PoseStack pose, MultiBufferSource buffers, int light, float equip, float swing, net.minecraft.world.entity.HumanoidArm arm);
 	@Invoker("renderArmWithItem")
 	void tearsofink$renderArmWithItem(AbstractClientPlayer player, float partialTicks, float pitch, InteractionHand hand, float swingProgress,
 									  ItemStack stack, float equippedProgress, PoseStack poseStack, MultiBufferSource buffer, int light);

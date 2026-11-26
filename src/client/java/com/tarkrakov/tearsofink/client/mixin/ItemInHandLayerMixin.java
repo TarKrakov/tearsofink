@@ -23,6 +23,9 @@ public abstract class ItemInHandLayerMixin {
 	@Inject(method = "renderArmWithItem", at = @At("HEAD"), cancellable = true)
     private void tearsofink$rangedOffhand(LivingEntity entity, ItemStack stack, ItemDisplayContext context, HumanoidArm arm, PoseStack pose,
                                           MultiBufferSource buffers, int light, CallbackInfo ci) {
+        if(entity instanceof net.minecraft.world.entity.player.Player player
+                && com.tarkrakov.tearsofink.client.KnifeAnims.isKnife(stack)
+                && com.tarkrakov.tearsofink.client.KnifeAnims.hidden(player,arm)){ci.cancel();return;}
         if (entity instanceof net.minecraft.world.entity.player.Player p && arm != p.getMainArm()
                 && com.tarkrakov.tearsofink.weapon.ranged.RangedCombat.blocksOffhand(p)) ci.cancel();
     }

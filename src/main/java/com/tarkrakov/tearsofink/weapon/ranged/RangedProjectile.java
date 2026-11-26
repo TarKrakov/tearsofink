@@ -30,6 +30,7 @@ public final class RangedProjectile extends ThrowableItemProjectile {
     private int lifetime=100;
     private Map<UUID,Long> pairHits;
     private static final DustParticleOptions PELLET_TRACE = new DustParticleOptions(new Vector3f(1f,.76f,.30f),.75f);
+    public static final DustParticleOptions KNIFE_TRACE = new DustParticleOptions(new Vector3f(.55f,.025f,.045f),.65f);
     private Vec3 traceImpact;
     public RangedProjectile(EntityType<? extends RangedProjectile> type, Level level) { super(type,level); }
     public RangedProjectile(ServerLevel level, ServerPlayer owner,float damage,float bleed,boolean slow,Map<UUID,Long> pairHits) {
@@ -43,10 +44,11 @@ public final class RangedProjectile extends ThrowableItemProjectile {
         // The sprite alone is hard to see at 3.2 blocks/tick (especially on the impact tick).
         // Sample the real server-side path, including a hit before the first client render.
         boolean pellet=level() instanceof ServerLevel && getItem().is(ModItems.PALE_BULLET);
-        Vec3 start=pellet?position():null;
+        boolean knife=level() instanceof ServerLevel && getItem().is(ModItems.BLOOD_THROWING_DAGGER);
+        Vec3 start=pellet||knife?position():null;
         traceImpact=null;
         super.tick();
-        if(pellet){
+        if(pellet||knife){
             Vec3 end=traceImpact!=null?traceImpact:position();
             Vec3 delta=end.subtract(start);
             double length=delta.length();
@@ -54,7 +56,7 @@ public final class RangedProjectile extends ThrowableItemProjectile {
                 int samples=Math.clamp((int)Math.ceil(length/.85),1,5);
                 for(int i=0;i<samples;i++){
                     Vec3 point=start.add(delta.scale((i+.5)/samples));
-                    ((ServerLevel)level()).sendParticles(PELLET_TRACE,point.x,point.y,point.z,1,0,0,0,0);
+                    ((ServerLevel)level()).sendParticles(knife?KNIFE_TRACE:PELLET_TRACE,point.x,point.y,point.z,1,0,0,0,0);
                 }
             }
         }

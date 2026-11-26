@@ -65,6 +65,7 @@ public final class RangedClient {
     }
     public static void init(){
         PistolAnims.init();
+        KnifeAnims.init();
         off=KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tears-of-ink.ranged_offhand", InputConstants.Type.MOUSE,GLFW.GLFW_MOUSE_BUTTON_4,SkillKeys.CATEGORY));
         ClientPlayNetworking.registerGlobalReceiver(RangedCombat.AimPose.TYPE,(v,ctx)->ctx.client().execute(()->{
             if(v.active()&&ctx.client().level!=null)REMOTE_AIM.put(v.entity(),ctx.client().level.getGameTime()+45);

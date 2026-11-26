@@ -39,12 +39,21 @@ import java.util.*;
 public final class RangedCombat {
     // Game balance: one cartridge pays for a short-range spread, not six full hits.
     private static final int PELLETS=6, PELLET_LIFETIME=6;
+    public static final int KNIFE_RELEASE=5, KNIFE_RETURN=20, KNIFE_BLOOD_RETURN=10, KNIFE_DURATION=25, KNIFE_BLOOD_DURATION=15;
+    public static final int KNIFE_START=0, KNIFE_FLY=1, KNIFE_REFORM=2, KNIFE_CANCEL=3;
     private static final float PISTOL_DAMAGE=8f, PISTOL_WILD_DAMAGE=10f; // HP per barrel, before target protection
     private static final String LOADED="toi_ranged_loaded", EMPOWERED="toi_ranged_empowered";
     private static final net.minecraft.resources.ResourceLocation SLOW=TearsOfInk.id("ranged_reload_slow");
     private static final Map<UUID,State> STATES=new HashMap<>();
     private static final class Job { ItemStack stack=ItemStack.EMPTY; int ticks, duration; }
-    private static final class State { final Job main=new Job(), off=new Job(); long nextMain, nextOff; double slow; boolean aim, hadPistol; ItemStack aimStack=ItemStack.EMPTY; }
+    private static final class State { final Job main=new Job(), off=new Job(); long nextMain, nextOff; double slow; boolean aim, hadPistol; ItemStack aimStack=ItemStack.EMPTY; PendingKnife mainKnife, offKnife; }
+    private static final class PendingKnife {
+        final net.minecraft.server.level.ServerLevel level; final ItemStack first, second;
+        final boolean off, pair, special; final long start; boolean released, returned;
+        PendingKnife(ServerPlayer p, ItemStack first, ItemStack second, boolean off, boolean pair, boolean special, long start){
+            this.level=p.serverLevel();this.first=first;this.second=second;this.off=off;this.pair=pair;this.special=special;this.start=start;
+        }
+    }
     private RangedCombat(){}
     public record Fire(boolean off,boolean aimed) implements CustomPacketPayload {
         public static final Type<Fire> TYPE=new Type<>(TearsOfInk.id("ranged_fire"));
@@ -66,6 +75,16 @@ public final class RangedCombat {
         public static final Type<PistolShot> TYPE=new Type<>(TearsOfInk.id("pistol_shot_pose"));
         public static final StreamCodec<ByteBuf,PistolShot> CODEC=StreamCodec.composite(ByteBufCodecs.VAR_INT,PistolShot::entity,ByteBufCodecs.BOOL,PistolShot::off,ByteBufCodecs.BOOL,PistolShot::pair,ByteBufCodecs.BOOL,PistolShot::aimed,ByteBufCodecs.BOOL,PistolShot::wild,PistolShot::new);
         @Override public Type<PistolShot> type(){return TYPE;}
+    }
+    public record KnifePose(int entity,boolean off,boolean pair,boolean special,int phase) implements CustomPacketPayload {
+        public static final Type<KnifePose> TYPE=new Type<>(TearsOfInk.id("knife_throw_pose"));
+        public static final StreamCodec<ByteBuf,KnifePose> CODEC=StreamCodec.composite(ByteBufCodecs.VAR_INT,KnifePose::entity,ByteBufCodecs.BOOL,KnifePose::off,ByteBufCodecs.BOOL,KnifePose::pair,ByteBufCodecs.BOOL,KnifePose::special,ByteBufCodecs.VAR_INT,KnifePose::phase,KnifePose::new);
+        @Override public Type<KnifePose> type(){return TYPE;}
+    }
+    private static void knifePose(ServerPlayer p,PendingKnife k,int phase){
+        var packet=new KnifePose(p.getId(),k.off,k.pair,k.special,phase);
+        for(ServerPlayer viewer:k.level.players())if(viewer.distanceToSqr(p)<128*128&&ServerPlayNetworking.canSend(viewer,KnifePose.TYPE))ServerPlayNetworking.send(viewer,packet);
+        if(p.serverLevel()!=k.level&&ServerPlayNetworking.canSend(p,KnifePose.TYPE))ServerPlayNetworking.send(p,packet);
     }
     public record PistolReload(int entity,int main,int mainMax,int off,int offMax) implements CustomPacketPayload {
         public static final Type<PistolReload> TYPE=new Type<>(TearsOfInk.id("pistol_reload_pose"));
@@ -124,6 +143,7 @@ public final class RangedCombat {
         PayloadTypeRegistry.playS2C().register(AimPose.TYPE,AimPose.CODEC);
         PayloadTypeRegistry.playS2C().register(ReloadView.TYPE,ReloadView.CODEC);
         PayloadTypeRegistry.playS2C().register(PistolShot.TYPE,PistolShot.CODEC);
+        PayloadTypeRegistry.playS2C().register(KnifePose.TYPE,KnifePose.CODEC);
         PayloadTypeRegistry.playS2C().register(PistolReload.TYPE,PistolReload.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(Aim.TYPE,(packet,ctx)->ctx.player().server.execute(()->aim(ctx.player(),packet.active())));
         ServerPlayNetworking.registerGlobalReceiver(Fire.TYPE,(packet,ctx)->ctx.player().server.execute(()->fire(ctx.player(),packet.off(),packet.aimed(),false)));
@@ -141,6 +161,9 @@ public final class RangedCombat {
     public static void resetReload(ServerPlayer p){
         State s=STATES.get(p.getUUID());
         if(s!=null){
+            if(s.mainKnife!=null)knifePose(p,s.mainKnife,KNIFE_CANCEL);
+            if(s.offKnife!=null)knifePose(p,s.offKnife,KNIFE_CANCEL);
+            s.mainKnife=s.offKnife=null;
             aim(p,false);s.main.stack=ItemStack.EMPTY;s.main.ticks=s.main.duration=0;
             s.off.stack=ItemStack.EMPTY;s.off.ticks=s.off.duration=0;slow(p,s,0);sendReload(p,s);
         }
@@ -159,6 +182,8 @@ public final class RangedCombat {
         if(!has&&s==null)return;
         if(s==null){s=new State();STATES.put(p.getUUID(),s);}
         if(!valid(p)){resetReload(p);return;}
+        s.mainKnife=tickKnife(p,s.mainKnife);
+        s.offKnife=tickKnife(p,s.offKnife);
         if(s.aim&&(!canAim(p)||s.aimStack!=p.getMainHandItem()))aim(p,false);
         boolean blocked=blocksOffhand(p);
         if(blocked&&p.isUsingItem()&&p.getUsedItemHand()==InteractionHand.OFF_HAND)p.stopUsingItem();
@@ -203,7 +228,13 @@ public final class RangedCombat {
         if(kind==Kind.DAGGER){
             int cost=special?2:1;
             if(!p.getAbilities().instabuild&&(RangedSupply.amount(first)<cost||pair&&RangedSupply.amount(second)<cost))return false;
-            if(!p.getAbilities().instabuild){RangedSupply.set(first,RangedSupply.amount(first)-cost);if(pair)RangedSupply.set(second,RangedSupply.amount(second)-cost);}
+            PendingKnife k=new PendingKnife(p,first,second,off,pair,special,now);
+            if(off)s.offKnife=k;else s.mainKnife=k;
+            int duration=special?KNIFE_BLOOD_DURATION:KNIFE_DURATION;
+            if(off)s.nextOff=now+duration;else s.nextMain=now+duration;
+            if(pair)s.nextOff=now+duration;
+            knifePose(p,k,KNIFE_START);
+            return true;
         }else{
             if(!loaded(first)||pair&&!loaded(second)||!RangedSupply.take(p,kind,n))return false;
             flag(first,LOADED,false);if(pair)flag(second,LOADED,false);
@@ -212,7 +243,7 @@ public final class RangedCombat {
         launch(p,first,kind,off,aimed&&!off,special,hits);
         if(pair)launch(p,second,kind,true,aimed,special,hits);
         if(kind==Kind.PISTOL)pistolShot(p,off,pair,aimed&&!off,false);
-        int gap=kind==Kind.DAGGER?12:5;
+        int gap=5;
         if(off)s.nextOff=now+gap;else s.nextMain=now+gap;
         if(pair)s.nextOff=now+gap;
         p.getInventory().setChanged();
@@ -221,6 +252,31 @@ public final class RangedCombat {
             p.level().playSound(null,p.blockPosition(),SoundEvents.CROSSBOW_SHOOT,SoundSource.PLAYERS,.8f,.75f);
         }else p.level().playSound(null,p.blockPosition(),kind==Kind.DAGGER?SoundEvents.TRIDENT_THROW.value():SoundEvents.CROSSBOW_SHOOT,SoundSource.PLAYERS,.85f,1f);
         return true;
+    }
+    private static PendingKnife tickKnife(ServerPlayer p,PendingKnife k){
+        if(k==null)return null;
+        ItemStack held=k.off?p.getOffhandItem():p.getMainHandItem();
+        if(k.level!=p.serverLevel()||held!=k.first||k.off&&blocksOffhand(p)||k.pair&&p.getOffhandItem()!=k.second){knifePose(p,k,KNIFE_CANCEL);return null;}
+        long elapsed=p.serverLevel().getGameTime()-k.start;
+        if(!k.released&&elapsed>=KNIFE_RELEASE){
+            int cost=k.special?2:1;
+            if(!p.getAbilities().instabuild&&(RangedSupply.amount(k.first)<cost||k.pair&&RangedSupply.amount(k.second)<cost)){knifePose(p,k,KNIFE_CANCEL);return null;}
+            if(!p.getAbilities().instabuild){RangedSupply.set(k.first,RangedSupply.amount(k.first)-cost);if(k.pair)RangedSupply.set(k.second,RangedSupply.amount(k.second)-cost);}
+            Map<UUID,Long> hits=k.pair?RangedProjectile.pair():null;
+            launch(p,k.first,Kind.DAGGER,k.off,false,k.special,hits);
+            if(k.pair)launch(p,k.second,Kind.DAGGER,true,false,k.special,hits);
+            k.released=true;p.getInventory().setChanged();
+            knifePose(p,k,KNIFE_FLY);
+            p.level().playSound(null,p.blockPosition(),SoundEvents.TRIDENT_THROW.value(),SoundSource.PLAYERS,.85f,1f);
+        }
+        if(!k.returned&&elapsed>=(k.special?KNIFE_BLOOD_RETURN:KNIFE_RETURN)){
+            k.returned=true;knifePose(p,k,KNIFE_REFORM);knifeReform(p,k.off);if(k.pair)knifeReform(p,true);
+        }
+        return elapsed>=(k.special?KNIFE_BLOOD_DURATION:KNIFE_DURATION)?null:k;
+    }
+    private static void knifeReform(ServerPlayer p,boolean off){
+        Vec3 at=shotStart(p,off,false).add(p.getLookAngle().scale(.25)).add(0,-.35,0);
+        p.serverLevel().sendParticles(RangedProjectile.KNIFE_TRACE,at.x,at.y,at.z,7,.09,.12,.09,.01);
     }
     private static Vec3 shotStart(ServerPlayer p,boolean off,boolean pistol){
         Vec3 right=Vec3.directionFromRotation(0,p.getYRot()+90);

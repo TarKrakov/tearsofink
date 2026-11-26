@@ -145,6 +145,7 @@ public final class WeaponAnims {
 				List<String> animationIds = new ArrayList<>();
                 for (Archetype a : Archetype.values()) animationIds.add(a.id);
                 animationIds.add("holy_pistol");
+                animationIds.add("blood_throwing_dagger");
                 for (String id : animationIds) {
 					var res = manager.getResource(TearsOfInk.id("weapon_anims/" + id + ".json"));
 					if (res.isEmpty()) continue;
@@ -174,6 +175,16 @@ public final class WeaponAnims {
                             throw new IllegalArgumentException("Invalid or duplicate pistol clip");
                         active.putAll(imported);
                     } catch(Exception e){ TearsOfInk.LOGGER.error("Pistol clips could not be loaded: {}",e.toString()); }
+                }
+                var knife = manager.getResource(TearsOfInk.id("weapon_anims/blood_throwing_dagger_bb_author.json"));
+                if (knife.isPresent() && CLIPS.containsKey("blood_throwing_dagger")) {
+                    try (Reader r = knife.get().openAsReader()) {
+                        Map<String,Clip> imported=parse(JsonParser.parseReader(r).getAsJsonObject());
+                        var active=CLIPS.get("blood_throwing_dagger");
+                        if(imported.keySet().stream().anyMatch(n->!n.startsWith("bb_author_")||active.containsKey(n)))
+                            throw new IllegalArgumentException("Invalid or duplicate knife clip");
+                        active.putAll(imported);
+                    } catch(Exception e){ TearsOfInk.LOGGER.error("Knife clips could not be loaded: {}",e.toString()); }
                 }
                 // Отдельная тестовая библиотека Blockbench: никогда не заменяет принятые клипы.
 				var pilot = manager.getResource(TearsOfInk.id("weapon_anims/pale_linear_greatsword_bb_test.json"));
@@ -335,6 +346,14 @@ public final class WeaponAnims {
                 key=new Key(0,rotationMix(old.rot(),key.rot(),u),lerp(old.pos(),key.pos(),u),lerp(old.scale(),key.scale(),u),Ease.LINEAR);
             }
             put(c,grip("holy_pistol"),rest,left,pose,key.rot(),key.pos(),key.scale());
+            return true;
+        }
+        if (com.tarkrakov.tearsofink.client.KnifeAnims.isKnife(stack)) {
+            var player=net.minecraft.client.Minecraft.getInstance().player;
+            var motion=player==null?null:com.tarkrakov.tearsofink.client.KnifeAnims.motion(player,arm);
+            if(motion==null)return false;
+            Clip c=motion.clip();Key key=sample(c,motion.time());
+            put(c,grip("blood_throwing_dagger"),rest,left,pose,key.rot(),key.pos(),key.scale());
             return true;
         }
         // This mount also applies when no clip is playing, so idle/attack/ability

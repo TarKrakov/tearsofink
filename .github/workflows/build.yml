@@ -49,6 +49,8 @@ jobs:
         run: node tools/blockbench/export_blood_throwknife.js --check
       - name: validate authored pistol export
         run: node tools/blockbench/export_holy_pistol.js --check
+      - name: validate final authored throwing knife clips
+        run: node tools/blockbench/import_blood_throwknife.js blockbench/blood_throwing_dagger_animation.bbmodel --check
       - name: validate final authored pistol clips
         run: node tools/blockbench/import_holy_pistol.js blockbench/holy_pistol_animation.bbmodel --check
       - name: validate final author scene and active Pale clip mapping

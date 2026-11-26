@@ -112,7 +112,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.SHIELD_PHANTOM, com.tarkrakov.tearsofink.client.shield.ShieldPhantomRenderer::new);
 		EntityRendererRegistry.register(ModEntities.BLOOD_ARC, NoopRenderer::new);
 		EntityRendererRegistry.register(ModEntities.INK_BLOT, net.minecraft.client.renderer.entity.ThrownItemRenderer::new);
-		EntityRendererRegistry.register(ModEntities.RANGED_SHOT, net.minecraft.client.renderer.entity.ThrownItemRenderer::new);
+		EntityRendererRegistry.register(ModEntities.RANGED_SHOT, RangedShotRenderer::new);
 		// ----- пролог -----
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.prologue.GuideModel.LAYER,
 				com.tarkrakov.tearsofink.client.prologue.GuideModel::createBodyLayer);
