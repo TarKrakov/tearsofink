@@ -14,13 +14,10 @@ import net.minecraft.client.model.HumanoidModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.player.AbstractClientPlayer;
 import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
-import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.player.PlayerModelPart;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
@@ -34,9 +31,7 @@ public final class CrossbowAnims {
     private static final Vector3f GRIP=new Vector3f(-1.5f,6.5f,9.5f);
     private static final Vector3f HINGE=new Vector3f(5.25f,8.5f,5f);
     private static final Vector3f FP_R_ARM=new Vector3f(2.86f,3.30086f,-.04348f),
-        FP_R_HAND=new Vector3f(2.86f,-6.69914f,-4.04348f),
-        FP_L_ARM=new Vector3f(-1.14f,5.21871f,-6.36037f),
-        FP_L_HAND=new Vector3f(2.86f,-4.78129f,-10.36037f);
+        FP_R_HAND=new Vector3f(2.86f,-6.69914f,-4.04348f);
     private static final Vector3f FP_SWORD=new Vector3f(90,85,90), F5_SWORD=new Vector3f(-90,21.25f,-90);
     private static final Vector3f F5_R_GUIDE=new Vector3f(37.21592f,-3.29292f,9.75924f);
     private static final Vector3f F5_L_GUIDE=new Vector3f(29.05828f,-9.06515f,34.0164f);
@@ -169,39 +164,14 @@ public final class CrossbowAnims {
         Quaternionf arm=q(rot(f,"FP_right_arm"));Vector3f shoulder=new Vector3f(FP_R_ARM).add(pos(f,"FP_right_arm"));
         Vector3f grip=new Vector3f(FP_R_HAND).sub(FP_R_ARM).add(pos(f,"FP_right_sword"));arm.transform(grip);grip.add(shoulder);
         Quaternionf sword=new Quaternionf(arm).mul(q(new Vector3f(FP_SWORD).add(rot(f,"FP_right_sword"))));
-        Quaternionf support=q(rot(f,"FP_left_arm"));Vector3f supportShoulder=new Vector3f(FP_L_ARM).add(pos(f,"FP_left_arm"));
-        Vector3f supportHand=new Vector3f(FP_L_HAND).sub(FP_L_ARM);support.transform(supportHand);supportHand.add(supportShoulder);
         boolean left=player.getMainArm()==HumanoidArm.LEFT;
         pose.pushPose();
         try{
             if(left)pose.scale(-1,1,1);
-            if(!player.isInvisible()){
-                drawArm(player,left?HumanoidArm.LEFT:HumanoidArm.RIGHT,shoulder,grip,pose,buffers,light);
-                drawArm(player,left?HumanoidArm.RIGHT:HumanoidArm.LEFT,supportShoulder,supportHand,pose,buffers,light);
-            }
             pose.pushPose();
             try{translate(pose,grip);pose.mulPose(sword);pose.scale(SCALE,SCALE,SCALE);translate(pose,new Vector3f(8,8,8).sub(GRIP));weapon(player,f,"FP",pose,buffers,light);}finally{pose.popPose();}
         }finally{pose.popPose();}
         return true;
-    }
-    private static void drawArm(AbstractClientPlayer player,HumanoidArm side,Vector3f start,Vector3f end,PoseStack pose,MultiBufferSource buffers,int light){
-        if(!(Minecraft.getInstance().getEntityRenderDispatcher().getRenderer(player) instanceof PlayerRenderer renderer))return;
-        var model=renderer.getModel();boolean left=side==HumanoidArm.LEFT;
-        ModelPart arm=left?model.leftArm:model.rightArm,sleeve=left?model.leftSleeve:model.rightSleeve;
-        var armSave=arm.storePose();var sleeveSave=sleeve.storePose();
-        Vector3f delta=new Vector3f(end).sub(start);
-        if(delta.lengthSquared()<.01f)return;
-        float len=delta.length();delta.normalize();
-        pose.pushPose();
-        try{
-            translate(pose,start);pose.mulPose(new Quaternionf().rotationTo(new Vector3f(0,1,0),delta));pose.scale(1,len/8f,1);
-            arm.setPos(0,0,0);arm.xRot=arm.yRot=arm.zRot=0;
-            sleeve.setPos(0,0,0);sleeve.xRot=sleeve.yRot=sleeve.zRot=0;
-            var skin=player.getSkin().texture();
-            arm.render(pose,buffers.getBuffer(RenderType.entitySolid(skin)),light,OverlayTexture.NO_OVERLAY);
-            if(player.isModelPartShown(left?PlayerModelPart.LEFT_SLEEVE:PlayerModelPart.RIGHT_SLEEVE))
-                sleeve.render(pose,buffers.getBuffer(RenderType.entityCutoutNoCull(skin)),light,OverlayTexture.NO_OVERLAY);
-        }finally{arm.loadPose(armSave);sleeve.loadPose(sleeveSave);pose.popPose();}
     }
     public static void pose(HumanoidModel<?> model,Player p){
         if(!load())return;
