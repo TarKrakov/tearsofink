@@ -125,6 +125,8 @@ public final class ModItems {
 	/** Чернильный металл — только с врагов Чернолесья и из сундуков (руды нет). */
 	public static final Item RAW_INK_METAL = register("raw_ink_metal", new Item(new Item.Properties()));
 	public static final Item INK_CROSSBOW = register("ink_crossbow", new com.tarkrakov.tearsofink.weapon.ranged.RangedItem(com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.CROSSBOW));
+	/** Internal render-only stack; quiver refill and projectile data continue to use vanilla arrows. */
+	public static final Item INK_CROSSBOW_BOLT_VISUAL = register("ink_crossbow_bolt_visual", new Item(new Item.Properties()));
 	public static final Item BLOOD_THROWING_DAGGER = register("blood_throwing_dagger", new com.tarkrakov.tearsofink.weapon.ranged.RangedItem(com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.DAGGER));
 	public static final Item HOLY_PISTOL = register("holy_pistol", new com.tarkrakov.tearsofink.weapon.ranged.RangedItem(com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.PISTOL));
 	public static final Item INK_QUIVER = register("ink_quiver", new com.tarkrakov.tearsofink.weapon.ranged.RangedSupply(64));
