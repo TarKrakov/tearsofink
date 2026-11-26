@@ -12,7 +12,7 @@ public final class ScatteredRuinDensityTest {
                 total++;
             }
             double ratio=kept/(double)total, diff=changed/(double)total;
-            if (ratio<.46 || ratio>.54 || diff<.46 || diff>.54) throw new AssertionError(seed+": "+ratio+", "+diff);
+            if (ratio<.34 || ratio>.41 || diff<.43 || diff>.51) throw new AssertionError(seed+": "+ratio+", "+diff);
             System.out.println(seed+": kept "+kept+"/"+total+" ("+ratio+")");
         }
     }

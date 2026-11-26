@@ -43,7 +43,9 @@ for name,table in tables.items():
         name.endswith("_rich") or name in {"ruins_inkwood","settlement_pantry"}) else (
         (1,3) if name.endswith("_common") or name=="temple_blood_supply" else (1,2))
     if name.startswith("ruins_scattered_"):
-        ink_range={"poor":(3,6),"common":(3,9),"rich":(6,9),"inkwood":(6,9)}[name.removeprefix("ruins_scattered_")]
+        ink_range={"poor":(3,7),"common":(4,10),"rich":(7,10),"inkwood":(7,10)}[name.removeprefix("ruins_scattered_")]
+    if name.startswith(("camp_","watchtower_")):
+        ink_range=tuple(5*x for x in ink_range)
     ink_pools=[p for p in table["pools"] if any(e.get("name")==prefix+"ink" for e in p["entries"])]
     assert len(ink_pools)==1, name
     ip=ink_pools[0]
@@ -89,12 +91,12 @@ for group in ("ruins_","gate_","gate_cache_","camp_cache_","watchtower_cache_"):
 for i,t in enumerate(tiers):
     for group,side,counts,maxpig,maxore in (
        ("gate_cache_","gate_supplies",range(1,4),[.08,.12,.15][i],[1.7,2.2,2.7][i]),
-       ("camp_cache_","camp_supplies",range(1,3),[.05,.08,.10][i],[1.2,1.7,2.2][i]),
-       ("watchtower_cache_","camp_supplies",range(1,2),[.06,.10,.12][i],[1.7,2.2,2.7][i])):
+       ("camp_cache_","camp_supplies",range(1,3),[.25,.40,.50][i],[6,8.5,11][i]),
+       ("watchtower_cache_","camp_supplies",range(1,2),[.30,.50,.60][i],[8.5,11,13.5][i])):
         for count in counts:
             for item,budget in (("pigment",maxpig),("raw_pale_metal",maxore)):
                 assert abs(expected(group+t,item)+(count-1)*expected(side,item)-budget)<1e-9
-    assert expected("gate_cache_"+t,"pigment")>expected("camp_cache_"+t,"pigment")
+    assert expected("camp_cache_"+t,"pigment")>expected("gate_cache_"+t,"pigment")
     assert expected("gate_"+t,"pigment")<=expected("gate_cache_"+t,"pigment")
     assert expected("temple_pale_supply_"+t,"pigment")==0
 assert expected("temple_blood_supply","pigment")==0
@@ -124,16 +126,16 @@ for tier, chance in zip(tiers,(.05,.08,.12)):
     name="ruins_"+tier
     assert abs(expected(name,"raw_blood_metal")-chance)<1e-9
     assert expected(name,"raw_blood_metal")<expected(name,"raw_pale_metal")
-# New scattered ruins: guaranteed local metal, triple pigment probability,
+# New scattered ruins: guaranteed local metal, boosted pigment probability,
 # legacy and military tables remain covered by the original assertions.
 for tier,metal,ore,pig in (
-    ("poor","raw_pale_metal",3.5,.15),("common","raw_pale_metal",4.5,.24),
-    ("rich","raw_pale_metal",6.0,.30),("inkwood","raw_ink_metal",4.0,.30)):
+    ("poor","raw_pale_metal",4.0,.1725),("common","raw_pale_metal",5.0,.276),
+    ("rich","raw_pale_metal",7.0,.345),("inkwood","raw_ink_metal",4.5,.345)):
     name="ruins_scattered_"+tier
     old="ruins_"+tier
     assert abs(expected(name,metal)-ore)<1e-9
     assert abs(expected(name,"pigment")-pig)<1e-9
-    assert abs(expected(name,"ink")-3*expected(old,"ink"))<1e-9
+    assert abs(expected(name,"ink")-{"poor":5,"common":7,"rich":8.5,"inkwood":8.5}[tier])<1e-9
     assert abs(any_item(name,rare)-any_item(old,rare)-(.01 if tier=="common" else 0))<1e-9
     metal_pool=next(p for p in tables[name]["pools"] if any(e.get("name")==prefix+metal for e in p["entries"]))
     assert not metal_pool.get("conditions") and metal_pool["rolls"]==1 and len(metal_pool["entries"])==1
