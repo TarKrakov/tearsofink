@@ -2,9 +2,7 @@ package com.tarkrakov.tearsofink.weapon.ranged;
 
 import com.tarkrakov.tearsofink.skill.Skill;
 import com.tarkrakov.tearsofink.weapon.AbilityWeapon;
-import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.*;
-import java.util.List;
 
 /** Prototype ranged weapons are not melee archetypes. */
 public final class RangedItem extends Item implements AbilityWeapon {
@@ -20,31 +18,4 @@ public final class RangedItem extends Item implements AbilityWeapon {
     @Override public boolean isBarVisible(ItemStack stack) { return kind == Kind.DAGGER; }
     @Override public int getBarWidth(ItemStack stack) { return Math.round(13f * RangedSupply.amount(stack) / RangedSupply.capacity(stack)); }
     @Override public int getBarColor(ItemStack stack) { return 0x9b3545; }
-    @Override public void appendHoverText(ItemStack stack, TooltipContext context, List<Component> tooltip, TooltipFlag flag) {
-        if (kind == Kind.DAGGER) {
-            tooltip.add(Component.translatable("ranged.tears-of-ink.charges", RangedSupply.amount(stack), RangedSupply.capacity(stack)));
-            tooltip.add(Component.translatable("ranged.tears-of-ink.knife_damage", KnifeTuning.DAMAGE));
-            tooltip.add(Component.translatable("ranged.tears-of-ink.knife_bleed", Math.round(KnifeTuning.BLEED_CHANCE*100), KnifeTuning.COST, RangedCombat.KNIFE_DURATION/20f));
-            tooltip.add(Component.translatable("ranged.tears-of-ink.knife_blood", Math.round(KnifeTuning.BLOOD_BLEED_CHANCE*100), KnifeTuning.BLOOD_COST, KnifeTuning.BLOOD_COOLDOWN/20f));
-            tooltip.add(Component.translatable("ranged.tears-of-ink.knife_refill", KnifeTuning.REFILL_PER_INGOT));
-        }
-        else {
-            tooltip.add(Component.translatable(RangedCombat.loaded(stack) ? "ranged.tears-of-ink.loaded" : "ranged.tears-of-ink.unloaded"));
-            if (kind == Kind.PISTOL) {
-                tooltip.add(Component.translatable("ranged.tears-of-ink.pistol_damage", PistolTuning.DAMAGE, PistolTuning.DAMAGE*2));
-                tooltip.add(Component.translatable("ranged.tears-of-ink.pistol_pellets", PistolTuning.PELLETS, Math.round(PistolTuning.DAMAGE/PistolTuning.PELLETS*100)/100f));
-                tooltip.add(Component.translatable("ranged.tears-of-ink.pistol_reload", PistolTuning.RELOAD/20f, PistolTuning.DUAL_RELOAD/20f, Math.round(PistolTuning.RELOAD_SLOW*100)));
-                tooltip.add(Component.translatable("ranged.tears-of-ink.pistol_spread", PistolTuning.HIP_SPREAD, PistolTuning.AIM_SPREAD));
-                tooltip.add(Component.translatable("ranged.tears-of-ink.pistol_range", Math.round(PistolTuning.SPEED*PistolTuning.PELLET_LIFETIME), PistolTuning.PELLET_LIFETIME/20f));
-                tooltip.add(Component.translatable("ranged.tears-of-ink.pistol_cost", PistolTuning.SHOT_COST, PistolTuning.SHOT_COST*2));
-                tooltip.add(Component.translatable("ranged.tears-of-ink.pistol_wild_damage", PistolTuning.WILD_DAMAGE, PistolTuning.WILD_DAMAGE*2, PistolTuning.WILD_RANGE));
-                tooltip.add(Component.translatable("ranged.tears-of-ink.pistol_wild_cost", PistolTuning.WILD_COST, PistolTuning.WILD_COST*2, PistolTuning.WILD_SOUL, PistolTuning.WILD_COOLDOWN/20f));
-                tooltip.add(Component.translatable("ranged.tears-of-ink.pistol_wild_recoil"));
-                int capacity=RangedSupply.capacity(new ItemStack(com.tarkrakov.tearsofink.item.ModItems.HOLY_BANDOLIER));
-                tooltip.add(Component.translatable("ranged.tears-of-ink.pistol_supply", capacity, RangedSupply.FULL_REFILL_ITEMS));
-                tooltip.add(Component.translatable("ranged.tears-of-ink.pistol_controls"));
-            }
-        }
-        tooltip.add(Component.translatable(ability().nameKey()));
-    }
 }

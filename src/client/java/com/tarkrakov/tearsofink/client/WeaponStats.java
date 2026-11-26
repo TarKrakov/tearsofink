@@ -10,6 +10,7 @@ import com.tarkrakov.tearsofink.weapon.blood.BloodAbilities;
 import com.tarkrakov.tearsofink.weapon.combat.*;
 import com.tarkrakov.tearsofink.weapon.forge.*;
 import com.tarkrakov.tearsofink.weapon.shield.ShieldTuning;
+import com.tarkrakov.tearsofink.weapon.ranged.*;
 import com.tarkrakov.tearsofink.world.ModDimensions;
 import com.tarkrakov.tearsofink.ink.FoodBalance;
 import com.tarkrakov.tearsofink.ink.SoulPenalty;
@@ -98,7 +99,6 @@ public final class WeaponStats {
         if (inside && stack.is(ModItems.RAW_CATERPILLAR_MEAT)) {
             lines.add(t("food.corrupted", SoulPenalty.RAW_MEAT_STAGE).withStyle(ChatFormatting.GRAY));
         }
-        if (item instanceof com.tarkrakov.tearsofink.weapon.ranged.RangedItem) return; // ranged prototype provides its own tooltip
         if (!(item instanceof AbilityWeapon) && !(item instanceof OrdinaryArmorItem)) {
             if (inside && !Gear.isModItem(stack)) {
                 if (item instanceof ArmorItem) lines.add(t("penalty.armor", fmt((1 - VanillaArmorPenalty.LAND_MULTIPLIER) * 100)).withStyle(ChatFormatting.RED));
@@ -129,16 +129,17 @@ public final class WeaponStats {
             }
         }
 
-        boolean upgrades = Gear.ours(stack) && Screen.hasControlDown();
+        boolean upgrades = !(item instanceof RangedItem) && Gear.ours(stack) && Screen.hasControlDown();
         boolean detail = Screen.hasShiftDown() && !upgrades;
         List<Component> out = new ArrayList<>();
         if (item instanceof OrdinaryArmorItem armor) armor(out, stack, armor, detail, inside);
+        else if (item instanceof RangedItem ranged) ranged(out, stack, ranged, detail);
         else weapon(out, stack, (AbilityWeapon) item, detail, upgrades);
         if (mc.level != null && !inside && (item instanceof OrdinaryArmorItem || item instanceof SwordItem || item instanceof SoulShieldItem)) {
             add(out, item instanceof OrdinaryArmorItem ? "penalty.mod_armor" : "penalty.mod_weapon", ChatFormatting.RED,
                     fmt((1 - EquipmentAffinity.MOD_OUTSIDE_LANDS) * 100));
         }
-        add(out, detail || upgrades ? "summary_hint" : Gear.ours(stack) ? "views_hint" : item instanceof OrdinaryArmorItem ? "armor_hint" : "details_hint", ChatFormatting.GRAY);
+        add(out, detail || upgrades ? "summary_hint" : !(item instanceof RangedItem) && Gear.ours(stack) ? "views_hint" : item instanceof OrdinaryArmorItem ? "armor_hint" : "details_hint", ChatFormatting.GRAY);
         lines.addAll(Math.min(1, lines.size()), out);
         // Wrap by actual font pixel width, not a count of characters. Native tooltip positioning
         // stays responsible for the cursor and screen edges. Do not shrink the player's font.
@@ -157,6 +158,81 @@ public final class WeaponStats {
         }
         lines.clear();
         lines.addAll(wrapped);
+    }
+
+    /** Ranged attacks are projectiles, not melee attribute damage or sharpenable blades. */
+    private static void ranged(List<Component> out, ItemStack stack, RangedItem item, boolean detail) {
+        boolean pistol = item.kind == RangedItem.Kind.PISTOL;
+        boolean knife = item.kind == RangedItem.Kind.DAGGER;
+        add(out, "weapon.type", ChatFormatting.GOLD, t("class.ranged"), t(pistol || knife ? "hands.one" : "hands.two"));
+        add(out, pistol ? "ranged.line_soul" : knife ? "line.blood" : "line.ink", ChatFormatting.GRAY);
+        if (!detail) {
+            if (pistol) {
+                add(out, "ranged.volley", ChatFormatting.WHITE, fmt(PistolTuning.DAMAGE), fmt(PistolTuning.DAMAGE*2));
+                add(out, "ranged.reload_pair", ChatFormatting.WHITE, fmt(PistolTuning.RELOAD/20.0), fmt(PistolTuning.DUAL_RELOAD/20.0));
+                add(out, "ranged.pellets", ChatFormatting.GRAY, PistolTuning.PELLETS, fmt(PistolTuning.DAMAGE/PistolTuning.PELLETS));
+                add(out, "ranged.shot_cost", ChatFormatting.GRAY, PistolTuning.SHOT_COST, PistolTuning.SHOT_COST*2);
+            } else if (knife) {
+                add(out, "ranged.throw_damage", ChatFormatting.WHITE, fmt(KnifeTuning.DAMAGE), fmt(KnifeTuning.DAMAGE*2));
+                add(out, "ranged.throw_interval", ChatFormatting.WHITE, fmt(RangedCombat.KNIFE_DURATION/20.0));
+                add(out, "passive.bleed", ChatFormatting.RED, fmt(KnifeTuning.BLEED_CHANCE*100));
+                add(out, "ranged.shot_cost", ChatFormatting.GRAY, KnifeTuning.COST, KnifeTuning.COST*2);
+            } else {
+                add(out, "weapon.damage_lands", ChatFormatting.WHITE, "11");
+                add(out, "ranged.reload_single", ChatFormatting.WHITE, "2.3");
+            }
+        }
+        if (knife) {
+            int charges = RangedSupply.amount(stack);
+            out.add(Component.translatable("ranged.tears-of-ink.charges", charges, RangedSupply.capacity(stack))
+                    .withStyle(charges==0 ? ChatFormatting.RED : ChatFormatting.GRAY));
+        } else {
+            boolean loaded=RangedCombat.loaded(stack);
+            out.add(Component.translatable(loaded ? "ranged.tears-of-ink.loaded" : "ranged.tears-of-ink.unloaded")
+                    .withStyle(loaded ? ChatFormatting.GREEN : ChatFormatting.GRAY));
+        }
+        Skill ability = item.ability();
+        add(out, "ability.name", ChatFormatting.AQUA, SkillKeys.weaponKeyLabel(), Component.translatable(ability.nameKey()));
+        MutableComponent costs = Component.empty();
+        if (pistol || knife) {
+            int cost=pistol?PistolTuning.WILD_COST:KnifeTuning.BLOOD_COST;
+            costs.append(t("ranged.ability_charges",cost,cost*2).withStyle(ChatFormatting.GRAY));
+        }
+        if (ability.inkCost()>0) {
+            if (pistol || knife) costs.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY));
+            costs.append(t("cost.ink",fmt(ability.inkCost())).withStyle(ChatFormatting.LIGHT_PURPLE));
+        }
+        if (ability.soulCost()>0) {
+            if (pistol || knife || ability.inkCost()>0) costs.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY));
+            costs.append(t("cost.soul",ability.soulCost()).withStyle(ChatFormatting.AQUA));
+        }
+        if (ability.cooldownTicks()>0) {
+            costs.append(Component.literal(" · ").withStyle(ChatFormatting.DARK_GRAY));
+            costs.append(t("cooldown",cooldown(stack,ability.cooldownTicks())).withStyle(ChatFormatting.GRAY));
+        }
+        out.add(costs);
+        if (!detail) return;
+
+        var options=Minecraft.getInstance().options;
+        add(out, "ranged.fire_control", ChatFormatting.AQUA, options.keyAttack.getTranslatedKeyMessage());
+        if (!knife) add(out, "ranged.aim_control", ChatFormatting.GRAY, options.keyUse.getTranslatedKeyMessage());
+        if (pistol || knife) {
+            add(out, "ranged.offhand_control", ChatFormatting.GRAY, RangedClient.offhandKeyLabel(), t("offkey",SkillKeys.weaponKeyLabel()));
+            if (pistol) {
+                add(out, "ranged.wild", ChatFormatting.WHITE, fmt(PistolTuning.WILD_DAMAGE), fmt(PistolTuning.WILD_DAMAGE*2), fmt(PistolTuning.WILD_RANGE));
+                add(out, "ranged.wild_recoil", ChatFormatting.GRAY);
+                add(out, "ranged.spread", ChatFormatting.GRAY, fmt(PistolTuning.HIP_SPREAD), fmt(PistolTuning.AIM_SPREAD));
+                add(out, "ranged.range", ChatFormatting.GRAY, fmt(PistolTuning.SPEED*PistolTuning.PELLET_LIFETIME));
+                add(out, "ranged.reload_slow", ChatFormatting.RED, fmt(PistolTuning.RELOAD_SLOW*100));
+                add(out, "ranged.supply", ChatFormatting.GRAY,
+                        RangedSupply.capacity(new ItemStack(ModItems.HOLY_BANDOLIER)), RangedSupply.FULL_REFILL_ITEMS);
+            } else {
+                add(out, "ranged.blood_shot", ChatFormatting.RED, fmt(KnifeTuning.BLOOD_BLEED_CHANCE*100));
+                add(out, "ranged.blood_duration", ChatFormatting.GRAY, fmt(RangedCombat.KNIFE_BLOOD_DURATION/20.0));
+                add(out, "ranged.range", ChatFormatting.GRAY, fmt(KnifeTuning.SPEED*KnifeTuning.LIFETIME));
+                add(out, "ranged.knife_refill", ChatFormatting.GRAY, KnifeTuning.REFILL_PER_INGOT);
+            }
+        } else add(out, "ranged.ink_shot", ChatFormatting.GRAY);
     }
 
     private static void armor(List<Component> out, ItemStack stack, OrdinaryArmorItem armor, boolean detail, boolean inside) {

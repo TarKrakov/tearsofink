@@ -20,6 +20,7 @@ import java.util.Map;
 
 public final class RangedClient {
     private static KeyMapping off;
+    public static Component offhandKeyLabel(){return off==null?Component.translatable("key.mouse.4"):off.getTranslatedKeyMessage();}
     private static boolean sentAim, aimRequested;
     private static ItemStack lastMain=ItemStack.EMPTY;
     private static final Map<Integer,Long> REMOTE_AIM=new HashMap<>();
