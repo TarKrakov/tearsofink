@@ -124,8 +124,9 @@ public final class WeaponLoadouts {
         ShieldStance.equipmentChanged(player);
         WeaponAbilities.MERCY.equipmentChanged(player);
         player.setAttached(READY_AT, player.server.overworld().getGameTime() + COOLDOWN);
-        if (ServerPlayNetworking.canSend(player, Swapped.TYPE)) ServerPlayNetworking.send(player, Swapped.INSTANCE);
+        // Synchronize the incoming stacks before the visual draw acknowledgement.
         player.inventoryMenu.broadcastChanges();
+        if (ServerPlayNetworking.canSend(player, Swapped.TYPE)) ServerPlayNetworking.send(player, Swapped.INSTANCE);
     }
 
     /** Runs with vanilla's inventory drop, after its keep-inventory and spectator checks. */

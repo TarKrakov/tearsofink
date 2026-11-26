@@ -18,6 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 public abstract class ItemInHandRendererMixin {
 	@Unique
 	private static boolean tearsofink$inner;
+	@Unique private static boolean tearsofink$drawLayer;
 
 	/** Щиты Души парой светятся в темноте и от первого лица. */
 	@org.spongepowered.asm.mixin.injection.ModifyArg(method = "renderArmWithItem", index = 6, require = 0, at = @At(value = "INVOKE",
@@ -43,6 +44,13 @@ public abstract class ItemInHandRendererMixin {
 									  ItemStack stack, float equippedProgress, PoseStack poseStack, MultiBufferSource buffer, int light, CallbackInfo ci) {
 		if (hand == InteractionHand.OFF_HAND && com.tarkrakov.tearsofink.weapon.ranged.RangedCombat.blocksOffhand(player)) {
             ci.cancel(); return;
+        }
+        if (!tearsofink$inner && !tearsofink$drawLayer) {
+            float drop = com.tarkrakov.tearsofink.client.combat.CombatClient.drawOffset(player, hand, stack);
+            if (drop > 0) {
+                tearsofink$renderDraw(player, partialTicks, pitch, hand, swingProgress, stack, poseStack, buffer, light, drop);
+                ci.cancel(); return;
+            }
         }
         if (!tearsofink$inner && com.tarkrakov.tearsofink.client.PistolAnims.isPistol(stack)) {
             var side = hand==InteractionHand.MAIN_HAND?player.getMainArm():player.getMainArm().getOpposite();
@@ -86,4 +94,21 @@ public abstract class ItemInHandRendererMixin {
 		}
 		ci.cancel();
 	}
+
+    /** Apply only once, outside all authored poses; suppress vanilla equip for the same rise. */
+    @Unique
+    private void tearsofink$renderDraw(AbstractClientPlayer player, float partialTicks, float pitch,
+                                      InteractionHand hand, float swingProgress, ItemStack stack,
+                                      PoseStack pose, MultiBufferSource buffers, int light, float drop) {
+        tearsofink$drawLayer = true;
+        pose.pushPose();
+        try {
+            pose.translate(0, -drop, 0);
+            ((ItemInHandRendererInvoker)this).tearsofink$renderArmWithItem(player, partialTicks, pitch, hand,
+                    swingProgress, stack, 0, pose, buffers, light);
+        } finally {
+            pose.popPose();
+            tearsofink$drawLayer = false;
+        }
+    }
 }

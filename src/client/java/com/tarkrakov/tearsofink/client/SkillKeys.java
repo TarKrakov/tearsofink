@@ -52,7 +52,10 @@ public final class SkillKeys {
 		loadoutKey = KeyBindingHelper.registerKeyBinding(new KeyMapping("key.tears-of-ink.loadout",
 				InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, CATEGORY));
 		ClientPlayNetworking.registerGlobalReceiver(WeaponLoadouts.Swapped.TYPE, (packet, context) ->
-				context.client().execute(() -> suppressHeldUse = context.client().options.keyUse.isDown()));
+				context.client().execute(() -> {
+                    suppressHeldUse = context.client().options.keyUse.isDown();
+                    com.tarkrakov.tearsofink.client.combat.CombatClient.loadoutSwapped();
+                }));
 		ClientPlayConnectionEvents.DISCONNECT.register((handler, client) -> suppressHeldUse = false);
 		ClientTickEvents.END_CLIENT_TICK.register(SkillKeys::tick);
 		RangedClient.init();
