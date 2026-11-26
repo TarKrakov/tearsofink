@@ -133,8 +133,8 @@ public final class RangedCombat {
         AttackEntityCallback.EVENT.register((p,level,hand,target,hit)->RangedItem.kind(p.getMainHandItem())!=null?InteractionResult.FAIL:InteractionResult.PASS);
         UseItemCallback.EVENT.register((p,level,hand)->blocked(p,hand)
             ?InteractionResultHolder.fail(p.getItemInHand(hand)):InteractionResultHolder.pass(p.getItemInHand(hand)));
-        UseBlockCallback.EVENT.register((p,level,hand,hit)->blocked(p,hand)?InteractionResult.FAIL:InteractionResult.PASS);
-        UseEntityCallback.EVENT.register((p,level,hand,target,hit)->blocked(p,hand)?InteractionResult.FAIL:InteractionResult.PASS);
+        UseBlockCallback.EVENT.register((p,level,hand,hit)->hand==InteractionHand.OFF_HAND&&blocksOffhand(p)?InteractionResult.FAIL:InteractionResult.PASS);
+        UseEntityCallback.EVENT.register((p,level,hand,target,hit)->hand==InteractionHand.OFF_HAND&&blocksOffhand(p)?InteractionResult.FAIL:InteractionResult.PASS);
     }
     private static boolean blocked(Player p,InteractionHand hand){return hand==InteractionHand.OFF_HAND&&blocksOffhand(p)
         || RangedItem.kind(p.getItemInHand(hand))!=null;}

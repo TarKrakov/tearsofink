@@ -10,7 +10,7 @@ function convert(source){
    if(a>=0){const angle=e.rotation[a];out.rotation={angle,axis:"xyz"[a],origin:e.origin};if(![0,22.5,-22.5,45,-45].includes(angle))out.rotation.toi_exact_pistol=true;}
    out.faces=Object.fromEntries(Object.entries(e.faces).map(([k,v])=>[k,{uv:v.uv.map((n,i)=>n*16/(i%2?j.resolution.height:j.resolution.width)),texture:"#0",...(v.rotation?{rotation:v.rotation}:{})}]));
    return out;
- }),display:j.display};
+ }),display:{...j.display,gui:{rotation:[0,0,0],translation:[-5.6,.4,-2.4],scale:[.8,.8,.8]}}};
  return {source:j,model};
 }
 const root=path.resolve(__dirname,'../..'),assets=path.join(root,'src/main/resources/assets/tears-of-ink');

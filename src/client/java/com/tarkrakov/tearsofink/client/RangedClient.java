@@ -20,13 +20,15 @@ import java.util.Map;
 
 public final class RangedClient {
     private static KeyMapping off;
-    private static boolean sentAim;
+    private static boolean sentAim, aimRequested;
     private static ItemStack lastMain=ItemStack.EMPTY;
     private static final Map<Integer,Long> REMOTE_AIM=new HashMap<>();
     private static RangedCombat.ReloadView reload=new RangedCombat.ReloadView(0,0,0,0);
     private RangedClient(){}
+    public static void beginUseAttempt(){aimRequested=false;}
+    public static void aimAfterInteraction(Minecraft mc){aimRequested=mc.player!=null&&RangedCombat.canAim(mc.player);}
     private static boolean localAim(Minecraft mc){
-        return mc.player!=null&&mc.screen==null&&!mc.player.isSpectator()&&RangedCombat.canAim(mc.player)&&mc.options.keyUse.isDown()&&!SkillKeys.suppressHeldUse(mc);
+        return aimRequested&&mc.player!=null&&mc.screen==null&&!mc.player.isSpectator()&&RangedCombat.canAim(mc.player)&&mc.options.keyUse.isDown()&&!SkillKeys.suppressHeldUse(mc);
     }
     public static boolean aiming(Player player){
         Minecraft mc=Minecraft.getInstance();
@@ -69,8 +71,9 @@ public final class RangedClient {
             else REMOTE_AIM.remove(v.entity());
         }));
         ClientPlayNetworking.registerGlobalReceiver(RangedCombat.ReloadView.TYPE,(v,ctx)->ctx.client().execute(()->reload=v));
-        ClientPlayConnectionEvents.DISCONNECT.register((handler,mc)->{REMOTE_AIM.clear();sentAim=false;lastMain=ItemStack.EMPTY;reload=new RangedCombat.ReloadView(0,0,0,0);});
+        ClientPlayConnectionEvents.DISCONNECT.register((handler,mc)->{REMOTE_AIM.clear();sentAim=false;aimRequested=false;lastMain=ItemStack.EMPTY;reload=new RangedCombat.ReloadView(0,0,0,0);});
         ClientTickEvents.END_CLIENT_TICK.register(mc->{
+            if(!mc.options.keyUse.isDown()||mc.screen!=null||mc.player==null||!RangedCombat.canAim(mc.player)||SkillKeys.suppressHeldUse(mc))aimRequested=false;
             if(mc.player!=null){syncAim(mc,mc.player.tickCount%20==0);if(mc.player.tickCount%40==0)REMOTE_AIM.values().removeIf(t->t<mc.player.level().getGameTime());}
             while(off.consumeClick()){if(mc.screen==null)fire(true);}
         });

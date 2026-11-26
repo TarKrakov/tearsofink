@@ -1,6 +1,14 @@
 package com.tarkrakov.tearsofink.client.mixin;
 
 import com.tarkrakov.tearsofink.client.SkillKeys;
+import com.tarkrakov.tearsofink.client.RangedClient;
+import com.tarkrakov.tearsofink.weapon.ranged.RangedItem;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import net.minecraft.client.multiplayer.MultiPlayerGameMode;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import com.tarkrakov.tearsofink.client.combat.CombatClient;
 import com.tarkrakov.tearsofink.weapon.combat.Archetype;
 import net.minecraft.client.Minecraft;
@@ -38,9 +46,21 @@ public abstract class MinecraftAttackMixin {
 
 	@Inject(method = "startUseItem", at = @At("HEAD"), cancellable = true)
 	private void tearsofink$releaseBeforeUsingNewLoadout(CallbackInfo ci) {
-		if (SkillKeys.suppressHeldUse((Minecraft) (Object) this) ||
-            player != null && com.tarkrakov.tearsofink.weapon.ranged.RangedItem.kind(player.getMainHandItem()) != null) ci.cancel();
+        RangedClient.beginUseAttempt();
+		if (SkillKeys.suppressHeldUse((Minecraft) (Object) this)) ci.cancel();
 	}
+
+    // Vanilla tries entity and block interaction first. Only its fallback to
+    // using the held item becomes aiming; a consumed interaction never aims.
+    @WrapOperation(method = "startUseItem", at = @At(value = "INVOKE",
+        target = "Lnet/minecraft/client/multiplayer/MultiPlayerGameMode;useItem(Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/world/InteractionHand;)Lnet/minecraft/world/InteractionResult;"))
+    private InteractionResult tearsofink$aimAfterInteraction(MultiPlayerGameMode mode, Player actor, InteractionHand hand, Operation<InteractionResult> original) {
+        if(hand==InteractionHand.MAIN_HAND&&RangedItem.kind(actor.getMainHandItem())!=null){
+            RangedClient.aimAfterInteraction((Minecraft)(Object)this);
+            return InteractionResult.CONSUME;
+        }
+        return original.call(mode,actor,hand);
+    }
 
 	@Inject(method = "startUseItem", at = @At("TAIL"))
 	private void tearsofink$singleParryPerPress(CallbackInfo ci) {
