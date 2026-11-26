@@ -1333,5 +1333,7 @@
   "key.tears-of-ink.ranged_offhand": "Выстрел второй рукой",
   "ranged.tears-of-ink.charges": "Запас: %s / %s",
   "ranged.tears-of-ink.loaded": "Заряжено",
-  "ranged.tears-of-ink.unloaded": "Не заряжено"
+  "ranged.tears-of-ink.unloaded": "Не заряжено",
+  "ranged.tears-of-ink.refill_arrows": "До полного запаса: %s стрел (Чернильная наковальня)",
+  "ranged.tears-of-ink.refill_bullets": "До полного запаса: %s пуль (Чернильная наковальня)"
 }

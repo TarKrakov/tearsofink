@@ -55,7 +55,7 @@ public final class PistolAnims {
     public static void init(){
         ClientPlayNetworking.registerGlobalReceiver(RangedCombat.PistolShot.TYPE,(v,ctx)->ctx.client().execute(()->{
             long t=now();Hands h=state(v.entity(),t);
-            String name=v.wild()?"wild_shot":(v.pair()?"dual_":"")+(v.aimed()?"shoot_aimed":"shoot");
+            String name=(v.pair()?"dual_":"")+(v.wild()?"wild_shot":v.aimed()?"shoot_aimed":"shoot");
             shot(h.hand(v.off()),name,t);
             if(v.pair())shot(h.off,name,t);
         }));

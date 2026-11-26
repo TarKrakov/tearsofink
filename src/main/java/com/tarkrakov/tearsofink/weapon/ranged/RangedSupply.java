@@ -49,35 +49,55 @@ public final class RangedSupply extends Item {
         p.getInventory().setChanged();
         return true;
     }
-    /** Anvil consumes one item per occupied grid cell, preserving the returned stack's components. */
-    public static ItemStack refill(Container grid) {
+    public static final int FULL_REFILL_ITEMS=12;
+    public record Refill(ItemStack result,int[] consume) {}
+    /** Full top-up using stacked ammo; cost is rounded up for the missing fraction.
+     * Dagger refill retains the existing one-ingot-per-occupied-cell rule. */
+    public static Refill refillPlan(Container grid) {
+        int size=grid.getContainerSize(),receiverSlot=-1,units=0,occupied=0;
         ItemStack receiver=ItemStack.EMPTY;
         Item material=null;
-        int units=0;
-        for(int i=0;i<grid.getContainerSize();i++) {
+        for(int i=0;i<size;i++){
             ItemStack s=grid.getItem(i);
-            if(s.isEmpty()) continue;
-            if(capacity(s)>0) {
-                if(!receiver.isEmpty() || s.getCount()!=1) return ItemStack.EMPTY;
-                receiver=s;
-            } else {
-                if(material!=null && material!=s.getItem()) return ItemStack.EMPTY;
-                material=s.getItem(); units++;
+            if(s.isEmpty())continue;
+            if(capacity(s)>0){
+                if(!receiver.isEmpty()||s.getCount()!=1)return null;
+                receiver=s;receiverSlot=i;
+            }else{
+                if(material!=null&&material!=s.getItem())return null;
+                material=s.getItem();units+=s.getCount();occupied++;
             }
         }
-        if(receiver.isEmpty() || units==0 || amount(receiver)>=capacity(receiver)) return ItemStack.EMPTY;
-        int rate=receiver.is(ModItems.INK_QUIVER) && material==ModItems.INK ? 16
-            : receiver.is(ModItems.HOLY_BANDOLIER) && material==ModItems.PALE_BULLET ? 1
-            : RangedItem.kind(receiver)==RangedItem.Kind.DAGGER && material==ModItems.BLOOD_INGOT ? 12 : 0;
-        if(rate==0) return ItemStack.EMPTY;
+        if(receiver.isEmpty()||units==0||amount(receiver)>=capacity(receiver))return null;
+        boolean ammo=receiver.is(ModItems.INK_QUIVER)&&material==Items.ARROW
+            ||receiver.is(ModItems.HOLY_BANDOLIER)&&material==ModItems.PALE_BULLET;
+        boolean dagger=RangedItem.kind(receiver)==RangedItem.Kind.DAGGER&&material==ModItems.BLOOD_INGOT;
+        if(!ammo&&!dagger)return null;
+        int max=capacity(receiver),missing=max-amount(receiver);
+        int needed=ammo?(missing*FULL_REFILL_ITEMS+max-1)/max:occupied;
+        if(units<needed)return null;
+        int[] consume=new int[size];consume[receiverSlot]=1;
+        int left=needed;
+        for(int i=0;i<size&&left>0;i++){
+            if(i==receiverSlot||grid.getItem(i).isEmpty())continue;
+            int n=ammo?Math.min(left,grid.getItem(i).getCount()):1;
+            consume[i]=n;left-=n;
+        }
+        if(left!=0)return null;
         ItemStack out=receiver.copyWithCount(1);
-        set(out,amount(out)+rate*units);
-        return out;
+        set(out,ammo?max:amount(out)+12*needed);
+        return new Refill(out,consume);
+    }
+    public static ItemStack refill(Container grid){
+        Refill plan=refillPlan(grid);
+        return plan==null?ItemStack.EMPTY:plan.result();
     }
     @Override public boolean isBarVisible(ItemStack stack) { return true; }
     @Override public int getBarWidth(ItemStack stack) { return Math.round(13f*amount(stack)/max); }
     @Override public int getBarColor(ItemStack stack) { return 0x9caa70; }
     @Override public void appendHoverText(ItemStack stack,TooltipContext context,List<Component> tooltip,TooltipFlag flag) {
         tooltip.add(Component.translatable("ranged.tears-of-ink.charges",amount(stack),max));
+        int needed=((max-amount(stack))*FULL_REFILL_ITEMS+max-1)/max;
+        tooltip.add(Component.translatable(stack.is(ModItems.INK_QUIVER)?"ranged.tears-of-ink.refill_arrows":"ranged.tears-of-ink.refill_bullets",needed));
     }
 }

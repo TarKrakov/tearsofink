@@ -2,6 +2,7 @@ package com.tarkrakov.tearsofink.weapon.forge;
 
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.item.ModItems;
+import com.tarkrakov.tearsofink.weapon.ranged.RangedSupply;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -19,7 +20,7 @@ import net.minecraft.world.item.crafting.CraftingInput;
 /**
  * Окно Чернильной наковальни: сетка 3×3 + результат, как у верстака.
  * Ковка — рецепты "tears-of-ink:forging". Заточка — оружие Контрастное/Рубрики + Пигмент по одному в клетку (каждый — четверть шкалы).
- * Забрал результат — из каждой занятой клетки уходит по одному предмету.
+ * Ковка и заточка расходуют по одному предмету в клетке; пополнение боеприпасов — рассчитанный объём из стопок.
  */
 public class InkAnvilMenu extends AbstractContainerMenu {
 	private static final int RESULT_SLOT = 0, GRID_START = 1, GRID_END = 10, INV_START = 10, INV_END = 46;
@@ -45,8 +46,16 @@ public class InkAnvilMenu extends AbstractContainerMenu {
 
 			@Override
 			public void onTake(Player taker, ItemStack stack) {
+				// Match the same preview rule and consume the complete refill in one take.
+                // Other forging recipes and sharpening retain one item per occupied cell.
+                RangedSupply.Refill refill = null;
+                if(taker.level() instanceof ServerLevel level &&
+                    level.getRecipeManager().getRecipeFor(ModForge.TYPE,grid.asCraftInput(),level).isEmpty())
+                    refill=RangedSupply.refillPlan(grid);
+                int[] consume=refill==null?null:refill.consume();
 				for (int i = 0; i < grid.getContainerSize(); i++) {
-					if (!grid.getItem(i).isEmpty()) grid.removeItem(i, 1);
+                    int count=consume==null?1:consume[i];
+					if (count>0&&!grid.getItem(i).isEmpty()) grid.removeItem(i, count);
 				}
 				access.execute((level, pos) -> level.playSound(null, pos, SoundEvents.ANVIL_USE, SoundSource.BLOCKS, 0.6f, 1.2f));
 				slotsChanged(grid);
@@ -78,7 +87,7 @@ public class InkAnvilMenu extends AbstractContainerMenu {
 		ItemStack out = level.getRecipeManager().getRecipeFor(ModForge.TYPE, input, level)
 				.map(r -> r.value().assemble(input, level.registryAccess()))
 				.orElseGet(() -> {
-                    ItemStack refill = com.tarkrakov.tearsofink.weapon.ranged.RangedSupply.refill(grid);
+                    ItemStack refill = RangedSupply.refill(grid);
                     return refill.isEmpty() ? sharpening() : refill;
                 });
 		result.setItem(0, out);

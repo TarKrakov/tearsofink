@@ -37,6 +37,9 @@ import net.minecraft.core.particles.ParticleTypes;
 import java.util.*;
 
 public final class RangedCombat {
+    // Game balance: one cartridge pays for a short-range spread, not six full hits.
+    private static final int PELLETS=6, PELLET_LIFETIME=6;
+    private static final float PISTOL_DAMAGE=12f;
     private static final String LOADED="toi_ranged_loaded", EMPOWERED="toi_ranged_empowered";
     private static final net.minecraft.resources.ResourceLocation SLOW=TearsOfInk.id("ranged_reload_slow");
     private static final Map<UUID,State> STATES=new HashMap<>();
@@ -205,7 +208,7 @@ public final class RangedCombat {
             if(!loaded(first)||pair&&!loaded(second)||!RangedSupply.take(p,kind,n))return false;
             flag(first,LOADED,false);if(pair)flag(second,LOADED,false);
         }
-        Map<UUID,Long> hits=pair?RangedProjectile.pair():null;
+        Map<UUID,Long> hits=pair||kind==Kind.PISTOL?RangedProjectile.pair():null;
         launch(p,first,kind,off,aimed&&!off,special,hits);
         if(pair)launch(p,second,kind,true,aimed,special,hits);
         if(kind==Kind.PISTOL)pistolShot(p,off,pair,aimed&&!off,false);
@@ -213,25 +216,81 @@ public final class RangedCombat {
         if(off)s.nextOff=now+gap;else s.nextMain=now+gap;
         if(pair)s.nextOff=now+gap;
         p.getInventory().setChanged();
-        p.level().playSound(null,p.blockPosition(),kind==Kind.DAGGER?SoundEvents.TRIDENT_THROW.value():SoundEvents.CROSSBOW_SHOOT,SoundSource.PLAYERS,.85f,kind==Kind.PISTOL?.65f:1f);
+        if(kind==Kind.PISTOL){
+            p.level().playSound(null,p.blockPosition(),SoundEvents.GENERIC_EXPLODE.value(),SoundSource.PLAYERS,pair?1.15f:.85f,1.45f);
+            p.level().playSound(null,p.blockPosition(),SoundEvents.CROSSBOW_SHOOT,SoundSource.PLAYERS,.8f,.75f);
+        }else p.level().playSound(null,p.blockPosition(),kind==Kind.DAGGER?SoundEvents.TRIDENT_THROW.value():SoundEvents.CROSSBOW_SHOOT,SoundSource.PLAYERS,.85f,1f);
         return true;
+    }
+    private static Vec3 shotStart(ServerPlayer p,boolean off,boolean pistol){
+        Vec3 right=Vec3.directionFromRotation(0,p.getYRot()+90);
+        // Minecraft yaw+90 points to the player's physical right.
+        double side=(off?-1:1)*(p.getMainArm()==net.minecraft.world.entity.HumanoidArm.RIGHT?1:-1);
+        return p.getEyePosition().add(right.scale(side*(pistol?.36:.22))).add(0,pistol?-.24:-.15,0);
+    }
+    private static Vec3 visibleMuzzle(ServerPlayer p,Vec3 start,Vec3 look){
+        Vec3 end=start.add(look.scale(.65));
+        var hit=p.level().clip(new net.minecraft.world.level.ClipContext(p.getEyePosition(),end,
+            net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,p));
+        return hit.getType()==net.minecraft.world.phys.HitResult.Type.MISS?end:hit.getLocation().subtract(look.scale(.08));
+    }
+    /** Server particle bursts; no fire blocks, explosions or destructive world changes. */
+    private static void muzzleFlash(ServerPlayer p,boolean off,boolean wild){
+        Vec3 look=p.getLookAngle(),m=visibleMuzzle(p,shotStart(p,off,true),look);
+        var level=p.serverLevel();
+        level.sendParticles(ParticleTypes.FLASH,m.x,m.y,m.z,1,0,0,0,0);
+        level.sendParticles(ParticleTypes.FLAME,m.x,m.y,m.z,wild?34:16,.09,.09,.09,wild?.22:.15);
+        level.sendParticles(ParticleTypes.LAVA,m.x,m.y,m.z,wild?7:3,.1,.1,.1,.02);
+        level.sendParticles(ParticleTypes.LARGE_SMOKE,m.x,m.y,m.z,wild?16:6,.13,.12,.13,.07);
+        Vec3 right=Vec3.directionFromRotation(0,p.getYRot()+90),up=right.cross(look).normalize();
+        int rays=wild?20:8;
+        for(int i=0;i<rays;i++){
+            double a=p.getRandom().nextDouble()*Math.PI*2;
+            double spread=(wild?.48:.25)*Math.sqrt(p.getRandom().nextDouble());
+            Vec3 v=look.scale(wild?.75:.45).add(right.scale(Math.cos(a)*spread)).add(up.scale(Math.sin(a)*spread));
+            level.sendParticles(ParticleTypes.FLAME,m.x,m.y,m.z,0,v.x,v.y,v.z,1);
+        }
+    }
+    private static void wildFlash(ServerPlayer p,boolean off){
+        muzzleFlash(p,off,true);
+        Vec3 look=p.getLookAngle(),m=visibleMuzzle(p,shotStart(p,off,true),look);
+        var level=p.serverLevel();
+        // A widening fire/smoke front, stopped by intervening solid blocks.
+        for(int i=1;i<=3;i++){
+            double distance=i*.72;
+            Vec3 center=m.add(look.scale(distance));
+            var hit=p.level().clip(new net.minecraft.world.level.ClipContext(m,center,
+                net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,p));
+            if(hit.getType()!=net.minecraft.world.phys.HitResult.Type.MISS)break;
+            double radius=.18+i*.18;
+            level.sendParticles(ParticleTypes.FLAME,center.x,center.y,center.z,22,radius,radius,radius,.09);
+            level.sendParticles(ParticleTypes.SMOKE,center.x,center.y,center.z,10,radius,radius,radius,.06);
+            if(i==2)level.sendParticles(ParticleTypes.EXPLOSION,center.x,center.y,center.z,1,0,0,0,0);
+        }
     }
     private static void launch(ServerPlayer p,ItemStack stack,Kind kind,boolean off,boolean aimed,boolean special,Map<UUID,Long> hits){
         boolean ink=kind==Kind.CROSSBOW&&empowered(stack);
         if(ink)flag(stack,EMPOWERED,false);
-        float damage=kind==Kind.CROSSBOW?(ink?15:11):kind==Kind.PISTOL?12:4.5f;
+        boolean pistol=kind==Kind.PISTOL;
+        float damage=kind==Kind.CROSSBOW?(ink?15:11):pistol?PISTOL_DAMAGE/PELLETS:4.5f;
         float bleed=kind==Kind.DAGGER?(special?.80f:.25f):0;
-        RangedProjectile shot=new RangedProjectile(p.serverLevel(),p,damage,bleed,ink,hits);
-        shot.setItem(new ItemStack(kind==Kind.DAGGER?ModItems.BLOOD_THROWING_DAGGER:kind==Kind.PISTOL?ModItems.PALE_BULLET:Items.ARROW));
-        Vec3 look=p.getLookAngle();
-        Vec3 right=new Vec3(-look.z,0,look.x).normalize();
-        double side=(off?-1:1)*(p.getMainArm()==net.minecraft.world.entity.HumanoidArm.RIGHT?1:-1);
-        Vec3 start=p.getEyePosition().add(right.scale(side*.22)).add(0,-.15,0);
-        shot.setPos(start.x,start.y,start.z);
-        float spread=kind==Kind.CROSSBOW?(aimed?.5f:3f):kind==Kind.PISTOL?(aimed?3f:8f):1.7f;
-        Vec3 direction=aimed&&kind!=Kind.DAGGER?p.getEyePosition().add(look.scale(24)).subtract(start).normalize():look;
-        shot.shoot(direction.x,direction.y,direction.z,kind==Kind.DAGGER?1.7f:kind==Kind.PISTOL?3.2f:2.7f,spread);
-        p.serverLevel().addFreshEntity(shot);
+        Vec3 look=p.getLookAngle(),start=shotStart(p,off,pistol);
+        // Do not place a projectile across an adjacent wall.
+        var obstruction=p.level().clip(new net.minecraft.world.level.ClipContext(p.getEyePosition(),start,
+            net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,p));
+        if(obstruction.getType()!=net.minecraft.world.phys.HitResult.Type.MISS)start=p.getEyePosition();
+        float spread=kind==Kind.CROSSBOW?(aimed?.5f:3f):pistol?(aimed?10f:18f):1.7f;
+        Vec3 direction=aimed&&kind!=Kind.DAGGER?p.getEyePosition().add(look.scale(pistol?8:24)).subtract(start).normalize():look;
+        int count=pistol?PELLETS:1;
+        for(int i=0;i<count;i++){
+            RangedProjectile shot=new RangedProjectile(p.serverLevel(),p,damage,bleed,ink,hits);
+            shot.setItem(new ItemStack(kind==Kind.DAGGER?ModItems.BLOOD_THROWING_DAGGER:pistol?ModItems.PALE_BULLET:Items.ARROW));
+            shot.setPos(start.x,start.y,start.z);
+            if(pistol)shot.limitLifetime(PELLET_LIFETIME);
+            shot.shoot(direction.x,direction.y,direction.z,kind==Kind.DAGGER?1.7f:pistol?3.2f:2.7f,spread);
+            p.serverLevel().addFreshEntity(shot);
+        }
+        if(pistol)muzzleFlash(p,off,false);
     }
     private static ItemStack held(ServerPlayer p,SkillInput input){return input.sneaking()?p.getOffhandItem():p.getMainHandItem();}
     public static final Skill INK_SHOT=new Skill(TearsOfInk.id("ranged_ink_shot"),8,0,60){
@@ -246,21 +305,27 @@ public final class RangedCombat {
     };
     public static final Skill WILD_SHOT=new Skill(TearsOfInk.id("ranged_wild_shot"),0,12,100){
         @Override public boolean activate(ServerPlayer p,SkillInput input){
-            ItemStack s=held(p,input);
-            if(!valid(p)||input.sneaking()&&blocksOffhand(p)||RangedItem.kind(s)!=Kind.PISTOL||!loaded(s)||!RangedSupply.take(p,Kind.PISTOL,2))return false;
+            boolean off=input.sneaking(),pair=!off&&paired(p,Kind.PISTOL);
+            ItemStack s=held(p,input),other=p.getOffhandItem();
+            if(!valid(p)||off&&blocksOffhand(p)||RangedItem.kind(s)!=Kind.PISTOL||!loaded(s)
+                ||pair&&!loaded(other)||!RangedSupply.take(p,Kind.PISTOL,pair?4:2))return false;
             flag(s,LOADED,false);
-            pistolShot(p,input.sneaking(),false,false,true);
+            if(pair)flag(other,LOADED,false);
+            pistolShot(p,off,pair,false,true);
+            p.getInventory().setChanged();
             Vec3 look=p.getLookAngle().multiply(1,0,1).normalize();
             if(look.lengthSqr()<1e-5)look=Vec3.directionFromRotation(0,p.getYRot());
             for(LivingEntity t:p.serverLevel().getEntitiesOfClass(LivingEntity.class,p.getBoundingBox().inflate(3.3),e->e!=p&&e.isAlive())){
                 Vec3 d=t.position().subtract(p.position()).multiply(1,0,1);
                 if(d.lengthSqr()>10.89||d.lengthSqr()<1e-5||look.dot(d.normalize())<.45||!p.hasLineOfSight(t)
                     ||t.isAlliedTo(p)||!PantheonCombat.permitsInteraction(t,p))continue;
-                if(Gear.hurtModWave(t,p.damageSources().playerAttack(p),15f))t.knockback(1.1,p.getX()-t.getX(),p.getZ()-t.getZ());
+                if(Gear.hurtModWave(t,p.damageSources().playerAttack(p),pair?30f:15f))t.knockback(1.1,p.getX()-t.getX(),p.getZ()-t.getZ());
             }
             p.setDeltaMovement(p.getDeltaMovement().add(look.scale(-.75)).add(0,.14,0));p.hurtMarked=true;
-            p.serverLevel().sendParticles(ParticleTypes.POOF,p.getX()+look.x,p.getY()+1.15,p.getZ()+look.z,18,.4,.3,.4,.06);
-            p.level().playSound(null,p.blockPosition(),SoundEvents.GENERIC_EXPLODE.value(),SoundSource.PLAYERS,.6f,1.3f);
+            wildFlash(p,off);
+            if(pair)wildFlash(p,true);
+            p.level().playSound(null,p.blockPosition(),SoundEvents.GENERIC_EXPLODE.value(),SoundSource.PLAYERS,pair?1.8f:1.45f,.85f);
+            p.level().playSound(null,p.blockPosition(),SoundEvents.CROSSBOW_SHOOT,SoundSource.PLAYERS,1.0f,.55f);
             return true;
         }
     };

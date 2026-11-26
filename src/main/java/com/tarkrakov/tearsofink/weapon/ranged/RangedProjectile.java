@@ -19,10 +19,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-/** Server-owned transient projectile, no pickup. Two projectiles of one volley share a hit ledger. */
+/** Server-owned transient projectile, no pickup. Members of one accepted volley share a hit ledger. */
 public final class RangedProjectile extends ThrowableItemProjectile {
     private float damage, bleed;
     private boolean slow;
+    private int lifetime=100;
     private Map<UUID,Long> pairHits;
     public RangedProjectile(EntityType<? extends RangedProjectile> type, Level level) { super(type,level); }
     public RangedProjectile(ServerLevel level, ServerPlayer owner,float damage,float bleed,boolean slow,Map<UUID,Long> pairHits) {
@@ -31,14 +32,15 @@ public final class RangedProjectile extends ThrowableItemProjectile {
     }
     public static Map<UUID,Long> pair() { return new HashMap<>(); }
     @Override protected Item getDefaultItem(){ return Items.ARROW; }
-    @Override public void tick(){ super.tick(); if(!level().isClientSide && tickCount>100) discard(); }
+    public void limitLifetime(int ticks){lifetime=Math.clamp(ticks,1,100);}
+    @Override public void tick(){ super.tick(); if(!level().isClientSide && tickCount>=lifetime) discard(); }
     @Override protected void onHitEntity(EntityHitResult hit) {
         super.onHitEntity(hit);
         if(!(level() instanceof ServerLevel level) || !(getOwner() instanceof ServerPlayer p)
             || !(hit.getEntity() instanceof LivingEntity target) || target==p || target.isAlliedTo(p)
             || !PantheonCombat.permitsInteraction(target,this)) return;
         Long first=pairHits==null ? null : pairHits.get(target.getUUID());
-        // Only the second successful member of the same volley, within a short interval.
+        // Only members of the same accepted volley, within a short interval. Unrelated attacks retain i-frames.
         int old=target.invulnerableTime;
         boolean companion=first!=null && level.getGameTime()-first<=4;
         if(companion) target.invulnerableTime=0;

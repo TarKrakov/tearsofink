@@ -1333,5 +1333,7 @@
   "key.tears-of-ink.ranged_offhand": "Offhand ranged attack",
   "ranged.tears-of-ink.charges": "Charges: %s / %s",
   "ranged.tears-of-ink.loaded": "Loaded",
-  "ranged.tears-of-ink.unloaded": "Unloaded"
+  "ranged.tears-of-ink.unloaded": "Unloaded",
+  "ranged.tears-of-ink.refill_arrows": "Arrows to refill: %s (Ink Anvil)",
+  "ranged.tears-of-ink.refill_bullets": "Bullets to refill: %s (Ink Anvil)"
 }

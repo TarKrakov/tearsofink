@@ -128,7 +128,7 @@ public final class ModItems {
 	public static final Item BLOOD_THROWING_DAGGER = register("blood_throwing_dagger", new com.tarkrakov.tearsofink.weapon.ranged.RangedItem(com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.DAGGER));
 	public static final Item HOLY_PISTOL = register("holy_pistol", new com.tarkrakov.tearsofink.weapon.ranged.RangedItem(com.tarkrakov.tearsofink.weapon.ranged.RangedItem.Kind.PISTOL));
 	public static final Item INK_QUIVER = register("ink_quiver", new com.tarkrakov.tearsofink.weapon.ranged.RangedSupply(64));
-	public static final Item HOLY_BANDOLIER = register("holy_bandolier", new com.tarkrakov.tearsofink.weapon.ranged.RangedSupply(32));
+	public static final Item HOLY_BANDOLIER = register("holy_bandolier", new com.tarkrakov.tearsofink.weapon.ranged.RangedSupply(64));
 	public static final Item PALE_BULLET = register("pale_bullet", new Item(new Item.Properties()));
 	public static final Item PALE_INGOT = register("pale_ingot", new Item(new Item.Properties()));
 	public static final Item BLOOD_INGOT = register("blood_ingot", new Item(new Item.Properties()));
