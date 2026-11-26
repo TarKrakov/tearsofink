@@ -25,6 +25,6 @@ public final class RangedItem extends Item implements AbilityWeapon {
     @Override public int getBarColor(ItemStack stack) {
         if(kind==Kind.DAGGER)return 0x9b3545;
         float f=com.tarkrakov.tearsofink.weapon.forge.Gear.sharpFraction(stack);
-        return net.minecraft.util.Mth.hsvToRgb(f/3f,1f,1f);
+        return f <= com.tarkrakov.tearsofink.weapon.forge.Gear.WARN_AT ? 0xD05A2A : 0x9A8CD8;
     }
 }
