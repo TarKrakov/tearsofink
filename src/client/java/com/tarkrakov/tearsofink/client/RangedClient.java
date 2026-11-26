@@ -121,7 +121,7 @@ public final class RangedClient {
         Minecraft mc=Minecraft.getInstance();
         if(mc.player==null||mc.player.isSpectator()||!ClientPlayNetworking.canSend(RangedCombat.Fire.TYPE))return;
         if(RangedItem.kind(secondary?mc.player.getOffhandItem():mc.player.getMainHandItem())==null)return;
-        if(!secondary&&CrossbowAnims.holds(mc.player)&&(!localAim(mc)||!CrossbowAnims.canFire(mc.player)))return;
+        // LMB is sufficient: server schedules the crossbow's automatic aim and release.
         syncAim(mc,false);
         ClientPlayNetworking.send(new RangedCombat.Fire(secondary,!secondary&&localAim(mc)));
     }

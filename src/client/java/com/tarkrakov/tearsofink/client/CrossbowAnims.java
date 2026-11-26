@@ -38,7 +38,7 @@ public final class CrossbowAnims {
     private static final Map<Integer,State> states=new HashMap<>();
     private static final class State {
         float previousAim,aim;
-        int shot,reload,max;
+        int autoAim,shot,reload,max;
         long received;
     }
     private record Key(float time,Vector3f value,boolean smooth){}
@@ -51,7 +51,7 @@ public final class CrossbowAnims {
     public static void init(){
         ClientPlayNetworking.registerGlobalReceiver(RangedCombat.CrossbowPose.TYPE,(v,ctx)->ctx.client().execute(()->{
             State s=states.computeIfAbsent(v.entity(),id->new State());
-            s.shot=v.shotRemaining();s.reload=v.reloadTicks();s.max=v.reloadMax();s.received=System.nanoTime();
+            s.autoAim=v.aimRemaining();s.shot=v.shotRemaining();s.reload=v.reloadTicks();s.max=v.reloadMax();s.received=System.nanoTime();
             if(s.shot>0||s.max>0)s.previousAim=s.aim=0;
         }));
         ClientPlayConnectionEvents.DISCONNECT.register((handler,mc)->states.clear());
@@ -70,7 +70,6 @@ public final class CrossbowAnims {
     }
     private static float elapsed(State s){return Math.max(0,(System.nanoTime()-s.received)/50_000_000f);}
     private static boolean busy(State s){float e=elapsed(s);return s.shot>e||s.max>0&&s.reload+e<s.max&&e<20;}
-    public static boolean canFire(Player p){State s=states.get(p.getId());return s!=null&&s.aim>=.999f&&!busy(s)&&RangedCombat.loaded(p.getMainHandItem());}
     private static Frame frame(Player p,float partial){
         State s=states.get(p.getId());boolean loaded=RangedCombat.loaded(p.getMainHandItem());
         if(s!=null){
@@ -79,6 +78,10 @@ public final class CrossbowAnims {
             if(s.max>0&&e<20&&!loaded){
                 float t=Math.clamp((s.reload+e)/s.max*3.5f,0,3.5f);
                 return new Frame("reload",t,t>=2.75f,Math.max(0,(3.25f-t)*6),false);
+            }
+            if(s.autoAim>0&&e<20){
+                float t=Math.clamp((RangedCombat.CROSSBOW_AIM_TICKS-s.autoAim+e)/20f,0,.25f);
+                return new Frame("aim",t,true,0,false);
             }
             if(loaded){float aim=Mth.lerp(partial,s.previousAim,s.aim);if(aim>0)return new Frame("aim",aim*.25f,true,0,false);}
         }

@@ -45,7 +45,8 @@ public final class RangedCombat {
     private static final net.minecraft.resources.ResourceLocation SLOW=TearsOfInk.id("ranged_reload_slow");
     private static final Map<UUID,State> STATES=new HashMap<>();
     private static final class Job { ItemStack stack=ItemStack.EMPTY; int ticks, duration; }
-    private static final class State { final Job main=new Job(), off=new Job(); long nextMain, nextOff; double slow; boolean aim, hadPistol; long aimSince, crossbowShotUntil; ItemStack crossbowShotStack=ItemStack.EMPTY, aimStack=ItemStack.EMPTY; PendingKnife mainKnife, offKnife; }
+    private static final class State { final Job main=new Job(), off=new Job(); long nextMain, nextOff; double slow; boolean aim, hadPistol; long aimSince, crossbowShotUntil; ItemStack crossbowShotStack=ItemStack.EMPTY, aimStack=ItemStack.EMPTY; PendingKnife mainKnife, offKnife; PendingCrossbow crossbowPending; }
+    private record PendingCrossbow(net.minecraft.server.level.ServerLevel level,ItemStack stack,long release) {}
     private static final class PendingKnife {
         final net.minecraft.server.level.ServerLevel level; final ItemStack first, second;
         final boolean off, pair, special, aimed; final long start; boolean released, returned;
@@ -101,15 +102,18 @@ public final class RangedCombat {
         @Override public Type<ReloadView> type(){return TYPE;}
     }
     /** Server-authoritative phase for the authored FP/F5 crossbow clip. */
-    public record CrossbowPose(int entity,int shotRemaining,int reloadTicks,int reloadMax) implements CustomPacketPayload {
+    public record CrossbowPose(int entity,int aimRemaining,int shotRemaining,int reloadTicks,int reloadMax) implements CustomPacketPayload {
         public static final Type<CrossbowPose> TYPE=new Type<>(TearsOfInk.id("crossbow_pose"));
-        public static final StreamCodec<ByteBuf,CrossbowPose> CODEC=StreamCodec.composite(ByteBufCodecs.VAR_INT,CrossbowPose::entity,ByteBufCodecs.VAR_INT,CrossbowPose::shotRemaining,ByteBufCodecs.VAR_INT,CrossbowPose::reloadTicks,ByteBufCodecs.VAR_INT,CrossbowPose::reloadMax,CrossbowPose::new);
+        public static final StreamCodec<ByteBuf,CrossbowPose> CODEC=StreamCodec.composite(ByteBufCodecs.VAR_INT,CrossbowPose::entity,ByteBufCodecs.VAR_INT,CrossbowPose::aimRemaining,ByteBufCodecs.VAR_INT,CrossbowPose::shotRemaining,ByteBufCodecs.VAR_INT,CrossbowPose::reloadTicks,ByteBufCodecs.VAR_INT,CrossbowPose::reloadMax,CrossbowPose::new);
         @Override public Type<CrossbowPose> type(){return TYPE;}
     }
     private static void sendCrossbow(ServerPlayer p,State s){
         if(!blocksOffhand(p))return;
         int shot=s.crossbowShotStack==p.getMainHandItem()?(int)Math.clamp(s.crossbowShotUntil-p.serverLevel().getGameTime(),0,CROSSBOW_SHOT_TICKS):0;
-        var packet=new CrossbowPose(p.getId(),shot,s.main.ticks,s.main.duration);
+        int aim=s.crossbowPending!=null&&s.crossbowPending.stack==p.getMainHandItem()&&s.crossbowPending.level==p.serverLevel()
+            ?(int)Math.clamp(s.crossbowPending.release-p.serverLevel().getGameTime(),0,CROSSBOW_AIM_TICKS):0;
+        boolean reloading=s.main.stack==p.getMainHandItem()&&!loaded(p.getMainHandItem());
+        var packet=new CrossbowPose(p.getId(),aim,shot,reloading?s.main.ticks:0,reloading?s.main.duration:0);
         for(ServerPlayer viewer:p.serverLevel().players())if(viewer.distanceToSqr(p)<128*128&&ServerPlayNetworking.canSend(viewer,CrossbowPose.TYPE))ServerPlayNetworking.send(viewer,packet);
     }
     public static boolean canAim(Player p){
@@ -159,7 +163,7 @@ public final class RangedCombat {
         PayloadTypeRegistry.playS2C().register(PistolReload.TYPE,PistolReload.CODEC);
         PayloadTypeRegistry.playS2C().register(CrossbowPose.TYPE,CrossbowPose.CODEC);
         ServerPlayNetworking.registerGlobalReceiver(Aim.TYPE,(packet,ctx)->ctx.player().server.execute(()->aim(ctx.player(),packet.active())));
-        ServerPlayNetworking.registerGlobalReceiver(Fire.TYPE,(packet,ctx)->ctx.player().server.execute(()->fire(ctx.player(),packet.off(),packet.aimed(),false)));
+        ServerPlayNetworking.registerGlobalReceiver(Fire.TYPE,(packet,ctx)->ctx.player().server.execute(()->requestFire(ctx.player(),packet.off(),packet.aimed())));
         ServerTickEvents.END_SERVER_TICK.register(server->{for(ServerPlayer p:server.getPlayerList().getPlayers()) tick(p);});
         ServerPlayConnectionEvents.DISCONNECT.register((h,s)->STATES.remove(h.getPlayer().getUUID()));
         net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents.SERVER_STOPPED.register(s->STATES.clear());
@@ -176,7 +180,7 @@ public final class RangedCombat {
         if(s!=null){
             if(s.mainKnife!=null)knifePose(p,s.mainKnife,KNIFE_CANCEL);
             if(s.offKnife!=null)knifePose(p,s.offKnife,KNIFE_CANCEL);
-            s.mainKnife=s.offKnife=null;s.crossbowShotStack=ItemStack.EMPTY;s.crossbowShotUntil=0;
+            s.mainKnife=s.offKnife=null;s.crossbowShotStack=ItemStack.EMPTY;s.crossbowShotUntil=0;s.crossbowPending=null;
             aim(p,false);s.main.stack=ItemStack.EMPTY;s.main.ticks=s.main.duration=0;
             s.off.stack=ItemStack.EMPTY;s.off.ticks=s.off.duration=0;slow(p,s,0);sendReload(p,s);sendCrossbow(p,s);
         }
@@ -197,6 +201,7 @@ public final class RangedCombat {
         if(!valid(p)){resetReload(p);return;}
         s.mainKnife=tickKnife(p,s.mainKnife);
         s.offKnife=tickKnife(p,s.offKnife);
+        tickCrossbow(p,s);
         if(s.aim&&(!canAim(p)||s.aimStack!=p.getMainHandItem()))aim(p,false);
         boolean blocked=blocksOffhand(p);
         if(blocked&&p.isUsingItem()&&p.getUsedItemHand()==InteractionHand.OFF_HAND)p.stopUsingItem();
@@ -228,7 +233,35 @@ public final class RangedCombat {
         }
         return true;
     }
+    /** A single LMB schedules a server-owned aim then shot. RMB remains manual aim. */
+    private static void requestFire(ServerPlayer p,boolean off,boolean aimed){
+        if(off||!blocksOffhand(p)){fire(p,off,aimed,false);return;}
+        if(!valid(p))return;
+        ItemStack stack=p.getMainHandItem();
+        State s=STATES.computeIfAbsent(p.getUUID(),k->new State());
+        long now=p.serverLevel().getGameTime();
+        if(s.crossbowPending!=null||now<s.nextMain||!loaded(stack)
+            ||!p.getAbilities().instabuild&&RangedSupply.available(p,Kind.CROSSBOW)<1)return;
+        long held=aimed&&s.aim&&s.aimStack==stack?Math.clamp(now-s.aimSince,0,CROSSBOW_AIM_TICKS):0;
+        if(held>=CROSSBOW_AIM_TICKS){fire(p,false,true,false,true);return;}
+        s.crossbowPending=new PendingCrossbow(p.serverLevel(),stack,now+CROSSBOW_AIM_TICKS-held);
+        sendCrossbow(p,s);
+    }
+    private static void tickCrossbow(ServerPlayer p,State s){
+        PendingCrossbow pending=s.crossbowPending;
+        if(pending==null)return;
+        if(p.serverLevel()!=pending.level||p.getMainHandItem()!=pending.stack||!loaded(pending.stack)
+            ||!p.getAbilities().instabuild&&RangedSupply.available(p,Kind.CROSSBOW)<1){
+            s.crossbowPending=null;sendCrossbow(p,s);return;
+        }
+        if(p.serverLevel().getGameTime()<pending.release)return;
+        s.crossbowPending=null;
+        if(!fire(p,false,true,false,true))sendCrossbow(p,s);
+    }
     private static boolean fire(ServerPlayer p,boolean off,boolean aimed,boolean special){
+        return fire(p,off,aimed,special,false);
+    }
+    private static boolean fire(ServerPlayer p,boolean off,boolean aimed,boolean special,boolean crossbowAimed){
         if(!valid(p)||off&&blocksOffhand(p))return false;
         ItemStack first=off?p.getOffhandItem():p.getMainHandItem();
         Kind kind=RangedItem.kind(first);
@@ -239,8 +272,8 @@ public final class RangedCombat {
         ItemStack second=pair?p.getOffhandItem():ItemStack.EMPTY;
         State s=STATES.computeIfAbsent(p.getUUID(),k->new State());
         long now=p.serverLevel().getGameTime();
-        aimed=aimed&&s.aim&&s.aimStack==p.getMainHandItem();
-        if(kind==Kind.CROSSBOW&&(!aimed||now-s.aimSince<CROSSBOW_AIM_TICKS))return false;
+        aimed=kind==Kind.CROSSBOW?crossbowAimed:aimed&&s.aim&&s.aimStack==p.getMainHandItem();
+        if(kind==Kind.CROSSBOW&&!aimed)return false;
         if(now<(off?s.nextOff:s.nextMain)||pair&&now<s.nextOff)return false;
         int n=(pair?2:1)*(kind==Kind.PISTOL?PistolTuning.SHOT_COST:1);
         if(kind==Kind.DAGGER){
