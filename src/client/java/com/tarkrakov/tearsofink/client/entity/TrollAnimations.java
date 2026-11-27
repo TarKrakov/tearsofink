@@ -2,393 +2,595 @@ package com.tarkrakov.tearsofink.client.entity;
 import net.minecraft.client.animation.*;
 /** Authored keyframes from troll.bbmodel; Bezier segments sampled at 50 Hz. */
 final class TrollAnimations {
-static final AnimationDefinition idle=AnimationDefinition.Builder.withLength(3f).looping()
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+static final AnimationDefinition idle=idle();
+static final AnimationDefinition walk=walk();
+static final AnimationDefinition attack_punch_right=attack_punch_right();
+static final AnimationDefinition attack_punch_left=attack_punch_left();
+static final AnimationDefinition attack_belly=attack_belly();
+static final AnimationDefinition attack_slam=attack_slam();
+static final AnimationDefinition sit_down=sit_down();
+static final AnimationDefinition stand_up=stand_up();
+static final AnimationDefinition scratch_belly=scratch_belly();
+static final AnimationDefinition sleep=sleep();
+static final AnimationDefinition death=death();
+private static AnimationChannel channel1(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel2(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel3(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.degreeVec(-2.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel4(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.posVec(0f,1f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel5(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.75f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel6(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.75f,KeyframeAnimations.posVec(0f,0.49952f,-0.02181f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel7(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel8(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.posVec(0f,0.49952f,-0.02181f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel9(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel10(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.posVec(0f,1f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel11(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.degreeVec(-5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel12(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel13(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel14(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel15(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.degreeVec(-5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel16(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel17(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel18(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.posVec(0f,-2f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel19(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel20(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.posVec(0f,2f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel21(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel22(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.posVec(0f,2f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel23(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel24(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.posVec(0f,-2f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationDefinition idle(){
+return AnimationDefinition.Builder.withLength(3f).looping()
+.addAnimation("head_with_neck",channel1())
+.addAnimation("head_with_neck",channel2())
+.addAnimation("body_main",channel3())
+.addAnimation("body_main",channel4())
+.addAnimation("body_fat1",channel5())
+.addAnimation("body_fat1",channel6())
+.addAnimation("body_fat2",channel7())
+.addAnimation("body_fat2",channel8())
+.addAnimation("hand_r",channel9())
+.addAnimation("hand_r",channel10())
+.addAnimation("hand_r_1",channel11())
+.addAnimation("hand_r_1",channel12())
+.addAnimation("hand_l",channel13())
+.addAnimation("hand_l",channel14())
+.addAnimation("hand_l_1",channel15())
+.addAnimation("hand_l_1",channel16())
+.addAnimation("leg_l_1",channel17())
+.addAnimation("leg_l_1",channel18())
+.addAnimation("leg_l",channel19())
+.addAnimation("leg_l",channel20())
+.addAnimation("leg_r",channel21())
+.addAnimation("leg_r",channel22())
+.addAnimation("leg_r_1",channel23())
+.addAnimation("leg_r_1",channel24())
 .build();
-static final AnimationDefinition walk=AnimationDefinition.Builder.withLength(4f).looping()
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.POSITION,
+}
+
+private static AnimationChannel channel25(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.posVec(0f,-0.5f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.posVec(0f,-0.5f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_only",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel26(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(2.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.degreeVec(2.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel27(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel28(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.posVec(0f,-0.5f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.posVec(0f,-0.5f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel29(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel30(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.posVec(0f,-0.5f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.posVec(0f,-0.5f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel31(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel32(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.posVec(0f,-0.4981f,-0.04358f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.posVec(0f,-0.4981f,-0.04358f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel33(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(-5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.degreeVec(-5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel34(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.posVec(0f,-0.5f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.posVec(0f,-0.5f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel35(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel36(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.posVec(0f,-0.5f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.posVec(0f,-0.5f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel37(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-20f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(22.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(-20f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.degreeVec(22.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.degreeVec(-20f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(4f,KeyframeAnimations.degreeVec(-20f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel38(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(35f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(-15f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(35f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.degreeVec(-15f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.degreeVec(35f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(4f,KeyframeAnimations.degreeVec(35f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel39(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(27.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(-20f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(27.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.degreeVec(-20f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.degreeVec(27.5f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(4f,KeyframeAnimations.degreeVec(27.5f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel40(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-20f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(35f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(-20f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(3f,KeyframeAnimations.degreeVec(35f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(4f,KeyframeAnimations.degreeVec(-20f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
+new Keyframe(4f,KeyframeAnimations.degreeVec(-20f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationDefinition walk(){
+return AnimationDefinition.Builder.withLength(4f).looping()
+.addAnimation("head_with_neck",channel25())
+.addAnimation("head_only",channel26())
+.addAnimation("body_main",channel27())
+.addAnimation("body_main",channel28())
+.addAnimation("body_fat1",channel29())
+.addAnimation("body_fat1",channel30())
+.addAnimation("body_fat2",channel31())
+.addAnimation("body_fat2",channel32())
+.addAnimation("hand_r",channel33())
+.addAnimation("hand_r",channel34())
+.addAnimation("hand_l",channel35())
+.addAnimation("hand_l",channel36())
+.addAnimation("leg_r",channel37())
+.addAnimation("leg_r_1",channel38())
+.addAnimation("leg_l",channel39())
+.addAnimation("leg_l_1",channel40())
 .build();
-static final AnimationDefinition attack_punch_right=AnimationDefinition.Builder.withLength(2f)
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+}
+
+private static AnimationChannel channel41(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.2f,KeyframeAnimations.degreeVec(2.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel42(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_only",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel43(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.2f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(7.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(10.0284f,-4.9571f,-0.6542f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel44(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.2f,KeyframeAnimations.degreeVec(2.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(7.5047f,-2.4905f,-0.218f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel45(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel46(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.2f,KeyframeAnimations.degreeVec(2.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel47(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel48(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.2f,KeyframeAnimations.degreeVec(2.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel49(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel50(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.2f,KeyframeAnimations.degreeVec(17.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(40f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(-69.6391f,-8.8605f,-4.6546f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel51(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel52(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(-42.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(50f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel53(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel54(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(0f,0f,-5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(0f,-10f,-5f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel55(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel56(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(0f,25f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(-12.5f,25f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel57(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel58(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel59(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel60(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel61(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel62(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel63(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel64(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel65(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationDefinition attack_punch_right(){
+return AnimationDefinition.Builder.withLength(2f)
+.addAnimation("head_with_neck",channel41())
+.addAnimation("head_with_neck",channel42())
+.addAnimation("head_only",channel43())
+.addAnimation("body_main",channel44())
+.addAnimation("body_main",channel45())
+.addAnimation("body_fat1",channel46())
+.addAnimation("body_fat1",channel47())
+.addAnimation("body_fat2",channel48())
+.addAnimation("body_fat2",channel49())
+.addAnimation("hand_r",channel50())
+.addAnimation("hand_r",channel51())
+.addAnimation("hand_r_1",channel52())
+.addAnimation("hand_r_1",channel53())
+.addAnimation("hand_l",channel54())
+.addAnimation("hand_l",channel55())
+.addAnimation("hand_l_1",channel56())
+.addAnimation("hand_l_1",channel57())
+.addAnimation("leg_r",channel58())
+.addAnimation("leg_r",channel59())
+.addAnimation("leg_r_1",channel60())
+.addAnimation("leg_r_1",channel61())
+.addAnimation("leg_l",channel62())
+.addAnimation("leg_l",channel63())
+.addAnimation("leg_l_1",channel64())
+.addAnimation("leg_l_1",channel65())
 .build();
-static final AnimationDefinition attack_punch_left=AnimationDefinition.Builder.withLength(2f)
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+}
+
+private static AnimationChannel channel66(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.2f,KeyframeAnimations.degreeVec(2.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel67(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_only",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel68(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.2f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(7.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(10.0284f,4.9571f,0.6542f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel69(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.2f,KeyframeAnimations.degreeVec(2.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(7.5047f,2.4905f,0.218f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel70(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel71(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.2f,KeyframeAnimations.degreeVec(2.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel72(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel73(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.2f,KeyframeAnimations.degreeVec(2.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel74(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel75(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.2f,KeyframeAnimations.degreeVec(17.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(0f,0f,5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(0f,10f,5f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel76(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel77(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(0f,-25f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(-12.5f,-25f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel78(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel79(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.2f,KeyframeAnimations.degreeVec(17.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(40f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(-69.6391f,8.8605f,4.6546f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel80(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel81(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(-42.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.1f,KeyframeAnimations.degreeVec(50f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel82(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel83(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel84(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel85(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel86(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel87(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel88(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel89(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel90(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationDefinition attack_punch_left(){
+return AnimationDefinition.Builder.withLength(2f)
+.addAnimation("head_with_neck",channel66())
+.addAnimation("head_with_neck",channel67())
+.addAnimation("head_only",channel68())
+.addAnimation("body_main",channel69())
+.addAnimation("body_main",channel70())
+.addAnimation("body_fat1",channel71())
+.addAnimation("body_fat1",channel72())
+.addAnimation("body_fat2",channel73())
+.addAnimation("body_fat2",channel74())
+.addAnimation("hand_r",channel75())
+.addAnimation("hand_r",channel76())
+.addAnimation("hand_r_1",channel77())
+.addAnimation("hand_r_1",channel78())
+.addAnimation("hand_l",channel79())
+.addAnimation("hand_l",channel80())
+.addAnimation("hand_l_1",channel81())
+.addAnimation("hand_l_1",channel82())
+.addAnimation("leg_r",channel83())
+.addAnimation("leg_r",channel84())
+.addAnimation("leg_r_1",channel85())
+.addAnimation("leg_r_1",channel86())
+.addAnimation("leg_l",channel87())
+.addAnimation("leg_l",channel88())
+.addAnimation("leg_l_1",channel89())
+.addAnimation("leg_l_1",channel90())
 .build();
-static final AnimationDefinition attack_belly=AnimationDefinition.Builder.withLength(2f)
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+}
+
+private static AnimationChannel channel91(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.35f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
@@ -442,8 +644,9 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(-0.30784f,0f,0f),AnimationChanne
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(-0.16325f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(-0.06122f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(-0.0071f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel92(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1f,KeyframeAnimations.posVec(0f,-0.52293f,-5.97717f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.02f,KeyframeAnimations.posVec(0f,-0.52275f,-5.72444f),AnimationChannel.Interpolations.LINEAR),
@@ -496,8 +699,9 @@ new Keyframe(1.93f,KeyframeAnimations.posVec(0f,-0.00915f,-0.03483f),AnimationCh
 new Keyframe(1.95f,KeyframeAnimations.posVec(0f,-0.00485f,-0.01847f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.posVec(0f,-0.00182f,-0.00693f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.posVec(0f,-0.00021f,-0.0008f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_only",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel93(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(7.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.35f,KeyframeAnimations.degreeVec(17.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
@@ -552,8 +756,9 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(0.43977f,0f,0f),AnimationChannel
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(0.23321f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(0.08746f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(0.01015f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel94(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.35f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
@@ -608,8 +813,9 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(-0.13193f,0f,0f),AnimationChanne
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(-0.06996f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(-0.02624f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(-0.00304f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel95(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.02f,KeyframeAnimations.posVec(0f,0f,-0.00525f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.posVec(0f,0f,-0.02029f),AnimationChannel.Interpolations.LINEAR),
@@ -711,8 +917,9 @@ new Keyframe(1.93f,KeyframeAnimations.posVec(0f,0f,-0.10554f),AnimationChannel.I
 new Keyframe(1.95f,KeyframeAnimations.posVec(0f,0f,-0.05597f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.posVec(0f,0f,-0.02099f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.posVec(0f,0f,-0.00244f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel96(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1f,KeyframeAnimations.degreeVec(12.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
@@ -766,8 +973,9 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Inter
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel97(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.02f,KeyframeAnimations.posVec(0f,-0.00011f,-0.00087f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.posVec(0f,-0.00044f,-0.00335f),AnimationChannel.Interpolations.LINEAR),
@@ -869,8 +1077,9 @@ new Keyframe(1.93f,KeyframeAnimations.posVec(0f,-0.0023f,-0.01744f),AnimationCha
 new Keyframe(1.95f,KeyframeAnimations.posVec(0f,-0.00122f,-0.00925f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.posVec(0f,-0.00046f,-0.00347f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.posVec(0f,-0.00005f,-0.0004f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel98(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1f,KeyframeAnimations.degreeVec(17.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
@@ -924,8 +1133,9 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(0.13193f,0f,0f),AnimationChannel
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(0.06996f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(0.02624f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(0.00304f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel99(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.02f,KeyframeAnimations.posVec(0f,-0.00023f,-0.00174f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.posVec(0f,-0.00088f,-0.0067f),AnimationChannel.Interpolations.LINEAR),
@@ -1027,8 +1237,9 @@ new Keyframe(1.93f,KeyframeAnimations.posVec(0f,-0.00459f,-0.03488f),AnimationCh
 new Keyframe(1.95f,KeyframeAnimations.posVec(0f,-0.00244f,-0.0185f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.posVec(0f,-0.00091f,-0.00694f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.posVec(0f,-0.00011f,-0.0008f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel100(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(11.7679f,-4.2454f,19.5621f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1f,KeyframeAnimations.degreeVec(59.3673f,-30.1803f,21.9122f),AnimationChannel.Interpolations.CATMULLROM),
@@ -1082,11 +1293,13 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(-0.4978f,-0.26092f,0.22102f),Ani
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(-0.26399f,-0.13837f,0.11721f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(-0.099f,-0.05189f,0.04396f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(-0.01149f,-0.00602f,0.0051f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel101(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel102(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1f,KeyframeAnimations.degreeVec(-30f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.02f,KeyframeAnimations.degreeVec(-25.09988f,0f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -1139,11 +1352,13 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(0.83556f,0f,0f),AnimationChannel
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(0.44311f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(0.16617f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(0.01928f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel103(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel104(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(11.7679f,4.2454f,-19.5621f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1f,KeyframeAnimations.degreeVec(59.3673f,30.1803f,-21.9122f),AnimationChannel.Interpolations.CATMULLROM),
@@ -1197,11 +1412,13 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(-0.4978f,0.26092f,-0.22102f),Ani
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(-0.26399f,0.13837f,-0.11721f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(-0.099f,0.05189f,-0.04396f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(-0.01149f,0.00602f,-0.0051f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel105(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel106(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1f,KeyframeAnimations.degreeVec(-30f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.02f,KeyframeAnimations.degreeVec(-25.09988f,0f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -1254,11 +1471,13 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(0.83556f,0f,0f),AnimationChannel
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(0.44311f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(0.16617f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(0.01928f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel107(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel108(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(-15f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1f,KeyframeAnimations.degreeVec(-22.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
@@ -1312,11 +1531,13 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(0.27916f,0f,0f),AnimationChannel
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(0.14804f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(0.05552f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(0.00644f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel109(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel110(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(25f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1f,KeyframeAnimations.degreeVec(41.67f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
@@ -1370,11 +1591,13 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(-0.08057f,0f,0f),AnimationChanne
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(-0.04272f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(-0.01602f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(-0.00186f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel111(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel112(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(-15f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1f,KeyframeAnimations.degreeVec(-22.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
@@ -1428,11 +1651,13 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(0.27916f,0f,0f),AnimationChannel
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(0.14804f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(0.05552f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(0.00644f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel113(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel114(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(25f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1f,KeyframeAnimations.degreeVec(41.67f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
@@ -1486,13 +1711,43 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(-0.08057f,0f,0f),AnimationChanne
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(-0.04272f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(-0.01602f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(-0.00186f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel115(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
+new Keyframe(2f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationDefinition attack_belly(){
+return AnimationDefinition.Builder.withLength(2f)
+.addAnimation("head_with_neck",channel91())
+.addAnimation("head_with_neck",channel92())
+.addAnimation("head_only",channel93())
+.addAnimation("body_main",channel94())
+.addAnimation("body_main",channel95())
+.addAnimation("body_fat1",channel96())
+.addAnimation("body_fat1",channel97())
+.addAnimation("body_fat2",channel98())
+.addAnimation("body_fat2",channel99())
+.addAnimation("hand_r",channel100())
+.addAnimation("hand_r",channel101())
+.addAnimation("hand_r_1",channel102())
+.addAnimation("hand_r_1",channel103())
+.addAnimation("hand_l",channel104())
+.addAnimation("hand_l",channel105())
+.addAnimation("hand_l_1",channel106())
+.addAnimation("hand_l_1",channel107())
+.addAnimation("leg_r",channel108())
+.addAnimation("leg_r",channel109())
+.addAnimation("leg_r_1",channel110())
+.addAnimation("leg_r_1",channel111())
+.addAnimation("leg_l",channel112())
+.addAnimation("leg_l",channel113())
+.addAnimation("leg_l_1",channel114())
+.addAnimation("leg_l_1",channel115())
 .build();
-static final AnimationDefinition attack_slam=AnimationDefinition.Builder.withLength(2.9f)
-.addAnimation("main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+}
+
+private static AnimationChannel channel116(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.52f,KeyframeAnimations.posVec(0f,1.64391f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -1615,377 +1870,552 @@ new Keyframe(2.82f,KeyframeAnimations.posVec(0f,-0.12136f,0f),AnimationChannel.I
 new Keyframe(2.84f,KeyframeAnimations.posVec(0f,-0.0708f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2.86f,KeyframeAnimations.posVec(0f,-0.0327f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2.88f,KeyframeAnimations.posVec(0f,-0.00851f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2.9f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.9f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel117(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(15f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.degreeVec(7.17f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel118(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.posVec(0f,-1f,-7f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.posVec(0f,-0.48f,-3.35f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("head_only",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel119(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(7.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(12.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.degreeVec(12.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(2f,KeyframeAnimations.degreeVec(-5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.9f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.9f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel120(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(12.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(17.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.4f,KeyframeAnimations.degreeVec(22.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel121(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.posVec(0f,-1f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.posVec(0f,-0.56f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel122(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.65f,KeyframeAnimations.degreeVec(-17.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.degreeVec(2.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel123(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.65f,KeyframeAnimations.posVec(0f,0.60141f,-1.90743f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.posVec(0f,0.38f,-1.19f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel124(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.65f,KeyframeAnimations.degreeVec(-30f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.degreeVec(15f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel125(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.65f,KeyframeAnimations.posVec(0f,0f,-2f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.posVec(0f,0f,-1.25f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel126(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(32.3993f,-14.0284f,20.9057f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(77.3993f,-14.0284f,20.9057f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.65f,KeyframeAnimations.degreeVec(-90.1007f,-14.0284f,20.9057f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.degreeVec(-20.1007f,-14.0284f,20.9057f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel127(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.posVec(0f,-1f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.posVec(0f,-0.56f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel128(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(-30f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(-45f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.65f,KeyframeAnimations.degreeVec(7.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.degreeVec(37.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel129(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel130(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(32.3993f,14.0284f,-20.9057f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(77.3993f,14.0284f,-20.9057f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.65f,KeyframeAnimations.degreeVec(-90.1007f,14.0284f,-20.9057f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.degreeVec(-20.1007f,14.0284f,-20.9057f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel131(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.posVec(0f,-1f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.posVec(0f,-0.56f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel132(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(-30f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(-45f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.65f,KeyframeAnimations.degreeVec(7.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.degreeVec(37.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2.3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel133(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel134(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(0f,0f,10f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(0f,0f,17.5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.65f,KeyframeAnimations.degreeVec(-62.5f,0f,17.5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.degreeVec(-62.5f,0f,17.5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(2.4f,KeyframeAnimations.degreeVec(-15f,0f,17.5f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.9f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2.9f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel135(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.9f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.9f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel136(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(0f,0f,-12.5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(0f,0f,-17.5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.65f,KeyframeAnimations.degreeVec(-25f,0f,-17.5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.degreeVec(-25f,0f,-17.5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(2.4f,KeyframeAnimations.degreeVec(40f,0f,-17.5f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.9f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2.9f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel137(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.9f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.9f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel138(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(0f,0f,-10f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(0f,0f,-17.5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.65f,KeyframeAnimations.degreeVec(-62.5f,0f,-17.5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.degreeVec(-62.5f,0f,-17.5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(2.4f,KeyframeAnimations.degreeVec(-15f,0f,-17.5f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.9f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2.9f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel139(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.9f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.9f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel140(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(0f,0f,12.5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(0f,0f,17.5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.65f,KeyframeAnimations.degreeVec(-25f,0f,17.5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(1.4f,KeyframeAnimations.degreeVec(-25f,0f,17.5f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(2.4f,KeyframeAnimations.degreeVec(40f,0f,17.5f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.9f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2.9f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel141(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.9f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
+new Keyframe(2.9f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationDefinition attack_slam(){
+return AnimationDefinition.Builder.withLength(2.9f)
+.addAnimation("main",channel116())
+.addAnimation("head_with_neck",channel117())
+.addAnimation("head_with_neck",channel118())
+.addAnimation("head_only",channel119())
+.addAnimation("body_main",channel120())
+.addAnimation("body_main",channel121())
+.addAnimation("body_fat1",channel122())
+.addAnimation("body_fat1",channel123())
+.addAnimation("body_fat2",channel124())
+.addAnimation("body_fat2",channel125())
+.addAnimation("hand_r",channel126())
+.addAnimation("hand_r",channel127())
+.addAnimation("hand_r_1",channel128())
+.addAnimation("hand_r_1",channel129())
+.addAnimation("hand_l",channel130())
+.addAnimation("hand_l",channel131())
+.addAnimation("hand_l_1",channel132())
+.addAnimation("hand_l_1",channel133())
+.addAnimation("leg_r",channel134())
+.addAnimation("leg_r",channel135())
+.addAnimation("leg_r_1",channel136())
+.addAnimation("leg_r_1",channel137())
+.addAnimation("leg_l",channel138())
+.addAnimation("leg_l",channel139())
+.addAnimation("leg_l_1",channel140())
+.addAnimation("leg_l_1",channel141())
 .build();
-static final AnimationDefinition sit_down=AnimationDefinition.Builder.withLength(0.75f)
-.addAnimation("main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+}
+
+private static AnimationChannel channel142(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,-18f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,-18f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel143(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel144(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_only",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel145(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(2.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(7.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel146(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(-5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(-5.3125f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel147(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel148(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(-5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(-10f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel149(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel150(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(-5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(-7.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel151(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel152(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(0f,0f,15f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(-9.6658f,2.576f,24.7822f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(-9.6658f,2.576f,12.2822f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(-9.6658f,2.576f,12.2822f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel153(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel154(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(-19.3701f,5.0787f,-0.8672f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(1.1969f,-4.071f,-1.371f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(-7.9528f,-0.0296f,-0.7405f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(-7.9528f,-0.0296f,-0.7405f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel155(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel156(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(0f,0f,-15f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(-9.6658f,-2.576f,-24.7822f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(-9.6658f,-2.576f,-12.2822f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(-9.6658f,-2.576f,-12.2822f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel157(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel158(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(-19.3701f,-5.0787f,0.8672f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(1.1969f,4.071f,1.371f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(-7.9528f,0.0296f,0.7405f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(-7.9528f,0.0296f,0.7405f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel159(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel160(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(-53.669f,11.1447f,13.579f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(-48.735f,9.9318f,14.482f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(-48.735f,9.9318f,14.482f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel161(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel162(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(10.0947f,0.3157f,-15.1949f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(-2.7192f,-9.0022f,-25.6839f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(-2.7192f,-9.0022f,-25.6839f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel163(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel164(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(-53.669f,-11.1447f,-13.579f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(-48.735f,-9.9318f,-14.482f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(-48.735f,-9.9318f,-14.482f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel165(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel166(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(10.0947f,-0.3157f,15.1949f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(-2.7192f,9.0022f,25.6839f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(-2.7192f,9.0022f,25.6839f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel167(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationDefinition sit_down(){
+return AnimationDefinition.Builder.withLength(0.75f)
+.addAnimation("main",channel142())
+.addAnimation("head_with_neck",channel143())
+.addAnimation("head_with_neck",channel144())
+.addAnimation("head_only",channel145())
+.addAnimation("body_main",channel146())
+.addAnimation("body_main",channel147())
+.addAnimation("body_fat1",channel148())
+.addAnimation("body_fat1",channel149())
+.addAnimation("body_fat2",channel150())
+.addAnimation("body_fat2",channel151())
+.addAnimation("hand_r",channel152())
+.addAnimation("hand_r",channel153())
+.addAnimation("hand_r_1",channel154())
+.addAnimation("hand_r_1",channel155())
+.addAnimation("hand_l",channel156())
+.addAnimation("hand_l",channel157())
+.addAnimation("hand_l_1",channel158())
+.addAnimation("hand_l_1",channel159())
+.addAnimation("leg_r",channel160())
+.addAnimation("leg_r",channel161())
+.addAnimation("leg_r_1",channel162())
+.addAnimation("leg_r_1",channel163())
+.addAnimation("leg_l",channel164())
+.addAnimation("leg_l",channel165())
+.addAnimation("leg_l_1",channel166())
+.addAnimation("leg_l_1",channel167())
 .build();
-static final AnimationDefinition stand_up=AnimationDefinition.Builder.withLength(0.75f)
-.addAnimation("main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+}
+
+private static AnimationChannel channel168(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,-18f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel169(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_only",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel170(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel171(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(7.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(2.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel172(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(7.8125f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel173(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel174(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel175(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel176(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel177(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel178(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-9.6658f,2.576f,12.2822f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(-9.6658f,2.576f,24.7822f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(0f,0f,15f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel179(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel180(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-7.9528f,-0.0296f,-0.7405f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(1.1969f,-4.071f,-1.371f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(-19.3701f,5.0787f,-0.8672f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel181(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel182(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-9.6658f,-2.576f,-12.2822f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(-9.6658f,-2.576f,-24.7822f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(0f,0f,-15f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel183(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel184(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-7.9528f,0.0296f,0.7405f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(1.1969f,4.071f,1.371f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.5f,KeyframeAnimations.degreeVec(-19.3701f,-5.0787f,0.8672f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel185(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel186(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-48.735f,9.9318f,14.482f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(-53.669f,11.1447f,13.579f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel187(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel188(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-2.7192f,-9.0022f,-25.6839f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(10.0947f,0.3157f,-15.1949f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel189(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel190(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-48.735f,-9.9318f,-14.482f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(-53.669f,-11.1447f,-13.579f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel191(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel192(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-2.7192f,9.0022f,25.6839f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(0.25f,KeyframeAnimations.degreeVec(10.0947f,-0.3157f,15.1949f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
+new Keyframe(0.75f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel193(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0.75f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationDefinition stand_up(){
+return AnimationDefinition.Builder.withLength(0.75f)
+.addAnimation("main",channel168())
+.addAnimation("head_with_neck",channel169())
+.addAnimation("head_with_neck",channel170())
+.addAnimation("head_only",channel171())
+.addAnimation("body_main",channel172())
+.addAnimation("body_main",channel173())
+.addAnimation("body_fat1",channel174())
+.addAnimation("body_fat1",channel175())
+.addAnimation("body_fat2",channel176())
+.addAnimation("body_fat2",channel177())
+.addAnimation("hand_r",channel178())
+.addAnimation("hand_r",channel179())
+.addAnimation("hand_r_1",channel180())
+.addAnimation("hand_r_1",channel181())
+.addAnimation("hand_l",channel182())
+.addAnimation("hand_l",channel183())
+.addAnimation("hand_l_1",channel184())
+.addAnimation("hand_l_1",channel185())
+.addAnimation("leg_r",channel186())
+.addAnimation("leg_r",channel187())
+.addAnimation("leg_r_1",channel188())
+.addAnimation("leg_r_1",channel189())
+.addAnimation("leg_l",channel190())
+.addAnimation("leg_l",channel191())
+.addAnimation("leg_l_1",channel192())
+.addAnimation("leg_l_1",channel193())
 .build();
-static final AnimationDefinition scratch_belly=AnimationDefinition.Builder.withLength(3f)
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+}
+
+private static AnimationChannel channel194(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel195(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel196(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.degreeVec(-2.5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel197(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.posVec(0f,1f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel198(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(7.8526f,-0.3418f,2.4765f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.15f,KeyframeAnimations.degreeVec(-0.21f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.35f,KeyframeAnimations.degreeVec(6.5238f,0.2842f,-2.4838f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.65f,KeyframeAnimations.degreeVec(-2.12f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.75f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel199(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.75f,KeyframeAnimations.posVec(0f,0.49952f,-0.02181f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel200(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(7.4717f,-0.6518f,4.9574f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.15f,KeyframeAnimations.degreeVec(-2.88f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.35f,KeyframeAnimations.degreeVec(3.9549f,0.3457f,-4.9881f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.65f,KeyframeAnimations.degreeVec(-5.55f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel201(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.posVec(0f,0.49952f,-0.02181f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel202(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.75f,KeyframeAnimations.degreeVec(-5.5463f,-39.5053f,-3.3167f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.75f,KeyframeAnimations.degreeVec(-25.5463f,-39.5053f,-3.3167f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2.25f,KeyframeAnimations.degreeVec(-5.5463f,-39.5053f,-3.3167f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel203(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel204(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.75f,KeyframeAnimations.degreeVec(-20f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1f,KeyframeAnimations.degreeVec(-5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -1993,183 +2423,267 @@ new Keyframe(1.25f,KeyframeAnimations.degreeVec(-25.8425f,-9.0172f,4.341f),Anima
 new Keyframe(1.5f,KeyframeAnimations.degreeVec(0.5431f,-24.1197f,3.9535f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.75f,KeyframeAnimations.degreeVec(-20.6047f,-28.3865f,5.8409f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2.25f,KeyframeAnimations.degreeVec(-20f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel205(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel206(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel207(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel208(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.degreeVec(-5f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel209(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel210(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel211(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.posVec(0f,2f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel212(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel213(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.posVec(0f,-2f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel214(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel215(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.posVec(0f,2f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel216(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(3f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel217(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.posVec(0f,-2f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
+new Keyframe(3f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationDefinition scratch_belly(){
+return AnimationDefinition.Builder.withLength(3f)
+.addAnimation("head_with_neck",channel194())
+.addAnimation("head_with_neck",channel195())
+.addAnimation("body_main",channel196())
+.addAnimation("body_main",channel197())
+.addAnimation("body_fat1",channel198())
+.addAnimation("body_fat1",channel199())
+.addAnimation("body_fat2",channel200())
+.addAnimation("body_fat2",channel201())
+.addAnimation("hand_r",channel202())
+.addAnimation("hand_r",channel203())
+.addAnimation("hand_r_1",channel204())
+.addAnimation("hand_r_1",channel205())
+.addAnimation("hand_l",channel206())
+.addAnimation("hand_l",channel207())
+.addAnimation("hand_l_1",channel208())
+.addAnimation("hand_l_1",channel209())
+.addAnimation("leg_r",channel210())
+.addAnimation("leg_r",channel211())
+.addAnimation("leg_r_1",channel212())
+.addAnimation("leg_r_1",channel213())
+.addAnimation("leg_l",channel214())
+.addAnimation("leg_l",channel215())
+.addAnimation("leg_l_1",channel216())
+.addAnimation("leg_l_1",channel217())
 .build();
-static final AnimationDefinition sleep=AnimationDefinition.Builder.withLength(12f).looping()
-.addAnimation("main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+}
+
+private static AnimationChannel channel218(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,-18f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(4f,KeyframeAnimations.posVec(0f,-18f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(8f,KeyframeAnimations.posVec(0f,-18f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(12f,KeyframeAnimations.posVec(0f,-18f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(12f,KeyframeAnimations.posVec(0f,-18f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel219(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(20f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(4f,KeyframeAnimations.degreeVec(20f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(6f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(8f,KeyframeAnimations.degreeVec(20f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(10f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(12f,KeyframeAnimations.degreeVec(20f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(12f,KeyframeAnimations.degreeVec(20f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel220(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(8f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(12f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_only",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(12f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel221(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,-15f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(2.5f,0f,-15f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,-15f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(6f,KeyframeAnimations.degreeVec(2.5f,0f,-15f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(8f,KeyframeAnimations.degreeVec(0f,0f,-15f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(10f,KeyframeAnimations.degreeVec(2.5f,0f,-15f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(12f,KeyframeAnimations.degreeVec(0f,0f,-15f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(12f,KeyframeAnimations.degreeVec(0f,0f,-15f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel222(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(2f,KeyframeAnimations.degreeVec(-7.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(6f,KeyframeAnimations.degreeVec(-7.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(8f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(10f,KeyframeAnimations.degreeVec(-7.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(12f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(12f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel223(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(8f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(12f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(12f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel224(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(15f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(6f,KeyframeAnimations.degreeVec(15f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(8f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(10f,KeyframeAnimations.degreeVec(15f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(12f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(12f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel225(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(8f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(12f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(12f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel226(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(4f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(6f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(8f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(10f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(12f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(12f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel227(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(4f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(8f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(12f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(12f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel228(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-16.4783f,-53.7487f,26.1374f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(-25.5899f,-51.0449f,37.6207f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(4f,KeyframeAnimations.degreeVec(-16.4783f,-53.7487f,26.1374f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(6f,KeyframeAnimations.degreeVec(-25.5899f,-51.0449f,37.6207f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(8f,KeyframeAnimations.degreeVec(-16.4783f,-53.7487f,26.1374f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(10f,KeyframeAnimations.degreeVec(-25.5899f,-51.0449f,37.6207f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(12f,KeyframeAnimations.degreeVec(-16.4783f,-53.7487f,26.1374f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(12f,KeyframeAnimations.degreeVec(-16.4783f,-53.7487f,26.1374f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel229(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-22.9528f,-0.0296f,-0.7405f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(4f,KeyframeAnimations.degreeVec(-22.9528f,-0.0296f,-0.7405f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(8f,KeyframeAnimations.degreeVec(-22.9528f,-0.0296f,-0.7405f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(12f,KeyframeAnimations.degreeVec(-22.9528f,-0.0296f,-0.7405f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(12f,KeyframeAnimations.degreeVec(-22.9528f,-0.0296f,-0.7405f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel230(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-16.4783f,53.7487f,-26.1374f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(2f,KeyframeAnimations.degreeVec(-25.5899f,51.0449f,-37.6207f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(4f,KeyframeAnimations.degreeVec(-16.4783f,53.7487f,-26.1374f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(6f,KeyframeAnimations.degreeVec(-25.5899f,51.0449f,-37.6207f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(8f,KeyframeAnimations.degreeVec(-16.4783f,53.7487f,-26.1374f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(10f,KeyframeAnimations.degreeVec(-25.5899f,51.0449f,-37.6207f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(12f,KeyframeAnimations.degreeVec(-16.4783f,53.7487f,-26.1374f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(12f,KeyframeAnimations.degreeVec(-16.4783f,53.7487f,-26.1374f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel231(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-22.9528f,0.0296f,0.7405f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(4f,KeyframeAnimations.degreeVec(-22.9528f,0.0296f,0.7405f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(8f,KeyframeAnimations.degreeVec(-22.9528f,0.0296f,0.7405f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(12f,KeyframeAnimations.degreeVec(-22.9528f,0.0296f,0.7405f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(12f,KeyframeAnimations.degreeVec(-22.9528f,0.0296f,0.7405f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel232(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-48.735f,9.9318f,14.482f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(4f,KeyframeAnimations.degreeVec(-48.735f,9.9318f,14.482f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(8f,KeyframeAnimations.degreeVec(-48.735f,9.9318f,14.482f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(12f,KeyframeAnimations.degreeVec(-48.735f,9.9318f,14.482f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(12f,KeyframeAnimations.degreeVec(-48.735f,9.9318f,14.482f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel233(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-2.7192f,-9.0022f,-25.6839f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(4f,KeyframeAnimations.degreeVec(-2.7192f,-9.0022f,-25.6839f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(8f,KeyframeAnimations.degreeVec(-2.7192f,-9.0022f,-25.6839f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(12f,KeyframeAnimations.degreeVec(-2.7192f,-9.0022f,-25.6839f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(12f,KeyframeAnimations.degreeVec(-2.7192f,-9.0022f,-25.6839f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel234(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-48.735f,-9.9318f,-14.482f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(4f,KeyframeAnimations.degreeVec(-48.735f,-9.9318f,-14.482f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(8f,KeyframeAnimations.degreeVec(-48.735f,-9.9318f,-14.482f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(12f,KeyframeAnimations.degreeVec(-48.735f,-9.9318f,-14.482f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(12f,KeyframeAnimations.degreeVec(-48.735f,-9.9318f,-14.482f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel235(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(-2.7192f,9.0022f,25.6839f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(4f,KeyframeAnimations.degreeVec(-2.7192f,9.0022f,25.6839f),AnimationChannel.Interpolations.CATMULLROM),
 new Keyframe(8f,KeyframeAnimations.degreeVec(-2.7192f,9.0022f,25.6839f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(12f,KeyframeAnimations.degreeVec(-2.7192f,9.0022f,25.6839f),AnimationChannel.Interpolations.CATMULLROM)))
+new Keyframe(12f,KeyframeAnimations.degreeVec(-2.7192f,9.0022f,25.6839f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationDefinition sleep(){
+return AnimationDefinition.Builder.withLength(12f).looping()
+.addAnimation("main",channel218())
+.addAnimation("head_with_neck",channel219())
+.addAnimation("head_with_neck",channel220())
+.addAnimation("head_only",channel221())
+.addAnimation("body_main",channel222())
+.addAnimation("body_main",channel223())
+.addAnimation("body_fat1",channel224())
+.addAnimation("body_fat1",channel225())
+.addAnimation("body_fat2",channel226())
+.addAnimation("body_fat2",channel227())
+.addAnimation("hand_r",channel228())
+.addAnimation("hand_r_1",channel229())
+.addAnimation("hand_l",channel230())
+.addAnimation("hand_l_1",channel231())
+.addAnimation("leg_r",channel232())
+.addAnimation("leg_r_1",channel233())
+.addAnimation("leg_l",channel234())
+.addAnimation("leg_l_1",channel235())
 .build();
-static final AnimationDefinition death=AnimationDefinition.Builder.withLength(2.05f)
-.addAnimation("main",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+}
+
+private static AnimationChannel channel236(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.6f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.05f,KeyframeAnimations.degreeVec(-50f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("main",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2.05f,KeyframeAnimations.degreeVec(-50f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel237(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.6f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.5f,KeyframeAnimations.posVec(0f,-5f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.05f,KeyframeAnimations.posVec(0f,-11f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.05f,KeyframeAnimations.posVec(0f,-11f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel238(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(1.4f,KeyframeAnimations.degreeVec(-15f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("head_with_neck",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("head_only",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(1.4f,KeyframeAnimations.degreeVec(-15f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel239(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel240(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.02f,KeyframeAnimations.degreeVec(-0.02882f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.degreeVec(-0.11099f,0f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -2233,8 +2747,9 @@ new Keyframe(1.18f,KeyframeAnimations.degreeVec(-20.43409f,-9.66079f,20.63835f),
 new Keyframe(1.2f,KeyframeAnimations.degreeVec(-19.88485f,-10.82291f,23.12098f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.22f,KeyframeAnimations.degreeVec(-19.48708f,-11.66453f,24.91893f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.24f,KeyframeAnimations.degreeVec(-19.27608f,-12.11097f,25.87267f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(1.25f,KeyframeAnimations.degreeVec(-19.2488f,-12.1687f,25.996f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(1.25f,KeyframeAnimations.degreeVec(-19.2488f,-12.1687f,25.996f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel241(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.02f,KeyframeAnimations.degreeVec(-0.00865f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.degreeVec(-0.0333f,0f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -2308,10 +2823,12 @@ new Keyframe(1.38f,KeyframeAnimations.degreeVec(-28.6462f,0f,0f),AnimationChanne
 new Keyframe(1.4f,KeyframeAnimations.degreeVec(-29.27374f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.42f,KeyframeAnimations.degreeVec(-29.7244f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.44f,KeyframeAnimations.degreeVec(-29.96762f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(1.45f,KeyframeAnimations.degreeVec(-30f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_main",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(1.45f,KeyframeAnimations.degreeVec(-30f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel242(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel243(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.02f,KeyframeAnimations.degreeVec(0.01153f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.degreeVec(0.04439f,0f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -2362,10 +2879,12 @@ new Keyframe(0.92f,KeyframeAnimations.degreeVec(9.32521f,0f,0f),AnimationChannel
 new Keyframe(0.94f,KeyframeAnimations.degreeVec(9.54902f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.96f,KeyframeAnimations.degreeVec(9.75143f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.98f,KeyframeAnimations.degreeVec(9.91685f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(1f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat1",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(1f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel244(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel245(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.02f,KeyframeAnimations.degreeVec(0.00716f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.degreeVec(0.02766f,0f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -2421,10 +2940,12 @@ new Keyframe(1.02f,KeyframeAnimations.degreeVec(7.03091f,0f,0f),AnimationChannel
 new Keyframe(1.04f,KeyframeAnimations.degreeVec(7.18468f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.06f,KeyframeAnimations.degreeVec(7.32463f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.08f,KeyframeAnimations.degreeVec(7.44037f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(1.1f,KeyframeAnimations.degreeVec(7.5f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("body_fat2",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(1.1f,KeyframeAnimations.degreeVec(7.5f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel246(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel247(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.02f,KeyframeAnimations.degreeVec(0.0191f,0.02388f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.degreeVec(0.07375f,0.09218f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -2494,8 +3015,9 @@ new Keyframe(1.3f,KeyframeAnimations.degreeVec(2.21189f,25f,0f),AnimationChannel
 new Keyframe(1.32f,KeyframeAnimations.degreeVec(0.82864f,25f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.34f,KeyframeAnimations.degreeVec(0.09488f,25f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.35f,KeyframeAnimations.degreeVec(0f,25f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(-13.6328f,5.6077f,5.1031f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("hand_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(-13.6328f,5.6077f,5.1031f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel248(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.02f,KeyframeAnimations.posVec(0f,0.00287f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.posVec(0f,0.01106f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -2551,8 +3073,9 @@ new Keyframe(1.02f,KeyframeAnimations.posVec(0f,2.81236f,0f),AnimationChannel.In
 new Keyframe(1.04f,KeyframeAnimations.posVec(0f,2.87387f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.06f,KeyframeAnimations.posVec(0f,2.92985f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.08f,KeyframeAnimations.posVec(0f,2.97615f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(1.1f,KeyframeAnimations.posVec(0f,3f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(1.1f,KeyframeAnimations.posVec(0f,3f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel249(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.02f,KeyframeAnimations.degreeVec(0.01116f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.degreeVec(0.04328f,0f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -2654,10 +3177,12 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(46.61731f,0f,0f),AnimationChanne
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(47.02925f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(47.32239f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(47.47925f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(47.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("hand_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(47.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel250(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel251(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.02f,KeyframeAnimations.degreeVec(0.0191f,-0.02388f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.degreeVec(0.07375f,-0.09218f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -2727,8 +3252,9 @@ new Keyframe(1.3f,KeyframeAnimations.degreeVec(2.21189f,-25f,0f),AnimationChanne
 new Keyframe(1.32f,KeyframeAnimations.degreeVec(0.82864f,-25f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.34f,KeyframeAnimations.degreeVec(0.09488f,-25f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.35f,KeyframeAnimations.degreeVec(0f,-25f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2f,KeyframeAnimations.degreeVec(-13.6328f,-5.6077f,-5.1031f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("hand_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(-13.6328f,-5.6077f,-5.1031f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel252(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
 new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.02f,KeyframeAnimations.posVec(0f,0.00287f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.posVec(0f,0.01106f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -2784,8 +3310,9 @@ new Keyframe(1.02f,KeyframeAnimations.posVec(0f,2.81236f,0f),AnimationChannel.In
 new Keyframe(1.04f,KeyframeAnimations.posVec(0f,2.87387f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.06f,KeyframeAnimations.posVec(0f,2.92985f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.08f,KeyframeAnimations.posVec(0f,2.97615f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(1.1f,KeyframeAnimations.posVec(0f,3f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(1.1f,KeyframeAnimations.posVec(0f,3f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel253(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.02f,KeyframeAnimations.degreeVec(0.01116f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.degreeVec(0.04328f,0f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -2887,10 +3414,12 @@ new Keyframe(1.93f,KeyframeAnimations.degreeVec(46.61731f,0f,0f),AnimationChanne
 new Keyframe(1.95f,KeyframeAnimations.degreeVec(47.02925f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.97f,KeyframeAnimations.degreeVec(47.32239f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.99f,KeyframeAnimations.degreeVec(47.47925f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(2f,KeyframeAnimations.degreeVec(47.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM)))
-.addAnimation("hand_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2f,KeyframeAnimations.degreeVec(47.5f,0f,0f),AnimationChannel.Interpolations.CATMULLROM));}
+
+private static AnimationChannel channel254(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel255(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.02f,KeyframeAnimations.degreeVec(0f,0.02594f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.degreeVec(0f,0.09989f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -2970,10 +3499,12 @@ new Keyframe(1.5f,KeyframeAnimations.degreeVec(-51.35898f,22.5f,0f),AnimationCha
 new Keyframe(1.52f,KeyframeAnimations.degreeVec(-52.0681f,22.5f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.54f,KeyframeAnimations.degreeVec(-52.44938f,22.5f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.55f,KeyframeAnimations.degreeVec(-52.5f,22.5f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.05f,KeyframeAnimations.degreeVec(-32.5f,22.5f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.05f,KeyframeAnimations.degreeVec(-32.5f,22.5f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel256(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel257(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.02f,KeyframeAnimations.degreeVec(0.01153f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.degreeVec(0.04439f,0f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -3024,10 +3555,12 @@ new Keyframe(0.92f,KeyframeAnimations.degreeVec(9.32521f,0f,0f),AnimationChannel
 new Keyframe(0.94f,KeyframeAnimations.degreeVec(9.54902f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.96f,KeyframeAnimations.degreeVec(9.75143f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.98f,KeyframeAnimations.degreeVec(9.91685f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(1f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_r_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(1f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel258(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel259(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.02f,KeyframeAnimations.degreeVec(0f,-0.02594f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.degreeVec(0f,-0.09989f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -3107,10 +3640,12 @@ new Keyframe(1.5f,KeyframeAnimations.degreeVec(-51.35898f,-22.5f,0f),AnimationCh
 new Keyframe(1.52f,KeyframeAnimations.degreeVec(-52.0681f,-22.5f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.54f,KeyframeAnimations.degreeVec(-52.44938f,-22.5f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(1.55f,KeyframeAnimations.degreeVec(-52.5f,-22.5f,0f),AnimationChannel.Interpolations.CATMULLROM),
-new Keyframe(2.05f,KeyframeAnimations.degreeVec(-32.5f,-22.5f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.ROTATION,
+new Keyframe(2.05f,KeyframeAnimations.degreeVec(-32.5f,-22.5f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel260(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel261(){return new AnimationChannel(AnimationChannel.Targets.ROTATION,
 new Keyframe(0f,KeyframeAnimations.degreeVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.02f,KeyframeAnimations.degreeVec(0.01153f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.04f,KeyframeAnimations.degreeVec(0.04439f,0f,0f),AnimationChannel.Interpolations.LINEAR),
@@ -3161,8 +3696,40 @@ new Keyframe(0.92f,KeyframeAnimations.degreeVec(9.32521f,0f,0f),AnimationChannel
 new Keyframe(0.94f,KeyframeAnimations.degreeVec(9.54902f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.96f,KeyframeAnimations.degreeVec(9.75143f,0f,0f),AnimationChannel.Interpolations.LINEAR),
 new Keyframe(0.98f,KeyframeAnimations.degreeVec(9.91685f,0f,0f),AnimationChannel.Interpolations.LINEAR),
-new Keyframe(1f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
-.addAnimation("leg_l_1",new AnimationChannel(AnimationChannel.Targets.POSITION,
-new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR)))
+new Keyframe(1f,KeyframeAnimations.degreeVec(10f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationChannel channel262(){return new AnimationChannel(AnimationChannel.Targets.POSITION,
+new Keyframe(0f,KeyframeAnimations.posVec(0f,0f,0f),AnimationChannel.Interpolations.LINEAR));}
+
+private static AnimationDefinition death(){
+return AnimationDefinition.Builder.withLength(2.05f)
+.addAnimation("main",channel236())
+.addAnimation("main",channel237())
+.addAnimation("head_with_neck",channel238())
+.addAnimation("head_with_neck",channel239())
+.addAnimation("head_only",channel240())
+.addAnimation("body_main",channel241())
+.addAnimation("body_main",channel242())
+.addAnimation("body_fat1",channel243())
+.addAnimation("body_fat1",channel244())
+.addAnimation("body_fat2",channel245())
+.addAnimation("body_fat2",channel246())
+.addAnimation("hand_r",channel247())
+.addAnimation("hand_r",channel248())
+.addAnimation("hand_r_1",channel249())
+.addAnimation("hand_r_1",channel250())
+.addAnimation("hand_l",channel251())
+.addAnimation("hand_l",channel252())
+.addAnimation("hand_l_1",channel253())
+.addAnimation("hand_l_1",channel254())
+.addAnimation("leg_r",channel255())
+.addAnimation("leg_r",channel256())
+.addAnimation("leg_r_1",channel257())
+.addAnimation("leg_r_1",channel258())
+.addAnimation("leg_l",channel259())
+.addAnimation("leg_l",channel260())
+.addAnimation("leg_l_1",channel261())
+.addAnimation("leg_l_1",channel262())
 .build();
+}
 }

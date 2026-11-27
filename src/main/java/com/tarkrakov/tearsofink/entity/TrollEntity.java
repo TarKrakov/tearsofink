@@ -80,7 +80,7 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
         if(home==null)home=position();
         if(entityData.get(STATE)==0)play(IDLE);
         if(laughIn>0)--laughIn;if(attackIn>0)--attackIn;
-        if(!eligible(prey)||distanceToSqr(prey)>28*28)prey=null;
+        if(prey!=null&&(!eligible(prey)||distanceToSqr(prey)>28*28)){prey=null;getNavigation().stop();}
         if(--scanIn<=0){
             scanIn=10;if(prey==null){double best=16*16;for(LivingEntity e:l.getEntitiesOfClass(LivingEntity.class,getBoundingBox().inflate(16,5,16),this::eligible)){
                 double d=distanceToSqr(e);if(d<best&&getSensing().hasLineOfSight(e)){prey=e;best=d;}
