@@ -48,6 +48,7 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
     public static final int IDLE = 0, WALK = 1, RIGHT = 2, LEFT = 3, BELLY = 4, SLAM = 5,
             SCRATCH = 6, SIT = 7, SLEEP = 8, STAND = 9, DEATH = 10;
     private static final int[] DURATION = {60, 80, 40, 40, 40, 58, 60, 15, 240, 15, 41};
+    private static final double HEALTH = 100.0;
     private static final int PURSUIT_INTERVAL = 12;
     private static final double ENGAGE_RANGE = 4.1, ATTACK_HEIGHT = 2.7;
     private static final EntityDataAccessor<Long> STATE = SynchedEntityData.defineId(TrollEntity.class, EntityDataSerializers.LONG);
@@ -72,7 +73,7 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
 
     public static AttributeSupplier.Builder createAttributes() {
         return PathfinderMob.createMobAttributes()
-                .add(Attributes.MAX_HEALTH, 64).add(Attributes.MOVEMENT_SPEED, .19)
+                .add(Attributes.MAX_HEALTH, HEALTH).add(Attributes.MOVEMENT_SPEED, .19)
                 .add(Attributes.ATTACK_DAMAGE, 10).add(Attributes.FOLLOW_RANGE, 20)
                 .add(Attributes.KNOCKBACK_RESISTANCE, .85).add(Attributes.STEP_HEIGHT, 1.0);
     }
@@ -159,6 +160,14 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
     @Override
     public void readAdditionalSaveData(CompoundTag tag) {
         super.readAdditionalSaveData(tag);
+        // Migrate only the previous standard base; preserve modifiers, custom
+        // base values and the fraction of health remaining in saved worlds.
+        var health = getAttribute(Attributes.MAX_HEALTH);
+        if (health != null && health.getBaseValue() == 64.0) {
+            float fraction = getHealth() / getMaxHealth();
+            health.setBaseValue(HEALTH);
+            setHealth(fraction * getMaxHealth());
+        }
         home = tag.contains("TrollHomeX") ? new Vec3(tag.getDouble("TrollHomeX"), tag.getDouble("TrollHomeY"), tag.getDouble("TrollHomeZ")) : null;
         bed = tag.contains("TrollBedX") ? new Vec3(tag.getDouble("TrollBedX"), tag.getDouble("TrollBedY"), tag.getDouble("TrollBedZ")) : home;
         territoryId = tag.hasUUID("TrollTerritory") ? tag.getUUID("TrollTerritory") : null;
