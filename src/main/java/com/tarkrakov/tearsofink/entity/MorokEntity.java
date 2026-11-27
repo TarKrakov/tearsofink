@@ -41,6 +41,7 @@ public final class MorokEntity extends PathfinderMob implements Enemy {
         if(phase()!=next||entityData.get(PHASE)==0L) entityData.set(PHASE,(level().getGameTime()<<2)|next);
     }
     void encounter(Vec3 at){home=at;encounter=true;}
+    @Override public net.minecraft.sounds.SoundSource getSoundSource(){return net.minecraft.sounds.SoundSource.HOSTILE;}
     @Override public boolean removeWhenFarAway(double d){return encounter&&phase()!=DETONATE;}
     @Override public boolean causeFallDamage(float d,float m,DamageSource src){return false;}
     @Override public boolean isPushable(){return false;}

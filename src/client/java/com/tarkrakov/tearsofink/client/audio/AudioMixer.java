@@ -34,7 +34,7 @@ public final class AudioMixer {
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("tearsofink-audio.json");
 
     public enum Group {
-        FOREST, MUSIC, OWLS, CATERPILLARS, DIARY, DEER, BOSS_MUSIC;
+        FOREST, MUSIC, OWLS, CATERPILLARS, DIARY, DEER, BOSS_MUSIC, MOROKS;
         public String key() { return name().toLowerCase(Locale.ROOT); }
         public Component label() { return Component.translatable("mixer.tears-of-ink.group." + key()); }
     }
@@ -73,6 +73,10 @@ public final class AudioMixer {
         new Entry(TearsOfInk.id("pale_deer_watch_roar"), Group.DEER, SoundSource.NEUTRAL, 0.8200f, "subtitles.tears-of-ink.pale_deer_watch_roar"),
         new Entry(TearsOfInk.id("pale_deer_roar"), Group.DEER, SoundSource.NEUTRAL, 0.6200f, "subtitles.tears-of-ink.pale_deer_roar"),
         new Entry(TearsOfInk.id("pale_deer_run_step"), Group.DEER, SoundSource.NEUTRAL, 0.4800f, "subtitles.tears-of-ink.pale_deer_run_step"),
+        new Entry(TearsOfInk.id("morok_whisper"), Group.MOROKS, SoundSource.HOSTILE, 0.32f, "subtitles.tears-of-ink.morok_whisper"),
+        new Entry(TearsOfInk.id("morok_cry"), Group.MOROKS, SoundSource.HOSTILE, 0.8f, "subtitles.tears-of-ink.morok_cry"),
+        new Entry(TearsOfInk.id("morok_fuse"), Group.MOROKS, SoundSource.HOSTILE, 0.7f, "subtitles.tears-of-ink.morok_fuse"),
+        new Entry(TearsOfInk.id("morok_burst"), Group.MOROKS, SoundSource.HOSTILE, 1f, "subtitles.tears-of-ink.morok_burst"),
         new Entry(TearsOfInk.id("diary_page_turn"), Group.DIARY, SoundSource.PLAYERS, 0.5000f, "subtitles.tears-of-ink.diary_page_turn"),
         new Entry(TearsOfInk.id("diary_quill_write"), Group.DIARY, SoundSource.PLAYERS, 0.5000f, "subtitles.tears-of-ink.diary_quill_write")
     );

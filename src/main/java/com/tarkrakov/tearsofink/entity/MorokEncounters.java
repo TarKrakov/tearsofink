@@ -26,6 +26,11 @@ public final class MorokEncounters {
             var layout=InkLandsLayout.of(l);if(layout!=null&&!Ruins.nearStart(layout,p.getX(),p.getZ()))attempt(l,layout,p);
         }
     }
+    private static long mixSite(long n){
+        n=(n^(n>>>30))*0xbf58476d1ce4e5b9L;
+        n=(n^(n>>>27))*0x94d049bb133111ebL;
+        return n^(n>>>31);
+    }
     private static int count(ServerLevel l,Vec3 p,double r){return l.getEntitiesOfClass(MorokEntity.class,new AABB(p,p).inflate(r,24,r),MorokEntity::isAlive).size();}
     private static void attempt(ServerLevel l,InkLandsLayout layout,ServerPlayer p){
         boolean field=BattlefieldFaunaBoundary.inside(l,p.getX(),p.getZ());int existing=count(l,p.position(),LOCAL_RADIUS);
@@ -45,7 +50,7 @@ public final class MorokEncounters {
                 BoundingBox box=start.getBoundingBox();int x0=(box.minX()+box.maxX())/2,z0=(box.minZ()+box.maxZ())/2;
                 double d=Math.hypot(x0-p.getX(),z0-p.getZ());
                 if(d<22||d>50||count(l,new Vec3(x0,p.getY(),z0),18)>0)continue;
-                if(Math.floorMod(Long.hashCode(layout.seed()^BlockPos.asLong(x0,0,z0)),2)!=0)continue;
+                if((mixSite(layout.seed() ^ BlockPos.asLong(x0,0,z0)) & 1L) != 0L)continue;
                 int left=Math.min(1+l.random.nextInt(2),RUIN_CAP-existing);
                 for(int i=0;i<12&&left>0;i++){int x=x0+l.random.nextInt(9)-4,z=z0+l.random.nextInt(9)-4;if(spawn(l,layout,x,z,RUIN_CAP,false,box))left--;}
                 return;
