@@ -26,6 +26,8 @@ public final class MorokEntity extends PathfinderMob implements Enemy {
     private ServerPlayer prey;
     private int wanderIn,whisperIn=40,lostSight,scanIn;
     private boolean encounter,exploded,deathFx;
+    MorokDance dance;
+    private int danceIn=80;
     public MorokEntity(EntityType<? extends PathfinderMob> type,Level level) { super(type,level); setNoGravity(true); }
     public static AttributeSupplier.Builder createAttributes() {
         return PathfinderMob.createMobAttributes().add(Attributes.MAX_HEALTH,HEALTH).add(Attributes.MOVEMENT_SPEED,.22)
@@ -40,6 +42,10 @@ public final class MorokEntity extends PathfinderMob implements Enemy {
     private void phase(int next){
         if(phase()!=next||entityData.get(PHASE)==0L) entityData.set(PHASE,(level().getGameTime()<<2)|next);
     }
+    boolean canJoinDance(){return isAlive()&&!isNoAi()&&phase()==IDLE&&prey==null&&dance==null&&danceIn<=0;}
+    void joinDance(MorokDance group){dance=group;destination=null;}
+    private void leaveDance(){if(dance!=null){dance.stop();dance=null;danceIn=300+random.nextInt(301);destination=null;}}
+    boolean steerDance(ServerLevel level,Vec3 at,double speed){return steer(level,at,speed);}
     void encounter(Vec3 at){home=at;encounter=true;}
     @Override public net.minecraft.sounds.SoundSource getSoundSource(){return net.minecraft.sounds.SoundSource.HOSTILE;}
     @Override public boolean removeWhenFarAway(double d){return encounter&&phase()!=DETONATE;}
@@ -59,7 +65,7 @@ public final class MorokEntity extends PathfinderMob implements Enemy {
         super.tick();
         if(!isAlive())return;
         if(level().isClientSide){visual();return;}
-        if(isNoAi()){setDeltaMovement(Vec3.ZERO);return;}
+        if(isNoAi()){leaveDance();setDeltaMovement(Vec3.ZERO);return;}
         ServerLevel s=(ServerLevel)level();
         if(s.getDifficulty()==net.minecraft.world.Difficulty.PEACEFUL){discard();return;}
         setNoGravity(true);if(home==null)home=position();
@@ -73,7 +79,7 @@ public final class MorokEntity extends PathfinderMob implements Enemy {
         if(prey==null&&--scanIn<=0){
             scanIn=5;double best=DETECT*DETECT;
             for(ServerPlayer p:s.players()){double d=distanceToSqr(p);if(d<=best&&eligible(p)&&visible(s,p)){best=d;prey=p;}}
-            if(prey!=null){phase(CHARGE);lostSight=0;playSound(ModSounds.MOROK_CRY,.8f,.9f+random.nextFloat()*.18f);}
+            if(prey!=null){leaveDance();phase(CHARGE);lostSight=0;playSound(ModSounds.MOROK_CRY,.8f,.9f+random.nextFloat()*.18f);}
         }
         if(prey!=null){
             Vec3 goal=prey.position().add(0,Math.min(1.2,prey.getBbHeight()*.7),0);
@@ -87,6 +93,15 @@ public final class MorokEntity extends PathfinderMob implements Enemy {
         }
         phase(IDLE);
         if(--whisperIn<=0){whisperIn=95+random.nextInt(145);playSound(ModSounds.MOROK_WHISPER,.32f,.88f+random.nextFloat()*.24f);}
+        if(dance!=null){
+            if(dance.move(s,this))return;
+            leaveDance();
+        }
+        if(danceIn>0)--danceIn;
+        if(danceIn<=0&&Math.floorMod(s.getGameTime()+getUUID().hashCode(),100)==0&&random.nextInt(3)==0){
+            MorokDance.tryStart(s,this);
+            if(dance!=null&&dance.move(s,this))return;
+        }
         if(destination==null||--wanderIn<=0||position().distanceToSqr(destination)<.12){
             wanderIn=50+random.nextInt(80);destination=null;
             for(int i=0;i<8;i++){Vec3 p=home.add((random.nextDouble()-.5)*12,(random.nextDouble()-.5)*2,(random.nextDouble()-.5)*12);if(free(s,p)){destination=p;break;}}
@@ -130,6 +145,7 @@ public final class MorokEntity extends PathfinderMob implements Enemy {
         playSound(ModSounds.MOROK_BURST,1f,1f);discard();
     }
     @Override public void die(DamageSource source){
+        leaveDance();
         if(level() instanceof ServerLevel s&&!exploded&&!deathFx){deathFx=true;Vec3 c=center();s.sendParticles(ModParticles.MOROK_SHARD,c.x,c.y,c.z,20,.22,.22,.22,.095);}
         super.die(source);
     }

@@ -30,6 +30,10 @@ jobs:
         run: |
           javac -d /tmp/toi-ruin-test src/main/java/com/tarkrakov/tearsofink/world/ruins/ScatteredRuinDensity.java tools/tests/ScatteredRuinDensityTest.java
           java -cp /tmp/toi-ruin-test ScatteredRuinDensityTest
+      - name: validate Morok dance orbit
+        run: |
+          javac -d /tmp/toi-morok-test src/main/java/com/tarkrakov/tearsofink/entity/MorokDanceOrbit.java tools/tests/MorokDanceOrbitTest.java
+          java -cp /tmp/toi-morok-test MorokDanceOrbitTest
       - name: validate roadside watchtower slots and road safeguards
         run: python3 tools/check_roadside_watchtowers.py
       - name: validate hunter equipment, saved IDs and retired recipes

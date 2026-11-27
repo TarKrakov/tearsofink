@@ -37,7 +37,15 @@ public final class MorokEncounters {
         if(field){
             int left=Math.min(6,FIELD_CAP-existing);
             for(int i=0;i<36&&left>0;i++){double a=l.random.nextDouble()*Math.PI*2,r=22+l.random.nextDouble()*32;int x=(int)Math.floor(p.getX()+Math.cos(a)*r),z=(int)Math.floor(p.getZ()+Math.sin(a)*r);
-                if(BattlefieldFaunaBoundary.inside(l,x,z)&&spawn(l,layout,x,z,FIELD_CAP,true,null))left--;}
+                if(BattlefieldFaunaBoundary.inside(l,x,z)&&spawn(l,layout,x,z,FIELD_CAP,true,null)){
+                    left--;
+                    int cluster=Math.min(left,2+l.random.nextInt(2));
+                    for(int j=0;j<20&&cluster>0;j++){
+                        double angle=l.random.nextDouble()*Math.PI*2,dist=4+l.random.nextDouble()*5;
+                        int nx=x+(int)Math.round(Math.cos(angle)*dist),nz=z+(int)Math.round(Math.sin(angle)*dist);
+                        if(BattlefieldFaunaBoundary.inside(l,nx,nz)&&spawn(l,layout,nx,nz,FIELD_CAP,true,null)){left--;cluster--;}
+                    }
+                }}
             return;
         }
         if(existing>=RUIN_CAP)return;
