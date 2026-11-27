@@ -29,6 +29,23 @@ public final class TrollTerritories extends SavedData {
         }
         return false;
     }
+    /** Read-only search over saved caves, including unloaded and vacant ones. */
+    public record CaveEntrance(BlockPos entrance, BlockPos center) {}
+
+    public static CaveEntrance nearestCave(ServerLevel level, double x, double z) {
+        Zone best = null;
+        double distance = Double.POSITIVE_INFINITY;
+        for (Zone zone : of(level).zones.values()) {
+            if (zone.entrance == null) continue;
+            double candidate = distanceSq(x, z, zone.entrance.getX() + .5, zone.entrance.getZ() + .5);
+            if (candidate < distance) {
+                best = zone;
+                distance = candidate;
+            }
+        }
+        return best == null ? null : new CaveEntrance(best.entrance, best.center);
+    }
+
     boolean available(BlockPos p){
         return available(p.getX(), p.getZ(), MIN_GAP);
     }

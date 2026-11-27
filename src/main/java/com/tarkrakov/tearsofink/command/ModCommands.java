@@ -21,6 +21,7 @@ import net.minecraft.world.level.levelgen.Heightmap;
  * Команды для тестов (нужны права оператора):
  * /tearsofink where  — где центр Чернильных Земель и сколько до него
  * /tearsofink center — телепорт в центр
+ * /tearsofink troll tp — телепорт к входу ближайшего сохранённого логова Тролля
  * /tearsofink edge [1-5] — телепорт к краю, в начало одной из дорог (смотришь в сторону центра)
  * /tearsofink blood — телепорт в центр ближайшего пятна Кроволесья + проверка высот низины
  * /tearsofink powers — показать Душу и Чернила
@@ -41,6 +42,7 @@ public final class ModCommands {
 				dispatcher.register(Commands.literal("tearsofink")
 						.requires(source -> source.hasPermission(2))
 						.then(Commands.literal("where").executes(ModCommands::where))
+						.then(Commands.literal("troll").then(Commands.literal("tp").executes(ModCommands::trollCave)))
 						.then(Commands.literal("hunt")
 								.then(Commands.literal("start").executes(ctx -> {
 									var lands = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());
@@ -262,6 +264,44 @@ public final class ModCommands {
 	}
 
 	/** Телепорт в центр Смоляного Озера (на воду). */
+	private static int trollCave(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+		ServerPlayer player = ctx.getSource().getPlayerOrException();
+		ServerLevel level = ctx.getSource().getLevel();
+		if (player.level() != level || !com.tarkrakov.tearsofink.world.ModDimensions.isLands(level)) {
+			ctx.getSource().sendFailure(Component.literal("Команда доступна в Чернильных Землях."));
+			return 0;
+		}
+		var cave = com.tarkrakov.tearsofink.entity.TrollTerritories.nearestCave(level, player.getX(), player.getZ());
+		if (cave == null) {
+			ctx.getSource().sendFailure(Component.literal("В этом мире пока нет созданных логовищ Троллей. Исследуйте лес."));
+			return 0;
+		}
+		BlockPos entrance = cave.entrance();
+		int dx = Integer.signum(cave.center().getX() - entrance.getX());
+		int dz = Integer.signum(cave.center().getZ() - entrance.getZ());
+		float yaw = (float) Math.toDegrees(Math.atan2(-dx, dz));
+		// Prefer a point on the exterior approach, looking towards the entrance.
+		// This is an explicit operator teleport, not a natural spawn or chunk search.
+		for (int offset : new int[]{4, 3, 2, 1, 0}) {
+			BlockPos column = entrance.offset(-dx * offset, 0, -dz * offset);
+			level.getChunk(column.getX() >> 4, column.getZ() >> 4);
+			for (int delta = 5; delta >= -5; delta--) {
+				BlockPos feet = column.above(delta);
+				if (feet.getY() <= level.getMinBuildHeight() || feet.getY() + 2 >= level.getMaxBuildHeight()
+						|| !level.getWorldBorder().isWithinBounds(feet)
+						|| !level.getBlockState(feet.below()).isFaceSturdy(level, feet.below(), net.minecraft.core.Direction.UP)
+						|| !level.getFluidState(feet).isEmpty() || !level.getFluidState(feet.above()).isEmpty()) continue;
+				double x = feet.getX() + .5, y = feet.getY(), z = feet.getZ() + .5;
+				if (!level.noCollision(player, player.getBoundingBox().move(x - player.getX(), y - player.getY(), z - player.getZ()))) continue;
+				player.teleportTo(level, x, y, z, yaw, 0f);
+				ctx.getSource().sendSuccess(() -> Component.literal("Ближайшее логово Троллей: вход " + entrance.toShortString()), false);
+				return 1;
+			}
+		}
+		ctx.getSource().sendFailure(Component.literal("Вход логова " + entrance.toShortString() + " перекрыт: безопасное место для телепорта не найдено."));
+		return 0;
+	}
+
 	private static int lake(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
 		InkLandsLayout layout = findLayout(ctx.getSource());
 		if (layout == null) {
