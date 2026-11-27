@@ -38,7 +38,7 @@ public final class TrollEncounters {
         long caves=TrollTerritories.of(level).zones().stream().filter(zone->zone.entrance!=null).count();
         var stats=SEARCH_STATS.get(level);
         return "Логовищ: "+caves+"; территории: "+TrollTerritories.of(level).zones().size()
-            +"; сложность: "+level.getDifficulty().getName()+"; doMobSpawning: "+level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING)
+            +"; сложность: "+level.getDifficulty().name()+"; doMobSpawning: "+level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING)
             +"\nПричины/этапы поиска за текущую сессию: "+(stats==null?"попыток ещё нет":stats.toString());
     }
     private TrollEncounters(){}
