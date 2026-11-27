@@ -53,6 +53,14 @@ public final class LanternClarity {
 			float c = d <= lantern.clearRadius() ? 1f : (float) Math.max(0, 1 - (d - lantern.clearRadius()) / Lanterns.CLEAR_FADE);
 			if (c > best[0]) best[0] = c;
 		});
+        for (var morok : level.getEntitiesOfClass(com.tarkrakov.tearsofink.entity.MorokEntity.class,
+                new net.minecraft.world.phys.AABB(camera,camera).inflate(12), e -> e.isAlive())) {
+            double r = com.tarkrakov.tearsofink.entity.MorokTuning.LIGHT_RADIUS;
+            BUBBLES.add(new double[]{morok.getX(),morok.getY()+.32,morok.getZ(),r});
+            double d = camera.distanceTo(morok.position().add(0,.32,0));
+            float c = (float)Math.max(0,1-Math.max(0,d-r)/com.tarkrakov.tearsofink.entity.MorokTuning.LIGHT_FADE);
+            best[0] = Math.max(best[0],c*.6f);
+        }
 		worldClarity = best[0];
 		handView = handLanternView(Minecraft.getInstance().player);
 

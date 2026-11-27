@@ -197,6 +197,7 @@ public final class ModCreativeTab {
 						output.accept(ModItems.PALE_OWL_SPAWN_EGG);
 						output.accept(ModItems.PALE_DEER_SPAWN_EGG);
 						output.accept(ModItems.PALE_STRIDER_SPAWN_EGG);
+                            output.accept(ModItems.MOROK_SPAWN_EGG);
 						output.accept(ModItems.PALE_SPEARMAN_SPAWN_EGG);
 						output.accept(ModItems.PALE_SHIELDBEARER_SPAWN_EGG);
 						output.accept(ModItems.PALE_CROSSBOWMAN_SPAWN_EGG);

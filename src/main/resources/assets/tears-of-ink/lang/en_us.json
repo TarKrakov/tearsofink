@@ -1387,5 +1387,11 @@
   "equipment.tears-of-ink.awakening.flow.ability": "−%s%% ability cooldown",
   "equipment.tears-of-ink.ranged.sharp_wear": "Wear: shot −%s · technique −%s",
   "altar.tears-of-ink.incompatible": "Incompatible with this weapon",
-  "altar.tears-of-ink.foreign": "Foreign line: 60% power (included)"
+  "altar.tears-of-ink.foreign": "Foreign line: 60% power (included)",
+  "entity.tears-of-ink.morok": "Morok",
+  "item.tears-of-ink.morok_spawn_egg": "Morok Spawn Egg",
+  "subtitles.tears-of-ink.morok_whisper": "Morok whispers",
+  "subtitles.tears-of-ink.morok_cry": "Morok screams",
+  "subtitles.tears-of-ink.morok_fuse": "Morok builds up light",
+  "subtitles.tears-of-ink.morok_burst": "Morok bursts"
 }

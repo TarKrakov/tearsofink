@@ -1,9 +1,19 @@
 {
   "orion_phase1": {
-    "sounds": [{"name": "tears-of-ink:orion_phase1_intro", "stream": true}]
+    "sounds": [
+      {
+        "name": "tears-of-ink:orion_phase1_intro",
+        "stream": true
+      }
+    ]
   },
   "orion_phase2": {
-    "sounds": [{"name": "tears-of-ink:orion_phase2_intro", "stream": true}]
+    "sounds": [
+      {
+        "name": "tears-of-ink:orion_phase2_intro",
+        "stream": true
+      }
+    ]
   },
   "shield_choir": {
     "sounds": [
@@ -491,5 +501,61 @@
       }
     ],
     "subtitle": "subtitles.tears-of-ink.pale_deer_run_step"
+  },
+  "morok_whisper": {
+    "subtitle": "subtitles.tears-of-ink.morok_whisper",
+    "sounds": [
+      {
+        "name": "minecraft:entity.vex.ambient",
+        "type": "event",
+        "volume": 0.55,
+        "pitch": 0.7
+      },
+      {
+        "name": "minecraft:entity.ghast.ambient",
+        "type": "event",
+        "volume": 0.35,
+        "pitch": 0.6
+      }
+    ]
+  },
+  "morok_cry": {
+    "subtitle": "subtitles.tears-of-ink.morok_cry",
+    "sounds": [
+      {
+        "name": "minecraft:entity.ghast.warn",
+        "type": "event",
+        "volume": 0.75,
+        "pitch": 1.12
+      }
+    ]
+  },
+  "morok_fuse": {
+    "subtitle": "subtitles.tears-of-ink.morok_fuse",
+    "sounds": [
+      {
+        "name": "minecraft:entity.warden.sonic_charge",
+        "type": "event",
+        "volume": 0.4,
+        "pitch": 1.6
+      }
+    ]
+  },
+  "morok_burst": {
+    "subtitle": "subtitles.tears-of-ink.morok_burst",
+    "sounds": [
+      {
+        "name": "minecraft:entity.warden.sonic_boom",
+        "type": "event",
+        "volume": 0.65,
+        "pitch": 1.25
+      },
+      {
+        "name": "minecraft:entity.generic.explode",
+        "type": "event",
+        "volume": 0.65,
+        "pitch": 1.35
+      }
+    ]
   }
 }

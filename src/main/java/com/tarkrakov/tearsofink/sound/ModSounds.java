@@ -7,6 +7,10 @@ import net.minecraft.sounds.SoundEvent;
 
 /** Свои звуки мода (файлы — assets/tears-of-ink/sounds/, список — sounds.json). Заменить — положить .ogg поверх с тем же именем. */
 public final class ModSounds {
+    public static final SoundEvent MOROK_WHISPER = register("morok_whisper");
+    public static final SoundEvent MOROK_CRY = register("morok_cry");
+    public static final SoundEvent MOROK_FUSE = register("morok_fuse");
+    public static final SoundEvent MOROK_BURST = register("morok_burst");
 	/** Щиты Души на полном заряде принимают удар — тихий светлый хор (заглушка Claude, синтез). */
 	public static final SoundEvent SHIELD_CHOIR = register("shield_choir");
 	/** Тихое перелистывание Дневника: отдельное событие для независимой настройки звука. */

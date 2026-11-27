@@ -86,9 +86,14 @@ public final class ModMobs {
 			TearsOfInk.id("orion"), EntityType.Builder.of(OrionEntity::new, MobCategory.MISC)
 					.sized(1.38f, 2.84f).clientTrackingRange(12).updateInterval(1).build("orion"));
 
+	public static final EntityType<MorokEntity> MOROK = Registry.register(BuiltInRegistries.ENTITY_TYPE,
+            TearsOfInk.id("morok"), EntityType.Builder.of(MorokEntity::new, MobCategory.MONSTER)
+                .sized(.65f,.65f).clientTrackingRange(10).updateInterval(2).build("morok"));
 	private ModMobs() {}
 
 	public static void init() {
+        FabricDefaultAttributeRegistry.register(MOROK,MorokEntity.createAttributes());
+        MorokEncounters.init();
 		FabricDefaultAttributeRegistry.register(ORION, OrionEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(CATERPILLAR, CaterpillarEntity.createAttributes());
 		FabricDefaultAttributeRegistry.register(PALE_OWL, PaleOwlEntity.createAttributes());

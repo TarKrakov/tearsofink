@@ -1387,5 +1387,11 @@
   "equipment.tears-of-ink.awakening.flow.ability": "−%s%% кулдауна способности",
   "equipment.tears-of-ink.ranged.sharp_wear": "Износ: выстрел −%s · приём −%s",
   "altar.tears-of-ink.incompatible": "Свойство несовместимо с этим оружием",
-  "altar.tears-of-ink.foreign": "Чужая линия: 60% силы (учтено в числе)"
+  "altar.tears-of-ink.foreign": "Чужая линия: 60% силы (учтено в числе)",
+  "entity.tears-of-ink.morok": "Морок",
+  "item.tears-of-ink.morok_spawn_egg": "Яйцо призыва Морока",
+  "subtitles.tears-of-ink.morok_whisper": "Морок шепчет",
+  "subtitles.tears-of-ink.morok_cry": "Морок кричит",
+  "subtitles.tears-of-ink.morok_fuse": "Морок накапливает свет",
+  "subtitles.tears-of-ink.morok_burst": "Морок взрывается"
 }
