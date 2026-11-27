@@ -18,6 +18,8 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.*;
+import java.util.UUID;
+import static com.tarkrakov.tearsofink.entity.TrollTerritoryRules.*;
 
 public final class TrollEntity extends PathfinderMob implements Enemy {
     public static final float SCALE=.75f, WIDTH=2.2f, HEIGHT=3.6f;
@@ -25,7 +27,10 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
     public static final int[] DURATION={60,80,40,40,40,58,60,15,240,15,41};
     private static final EntityDataAccessor<Long> STATE=SynchedEntityData.defineId(TrollEntity.class,EntityDataSerializers.LONG);
     private static final EntityDataAccessor<Long> PREVIOUS=SynchedEntityData.defineId(TrollEntity.class,EntityDataSerializers.LONG);
-    private Vec3 home;
+    private Vec3 home,bed;
+    private UUID territoryId;
+    private boolean returning,sleepPending;
+    private int sleepTravel;
     private LivingEntity prey;
     private int scanIn,moveIn,actionIn=100,ambientIn=80,laughIn,attackIn,sleepFor;
     private boolean struck,alternate;
@@ -45,28 +50,43 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
         entityData.set(PREVIOUS,((long)elapsed()<<4)|clip());
         entityData.set(STATE,(level().getGameTime()<<4)|next);struck=false;
     }
-    void setHome(Vec3 p){home=p;setPersistenceRequired();}
+    Vec3 homePoint(){return home;}
+    Vec3 bedPoint(){return bed==null?home:bed;}
+    UUID territoryId(){return territoryId;}
+    void bindTerritory(UUID id,BlockPos center,BlockPos sleepingSite){
+        territoryId=id;home=Vec3.atBottomCenterOf(center);bed=Vec3.atBottomCenterOf(sleepingSite);setPersistenceRequired();
+    }
+    private double homeDistance(Vec3 p){return distanceSq(home.x,home.z,p.x,p.z);}
+    private double bedDistance(){return distanceToSqr(bedPoint().x,bedPoint().y,bedPoint().z);}
+    private boolean walkTo(ServerLevel l,Vec3 p,double speed){
+        return LoadedFaunaTerrain.loaded(l,new AABB(position(),p),3)&&getNavigation().moveTo(p.x,p.y,p.z,speed);
+    }
     @Override public SoundSource getSoundSource(){return SoundSource.HOSTILE;}
     @Override public void addAdditionalSaveData(CompoundTag t){
         super.addAdditionalSaveData(t);if(home!=null){t.putDouble("TrollHomeX",home.x);t.putDouble("TrollHomeY",home.y);t.putDouble("TrollHomeZ",home.z);}
+        if(territoryId!=null)t.putUUID("TrollTerritory",territoryId);
+        if(bed!=null){t.putDouble("TrollBedX",bed.x);t.putDouble("TrollBedY",bed.y);t.putDouble("TrollBedZ",bed.z);}
         t.putInt("TrollLaughIn",laughIn);
     }
     @Override public void readAdditionalSaveData(CompoundTag t){
         super.readAdditionalSaveData(t);if(t.contains("TrollHomeX"))home=new Vec3(t.getDouble("TrollHomeX"),t.getDouble("TrollHomeY"),t.getDouble("TrollHomeZ"));
+        if(t.hasUUID("TrollTerritory"))territoryId=t.getUUID("TrollTerritory");
+        if(t.contains("TrollBedX"))bed=new Vec3(t.getDouble("TrollBedX"),t.getDouble("TrollBedY"),t.getDouble("TrollBedZ"));
+        else bed=home;
         laughIn=Math.max(0,t.getInt("TrollLaughIn"));play(IDLE);
     }
     private boolean eligible(LivingEntity e){
         return e!=null&&e!=this&&!(e instanceof TrollEntity)&&e.isAlive()&&!e.isSpectator()
             &&(!(e instanceof Player p)||(!p.isCreative()&&(!ModDimensions.isLands(level())||!Sanctuary.contains(p))))
-            &&(home==null||home.distanceToSqr(e.position())<=32*32)
+            &&(home==null||homeDistance(e.position())<=CHASE*CHASE)
             &&(!ModDimensions.isLands(level())||!Sanctuary.near((ServerLevel)level(),e.getX(),e.getZ(),0));
     }
     @Override public boolean hurt(DamageSource source,float amount){
         boolean ok=super.hurt(source,amount);
-        if(ok&&!level().isClientSide&&isAlive()&&source.getEntity() instanceof LivingEntity e&&eligible(e))prey=e;
+        if(ok&&!level().isClientSide&&isAlive()&&source.getEntity() instanceof LivingEntity e&&eligible(e)&&!returning&&(home==null||homeDistance(e.position())<=DEFEND*DEFEND))prey=e;
         return ok;
     }
-    @Override public void die(DamageSource source){if(!level().isClientSide){getNavigation().stop();play(DEATH);}super.die(source);}
+    @Override public void die(DamageSource source){if(!level().isClientSide){getNavigation().stop();play(DEATH);if(territoryId!=null&&level() instanceof ServerLevel l)TrollTerritories.of(l).died(territoryId,getUUID(),l.getGameTime());}super.die(source);}
     @Override protected void tickDeath(){++deathTime;if(deathTime>=DURATION[DEATH]+1&&!level().isClientSide){level().broadcastEntityEvent(this,(byte)60);remove(RemovalReason.KILLED);}}
     private void face(LivingEntity e){
         Vec3 d=e.position().subtract(position());float yaw=(float)Math.toDegrees(Math.atan2(-d.x,d.z));
@@ -77,19 +97,24 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
         if(level() instanceof ServerLevel l&&!LoadedFaunaTerrain.canTick(l,this)){setDeltaMovement(Vec3.ZERO);return;}
         super.tick();if(level().isClientSide||!isAlive()||isNoAi())return;
         ServerLevel l=(ServerLevel)level();if(l.getDifficulty()==Difficulty.PEACEFUL){discard();return;}
-        if(home==null)home=position();
+        if(home==null)home=position();if(bed==null)bed=home;
         if(entityData.get(STATE)==0)play(IDLE);
         if(laughIn>0)--laughIn;if(attackIn>0)--attackIn;
-        if(prey!=null&&(!eligible(prey)||distanceToSqr(prey)>28*28)){prey=null;getNavigation().stop();}
+        if(homeDistance(position())>=CHASE*CHASE){if(!returning)getNavigation().stop();returning=true;prey=null;sleepPending=false;}
+        if(returning&&homeDistance(position())<=ROAM*ROAM)returning=false;
+        if(prey!=null&&(!eligible(prey)||distanceToSqr(prey)>28*28)){
+            prey=null;getNavigation().stop();if(homeDistance(position())>ROAM*ROAM)returning=true;
+        }
         if(--scanIn<=0){
-            scanIn=10;if(prey==null){double best=16*16;for(LivingEntity e:l.getEntitiesOfClass(LivingEntity.class,getBoundingBox().inflate(16,5,16),this::eligible)){
-                double d=distanceToSqr(e);if(d<best&&getSensing().hasLineOfSight(e)){prey=e;best=d;}
+            scanIn=10;if(prey==null&&!returning){double best=DETECT*DETECT;for(LivingEntity e:l.getEntitiesOfClass(LivingEntity.class,getBoundingBox().inflate(DETECT,5,DETECT),this::eligible)){
+                double d=distanceToSqr(e);if(d<best&&homeDistance(e.position())<=DEFEND*DEFEND&&getSensing().hasLineOfSight(e)){prey=e;best=d;}
             }}
         }
+        if(prey!=null)sleepPending=false;
         int c=clip(),t=elapsed();
         if(c>=RIGHT&&c<=SLAM){
             stop();int hit=c==SLAM?28:c==BELLY?23:22;
-            if(!struck&&t>=hit){struck=true;impact(l,c);}
+            if(!struck&&t>=hit){struck=true;if(!returning)impact(l,c);}
             if(t>=DURATION[c]){attackIn=18+random.nextInt(14);play(IDLE);}
             return;
         }
@@ -97,7 +122,7 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
         if(c==SLEEP){stop();if(prey!=null||--sleepFor<=0){play(STAND);return;}if(t%100==0)playSound(ModSounds.TROLL_SNORE,.65f,.85f+random.nextFloat()*.12f);return;}
         if(c==STAND){stop();if(t>=DURATION[STAND]){actionIn=160;play(IDLE);}return;}
         if(c==SCRATCH){stop();if(prey!=null||t>=DURATION[SCRATCH]){actionIn=140;play(IDLE);}return;}
-        if(prey!=null&&home.distanceToSqr(position())<=36*36){
+        if(prey!=null&&!returning){
             double dist=Math.sqrt(distanceToSqr(prey));
             if(dist<=4.1&&getSensing().hasLineOfSight(prey)){
                 stop();face(prey);
@@ -105,19 +130,39 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
                     int roll=random.nextInt(100);int next=roll<22?SLAM:roll<46?BELLY:alternate?LEFT:RIGHT;
                     alternate=!alternate;play(next);
                 }else play(IDLE);
-            }else{if(--moveIn<=0){moveIn=12;getNavigation().moveTo(prey,1.0);}play(getNavigation().isDone()?IDLE:WALK);}
+            }else{if(--moveIn<=0){moveIn=12;if(LoadedFaunaTerrain.loaded(l,new AABB(position(),prey.position()),3))getNavigation().moveTo(prey,1.0);}play(getNavigation().isDone()?IDLE:WALK);}
             return;
         }
         prey=null;
+        if(returning||homeDistance(position())>ROAM*ROAM){
+            returning=true;sleepPending=false;
+            if(--moveIn<=0){moveIn=30;walkTo(l,home,.8);}
+            play(getNavigation().isDone()?IDLE:WALK);return;
+        }
         if(--ambientIn<=0){ambientIn=100+random.nextInt(180);playSound(random.nextBoolean()?ModSounds.TROLL_CHOMP:ModSounds.TROLL_SNORT,.55f,.85f+random.nextFloat()*.2f);}
+        if(sleepPending){
+            if(bedDistance()<=4){sleepPending=false;stop();play(SIT);return;}
+            if(--sleepTravel<=0){sleepPending=false;getNavigation().stop();actionIn=100;}
+            else if(--moveIn<=0){moveIn=30;walkTo(l,bedPoint(),.65);}
+            play(getNavigation().isDone()?IDLE:WALK);return;
+        }
         if(--actionIn<=0&&getNavigation().isDone()){
             actionIn=120+random.nextInt(240);
-            if(home.distanceToSqr(position())<16&&random.nextInt(3)==0){play(SIT);return;}
-            if(random.nextInt(3)==0){play(SCRATCH);return;}
-            double x=home.x+(random.nextDouble()-.5)*18,z=home.z+(random.nextDouble()-.5)*18;
-            if(LoadedFaunaTerrain.loaded(l,new AABB(position(),new Vec3(x,home.y,z)),3))getNavigation().moveTo(x,home.y,z,.65);
+            if(random.nextInt(3)==0){
+                if(bedDistance()<=4){play(SIT);return;}
+                sleepPending=true;sleepTravel=240;moveIn=0;walkTo(l,bedPoint(),.65);
+            }else if(random.nextInt(3)==0){play(SCRATCH);return;}
+            else if(LoadedFaunaTerrain.search(l)){
+                for(int i=0;i<8;i++){
+                    double a=random.nextDouble()*Math.PI*2,r=6+random.nextDouble()*(ROAM-7);
+                    BlockPos point=TrollEncounters.site(l,(int)Math.floor(home.x+Math.cos(a)*r),(int)Math.floor(home.z+Math.sin(a)*r));
+                    if(point==null||homeDistance(Vec3.atBottomCenterOf(point))>ROAM*ROAM||Math.abs(point.getY()-home.y)>8)continue;
+                    if(ModDimensions.isLands(l)&&(Sanctuary.near(l,point.getX(),point.getZ(),2)
+                        ||com.tarkrakov.tearsofink.world.battlefield.BattlefieldFaunaBoundary.inside(l,point.getX(),point.getZ())))continue;
+                    if(walkTo(l,Vec3.atBottomCenterOf(point),.65))break;
+                }
+            }
         }
-        if(home.distanceToSqr(position())>18*18&&--moveIn<=0){moveIn=30;getNavigation().moveTo(home.x,home.y,home.z,.8);}
         play(getNavigation().isDone()?IDLE:WALK);
     }
     private void impact(ServerLevel l,int c){
