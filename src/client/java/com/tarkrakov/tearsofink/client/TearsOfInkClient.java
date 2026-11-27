@@ -173,7 +173,7 @@ public class TearsOfInkClient implements ClientModInitializer {
 		// Фауна
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.entity.MorokModel.LAYER, com.tarkrakov.tearsofink.client.entity.MorokModel::createBodyLayer);
         EntityRendererRegistry.register(ModMobs.MOROK,com.tarkrakov.tearsofink.client.entity.MorokRenderer::new);
-        ParticleFactoryRegistry.getInstance().register(ModParticles.MOROK_FLAME,s -> new com.tarkrakov.tearsofink.client.particle.MorokParticle.Provider(s,false));
+        ParticleFactoryRegistry.getInstance().register(ModParticles.MOROK_GLOW,s -> new com.tarkrakov.tearsofink.client.particle.MorokParticle.Provider(s,false));
         ParticleFactoryRegistry.getInstance().register(ModParticles.MOROK_SHARD,s -> new com.tarkrakov.tearsofink.client.particle.MorokParticle.Provider(s,true));
 		EntityModelLayerRegistry.registerModelLayer(CaterpillarModel.LAYER, CaterpillarModel::createBodyLayer);
 		EntityRendererRegistry.register(ModMobs.CATERPILLAR, CaterpillarRenderer::new);

@@ -53,7 +53,7 @@ public final class ModParticles {
 	public static final SimpleParticleType STORY_INK_SPARK = simple("story_ink_spark");
 	public static final SimpleParticleType STORY_SOUL_SPARK = simple("story_soul_spark");
 
-	public static final SimpleParticleType MOROK_FLAME = simple("morok_flame");
+	public static final SimpleParticleType MOROK_GLOW = simple("morok_flame");
     public static final SimpleParticleType MOROK_SHARD = simple("morok_shard");
 	private static SimpleParticleType simple(String name) {
 		return Registry.register(BuiltInRegistries.PARTICLE_TYPE, TearsOfInk.id(name), FabricParticleTypes.simple());

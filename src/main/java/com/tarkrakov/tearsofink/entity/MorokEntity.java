@@ -173,7 +173,7 @@ public final class MorokEntity extends PathfinderMob implements Enemy {
             if(dx*dx+dy*dy+dz*dz<=BLAST*BLAST)e.hurt(source,DAMAGE);
         }
         l.sendParticles(ParticleTypes.FLASH,c.x,c.y,c.z,1,0,0,0,0);
-        l.sendParticles(ModParticles.MOROK_FLAME,c.x,c.y,c.z,38,.25,.25,.25,.17);
+        l.sendParticles(ModParticles.MOROK_GLOW,c.x,c.y,c.z,34,.3,.3,.3,.23);
         l.sendParticles(ModParticles.MOROK_SHARD,c.x,c.y,c.z,58,.25,.25,.25,.25);
         playSound(ModSounds.MOROK_BURST,1f,1f);discard();
     }
@@ -184,11 +184,14 @@ public final class MorokEntity extends PathfinderMob implements Enemy {
     }
     private void visual(){
         Vec3 c=center();
-        for(int i=0;i<(phase()==DETONATE?5:3);i++){
-            double x=(random.nextDouble()-.5)*.65,y=(random.nextDouble()-.5)*.65,z=(random.nextDouble()-.5)*.65;
-            level().addParticle(ModParticles.MOROK_FLAME,c.x+x,c.y+y,c.z+z,x*.055,.035+Math.abs(y)*.04,z*.055);
+        int motes=phase()==DETONATE?5:phase()==CHARGE?3:2;
+        for(int i=0;i<motes;i++){
+            double x=(random.nextDouble()-.5)*1.15,y=(random.nextDouble()-.5)*1.05,z=(random.nextDouble()-.5)*1.15;
+            Vec3 drift=getDeltaMovement().scale(-.12);
+            level().addParticle(ModParticles.MOROK_GLOW,c.x+x,c.y+y,c.z+z,
+                    drift.x+x*.035,drift.y+y*.035,drift.z+z*.035);
         }
         if(phase()!=IDLE||tickCount%2==0){Vec3 v=getDeltaMovement().scale(-.16);
-            level().addParticle(ModParticles.MOROK_SHARD,c.x+(random.nextDouble()-.5)*.5,c.y+(random.nextDouble()-.5)*.5,c.z+(random.nextDouble()-.5)*.5,v.x+(random.nextDouble()-.5)*.06,v.y+.018,v.z+(random.nextDouble()-.5)*.06);}
+            level().addParticle(ModParticles.MOROK_SHARD,c.x+(random.nextDouble()-.5)*.5,c.y+(random.nextDouble()-.5)*.5,c.z+(random.nextDouble()-.5)*.5,v.x+(random.nextDouble()-.5)*.06,v.y+(random.nextDouble()-.5)*.04,v.z+(random.nextDouble()-.5)*.06);}
     }
 }
