@@ -53,10 +53,15 @@ public final class MorokEntity extends PathfinderMob implements Enemy {
     @Override public boolean isPushable(){return false;}
     @Override public void addAdditionalSaveData(CompoundTag tag){
         super.addAdditionalSaveData(tag);tag.putBoolean("MorokEncounter",encounter);tag.putInt("MorokFuse",fuseLeft());
+        tag.putInt("MorokScanIn",Math.max(0,scanIn));
         if(home!=null){tag.putDouble("MorokHomeX",home.x);tag.putDouble("MorokHomeY",home.y);tag.putDouble("MorokHomeZ",home.z);}
     }
     @Override public void readAdditionalSaveData(CompoundTag tag){
         super.readAdditionalSaveData(tag);encounter=tag.getBoolean("MorokEncounter");
+        // Migrate the old default health, preserving explicitly customized base values.
+        var health=getAttribute(Attributes.MAX_HEALTH);
+        if(health!=null&&health.getBaseValue()==10d){health.setBaseValue(HEALTH);setHealth(Math.min(getHealth(),getMaxHealth()));}
+        scanIn=Mth.clamp(tag.getInt("MorokScanIn"),0,DISENGAGE_COOLDOWN);
         if(tag.contains("MorokHomeX"))home=new Vec3(tag.getDouble("MorokHomeX"),tag.getDouble("MorokHomeY"),tag.getDouble("MorokHomeZ"));
         int fuse=Mth.clamp(tag.getInt("MorokFuse"),0,FUSE);entityData.set(LEFT,fuse);phase(fuse>0?DETONATE:IDLE);setNoGravity(true);
     }
@@ -72,6 +77,11 @@ public final class MorokEntity extends PathfinderMob implements Enemy {
         if(phase()==DETONATE){
             setDeltaMovement(getDeltaMovement().scale(.55));
             int left=fuseLeft()-1;entityData.set(LEFT,Math.max(0,left));if(left<=0)detonate(s);return;
+        }
+        // A lit fuse is already committed; the pursuit timeout only applies before it.
+        if(prey!=null&&s.getGameTime()-phaseStart()>=CHASE_LIMIT){
+            prey=null;lostSight=0;destination=null;phase(IDLE);
+            scanIn=DISENGAGE_COOLDOWN;setDeltaMovement(Vec3.ZERO);
         }
         if(prey!=null&&(!eligible(prey)||distanceToSqr(prey)>FORGET*FORGET||home.distanceToSqr(prey.position())>48*48||(!visible(s,prey)&&++lostSight>70))){
             prey=null;lostSight=0;destination=null;phase(IDLE);
