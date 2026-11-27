@@ -9,7 +9,7 @@ public final class TrollTerritoryRules {
     public static final int SEARCH_INTERVAL=60, SEARCH_COLUMNS=8;
     public static final int MOUTH_MIN=39, MOUTH_MAX=62;
     static final int STRUCTURE_MARGIN=3;
-    public static final double PLAYER_PURSUIT_SPEED=2.0, LEAP_RANGE=10.0, LEAP_RISE=8.0, LEAP_APEX=8.5;
+    public static final double PLAYER_PURSUIT_SPEED=2.0, LEAP_RANGE=10.0, LEAP_RISE=4.0, LEAP_APEX=4.5;
     public static final int LEAP_WINDUP=10, LEAP_FLIGHT=32, LEAP_RECOVERY=30, NO_HIT_LIMIT=100;
     static boolean needsLeap(double distanceSquared,int noHitTicks){
         return distanceSquared>9.0||noHitTicks>=NO_HIT_LIMIT;

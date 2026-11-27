@@ -561,7 +561,7 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
         double t=Math.min(1,step/(double)flight);
         double horizontal=leapHorizontal(t);
         Vec3 path=leapGoal.subtract(leapOrigin);
-        Vec3 desired=leapOrigin.add(path.x*horizontal,leapHeight(t,path.y)*(powerSlam()?1:.16),path.z*horizontal);
+        Vec3 desired=leapOrigin.add(path.x*horizontal,leapHeight(t,path.y)*(powerSlam()?1:1.36/LEAP_APEX),path.z*horizontal);
         Vec3 motion=desired.subtract(position());
         // Bounded physical movement, not teleportation. Obstructions remain
         // solid unless the griefing rules allow clearing the actual swept body.
