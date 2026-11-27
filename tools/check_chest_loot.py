@@ -5,6 +5,8 @@ from pathlib import Path
 root=Path("src/main/resources/data/tears-of-ink/loot_table/chests")
 tiers=("poor","common","rich")
 names={"ruins_start","ruins_poor","ruins_common","ruins_rich","ruins_inkwood","temple_pale_reward","temple_blood_supply","temple_blood_reward","settlement_supplies","settlement_pantry","gate_supplies","camp_supplies"}
+troll_caves={"troll_cave_pale","troll_cave_inkwood"}
+names|=troll_caves
 names|={"ruins_scattered_"+t for t in (*tiers,"inkwood")}
 names|={pre+t for pre in ("gate_","gate_cache_","camp_cache_","watchtower_cache_","temple_pale_supply_") for t in tiers}
 tables={p.stem:json.loads(p.read_text()) for p in root.glob("*.json")}
@@ -46,6 +48,7 @@ for name,table in tables.items():
         ink_range={"poor":(3,7),"common":(4,10),"rich":(7,10),"inkwood":(7,10)}[name.removeprefix("ruins_scattered_")]
     if name.startswith(("camp_","watchtower_")):
         ink_range=tuple(5*x for x in ink_range)
+    if name in troll_caves: ink_range=(13,20)
     ink_pools=[p for p in table["pools"] if any(e.get("name")==prefix+"ink" for e in p["entries"])]
     assert len(ink_pools)==1, name
     ip=ink_pools[0]
@@ -75,7 +78,7 @@ for name,table in tables.items():
         for c in pool.get("conditions",[]):
             if c["condition"]=="minecraft:random_chance": assert 0<=c["chance"]<=1
     assert rare_pools<=1
-    if name not in {"ruins_inkwood","ruins_scattered_inkwood"}: assert expected(name,"raw_ink_metal")==0
+    if name not in {"ruins_inkwood","ruins_scattered_inkwood","troll_cave_inkwood"}: assert expected(name,"raw_ink_metal")==0
     if name not in {"temple_blood_supply","temple_blood_reward","settlement_supplies","settlement_pantry","ruins_poor","ruins_common","ruins_rich","ruins_scattered_poor","ruins_scattered_common","ruins_scattered_rich"}: assert expected(name,"raw_blood_metal")==0
     if name.startswith(("gate_","camp_","watchtower_","settlement_","temple_pale_supply_")) or name=="temple_blood_supply": assert rare_pools==0
 for name in ("gate_supplies","camp_supplies","settlement_supplies","settlement_pantry"):
@@ -109,7 +112,7 @@ for tier,ore,pig in zip(tiers,(1.0,1.275,1.9),(.05,.08,.10)):
     assert expected("ruins_"+tier,"blood_clot")==.05
 assert expected("ruins_inkwood","pigment")==.10
 for name in tables:
-    if name not in {"ruins_inkwood","ruins_scattered_inkwood"}:
+    if name not in {"ruins_inkwood","ruins_scattered_inkwood","troll_cave_inkwood"}:
         assert expected(name,"tearbloom_brew")==0 and expected(name,"strong_tearbloom_brew")==0, name
     if name.startswith("temple_pale") or name=="ruins_start":
         assert expected(name,"blood_clot")==0
@@ -141,6 +144,16 @@ for tier,metal,ore,pig in (
     assert not metal_pool.get("conditions") and metal_pool["rolls"]==1 and len(metal_pool["entries"])==1
     assert expected(name,"raw_blood_metal")==expected(old,"raw_blood_metal")
     assert expected(name,"blood_clot")==expected(old,"blood_clot")
+for name,metal,average in (
+        ("troll_cave_pale","raw_pale_metal",12.5),("troll_cave_inkwood","raw_ink_metal",10)):
+    assert expected(name,metal)==average
+    assert any_item(name,{"raw_pale_metal","raw_ink_metal","raw_blood_metal"})==average
+    assert abs(expected(name,"pigment")-.45)<1e-9
+    assert abs(any_item(name,rare)-.30)<1e-9
+    metal_pool=next(p for p in tables[name]["pools"] if any(e.get("name")==prefix+metal for e in p["entries"]))
+    assert not metal_pool.get("conditions") and len(metal_pool["entries"])==1 and metal_pool["rolls"]==1
+cave=(java/"entity/TrollCave.java").read_text()
+assert set(re.findall(r'loot\("([^"]+)"\)',cave))==troll_caves
 piece=(java/"world/ruins/RuinPiece.java").read_text()
 assert 'tag.getBoolean("EnrichedScattered")' in piece and 'tag.putBoolean("EnrichedScattered",true)' in piece
 assert "enrichedScattered ? (pale ? Ruins.SCATTERED_LOOT[tier] : Ruins.SCATTERED_INKWOOD_LOOT)" in piece
@@ -155,7 +168,7 @@ for mob in ("pale_spearman","pale_crossbowman","pale_shieldbearer"):
 assert "random.nextInt(BloodTuning.CRYSTAL_ONE_IN)" not in (java/"block/blood/BloodTankBlockEntity.java").read_text()
 refs=(java/"world/ruins/Ruins.java").read_text()+(java/"world/herald/BloodSettlements.java").read_text()
 # Ignore historical strings in comments; actual references must cover every new ID.
-assert set(re.findall(r'"chests/([^"]+)"',refs))==names-set("gate_"+t for t in tiers)
+assert set(re.findall(r'"chests/([^"]+)"',refs))==names-troll_caves-set("gate_"+t for t in tiers)
 assert "i==0?loot:supplies" in (java/"entity/patrol/BarricadeGates.java").read_text()
 assert "i==0?loot:supplies" in (java/"entity/patrol/ForestCamps.java").read_text()
 assert "q.equals(p.pantry)?PANTRY:LOOT" in (java/"world/herald/BloodSettlements.java").read_text()

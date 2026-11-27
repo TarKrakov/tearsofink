@@ -4,6 +4,7 @@ import com.tarkrakov.tearsofink.TearsOfInk;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.block.lantern.FogClearing;
 import com.tarkrakov.tearsofink.entity.ModMobs;
+import com.tarkrakov.tearsofink.entity.TrollTerritories;
 import com.tarkrakov.tearsofink.world.InkLandsLayout;
 import com.tarkrakov.tearsofink.world.ModBiomes;
 import com.tarkrakov.tearsofink.world.ModDimensions;
@@ -71,7 +72,7 @@ public final class ForestCamps extends SavedData {
     }
     static boolean lamp(Level level,BlockPos p) {return onServer(level)&&of((ServerLevel)level).lamps.containsKey(p.asLong());}
     static boolean authored(Level level,BlockPos p) {return onServer(level)&&of((ServerLevel)level).authored.contains(p.asLong());}
-    static boolean near(ServerLevel level,BlockPos p,int radius) {
+    public static boolean near(ServerLevel level,BlockPos p,int radius) {
         return of(level).camps.values().stream().anyMatch(c->horizontal(c.center,p)<=radius*radius);
     }
     static boolean safe(ServerLevel level,BlockPos p) {
@@ -271,6 +272,7 @@ public final class ForestCamps extends SavedData {
         for(String p:PALETTE)list.add(BuiltInRegistries.BLOCK.get(TearsOfInk.id(p)));return list;
     }
     private Camp install(ServerLevel level,InkLandsLayout layout,long key,int type,Rotation rot,BlockPos site,boolean roadside){
+        if (TrollTerritories.nearCave(level, site, 38)) return null;
         var asset=level.getStructureManager().get(TearsOfInk.id(ASSETS[type]));
         if(asset.isEmpty())return null;StructureTemplate template=asset.get();var size=template.getSize();
         BlockPos pivot=new BlockPos(size.getX()/2,0,size.getZ()/2);

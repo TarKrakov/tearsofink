@@ -538,7 +538,7 @@
     "subtitle": "subtitles.tears-of-ink.troll_chomp",
     "sounds": [
       {
-        "name": "tears-of-ink:troll_chomp"
+        "name": "tears-of-ink:troll_chomp", "attenuation_distance": 48
       }
     ]
   },
@@ -546,7 +546,7 @@
     "subtitle": "subtitles.tears-of-ink.troll_snort",
     "sounds": [
       {
-        "name": "tears-of-ink:troll_snort"
+        "name": "tears-of-ink:troll_snort", "attenuation_distance": 64
       }
     ]
   },
@@ -554,7 +554,7 @@
     "subtitle": "subtitles.tears-of-ink.troll_laugh",
     "sounds": [
       {
-        "name": "tears-of-ink:troll_laugh"
+        "name": "tears-of-ink:troll_laugh", "attenuation_distance": 56
       }
     ]
   },
@@ -562,15 +562,31 @@
     "subtitle": "subtitles.tears-of-ink.troll_snore",
     "sounds": [
       {
-        "name": "tears-of-ink:troll_snore"
+        "name": "tears-of-ink:troll_snore", "attenuation_distance": 56
       }
     ]
+  },
+  "troll_step": {
+    "subtitle": "subtitles.tears-of-ink.troll_step",
+    "sounds": [{"name": "tears-of-ink:troll_step", "attenuation_distance": 28}]
+  },
+  "troll_windup": {
+    "subtitle": "subtitles.tears-of-ink.troll_windup",
+    "sounds": [{"name": "tears-of-ink:troll_windup", "attenuation_distance": 36}]
+  },
+  "troll_hurt": {
+    "subtitle": "subtitles.tears-of-ink.troll_hurt",
+    "sounds": [{"name": "tears-of-ink:troll_hurt", "attenuation_distance": 32}]
+  },
+  "troll_death": {
+    "subtitle": "subtitles.tears-of-ink.troll_death",
+    "sounds": [{"name": "tears-of-ink:troll_death", "attenuation_distance": 40}]
   },
   "troll_slam": {
     "subtitle": "subtitles.tears-of-ink.troll_slam",
     "sounds": [
       {
-        "name": "tears-of-ink:troll_slam"
+        "name": "tears-of-ink:troll_slam", "attenuation_distance": 56
       }
     ]
   }

@@ -7,11 +7,15 @@ import net.minecraft.sounds.SoundEvent;
 
 /** Свои звуки мода (файлы — assets/tears-of-ink/sounds/, список — sounds.json). Заменить — положить .ogg поверх с тем же именем. */
 public final class ModSounds {
-    public static final SoundEvent TROLL_CHOMP = register("troll_chomp");
-    public static final SoundEvent TROLL_SNORT = register("troll_snort");
-    public static final SoundEvent TROLL_LAUGH = register("troll_laugh");
-    public static final SoundEvent TROLL_SNORE = register("troll_snore");
-    public static final SoundEvent TROLL_SLAM = register("troll_slam");
+    public static final SoundEvent TROLL_CHOMP = register("troll_chomp", 48);
+    public static final SoundEvent TROLL_SNORT = register("troll_snort", 64);
+    public static final SoundEvent TROLL_LAUGH = register("troll_laugh", 56);
+    public static final SoundEvent TROLL_SNORE = register("troll_snore", 56);
+    public static final SoundEvent TROLL_STEP = register("troll_step", 28);
+    public static final SoundEvent TROLL_WINDUP = register("troll_windup", 36);
+    public static final SoundEvent TROLL_HURT = register("troll_hurt", 32);
+    public static final SoundEvent TROLL_DEATH = register("troll_death", 40);
+    public static final SoundEvent TROLL_SLAM = register("troll_slam", 56);
     public static final SoundEvent MOROK_WHISPER = register("morok_whisper");
     public static final SoundEvent MOROK_CRY = register("morok_cry");
     public static final SoundEvent MOROK_FUSE = register("morok_fuse");
@@ -138,6 +142,11 @@ public final class ModSounds {
 		var id = TearsOfInk.id(name);
 		return Registry.register(BuiltInRegistries.SOUND_EVENT, id, SoundEvent.createVariableRangeEvent(id));
 	}
+
+    private static SoundEvent register(String name, float range) {
+        var id = TearsOfInk.id(name);
+        return Registry.register(BuiltInRegistries.SOUND_EVENT, id, SoundEvent.createFixedRangeEvent(id, range));
+    }
 
 	public static void init() { StriderSong.init(); }
 }
