@@ -25,6 +25,11 @@ public final class TrollTerritoryRulesTest {
         check(!overlapsProtectedColumn(14,0,0,0,10,10));
         check(overlapsProtectedColumn(-3,-3,0,0,10,10));
         check(!overlapsProtectedColumn(-4,-4,0,0,10,10));
-        System.out.println("Troll territory, family, cooldown, search and strike geometry OK");
+        check(PLAYER_PURSUIT_SPEED==2&&LEAP_RANGE==10&&LEAP_RISE==8);
+        check(!needsLeap(9,99)&&needsLeap(9.01,0)&&needsLeap(0,100));
+        check(leapHorizontal(0)==0&&leapHorizontal(1)==1);
+        check(leapHeight(0,8)==0&&leapHeight(.42,8)==8.5&&leapHeight(1,8)==8);
+        check(leapHeight(1,0)==0);
+        System.out.println("Troll territory, family, search, leap and strike geometry OK");
     }
 }

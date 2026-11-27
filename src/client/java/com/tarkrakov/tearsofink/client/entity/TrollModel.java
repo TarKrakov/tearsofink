@@ -35,7 +35,7 @@ public final class TrollModel extends HierarchicalModel<TrollEntity>{
         int c=e.clip();float elapsed=Math.max(0,e.level().getGameTime()-e.clipStart()+Math.max(0,age-e.tickCount));
         float mix=Mth.clamp(elapsed/3,0,1);
         if(mix<1){apply(e.previousClip(),e.previousTicks());for(int i=0;i<parts.size();i++)previous[i]=parts.get(i).storePose();}
-        apply(c,elapsed);
+        apply(c,e.animationTicks(c,elapsed,Math.max(0,age-e.tickCount)));
         if(mix<1)for(int i=0;i<parts.size();i++){ModelPart p=parts.get(i);PartPose old=previous[i];p.setPos(Mth.lerp(mix,old.x,p.x),Mth.lerp(mix,old.y,p.y),Mth.lerp(mix,old.z,p.z));p.setRotation(angle(mix,old.xRot,p.xRot),angle(mix,old.yRot,p.yRot),angle(mix,old.zRot,p.zRot));}
     }
     private static float angle(float t,float a,float b){return a+t*Mth.wrapDegrees((b-a)*Mth.RAD_TO_DEG)*Mth.DEG_TO_RAD;}

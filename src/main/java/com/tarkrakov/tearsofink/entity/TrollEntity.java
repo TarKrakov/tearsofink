@@ -20,6 +20,7 @@ import net.minecraft.world.Difficulty;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -49,12 +50,17 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
             SCRATCH = 6, SIT = 7, SLEEP = 8, STAND = 9, DEATH = 10;
     private static final int[] DURATION = {60, 80, 40, 40, 40, 58, 60, 15, 240, 15, 41};
     private static final double HEALTH = 100.0;
-    private static final int PURSUIT_INTERVAL = 12;
+    private static final int PURSUIT_INTERVAL = 6;
     private static final double ENGAGE_RANGE = 4.1, ATTACK_HEIGHT = 2.7;
     private static final EntityDataAccessor<Long> STATE = SynchedEntityData.defineId(TrollEntity.class, EntityDataSerializers.LONG);
     private static final EntityDataAccessor<Long> PREVIOUS = SynchedEntityData.defineId(TrollEntity.class, EntityDataSerializers.LONG);
 
+    private static final EntityDataAccessor<Long> SLAM_LANDED = SynchedEntityData.defineId(TrollEntity.class, EntityDataSerializers.LONG);
+    private static final EntityDataAccessor<Boolean> FAST_WALK = SynchedEntityData.defineId(TrollEntity.class, EntityDataSerializers.BOOLEAN);
     private Vec3 home, bed;
+    private Vec3 leapOrigin, leapGoal;
+    private int leapTicks, noPlayerHit, leapCooldown;
+    private boolean leaping, leapPreviousGravity, breakBelly;
     private BlockPos entrance, forageTree, punchTree;
     private UUID territoryId, unreachablePrey;
     private LivingEntity prey;
@@ -106,12 +112,23 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
         super.defineSynchedData(builder);
         builder.define(STATE, 0L);
         builder.define(PREVIOUS, 0L);
+        builder.define(SLAM_LANDED, 0L);
+        builder.define(FAST_WALK, false);
     }
 
     public int clip() { return (int) (entityData.get(STATE) & 15); }
     public long clipStart() { return entityData.get(STATE) >>> 4; }
     public int previousClip() { return (int) (entityData.get(PREVIOUS) & 15); }
     public int previousTicks() { return (int) (entityData.get(PREVIOUS) >>> 4); }
+    public long slamLanded(){return entityData.get(SLAM_LANDED);}
+    public boolean fastWalk(){return entityData.get(FAST_WALK);}
+    public float animationTicks(int c,float ticks,float partial) {
+        if(c!=SLAM)return c==WALK&&fastWalk()?ticks*2:ticks;
+        long landed=slamLanded();
+        if(landed>0)return 28+Math.max(0,level().getGameTime()-landed+partial);
+        if(ticks<=LEAP_WINDUP)return ticks;
+        return Math.min(27.8f,10+18*(ticks-LEAP_WINDUP)/LEAP_FLIGHT);
+    }
 
     private int elapsed() {
         return (int) Math.clamp(level().getGameTime() - clipStart(), 0L, 100_000L);
@@ -155,6 +172,7 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
         if (entrance != null) tag.putLong("TrollEntrance", entrance.asLong());
         tag.putInt("TrollLaughIn", laughIn);
         tag.putInt("TrollAttackIn", attackIn);
+        if(leaping)tag.putBoolean("NoGravity",leapPreviousGravity);
     }
 
     @Override
@@ -217,13 +235,17 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
 
     private void acquire(LivingEntity entity) {
         if (prey == entity) return;
+        if(prey instanceof Player && !(entity instanceof Player))return;
+        boolean player=entity instanceof Player;
         prey = entity;
+        if(player){noPlayerHit=0;leapCooldown=0;returning=false;}
         forageTree = null;
         sleepPending = false;
         moveIn = 0;
         pursuitStall = 0;
         unseenTicks = 0;
         pursuitPosition = position();
+        if(player&&punchTree!=null){punchTree=null;play(IDLE);}
     }
 
     @Override
@@ -252,6 +274,7 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
     @Override
     public void die(DamageSource source) {
         if (level() instanceof ServerLevel level) {
+            cancelLeap();
             stop();
             play(DEATH);
             if (territoryId != null && ModDimensions.isLands(level)) {
@@ -295,13 +318,14 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
             setDeltaMovement(Vec3.ZERO);
             return;
         }
+        if(leaping&&!level().isClientSide)setDeltaMovement(Vec3.ZERO);
         super.tick();
         if (!(level() instanceof ServerLevel level) || !isAlive()) return;
         if (level.getDifficulty() == Difficulty.PEACEFUL) {
             discard();
             return;
         }
-        if (isNoAi()) return;
+        if (isNoAi()) {cancelLeap();return;}
         if (home == null) home = position();
         if (bed == null) bed = home;
         if (entityData.get(STATE) == 0) play(IDLE);
@@ -309,14 +333,17 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
         if (attackIn > 0) --attackIn;
         if (forageIn > 0) --forageIn;
         if (retryPreyIn > 0) --retryPreyIn;
+        if(leapCooldown>0)--leapCooldown;
+        if(prey instanceof Player)noPlayerHit=Math.min(10000,noPlayerHit+1);
+        entityData.set(FAST_WALK,prey instanceof Player);
 
         if (homeDistance(position()) >= CHASE * CHASE && !returning) returnHome();
         if (prey != null) {
             unseenTicks = getSensing().hasLineOfSight(prey) ? 0 : unseenTicks + 1;
-            if (!eligible(level, prey) || distanceToSqr(prey) > 28 * 28 || unseenTicks >= 100) losePrey();
+            if (!eligible(level, prey) || distanceToSqr(prey) > (prey instanceof Player?CHASE*CHASE:28*28) || unseenTicks >= (prey instanceof Player?240:100)) losePrey();
         }
         if (--scanIn <= 0) {
-            scanIn = 10;
+            scanIn = 4;
             if (!returning && !(prey instanceof Player)) scan(level);
         }
 
@@ -336,7 +363,7 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
         double best = prey == null ? Double.POSITIVE_INFINITY : homeDistance(prey.position());
         for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class,
                 getBoundingBox().inflate(DETECT, 5, DETECT), target -> eligible(level, target))) {
-            if (retryPreyIn > 0 && entity.getUUID().equals(unreachablePrey)) continue;
+            if (!(entity instanceof Player) && retryPreyIn > 0 && entity.getUUID().equals(unreachablePrey)) continue;
             double distance = distanceToSqr(entity);
             if (distance > DETECT * DETECT || homeDistance(entity.position()) > DEFEND * DEFEND) continue;
             boolean preferred = entity instanceof Player && !(closest instanceof Player);
@@ -352,7 +379,7 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
 
     private void losePrey() {
         prey = null;
-        scanIn = 35;
+        scanIn = 4;
         stop();
         if (homeDistance(position()) > ROAM * ROAM) returnHome();
     }
@@ -370,14 +397,19 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
     private boolean tickAnimation(ServerLevel level) {
         int clip = clip(), elapsed = elapsed();
         switch (clip) {
-            case RIGHT, LEFT, BELLY, SLAM -> {
+            case SLAM -> tickSlam(level,elapsed);
+            case RIGHT, LEFT, BELLY -> {
                 stop();
                 look(attackYaw);
-                int impact = clip == SLAM ? 28 : clip == BELLY ? 23 : 22;
+                int impact = clip == BELLY ? 23 : 22;
+                if(!struck&&prey instanceof Player&&elapsed<impact-5)
+                    attackYaw=Mth.approachDegrees(attackYaw,yawTo(prey),20);
+                look(attackYaw);
                 if (!struck && elapsed >= impact) {
                     struck = true;
                     if (!returning && onGround()) {
                         if (punchTree == null) {
+                            if(clip==BELLY)TrollBlockSmash.belly(level,this,attackYaw);
                             impact(level, clip);
                         } else if (canReachTree(level, punchTree)
                                 && TrollTrees.fell(level, BlockPos.containing(home), punchTree, true)) {
@@ -386,7 +418,8 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
                     }
                 }
                 if (elapsed >= DURATION[clip]) {
-                    attackIn = 18 + random.nextInt(14);
+                    attackIn = prey instanceof Player?6:18+random.nextInt(14);
+                    breakBelly=false;
                     punchTree = null;
                     play(IDLE);
                 }
@@ -433,46 +466,124 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
 
     private void fight(ServerLevel level) {
         Vec3 offset = prey.position().subtract(position());
-        if (offset.horizontalDistanceSqr() <= ENGAGE_RANGE * ENGAGE_RANGE
-                && Math.abs(offset.y) <= ATTACK_HEIGHT && getSensing().hasLineOfSight(prey)) {
-            stop();
-            pursuitStall = 0;
-            pursuitPosition = position();
-            moveIn = 0;
-            float aim = yawTo(prey);
-            look(Mth.approachDegrees(getYRot(), aim, 25));
-            if (attackIn <= 0 && onGround() && Math.abs(Mth.wrapDegrees(aim - getYRot())) <= 12) {
-                int roll = random.nextInt(100);
-                int next = roll < 22 ? SLAM : roll < 46 ? BELLY : leftPunch ? LEFT : RIGHT;
-                beginAttack(next);
-            } else {
-                play(IDLE);
-            }
-        } else {
-            if (--moveIn <= 0) {
-                moveIn = PURSUIT_INTERVAL;
-                pursuitStall = position().distanceToSqr(pursuitPosition) < .36 ? pursuitStall + PURSUIT_INTERVAL : 0;
-                pursuitPosition = position();
-                if (pursuitStall >= 60) {
-                    unreachablePrey = prey.getUUID();
-                    retryPreyIn = 160;
-                    losePrey();
-                } else if (LoadedFaunaTerrain.loaded(level, new AABB(position(), prey.position()), 3)) {
-                    // A partial route is useful when a player stands close to a ledge.
-                    getNavigation().moveTo(prey, 1);
-                } else {
-                    stop();
-                }
-            }
-            play(getNavigation().isDone() ? IDLE : WALK);
+        boolean player=prey instanceof Player;
+        double horizontal=offset.horizontalDistanceSqr();
+        boolean visible=getSensing().hasLineOfSight(prey);
+        if(player&&--moveIn<=0){
+            moveIn=PURSUIT_INTERVAL;
+            pursuitStall=horizontal>4&&position().distanceToSqr(pursuitPosition)<.16?pursuitStall+PURSUIT_INTERVAL:0;
+            pursuitPosition=position();
         }
+        float aim=yawTo(prey);
+        boolean ready=attackIn<=0&&onGround();
+        boolean blocked=player&&(horizontal<=ENGAGE_RANGE*ENGAGE_RANGE&&!visible||pursuitStall>=24);
+        // Do not require eye-level visibility to smash an obstruction in front.
+        if(ready&&blocked&&TrollBlockSmash.hasObstacle(level,this,aim)){
+            stop();look(aim);breakBelly=true;pursuitStall=0;beginAttack(BELLY);return;
+        }
+        if(ready&&player&&leapCooldown<=0&&needsLeap(offset.lengthSqr(),noPlayerHit)
+                &&LoadedFaunaTerrain.loaded(level,new AABB(position(),position().add(offset.normalize().scale(Math.min(LEAP_RANGE,offset.length())))).inflate(2),2)){
+            stop();look(aim);beginAttack(SLAM);return;
+        }
+        if(horizontal<=ENGAGE_RANGE*ENGAGE_RANGE&&Math.abs(offset.y)<=ATTACK_HEIGHT&&visible){
+            look(Mth.approachDegrees(getYRot(),aim,35));
+            if(ready&&Math.abs(Mth.wrapDegrees(aim-getYRot()))<=12){
+                stop();pursuitStall=0;int roll=random.nextInt(100);
+                int next=player?(roll<30?BELLY:leftPunch?LEFT:RIGHT)
+                        :roll<22?SLAM:roll<46?BELLY:leftPunch?LEFT:RIGHT;
+                beginAttack(next);return;
+            }
+            if(!player||horizontal<=2.6*2.6){stop();play(IDLE);return;}
+        }
+        if(player){
+            if(moveIn==PURSUIT_INTERVAL||getNavigation().isDone()){
+                if(LoadedFaunaTerrain.loaded(level,new AABB(position(),prey.position()),3)){
+                    int off=Mth.floor(getBbWidth()+1)/2;
+                    Path route=getNavigation().createPath(prey.blockPosition().offset(-off,0,-off),1);
+                    if(route!=null)getNavigation().moveTo(route,PLAYER_PURSUIT_SPEED);
+                    else getNavigation().moveTo(prey,PLAYER_PURSUIT_SPEED);
+                }else stop();
+            }
+        }else if(--moveIn<=0){
+            moveIn=12;
+            pursuitStall=position().distanceToSqr(pursuitPosition)<.36?pursuitStall+12:0;
+            pursuitPosition=position();
+            if(pursuitStall>=60){
+                unreachablePrey=prey.getUUID();retryPreyIn=160;losePrey();
+            }else if(LoadedFaunaTerrain.loaded(level,new AABB(position(),prey.position()),3))getNavigation().moveTo(prey,1);
+            else stop();
+        }
+        play(getNavigation().isDone()?IDLE:WALK);
     }
 
     private void beginAttack(int attack) {
         if (attack == LEFT || attack == RIGHT) leftPunch = !leftPunch;
         attackYaw = getYRot();
+        if(attack==SLAM){entityData.set(SLAM_LANDED,0L);leapTicks=0;leapOrigin=null;}
         play(attack);
         playSound(ModSounds.TROLL_WINDUP, .85f, attack == SLAM ? .85f : 1f + random.nextFloat() * .12f);
+    }
+
+    private void tickSlam(ServerLevel level,int elapsed){
+        stop();
+        if(slamLanded()>0){
+            look(attackYaw);
+            if(level.getGameTime()-slamLanded()>=LEAP_RECOVERY){
+                attackIn=prey instanceof Player?6:20;play(IDLE);
+            }
+            return;
+        }
+        if(!leaping){
+            if(elapsed<LEAP_WINDUP){
+                if(prey!=null)attackYaw=Mth.approachDegrees(attackYaw,yawTo(prey),25);
+                look(attackYaw);return;
+            }
+            if(returning||prey==null||!onGround()){play(IDLE);return;}
+            Vec3 delta=prey.position().subtract(position());
+            if(!(prey instanceof Player))delta=delta.scale(.4);
+            Vec3 horizontal=new Vec3(delta.x,0,delta.z);
+            if(horizontal.length()>LEAP_RANGE)horizontal=horizontal.normalize().scale(LEAP_RANGE);
+            Vec3 candidate=position().add(horizontal.x,Math.clamp(delta.y,-8,LEAP_RISE),horizontal.z);
+            if(homeDistance(candidate)>CHASE*CHASE||!LoadedFaunaTerrain.loaded(level,new AABB(position(),candidate).inflate(3),2)){
+                play(IDLE);leapCooldown=20;return;
+            }
+            leapOrigin=position();leapGoal=candidate;leapTicks=0;
+            leapPreviousGravity=isNoGravity();setNoGravity(true);leaping=true;
+            setDeltaMovement(Vec3.ZERO);
+        }
+        look(attackYaw);
+        int step=++leapTicks;
+        double t=Math.min(1,step/(double)LEAP_FLIGHT);
+        double horizontal=leapHorizontal(t);
+        Vec3 path=leapGoal.subtract(leapOrigin);
+        Vec3 desired=leapOrigin.add(path.x*horizontal,leapHeight(t,path.y),path.z*horizontal);
+        Vec3 motion=desired.subtract(position());
+        // Bounded physical movement, not teleportation. Obstructions remain
+        // solid unless the griefing rules allow clearing the actual swept body.
+        if(step>LEAP_FLIGHT)motion=new Vec3(0,-Math.min(1.2,.2+(step-LEAP_FLIGHT)*.12),0);
+        if(motion.length()>1.8)motion=motion.normalize().scale(1.8);
+        if(!LoadedFaunaTerrain.loaded(level,getBoundingBox().expandTowards(motion),2)){
+            cancelLeap();play(IDLE);leapCooldown=20;return;
+        }
+        TrollBlockSmash.flight(level,this,motion);
+        move(MoverType.SELF,motion);
+        setDeltaMovement(Vec3.ZERO);
+        fallDistance=0;
+        if((step>2&&motion.y<=0&&onGround())||step>=LEAP_FLIGHT+24){
+            boolean landed=onGround();
+            cancelLeap();entityData.set(SLAM_LANDED,level.getGameTime());
+            leapCooldown=20;
+            if(landed&&!struck){
+                struck=true;
+                TrollBlockSmash.landing(level,this);
+                if(!returning)impact(level,SLAM);
+            }
+        }
+    }
+
+    private void cancelLeap(){
+        if(leaping){setNoGravity(leapPreviousGravity);leaping=false;setDeltaMovement(Vec3.ZERO);fallDistance=0;}
+        leapOrigin=null;leapGoal=null;
     }
 
     private void goHome(ServerLevel level) {
@@ -647,10 +758,11 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
                 getBoundingBox().inflate(range, ATTACK_HEIGHT, range), target -> eligible(level, target))) {
             Vec3 delta = victim.position().subtract(position());
             if (!withinStrike(delta.x, delta.y, delta.z, forward.x, forward.z, range, ATTACK_HEIGHT, area)
-                    || !getSensing().hasLineOfSight(victim)) continue;
+                    || !hasLineOfSight(victim)) continue;
             float before = victim.getHealth() + victim.getAbsorptionAmount();
             if (victim.hurt(source, Math.max(0, damage)) && victim.getHealth() + victim.getAbsorptionAmount() < before) {
                 victim.knockback(attack == BELLY ? 1.1 : area ? .85 : .4, -delta.x, -delta.z);
+                if(victim==prey&&victim instanceof Player)noPlayerHit=0;
                 if (victim instanceof Player && laughIn <= 0) {
                     laughIn = 160;
                     playSound(ModSounds.TROLL_LAUGH, .8f, .9f + random.nextFloat() * .15f);

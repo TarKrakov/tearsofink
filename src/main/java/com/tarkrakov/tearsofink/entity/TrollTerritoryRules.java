@@ -9,6 +9,22 @@ public final class TrollTerritoryRules {
     public static final int SEARCH_INTERVAL=60, SEARCH_COLUMNS=8;
     public static final int MOUTH_MIN=39, MOUTH_MAX=62;
     static final int STRUCTURE_MARGIN=3;
+    public static final double PLAYER_PURSUIT_SPEED=2.0, LEAP_RANGE=10.0, LEAP_RISE=8.0, LEAP_APEX=8.5;
+    public static final int LEAP_WINDUP=10, LEAP_FLIGHT=32, LEAP_RECOVERY=30, NO_HIT_LIMIT=100;
+    static boolean needsLeap(double distanceSquared,int noHitTicks){
+        return distanceSquared>9.0||noHitTicks>=NO_HIT_LIMIT;
+    }
+    static double leapHorizontal(double progress){
+        double t=Math.clamp((progress-.18)/.60,0,1);
+        return t*t*(3-2*t);
+    }
+    static double leapHeight(double progress,double rise){
+        double t=Math.clamp(progress,0,1);
+        double end=Math.clamp(rise,-8,LEAP_RISE);
+        if(t<=.42){double u=t/.42;return LEAP_APEX*(2*u-u*u);}
+        double u=(t-.42)/.58;
+        return LEAP_APEX+(end-LEAP_APEX)*u*u;
+    }
     static final int CLEARING_RADIUS=25, CLEARING_MAX_CUT=32, CLEARING_TARGET_STUMPS=18, CLEARING_MAX_ADDED=12;
     static int clearingChance(int distanceSq) {
         return distanceSq<=14*14?100:distanceSq<=20*20?85:55;
