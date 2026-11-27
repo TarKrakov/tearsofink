@@ -26,6 +26,8 @@ jobs:
         run: python3 tools/check_advancement_icons.py
       - name: validate chest loot progression
         run: python3 tools/check_chest_loot.py
+      - name: validate Cursed Altar reagent costs
+        run: python3 tools/tests/check_altar_cost.py
       - name: validate scattered ruin density
         run: |
           javac -d /tmp/toi-ruin-test src/main/java/com/tarkrakov/tearsofink/world/ruins/ScatteredRuinDensity.java tools/tests/ScatteredRuinDensityTest.java

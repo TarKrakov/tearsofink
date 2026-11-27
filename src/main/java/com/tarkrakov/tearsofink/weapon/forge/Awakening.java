@@ -61,8 +61,8 @@ public enum Awakening {
 	public static final float CROSS_LINE = 0.6f;
 	/** Пробуждение: «ничего» 20%, иначе I — 55 из 80, II — 25 из 80. III — только усилением (Кристалл крови / Чернильный отголосок). */
 	public static final float NOTHING_CHANCE = 0.20f, LEVEL_TWO_CHANCE = 0.3125f;
-	/** Цена: 4 реагента, +2 за каждое прошлое пробуждение этого оружия, не больше 16. */
-	public static final int BASE_COST = 4, COST_STEP = 2, MAX_COST = 16;
+	/** Цена: 2 реагента, +1 за каждую прошлую попытку этого оружия, не больше 8. */
+	public static final int BASE_COST = 2, COST_STEP = 1, MAX_COST = 8;
 	/** «Разящий приём»: сколько тиков после приёма его урон считается уроном приёма. */
 	public static final int EDGE_WINDOW = 60;
 	/** Потолок суммарной прибавки урона от пробуждений (+50%). */
@@ -164,7 +164,12 @@ public enum Awakening {
 	}
 
 	public static int cost(ItemStack stack) {
-		return Math.min(MAX_COST, BASE_COST + COST_STEP * rolls(stack));
+		return rollCost(rolls(stack));
+	}
+
+	/** Shared cost for client display and server debit; saved roll history stays intact. */
+	public static int rollCost(int previousRolls) {
+		return BASE_COST + COST_STEP * Math.clamp(previousRolls, 0, (MAX_COST - BASE_COST) / COST_STEP);
 	}
 
 	/** Линия оружия «кровь» (иначе — Чернила: Шпиль и Чернила). */
