@@ -42,7 +42,17 @@ public final class ModCommands {
 				dispatcher.register(Commands.literal("tearsofink")
 						.requires(source -> source.hasPermission(2))
 						.then(Commands.literal("where").executes(ModCommands::where))
-						.then(Commands.literal("troll").then(Commands.literal("tp").executes(ModCommands::trollCave)))
+						.then(Commands.literal("troll")
+                                .then(Commands.literal("tp").executes(ModCommands::trollCave))
+                                .then(Commands.literal("status").executes(ctx -> {
+                                    var level = ctx.getSource().getLevel();
+                                    if (!com.tarkrakov.tearsofink.world.ModDimensions.isLands(level)) {
+                                        ctx.getSource().sendFailure(Component.literal("Команда доступна в Чернильных Землях."));
+                                        return 0;
+                                    }
+                                    ctx.getSource().sendSuccess(() -> Component.literal(com.tarkrakov.tearsofink.entity.TrollEncounters.status(level)), false);
+                                    return 1;
+                                })))
 						.then(Commands.literal("hunt")
 								.then(Commands.literal("start").executes(ctx -> {
 									var lands = com.tarkrakov.tearsofink.world.ModDimensions.lands(ctx.getSource().getServer());

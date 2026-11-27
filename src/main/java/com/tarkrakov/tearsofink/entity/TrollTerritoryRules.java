@@ -5,6 +5,14 @@ public final class TrollTerritoryRules {
     public static final int ROAM=25, DETECT=18, DEFEND=35, CHASE=45, MIN_GAP=150;
     public static final int FAMILY_PERCENT=20, REPLENISH=30*60*20;
     public static final int BED_MIN=5, BED_MAX=9, SPAWN_MIN=32, SPAWN_MAX=72;
+    // Frequent bounded searches while travelling, not one random attempt per 45 s.
+    public static final int SEARCH_INTERVAL=60, SEARCH_COLUMNS=8;
+    public static final int MOUTH_MIN=39, MOUTH_MAX=62;
+    static final int STRUCTURE_MARGIN=3;
+    static boolean overlapsProtectedColumn(int x,int z,int minX,int minZ,int maxX,int maxZ){
+        return x>=minX-STRUCTURE_MARGIN&&x<=maxX+STRUCTURE_MARGIN
+                &&z>=minZ-STRUCTURE_MARGIN&&z<=maxZ+STRUCTURE_MARGIN;
+    }
     private TrollTerritoryRules(){}
     public static double distanceSq(double ax,double az,double bx,double bz){
         double dx=ax-bx,dz=az-bz;return dx*dx+dz*dz;

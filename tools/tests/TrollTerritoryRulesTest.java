@@ -16,6 +16,12 @@ public final class TrollTerritoryRulesTest {
         check(!withinStrike(0, 0, -4, 0, 1, 4.1, 2.7, false));
         check(withinStrike(0, 0, -5, 0, 1, 5, 2.7, true));
         check(!withinStrike(0, 0, -5.01, 0, 1, 5, 2.7, true));
-        System.out.println("Troll territory, family, cooldown and strike geometry OK");
+        check(SEARCH_INTERVAL==60&&SEARCH_COLUMNS==8);
+        check(MOUTH_MIN>=SPAWN_MIN+6&&MOUTH_MAX<=SPAWN_MAX-6);
+        check(overlapsProtectedColumn(13,0,0,0,10,10));
+        check(!overlapsProtectedColumn(14,0,0,0,10,10));
+        check(overlapsProtectedColumn(-3,-3,0,0,10,10));
+        check(!overlapsProtectedColumn(-4,-4,0,0,10,10));
+        System.out.println("Troll territory, family, cooldown, search and strike geometry OK");
     }
 }

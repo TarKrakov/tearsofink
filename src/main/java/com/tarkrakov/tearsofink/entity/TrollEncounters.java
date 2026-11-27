@@ -22,10 +22,25 @@ import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.WeakHashMap;
 import static com.tarkrakov.tearsofink.entity.TrollTerritoryRules.*;
 
 /** Settles a cave once and replenishes confirmed vacant resident slots. */
-final class TrollEncounters {
+public final class TrollEncounters {
+    // Ephemeral diagnostics only; no save mutation or chunk loading by status.
+    private static final Map<ServerLevel, Map<String, Long>> SEARCH_STATS = new WeakHashMap<>();
+    private static void count(ServerLevel level,String reason){
+        SEARCH_STATS.computeIfAbsent(level,ignored->new LinkedHashMap<>()).merge(reason,1L,Long::sum);
+    }
+    public static String status(ServerLevel level){
+        long caves=TrollTerritories.of(level).zones().stream().filter(zone->zone.entrance!=null).count();
+        var stats=SEARCH_STATS.get(level);
+        return "Логовищ: "+caves+"; территории: "+TrollTerritories.of(level).zones().size()
+            +"; сложность: "+level.getDifficulty().getName()+"; doMobSpawning: "+level.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING)
+            +"\nПричины/этапы поиска за текущую сессию: "+(stats==null?"попыток ещё нет":stats.toString());
+    }
     private TrollEncounters(){}
     static void init(){
         ServerTickEvents.END_WORLD_TICK.register(TrollEncounters::tick);
@@ -39,7 +54,9 @@ final class TrollEncounters {
         if(!ModDimensions.isLands(l)||l.getDifficulty()==Difficulty.PEACEFUL||!l.getGameRules().getBoolean(GameRules.RULE_DOMOBSPAWNING))return;
         TrollTerritories data=TrollTerritories.of(l);
         for(ServerPlayer p:l.players()){
-            if(!p.isAlive()||p.isSpectator()||Math.floorMod(l.getGameTime()+p.getUUID().hashCode(),300)!=0||!LoadedFaunaTerrain.search(l))continue;
+            if(!p.isAlive()||p.isSpectator()||Math.floorMod(l.getGameTime()+p.getUUID().hashCode(),SEARCH_INTERVAL)!=0)continue;
+            if(!LoadedFaunaTerrain.search(l)){count(l,"budget");continue;}
+            count(l,"search");
             InkLandsLayout layout=InkLandsLayout.of(l);if(layout==null)continue;
             // Only replenish confirmed vacant slots; UUIDs of unloaded residents
             // remain occupied indefinitely. Reuse exactly the saved bed.
@@ -51,29 +68,32 @@ final class TrollEncounters {
                         &&validBed(l,layout,slot.bed)&&spawn(l,data,z,slot))replenished=true;
                 }
             }
-            if(replenished||l.random.nextInt(3)!=0)continue;
+            if(replenished){count(l,"replenished");continue;}
             int desired = size(l.random.nextInt(100));
-            for (int i = 0; i < 20; i++) {
+            for (int i = 0; i < SEARCH_COLUMNS; i++) {
                 double angle = l.random.nextDouble() * Math.PI * 2;
-                double distance = 39 + l.random.nextDouble() * 18;
+                double distance = MOUTH_MIN + l.random.nextDouble() * (MOUTH_MAX - MOUTH_MIN);
                 int x = (int) Math.floor(p.getX() + Math.cos(angle) * distance);
                 int z = (int) Math.floor(p.getZ() + Math.sin(angle) * distance);
-                if (!data.available(x, z, MIN_GAP - 6)) continue;
+                if (!data.available(x, z, MIN_GAP - 6)) {count(l,"spacing");continue;}
                 BlockPos mouth = TrollCave.ground(l, x, z);
-                if (mouth == null || !centerAllowed(l, layout, mouth) || !farFromPlayers(l, mouth)) continue;
+                if (mouth == null){count(l,"ground");continue;}
+                if (!centerAllowed(l, layout, mouth) || !farFromPlayers(l, mouth)){count(l,"region_or_player");continue;}
                 boolean inkwood = l.getBiome(mouth).is(ModBiomes.INKWOOD);
                 Direction inward = Direction.fromYRot(Math.toDegrees(angle) - 90);
                 boolean settled = false;
                 for (int turn = 0; turn < 4; turn++, inward = inward.getClockWise()) {
                     BlockPos center = mouth.relative(inward, 6);
-                    if (!data.available(center) || !centerAllowed(l, layout, center)) continue;
-                    TrollCave.Plan cave = TrollCave.plan(l, mouth, inward, desired, inkwood);
-                    if (cave == null || cave.beds().stream().anyMatch(bed ->
-                            !nearEnough(p, bed) || !farFromPlayers(l, bed) || !bedAllowed(l, layout, bed))) continue;
+                    if (!data.available(center) || !centerAllowed(l, layout, center)){count(l,"center");continue;}
+                    TrollCave.Plan cave = TrollCave.plan(l, mouth, inward, desired, inkwood, reason -> count(l,reason));
+                    if (cave == null) continue;
+                    if (cave.beds().stream().anyMatch(bed ->
+                            !nearEnough(p, bed) || !farFromPlayers(l, bed) || !bedAllowed(l, layout, bed))){count(l,"beds");continue;}
                     cave.build(l, inkwood);
                     TrollTerritories.Zone zone = data.create(cave.center(), cave.entrance(), cave.beds());
                     for (TrollTerritories.Slot slot : zone.slots) spawn(l, data, zone, slot);
                     TrollTrees.thinAround(l, cave.center(), cave.entrance());
+                    count(l,"built");
                     settled = true;
                     break;
                 }

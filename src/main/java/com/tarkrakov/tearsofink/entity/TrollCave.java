@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.ChestBlock;
@@ -25,6 +26,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import static com.tarkrakov.tearsofink.entity.TrollTerritoryRules.overlapsProtectedColumn;
 
 /** A rock shelter built once, when an unclaimed territory is first settled. */
 final class TrollCave {
@@ -66,16 +69,25 @@ final class TrollCave {
     }
 
     static Plan plan(ServerLevel level, BlockPos mouth, Direction inward, int members, boolean inkwood) {
+        return plan(level,mouth,inward,members,inkwood,reason->{});
+    }
+
+    private static Plan reject(Consumer<String> diagnostic,String reason){
+        diagnostic.accept(reason);
+        return null;
+    }
+
+    static Plan plan(ServerLevel level, BlockPos mouth, Direction inward, int members, boolean inkwood, Consumer<String> diagnostic) {
         AABB bounds = AABB.encapsulatingFullBlocks(at(mouth, inward, -6, -7), at(mouth, inward, 6, 12))
                 .inflate(1, 0, 1).expandTowards(0, 8, 0).expandTowards(0, -10, 0);
         if (bounds.minY < level.getMinBuildHeight() || bounds.maxY >= level.getMaxBuildHeight()
                 || !level.getWorldBorder().isWithinBounds(bounds) || !LoadedFaunaTerrain.loaded(level, bounds, 0)) {
-            return null;
+            return reject(diagnostic,"unloaded_or_bounds");
         }
 
         BlockPos exit = at(mouth, inward, 0, -7);
         BlockPos outside = ground(level, exit.getX(), exit.getZ());
-        if (outside == null || Math.abs(outside.getY() - mouth.getY()) > 5) return null;
+        if (outside == null || Math.abs(outside.getY() - mouth.getY()) > 5) return reject(diagnostic,"approach_slope");
         int rise = outside.getY() - mouth.getY();
         BlockPos center = at(mouth, inward, 0, 6);
         Set<BlockPos> treeClearing = new HashSet<>();
@@ -100,24 +112,24 @@ final class TrollCave {
                 // Tall steps leave clearance for the whole Troll hitbox while climbing.
                 int ceiling = depth >= 1 && depth <= 8 ? 6 : 5;
                 int top = depth < 0 ? 5 : open ? ceiling + 1 + skin % 2 : Math.abs(side) == edge ? 3 + skin % 3 : ceiling + 1;
-                if (!clearOfStructures(level, floor)) return null;
-                if (LoadedFaunaTerrain.chunk(level, floor).getInhabitedTime() >= 20 * 60 * 20) return null;
-                if (!foundation(level, center, floor, blocks, treeClearing, rock(skin, inkwood))) return null;
+                if (!clearOfStructures(level, floor)) return reject(diagnostic,"structure");
+                if (LoadedFaunaTerrain.chunk(level, floor).getInhabitedTime() >= 20 * 60 * 20) return reject(diagnostic,"inhabited_chunk");
+                if (!foundation(level, center, floor, blocks, treeClearing, rock(skin, inkwood))) return reject(diagnostic,"foundation");
                 for (int y = 0; y < top; y++) {
                     BlockPos pos = floor.above(y);
                     BlockState old = source(level, pos, treeClearing);
                     boolean passage = open && (depth < 0 || y < ceiling);
-                    if (!old.getFluidState().isEmpty() || old.hasBlockEntity()) return null;
+                    if (!old.getFluidState().isEmpty() || old.hasBlockEntity()) return reject(diagnostic,"fluid_or_inventory");
                     if (passage) {
                         if (old.isAir()) continue;
                         if (!plants(old) && !terrain(old) && !clearTree(level, center, pos, old, treeClearing)) {
-                            return null;
+                            return reject(diagnostic,"passage_obstruction");
                         }
                         blocks.put(pos, Blocks.AIR.defaultBlockState());
                     } else if (old.isAir() || plants(old) || clearTree(level, center, pos, old, treeClearing)) {
                         blocks.put(pos, rock((skin + y * 5) % 13, inkwood));
                     } else if (!terrain(old)) {
-                        return null;
+                        return reject(diagnostic,"wall_obstruction");
                     }
                 }
             }
@@ -125,9 +137,17 @@ final class TrollCave {
         // Recheck the far end of the approach against the untouched forest floor.
         for (int side = -1; side <= 1; side++) {
             BlockPos column = outside.relative(inward.getClockWise(), side);
-            if (!naturalStep(level, column, treeClearing)) return null;
+            if (!naturalStep(level, column, treeClearing)) return reject(diagnostic,"approach_blocked");
         }
-        if (!level.getEntitiesOfClass(LivingEntity.class, bounds).isEmpty()) return null;
+        // A creature elsewhere in the broad search AABB (e.g. a flying owl)
+        // should not veto the whole cave. Never change blocks intersecting
+        // a living entity or the blocks immediately supporting it.
+        for (LivingEntity entity : level.getEntitiesOfClass(LivingEntity.class, bounds)) {
+            AABB occupied = entity.getBoundingBox().expandTowards(0,-1,0);
+            if (blocks.keySet().stream().anyMatch(pos->occupied.intersects(new AABB(pos)))
+                    || treeClearing.stream().anyMatch(pos->occupied.intersects(new AABB(pos))))
+                return reject(diagnostic,"entity_in_footprint");
+        }
 
         List<BlockPos> beds = members == 1 ? List.of(center)
                 : List.of(at(mouth, inward, -3, 6), at(mouth, inward, 3, 6));
@@ -141,8 +161,22 @@ final class TrollCave {
 
     static boolean clearOfStructures(ServerLevel level, BlockPos pos) {
         var chunk = LoadedFaunaTerrain.chunk(level, pos);
-        // References cover every intersected chunk, including starts in another chunk.
-        return chunk != null && chunk.getAllReferences().isEmpty();
+        if (chunk == null) return false;
+        // A reference means a structure intersects SOME part of this chunk,
+        // not that every column is occupied. Protect its actual bounding box
+        // plus a margin, even underground; never force-load an unknown start.
+        for (var entry : chunk.getAllReferences().entrySet()) {
+            for (long reference : entry.getValue()) {
+                var startChunk = level.getChunkSource().getChunkNow(ChunkPos.getX(reference), ChunkPos.getZ(reference));
+                if (startChunk == null) return false;
+                var start = startChunk.getStartForStructure(entry.getKey());
+                if (start == null || !start.isValid()) continue;
+                var box = start.getBoundingBox();
+                if (overlapsProtectedColumn(pos.getX(),pos.getZ(),box.minX(),box.minZ(),box.maxX(),box.maxZ()))
+                    return false;
+            }
+        }
+        return true;
     }
 
     private static boolean naturalStep(ServerLevel level, BlockPos pos, Set<BlockPos> treeClearing) {
