@@ -41,9 +41,10 @@ final class MorokDance {
         mean=mean.scale(1.0/size);
         Vec3 center=null;
         for(int i=0;i<12;i++){
-            Vec3 c=mean.add(i==0?0:(level.random.nextDouble()-.5)*6,
-                    i==0?0:(level.random.nextDouble()-.25)*3,
+            Vec3 candidate=mean.add(i==0?0:(level.random.nextDouble()-.5)*6,0,
                     i==0?0:(level.random.nextDouble()-.5)*6);
+            Vec3 c=raisedCenter(level,candidate);
+            if(c==null)continue;
             boolean tooFar=false;
             for(MorokEntity m:group)if(m.position().distanceToSqr(c)>17*17){tooFar=true;break;}
             if(tooFar||Sanctuary.near(level,c.x,c.z,6)||!clearRing(level,c))continue;
@@ -57,6 +58,19 @@ final class MorokDance {
         double angle=Math.atan2(group.get(0).getZ()-center.z,group.get(0).getX()-center.x);
         MorokDance dance=new MorokDance(center,group,angle,level.random.nextBoolean()?1:-1,level.getGameTime(),400+level.random.nextInt(401));
         for(MorokEntity m:group)m.joinDance(dance);
+    }
+    private static Vec3 raisedCenter(ServerLevel level,Vec3 at){
+        double highest=MorokEntity.surface(level,at.x,at.z);
+        if(!Double.isFinite(highest))return null;
+        for(int i=0;i<32;i++){
+            double a=i*Math.PI/16;
+            double surface=MorokEntity.surface(level,at.x+Math.cos(a)*MorokDanceOrbit.RADIUS,at.z+Math.sin(a)*MorokDanceOrbit.RADIUS);
+            if(!Double.isFinite(surface))return null;
+            highest=Math.max(highest,surface);
+        }
+        // Keep the entire ring above the minimum, even at the lowest part of the bob.
+        double y=highest+MorokTuning.FLIGHT_MIN_HEIGHT+MorokDanceOrbit.BOB+.25;
+        return new Vec3(at.x,Math.max(y,Math.min(at.y,highest+MorokTuning.FLIGHT_MAX_HEIGHT)),at.z);
     }
     private static boolean clearRing(ServerLevel level,Vec3 c){
         if(!LoadedFaunaTerrain.loaded(level,new AABB(c,c).inflate(4,2,4),2))return false;

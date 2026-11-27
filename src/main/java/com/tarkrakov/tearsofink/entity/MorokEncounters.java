@@ -72,8 +72,10 @@ public final class MorokEncounters {
         if(layout.depthInside(x,z)<16||Ruins.nearStart(layout,x,z)||Ruins.nearTemple(layout,x,z)||Sanctuary.near(layout,x,z,8))return false;
         var chunk=l.getChunkSource().getChunkNow(x>>4,z>>4);if(chunk==null)return false;
         int surface=LoadedFaunaTerrain.surface(chunk,Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,x,z);
-        int top=ruin==null?surface+1:Math.min(surface+1,ruin.maxY()+1),bottom=ruin==null?top:Math.max(ruin.minY()+1,top-7);
-        for(int y=top;y>=bottom;y--){
+        // Above the local surface, including ruins; never fall back to ground-level spawns.
+        int first=FLIGHT_MIN_HEIGHT+l.random.nextInt(FLIGHT_MAX_HEIGHT-FLIGHT_MIN_HEIGHT+1);
+        for(int i=0;i<=FLIGHT_MAX_HEIGHT-FLIGHT_MIN_HEIGHT;i++){
+            int y=surface+FLIGHT_MIN_HEIGHT+(first-FLIGHT_MIN_HEIGHT+i)%(FLIGHT_MAX_HEIGHT-FLIGHT_MIN_HEIGHT+1);
             BlockPos pos=new BlockPos(x,y,z);Vec3 at=new Vec3(x+.5,y+.15,z+.5);AABB body=new AABB(at.x-.35,at.y-.15,at.z-.35,at.x+.35,at.y+.85,at.z+.35);
             if(!LoadedFaunaTerrain.free(l,null,body)||!l.noCollision(body)||!l.getFluidState(pos).isEmpty()||!l.getFluidState(pos.above()).isEmpty())continue;
             if(!(l.getBiome(pos).is(ModBiomes.PALE_FOREST)||l.getBiome(pos).is(ModBiomes.INKWOOD)))continue;

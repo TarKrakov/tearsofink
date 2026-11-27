@@ -104,9 +104,34 @@ public final class MorokEntity extends PathfinderMob implements Enemy {
         }
         if(destination==null||--wanderIn<=0||position().distanceToSqr(destination)<.12){
             wanderIn=50+random.nextInt(80);destination=null;
-            for(int i=0;i<8;i++){Vec3 p=home.add((random.nextDouble()-.5)*12,(random.nextDouble()-.5)*2,(random.nextDouble()-.5)*12);if(free(s,p)){destination=p;break;}}
+            for(int i=0;i<8;i++){
+                Vec3 p=cruisePoint(s,home.x+(random.nextDouble()-.5)*12,home.z+(random.nextDouble()-.5)*12);
+                if(p!=null){destination=p;break;}
+            }
+        }
+        // Return upward after a pursuit (or a low saved/command-spawned position).
+        double ground=surface(s,getX(),getZ());
+        if(Double.isFinite(ground)&&getY()<ground+FLIGHT_MIN_HEIGHT){
+            Vec3 rise=cruisePoint(s,getX(),getZ());
+            if(rise!=null&&steer(s,rise,IDLE_SPEED))return;
         }
         if(destination==null)setDeltaMovement(Vec3.ZERO);else if(!steer(s,destination,IDLE_SPEED))destination=null;
+    }
+    /** Loaded local surface, ignoring leaf canopy. No synchronous chunk requests. */
+    static double surface(ServerLevel level,double x,double z){
+        BlockPos at=BlockPos.containing(x,0,z);
+        var chunk=LoadedFaunaTerrain.chunk(level,at);
+        return chunk==null?Double.NaN:LoadedFaunaTerrain.surface(chunk,net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,at.getX(),at.getZ());
+    }
+    private Vec3 cruisePoint(ServerLevel level,double x,double z){
+        double ground=surface(level,x,z);
+        if(!Double.isFinite(ground))return null;
+        double first=FLIGHT_MIN_HEIGHT+random.nextDouble()*(FLIGHT_MAX_HEIGHT-FLIGHT_MIN_HEIGHT);
+        for(double height:new double[]{first,FLIGHT_MAX_HEIGHT,FLIGHT_MIN_HEIGHT}){
+            Vec3 p=new Vec3(x,ground+height,z);
+            if(free(level,p))return p;
+        }
+        return null;
     }
     private Vec3 center(){return position().add(0,.32,0);}
     private boolean eligible(ServerPlayer p){return p.isAlive()&&!p.isSpectator()&&!p.isCreative()&&p.level()==level()&&(!ModDimensions.isLands(level())||!Sanctuary.contains(p));}
@@ -123,7 +148,15 @@ public final class MorokEntity extends PathfinderMob implements Enemy {
         Vec3 desired=diff.scale(Math.min(speed,diff.length())/diff.length()),next=null;
         for(Vec3 v:new Vec3[]{getDeltaMovement().lerp(desired,.45),desired,desired.add(0,speed,0),desired.yRot(.75f),desired.yRot(-.75f),new Vec3(0,speed,0),desired.yRot(1.55f),desired.yRot(-1.55f),new Vec3(0,-speed,0)}){
             if(v.lengthSqr()<.00001)continue;if(v.length()>speed)v=v.normalize().scale(speed);
-            if(free(l,position().add(v))){next=v;break;}
+            Vec3 at=position().add(v);
+            if(phase()==IDLE){
+                double ground=surface(l,at.x,at.z),here=surface(l,getX(),getZ());
+                if(!Double.isFinite(ground)||!Double.isFinite(here))continue;
+                // Permit climbing out of a low position, not descending farther below cruise height.
+                double clearance=getY()-here;
+                if(at.y-ground<Math.min(FLIGHT_MIN_HEIGHT,clearance)-.001)continue;
+            }
+            if(free(l,at)){next=v;break;}
         }
         if(next==null){setDeltaMovement(Vec3.ZERO);return false;}
         setDeltaMovement(next);
