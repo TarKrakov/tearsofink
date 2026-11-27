@@ -61,8 +61,13 @@ public final class TrollEncounters {
             // Only replenish confirmed vacant slots; UUIDs of unloaded residents
             // remain occupied indefinitely. Reuse exactly the saved bed.
             boolean replenished=false;
+            boolean decorated=false;
             for(TrollTerritories.Zone z:data.zones()){
                 if(!within(p.getX(),p.getZ(),z.center.getX()+.5,z.center.getZ()+.5,SPAWN_MAX+BED_MAX))continue;
+                if(!decorated&&z.entrance!=null&&!z.clearingDone&&farFromPlayers(l,z.center)
+                        &&TrollTrees.thinAround(l,z.center,z.entrance)){
+                    data.clearingDone(z);decorated=true;count(l,"clearing");
+                }
                 for(TrollTerritories.Slot slot:z.slots){
                     if(slot.vacant(l.getGameTime())&&nearEnough(p,slot.bed)&&farFromPlayers(l,slot.bed)
                         &&validBed(l,layout,slot.bed)&&spawn(l,data,z,slot))replenished=true;
@@ -92,7 +97,7 @@ public final class TrollEncounters {
                     cave.build(l, inkwood);
                     TrollTerritories.Zone zone = data.create(cave.center(), cave.entrance(), cave.beds());
                     for (TrollTerritories.Slot slot : zone.slots) spawn(l, data, zone, slot);
-                    TrollTrees.thinAround(l, cave.center(), cave.entrance());
+                    if(TrollTrees.thinAround(l,cave.center(),cave.entrance()))data.clearingDone(zone);
                     count(l,"built");
                     settled = true;
                     break;

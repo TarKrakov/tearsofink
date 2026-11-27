@@ -3,8 +3,11 @@ import static com.tarkrakov.tearsofink.entity.TrollTerritoryRules.*;
 public final class TrollTerritoryRulesTest {
     static void check(boolean ok){if(!ok)throw new AssertionError();}
     public static void main(String[] args){
-        check(separated(0,0,150,0));check(!separated(0,0,149,0));
-        check(separated(-90,-120,0,0));check(!separated(-90,-119,0,0));
+        check(MIN_GAP==75);
+        check(separated(0,0,75,0));check(!separated(0,0,74,0));
+        check(separated(-45,-60,0,0));check(!separated(-45,-59,0,0));
+        check(CLEARING_RADIUS==25&&CLEARING_MAX_CUT==32&&CLEARING_MAX_ADDED==12);
+        check(clearingChance(14*14)==100&&clearingChance(15*15)==85&&clearingChance(21*21)==55);
         check(within(0,0,25,0,ROAM));check(!within(0,0,25.01,0,ROAM));
         check(DETECT==18&&DEFEND==35&&CHASE==45&&ROAM==25);
         int families=0;for(int i=0;i<100;i++)if(size(i)==2)families++;

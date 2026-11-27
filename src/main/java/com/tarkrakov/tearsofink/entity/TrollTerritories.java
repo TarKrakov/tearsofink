@@ -58,6 +58,7 @@ public final class TrollTerritories extends SavedData {
     Zone create(BlockPos center,BlockPos entrance,List<BlockPos> beds){
         Zone z=new Zone(UUID.randomUUID(),center,entrance,beds);zones.put(z.id,z);setDirty();return z;
     }
+    void clearingDone(Zone zone){zone.clearingDone=true;setDirty();}
     void reserve(Slot s,UUID member){s.member=member;s.readyAt=0;setDirty();}
     void failed(Slot s,long now){s.member=null;s.readyAt=now+200;setDirty();}
     void died(UUID zone,UUID member,long now){
@@ -114,18 +115,21 @@ public final class TrollTerritories extends SavedData {
         final BlockPos center;
         final BlockPos entrance;
         final List<Slot> slots;
+        boolean clearingDone;
         Zone(UUID id,BlockPos center,BlockPos entrance,List<BlockPos> beds){
             this.id=id;this.center=center;this.entrance=entrance;slots=new ArrayList<>();for(BlockPos b:beds)slots.add(new Slot(b));
         }
         CompoundTag save(){
             CompoundTag t=new CompoundTag();t.putUUID("Id",id);t.putLong("Center",center.asLong());
             if (entrance != null) t.putLong("Entrance", entrance.asLong());
+            t.putBoolean("ClearingV2",clearingDone);
             ListTag list=new ListTag();for(Slot s:slots){CompoundTag n=new CompoundTag();n.putLong("Bed",s.bed.asLong());n.putLong("ReadyAt",s.readyAt);if(s.member!=null)n.putUUID("Member",s.member);list.add(n);}
             t.put("Slots",list);return t;
         }
         static Zone load(CompoundTag t){
             BlockPos entrance = t.contains("Entrance", Tag.TAG_LONG) ? BlockPos.of(t.getLong("Entrance")) : null;
             Zone z=new Zone(t.getUUID("Id"),BlockPos.of(t.getLong("Center")),entrance,List.of());
+            z.clearingDone=t.getBoolean("ClearingV2");
             ListTag list=t.getList("Slots",Tag.TAG_COMPOUND);
             for(int i=0;i<list.size();i++){CompoundTag n=list.getCompound(i);Slot s=new Slot(BlockPos.of(n.getLong("Bed")));if(n.hasUUID("Member"))s.member=n.getUUID("Member");s.readyAt=Math.max(0,n.getLong("ReadyAt"));z.slots.add(s);}
             return z;

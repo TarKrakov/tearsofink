@@ -3,6 +3,7 @@ package com.tarkrakov.tearsofink.entity;
 import com.tarkrakov.tearsofink.block.ModBlocks;
 import com.tarkrakov.tearsofink.entity.patrol.ForestCamps;
 import com.tarkrakov.tearsofink.world.InkLandsLayout;
+import com.tarkrakov.tearsofink.world.ModBiomes;
 import com.tarkrakov.tearsofink.world.battlefield.BattlefieldFaunaBoundary;
 import com.tarkrakov.tearsofink.world.herald.BloodSettlements;
 import com.tarkrakov.tearsofink.world.ruins.Ruins;
@@ -17,6 +18,8 @@ import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.entity.LivingEntity;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -58,26 +61,99 @@ final class TrollTrees {
         return null;
     }
 
-    static void thinAround(ServerLevel level, BlockPos center, BlockPos entrance) {
-        if (!level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)) return;
+    // One bounded pass per cave, once all nearby chunks are already loaded.
+    static boolean thinAround(ServerLevel level, BlockPos center, BlockPos entrance) {
+        if (!level.getGameRules().getBoolean(GameRules.RULE_MOBGRIEFING)
+                || !LoadedFaunaTerrain.loaded(level, new AABB(center).inflate(CLEARING_RADIUS,0,CLEARING_RADIUS),2)) return false;
+        InkLandsLayout layout=InkLandsLayout.of(level);
+        if(layout==null)return false;
         List<BlockPos> candidates = new ArrayList<>();
-        for (int dx = -22; dx <= 22; dx++) for (int dz = -22; dz <= 22; dz++) {
+        List<BlockPos> stumps = new ArrayList<>();
+        for (int dx = -CLEARING_RADIUS; dx <= CLEARING_RADIUS; dx++) for (int dz = -CLEARING_RADIUS; dz <= CLEARING_RADIUS; dz++) {
             int distance = dx * dx + dz * dz;
-            if (distance > 22 * 22) continue;
+            if (distance > CLEARING_RADIUS * CLEARING_RADIUS) continue;
             BlockPos column = center.offset(dx, 0, dz);
-            int chance = distance <= 10 * 10 ? 85 : distance <= 16 * 16 ? 55 : 22;
-            if (variation(level.getSeed(), column.asLong(), 100) >= chance) continue;
             BlockPos root = rootAt(level, column.getX(), column.getZ());
             if (root != null && Math.abs(root.getY() - center.getY()) <= 12
-                    && distanceSq(root.getX(), root.getZ(), entrance.getX(), entrance.getZ()) >= 9) {
+                    && distanceSq(root.getX(), root.getZ(), entrance.getX(), entrance.getZ()) >= 9
+                    && variation(level.getSeed(), column.asLong(), 100)<clearingChance(distance)) {
                 candidates.add(root);
+            } else if (root == null) {
+                BlockPos stump = existingStump(level,column.getX(),column.getZ());
+                if(stump!=null&&Math.abs(stump.getY()-center.getY())<=12)stumps.add(stump);
             }
         }
         candidates.sort(Comparator.comparingDouble(p -> distanceSq(p.getX(), p.getZ(), center.getX(), center.getZ())));
         int cut = 0;
         for (BlockPos root : candidates) {
-            if (fell(level, center, root, false) && ++cut >= 12) break;
+            if(!freshColumn(level,root))continue;
+            List<BlockPos> logs=edibleCrown(level,center,root);
+            if(logs.isEmpty()||logs.stream().anyMatch(pos->!freshColumn(level,pos)))continue;
+            remove(level,logs);
+            stumps.add(root);
+            if (++cut >= CLEARING_MAX_CUT) break;
         }
+        // Where natural trees are sparse or connected crowns cannot safely
+        // be cut, place a few regional two-block stumps on bare forest soil.
+        // Keep the cave footprint and its entire approach free of new stumps.
+        List<BlockPos> columns=new ArrayList<>();
+        for(int dx=-CLEARING_RADIUS;dx<=CLEARING_RADIUS;dx++)for(int dz=-CLEARING_RADIUS;dz<=CLEARING_RADIUS;dz++){
+            int d=dx*dx+dz*dz;
+            if(d>=14*14&&d<=CLEARING_RADIUS*CLEARING_RADIUS)columns.add(center.offset(dx,0,dz));
+        }
+        columns.sort(Comparator.comparingInt(p->variation(level.getSeed(),p.asLong(),Integer.MAX_VALUE)));
+        int added=0;
+        for(BlockPos column:columns){
+            if(stumps.size()>=CLEARING_TARGET_STUMPS||added>=CLEARING_MAX_ADDED)break;
+            if(stumps.stream().anyMatch(p->distanceSq(p.getX(),p.getZ(),column.getX(),column.getZ())<4*4))continue;
+            BlockPos feet=TrollCave.ground(level,column.getX(),column.getZ());
+            if(feet==null||Math.abs(feet.getY()-center.getY())>8||!freshColumn(level,feet)
+                    ||!safeStump(level,layout,feet))continue;
+            boolean treeNearby=false;
+            for(int dx=-2;dx<=2&&!treeNearby;dx++)for(int dz=-2;dz<=2;dz++){
+                if(rootAt(level,feet.getX()+dx,feet.getZ()+dz)!=null){treeNearby=true;break;}
+            }
+            if(treeNearby)continue;
+            Block log=level.getBiome(feet).is(ModBiomes.INKWOOD)?ModBlocks.INK.log():ModBlocks.PALE_LOG;
+            BlockState state=log.defaultBlockState().setValue(RotatedPillarBlock.AXIS,Direction.Axis.Y);
+            level.setBlock(feet,state,Block.UPDATE_ALL);
+            level.setBlock(feet.above(),state,Block.UPDATE_ALL);
+            stumps.add(feet);added++;
+        }
+        return true;
+    }
+
+    private static boolean freshColumn(ServerLevel level,BlockPos pos){
+        var chunk=LoadedFaunaTerrain.chunk(level,pos);
+        return chunk!=null&&chunk.getInhabitedTime()<20*60*20;
+    }
+
+    private static BlockPos existingStump(ServerLevel level,int x,int z){
+        var chunk=level.getChunkSource().getChunkNow(x>>4,z>>4);
+        if(chunk==null)return null;
+        int top=LoadedFaunaTerrain.surface(chunk,Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,x,z);
+        for(int y=top-1;y>=Math.max(level.getMinBuildHeight()+1,top-6);y--){
+            BlockPos p=new BlockPos(x,y,z);
+            BlockState s=chunk.getBlockState(p),ground=chunk.getBlockState(p.below());
+            if(regionalLog(s)&&s.getValue(RotatedPillarBlock.AXIS)==Direction.Axis.Y
+                    &&(ground.is(ModBlocks.ASHEN_SOIL)||ground.is(ModBlocks.TAR_SOIL))
+                    &&chunk.getBlockState(p.above()).is(s.getBlock())
+                    &&!regionalLog(chunk.getBlockState(p.above(2))))return p;
+        }
+        return null;
+    }
+
+    private static boolean safeStump(ServerLevel level,InkLandsLayout layout,BlockPos p){
+        int x=p.getX(),z=p.getZ();
+        if(!TrollCave.clearOfStructures(level,p)||layout.nearRoad(x,z,8)
+                ||Ruins.nearStart(layout,x,z)||Sanctuary.near(layout,x,z,8)
+                ||BattlefieldFaunaBoundary.inside(level,x,z)||BloodSettlements.contains(level,p)
+                ||ForestCamps.near(level,p,30)||layout.nearHerald(x,z,40)
+                ||!(level.getBiome(p).is(ModBiomes.PALE_FOREST)||level.getBiome(p).is(ModBiomes.INKWOOD)))return false;
+        BlockState ground=level.getBlockState(p.below());
+        if(!(ground.is(ModBlocks.ASHEN_SOIL)||ground.is(ModBlocks.TAR_SOIL)))return false;
+        for(int y=0;y<6;y++)if(!level.getBlockState(p.above(y)).isAir())return false;
+        return level.getEntitiesOfClass(LivingEntity.class,new AABB(p).expandTowards(0,2,0)).isEmpty();
     }
 
     static boolean fell(ServerLevel level, BlockPos center, BlockPos root, boolean audible) {
