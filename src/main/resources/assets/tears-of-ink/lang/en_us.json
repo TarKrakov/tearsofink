@@ -1394,5 +1394,13 @@
   "subtitles.tears-of-ink.morok_whisper": "Morok whispers",
   "subtitles.tears-of-ink.morok_cry": "Morok screams",
   "subtitles.tears-of-ink.morok_fuse": "Morok builds up light",
-  "subtitles.tears-of-ink.morok_burst": "Morok bursts"
+  "subtitles.tears-of-ink.morok_burst": "Morok bursts",
+  "entity.tears-of-ink.troll": "Troll",
+  "item.tears-of-ink.troll_spawn_egg": "Troll Spawn Egg",
+  "mixer.tears-of-ink.group.trolls": "Trolls",
+  "subtitles.tears-of-ink.troll_chomp": "Troll chomps",
+  "subtitles.tears-of-ink.troll_snort": "Troll snorts",
+  "subtitles.tears-of-ink.troll_laugh": "Troll chuckles",
+  "subtitles.tears-of-ink.troll_snore": "Troll snores",
+  "subtitles.tears-of-ink.troll_slam": "Troll slams"
 }

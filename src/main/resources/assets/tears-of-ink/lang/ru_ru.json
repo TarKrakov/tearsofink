@@ -1394,5 +1394,13 @@
   "subtitles.tears-of-ink.morok_whisper": "Морок шепчет",
   "subtitles.tears-of-ink.morok_cry": "Морок кричит",
   "subtitles.tears-of-ink.morok_fuse": "Морок накапливает свет",
-  "subtitles.tears-of-ink.morok_burst": "Морок взрывается"
+  "subtitles.tears-of-ink.morok_burst": "Морок взрывается",
+  "entity.tears-of-ink.troll": "Тролль",
+  "item.tears-of-ink.troll_spawn_egg": "Яйцо призыва тролля",
+  "mixer.tears-of-ink.group.trolls": "Тролли",
+  "subtitles.tears-of-ink.troll_chomp": "Чавканье тролля",
+  "subtitles.tears-of-ink.troll_snort": "Тролль фыркает",
+  "subtitles.tears-of-ink.troll_laugh": "Тролль гогочет",
+  "subtitles.tears-of-ink.troll_snore": "Тролль храпит",
+  "subtitles.tears-of-ink.troll_slam": "Тролль обрушивается"
 }

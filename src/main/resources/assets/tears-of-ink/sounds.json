@@ -533,5 +533,55 @@
         "name": "tears-of-ink:morok_burst"
       }
     ]
+  },
+  "troll_chomp": {
+    "subtitle": "subtitles.tears-of-ink.troll_chomp",
+    "sounds": [
+      {
+        "name": "minecraft:entity.generic.eat",
+        "type": "event",
+        "pitch": 0.62
+      }
+    ]
+  },
+  "troll_snort": {
+    "subtitle": "subtitles.tears-of-ink.troll_snort",
+    "sounds": [
+      {
+        "name": "minecraft:entity.pig.ambient",
+        "type": "event",
+        "pitch": 0.62
+      }
+    ]
+  },
+  "troll_laugh": {
+    "subtitle": "subtitles.tears-of-ink.troll_laugh",
+    "sounds": [
+      {
+        "name": "minecraft:entity.witch.celebrate",
+        "type": "event",
+        "pitch": 0.62
+      }
+    ]
+  },
+  "troll_snore": {
+    "subtitle": "subtitles.tears-of-ink.troll_snore",
+    "sounds": [
+      {
+        "name": "minecraft:entity.panda.ambient",
+        "type": "event",
+        "pitch": 0.62
+      }
+    ]
+  },
+  "troll_slam": {
+    "subtitle": "subtitles.tears-of-ink.troll_slam",
+    "sounds": [
+      {
+        "name": "minecraft:entity.iron_golem.attack",
+        "type": "event",
+        "pitch": 0.62
+      }
+    ]
   }
 }

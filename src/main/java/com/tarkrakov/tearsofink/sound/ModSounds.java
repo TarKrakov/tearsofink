@@ -7,6 +7,11 @@ import net.minecraft.sounds.SoundEvent;
 
 /** Свои звуки мода (файлы — assets/tears-of-ink/sounds/, список — sounds.json). Заменить — положить .ogg поверх с тем же именем. */
 public final class ModSounds {
+    public static final SoundEvent TROLL_CHOMP = register("troll_chomp");
+    public static final SoundEvent TROLL_SNORT = register("troll_snort");
+    public static final SoundEvent TROLL_LAUGH = register("troll_laugh");
+    public static final SoundEvent TROLL_SNORE = register("troll_snore");
+    public static final SoundEvent TROLL_SLAM = register("troll_slam");
     public static final SoundEvent MOROK_WHISPER = register("morok_whisper");
     public static final SoundEvent MOROK_CRY = register("morok_cry");
     public static final SoundEvent MOROK_FUSE = register("morok_fuse");

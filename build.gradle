@@ -168,3 +168,6 @@ processResources {
 }
 
 apply from: "gradle/orion.gradle"
+processResources {
+    from('blockbench/troll_texture.png') { into 'assets/tears-of-ink/textures/entity' }
+}

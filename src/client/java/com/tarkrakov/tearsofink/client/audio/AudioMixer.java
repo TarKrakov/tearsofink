@@ -34,7 +34,7 @@ public final class AudioMixer {
     private static final Path FILE = FabricLoader.getInstance().getConfigDir().resolve("tearsofink-audio.json");
 
     public enum Group {
-        FOREST, MUSIC, OWLS, CATERPILLARS, DIARY, DEER, BOSS_MUSIC, MOROKS;
+        FOREST, MUSIC, OWLS, CATERPILLARS, DIARY, DEER, BOSS_MUSIC, MOROKS, TROLLS;
         public String key() { return name().toLowerCase(Locale.ROOT); }
         public Component label() { return Component.translatable("mixer.tears-of-ink.group." + key()); }
     }
@@ -73,6 +73,11 @@ public final class AudioMixer {
         new Entry(TearsOfInk.id("pale_deer_watch_roar"), Group.DEER, SoundSource.NEUTRAL, 0.8200f, "subtitles.tears-of-ink.pale_deer_watch_roar"),
         new Entry(TearsOfInk.id("pale_deer_roar"), Group.DEER, SoundSource.NEUTRAL, 0.6200f, "subtitles.tears-of-ink.pale_deer_roar"),
         new Entry(TearsOfInk.id("pale_deer_run_step"), Group.DEER, SoundSource.NEUTRAL, 0.4800f, "subtitles.tears-of-ink.pale_deer_run_step"),
+        new Entry(TearsOfInk.id("troll_chomp"), Group.TROLLS, SoundSource.HOSTILE, 0.65f, "subtitles.tears-of-ink.troll_chomp"),
+        new Entry(TearsOfInk.id("troll_snort"), Group.TROLLS, SoundSource.HOSTILE, 0.65f, "subtitles.tears-of-ink.troll_snort"),
+        new Entry(TearsOfInk.id("troll_laugh"), Group.TROLLS, SoundSource.HOSTILE, 0.65f, "subtitles.tears-of-ink.troll_laugh"),
+        new Entry(TearsOfInk.id("troll_snore"), Group.TROLLS, SoundSource.HOSTILE, 0.65f, "subtitles.tears-of-ink.troll_snore"),
+        new Entry(TearsOfInk.id("troll_slam"), Group.TROLLS, SoundSource.HOSTILE, 0.65f, "subtitles.tears-of-ink.troll_slam"),
         new Entry(TearsOfInk.id("morok_whisper"), Group.MOROKS, SoundSource.HOSTILE, 0.32f, "subtitles.tears-of-ink.morok_whisper"),
         new Entry(TearsOfInk.id("morok_cry"), Group.MOROKS, SoundSource.HOSTILE, 0.8f, "subtitles.tears-of-ink.morok_cry"),
         new Entry(TearsOfInk.id("morok_fuse"), Group.MOROKS, SoundSource.HOSTILE, 0.7f, "subtitles.tears-of-ink.morok_fuse"),
