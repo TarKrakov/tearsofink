@@ -1,0 +1,14 @@
+gradle.projectsEvaluated {
+    def project = gradle.rootProject
+    def sets = project.sourceSets
+    def checks = sets.create('vestibuleChecks') {
+        java.srcDir(project.file('tools/tests/vestibule'))
+        compileClasspath += sets.main.output + sets.main.compileClasspath
+        runtimeClasspath += sets.main.output + sets.main.runtimeClasspath
+    }
+    project.tasks.register('verifyVestibuleGrove', JavaExec) {
+        classpath = checks.runtimeClasspath
+        mainClass = 'com.tarkrakov.tearsofink.prologue.VestibuleGroveTest'
+        if (project.hasProperty('vestibuleDump')) args project.property('vestibuleDump')
+    }
+}

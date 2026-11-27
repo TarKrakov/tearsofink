@@ -119,6 +119,7 @@ public final class Prologue {
 		ServerTickEvents.END_WORLD_TICK.register(level -> {
 			if (!Vestibule.is(level) || level.getGameTime() % 4 != 0) return;
 			Vestibule v = Vestibule.get(level);
+			v.tickDeferredMigration(level);
 			for (ServerPlayer p : java.util.List.copyOf(level.players())) { // копия: игрок уходит в другое измерение прямо в цикле
 				if (!p.isAlive() || p.isSpectator()) {
 					clearTransit(p);

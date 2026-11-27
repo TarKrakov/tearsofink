@@ -150,6 +150,8 @@ public class TearsOfInkClient implements ClientModInitializer {
 				context.client().execute(() -> com.tarkrakov.tearsofink.client.trader.SoulTraderScreen.open(payload)));
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.trader.SoulTraderModel.LAYER,
 				com.tarkrakov.tearsofink.client.trader.SoulTraderModel::createBodyLayer);
+		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.trader.HarvestKeeperModel.LAYER,
+				com.tarkrakov.tearsofink.client.trader.HarvestKeeperModel::createBodyLayer);
 		EntityRendererRegistry.register(ModMobs.SOUL_TRADER, com.tarkrakov.tearsofink.client.trader.SoulTraderRenderer::new);
 		registerKeeper(); // Хранитель Жатвы — рендер Торговки со своей текстурой
 		EntityModelLayerRegistry.registerModelLayer(com.tarkrakov.tearsofink.client.hunt.HunterModel.LAYER,

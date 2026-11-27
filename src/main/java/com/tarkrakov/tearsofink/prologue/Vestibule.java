@@ -7,7 +7,10 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Vec3i;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtAccounter;
+import net.minecraft.nbt.NbtIo;
 import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -19,22 +22,30 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructurePlaceSettings;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate;
 import net.minecraft.world.level.saveddata.SavedData;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Преддверие — крошечное туманное измерение (пустота) с постройкой автора и воротами.
  * Постройка: data/tears-of-ink/structure/vestibule.nbt. Метки (ванильные блоки, код их убирает):
  * золотой блок — где появляется игрок, алмазный — где стоит Г-н Проводник, изумрудные — проём ворот.
- * Нет файла — ставится простая заглушка.
+ * При отсутствии шаблона ставится бледная роща вокруг прохода.
  */
 public final class Vestibule extends SavedData {
 	public static final ResourceKey<Level> KEY = ResourceKey.create(Registries.DIMENSION, TearsOfInk.id("vestibule"));
-	private static final int BASE_Y = 64;
+	private static final int BASE_Y = VestibuleGrove.FLOOR;
+	private static final int CUSTOM_SCENE = -1;
 
 	boolean placed;
+	private int sceneVersion;
+	private boolean migrationDeferred;
+	private boolean offlineMigrationReported;
 	BlockPos arrival = new BlockPos(0, BASE_Y + 1, 6);
 	BlockPos guide = new BlockPos(0, BASE_Y + 1, -4);
 	BlockPos gateMin = new BlockPos(-1, BASE_Y + 1, -8), gateMax = new BlockPos(1, BASE_Y + 4, -8);
@@ -68,23 +79,104 @@ public final class Vestibule extends SavedData {
 		if (placed) {
 			boolean arrivalReady = prepareChunk(level, arrival.getX() >> 4, arrival.getZ() >> 4);
 			boolean guideReady = prepareChunk(level, guide.getX() >> 4, guide.getZ() >> 4);
-			return arrivalReady && guideReady;
+			return arrivalReady && guideReady && refreshOriginal(level);
 		}
 		Optional<StructureTemplate> template = level.getStructureManager().get(TearsOfInk.id("vestibule"));
-		Vec3i size = template.map(StructureTemplate::getSize).orElse(new Vec3i(20, 1, 20));
-		int minX = -size.getX() / 2, minZ = -size.getZ() / 2;
-		boolean ready = true;
-		for (int cx = (minX - 1) >> 4; cx <= (minX + size.getX()) >> 4; cx++) {
-			for (int cz = (minZ - 1) >> 4; cz <= (minZ + size.getZ()) >> 4; cz++) {
-				ready &= prepareChunk(level, cx, cz);
-			}
+		if (template.isPresent()) {
+			Vec3i size = template.get().getSize();
+			int minX = -size.getX() / 2, minZ = -size.getZ() / 2;
+			if (!prepareBounds(level, minX - 1, minZ - 1, minX + size.getX(), minZ + size.getZ())) return false;
+			placeTemplate(level, template.get());
+			sceneVersion = CUSTOM_SCENE;
+		} else {
+			if (!prepareGrove(level)) return false;
+			VestibuleGrove.place(level);
+			arrival = VestibuleGrove.ARRIVAL;
+			guide = VestibuleGrove.GUIDE;
+			gateMin = VestibuleGrove.GATE_MIN;
+			gateMax = VestibuleGrove.GATE_MAX;
+			sceneVersion = VestibuleGrove.VERSION;
 		}
-		if (!ready) return false;
-		if (template.isPresent()) placeTemplate(level, template.get());
-		else placePlaceholder(level);
 		placed = true;
 		setDirty();
 		return true;
+	}
+
+	void tickDeferredMigration(ServerLevel level) {
+		int retryInterval = offlineMigrationReported ? 200 : 40;
+		if (migrationDeferred && level.getGameTime() % retryInterval == 0 && level.players().isEmpty()) refreshOriginal(level);
+	}
+
+	private boolean refreshOriginal(ServerLevel level) {
+		if (sceneVersion != 0) return true;
+		if (!level.players().isEmpty()) {
+			migrationDeferred = true;
+			return true;
+		}
+		if (!prepareGrove(level)) return false;
+		migrationDeferred = false;
+		if (arrival.equals(VestibuleGrove.ARRIVAL) && guide.equals(VestibuleGrove.GUIDE)
+				&& gateMin.equals(VestibuleGrove.GATE_MIN) && gateMax.equals(VestibuleGrove.GATE_MAX)
+				&& level.getStructureManager().get(TearsOfInk.id("vestibule")).isEmpty()
+				&& VestibuleGrove.matchesOriginal(level)) {
+			if (!offlinePositionsClear(level)) {
+				migrationDeferred = true;
+				if (!offlineMigrationReported) {
+					TearsOfInk.LOGGER.info("Vestibule grove migration deferred: a saved player position could intersect new blocks.");
+					offlineMigrationReported = true;
+				}
+				return true;
+			}
+			VestibuleGrove.place(level);
+			sceneVersion = VestibuleGrove.VERSION;
+		} else {
+			// Coordinates or blocks differ from the original fallback. Treat this scene as authored.
+			sceneVersion = CUSTOM_SCENE;
+			TearsOfInk.LOGGER.info("Vestibule grove migration skipped: existing scene differs from the original fallback.");
+		}
+		setDirty();
+		return true;
+	}
+
+	/** A disconnected player can log straight back into the old island, bypassing entry. */
+	private static boolean offlinePositionsClear(ServerLevel level) {
+		MinecraftServer server = level.getServer();
+		var directory = server.getWorldPath(LevelResource.PLAYER_DATA_DIR);
+		if (Files.notExists(directory)) return true;
+		try (var files = Files.newDirectoryStream(directory, "*.dat")) {
+			for (var file : files) {
+				String name = file.getFileName().toString();
+				UUID id;
+				try {
+					id = UUID.fromString(name.substring(0, name.length() - 4));
+				} catch (IllegalArgumentException ignored) {
+					continue;
+				}
+				if (server.getPlayerList().getPlayer(id) != null) continue;
+				var data = NbtIo.readCompressed(file, NbtAccounter.create(32L * 1024 * 1024));
+				if (!level.dimension().location().toString().equals(data.getString("Dimension"))) continue;
+				var pos = data.getList("Pos", Tag.TAG_DOUBLE);
+				if (pos.size() != 3 || VestibuleGrove.intersectsAddition(pos.getDouble(0), pos.getDouble(1), pos.getDouble(2)))
+					return false;
+			}
+			return true;
+		} catch (IOException | RuntimeException ignored) {
+			// Without reliable player positions, keep the old scene and retry later.
+			return false;
+		}
+	}
+
+	private static boolean prepareGrove(ServerLevel level) {
+		return prepareBounds(level, VestibuleGrove.MIN.getX() - 1, VestibuleGrove.MIN.getZ() - 1,
+				VestibuleGrove.MAX.getX() + 1, VestibuleGrove.MAX.getZ() + 1);
+	}
+
+	private static boolean prepareBounds(ServerLevel level, int minX, int minZ, int maxX, int maxZ) {
+		boolean ready = true;
+		for (int cx = minX >> 4; cx <= maxX >> 4; cx++) {
+			for (int cz = minZ >> 4; cz <= maxZ >> 4; cz++) ready &= prepareChunk(level, cx, cz);
+		}
+		return ready;
 	}
 
 	private static boolean prepareChunk(ServerLevel level, int x, int z) {
@@ -130,32 +222,6 @@ public final class Vestibule extends SavedData {
 		return ModBlocks.ASPHODELITE_ROCK.defaultBlockState();
 	}
 
-	/** Заглушка: каменный островок, бледные ворота и два Вечных фонаря. */
-	private void placePlaceholder(ServerLevel level) {
-		BlockState rock = ModBlocks.ASPHODELITE_ROCK.defaultBlockState(), path = ModBlocks.ASHEN_PATH.defaultBlockState();
-		BlockState log = ModBlocks.PALE_LOG.defaultBlockState();
-		for (int x = -9; x <= 9; x++) {
-			for (int z = -10; z <= 9; z++) {
-				if (x * x + z * z > 100) continue;
-				for (int y = BASE_Y - 3; y <= BASE_Y; y++) level.setBlock(new BlockPos(x, y, z), rock, 2);
-				if (Math.abs(x) <= 1) level.setBlock(new BlockPos(x, BASE_Y, z), path, 2);
-			}
-		}
-		for (int y = BASE_Y + 1; y <= BASE_Y + 5; y++) {
-			level.setBlock(new BlockPos(-2, y, -8), log, 2);
-			level.setBlock(new BlockPos(2, y, -8), log, 2);
-		}
-		for (int x = -2; x <= 2; x++) level.setBlock(new BlockPos(x, BASE_Y + 5, -8), log, 2);
-		BlockState lantern = ModBlocks.ETERNAL_LANTERN.defaultBlockState();
-		level.setBlock(new BlockPos(-3, BASE_Y + 1, -7), lantern, 2);
-		level.setBlock(new BlockPos(3, BASE_Y + 1, -7), lantern, 2);
-		gateMin = new BlockPos(-1, BASE_Y + 1, -8);
-		gateMax = new BlockPos(1, BASE_Y + 4, -8);
-		arrival = new BlockPos(0, BASE_Y + 1, 6);
-		guide = new BlockPos(0, BASE_Y + 1, -5);
-		fillGate(level);
-	}
-
 	/** Пелена в проёме ворот (где были изумруды). Ворота шире по X — пелена вдоль X, иначе вдоль Z. */
 	private void fillGate(ServerLevel level) {
 		net.minecraft.core.Direction.Axis axis = (gateMax.getX() - gateMin.getX()) >= (gateMax.getZ() - gateMin.getZ())
@@ -169,6 +235,7 @@ public final class Vestibule extends SavedData {
 	@Override
 	public CompoundTag save(CompoundTag tag, HolderLookup.Provider registries) {
 		tag.putBoolean("placed", placed);
+		tag.putInt("scene_version", sceneVersion);
 		tag.put("arrival", NbtUtils.writeBlockPos(arrival));
 		tag.put("guide", NbtUtils.writeBlockPos(guide));
 		tag.put("gate_min", NbtUtils.writeBlockPos(gateMin));
@@ -179,6 +246,7 @@ public final class Vestibule extends SavedData {
 	private static Vestibule load(CompoundTag tag, HolderLookup.Provider registries) {
 		Vestibule v = new Vestibule();
 		v.placed = tag.getBoolean("placed");
+		v.sceneVersion = tag.getInt("scene_version");
 		NbtUtils.readBlockPos(tag, "arrival").ifPresent(p -> v.arrival = p);
 		NbtUtils.readBlockPos(tag, "guide").ifPresent(p -> v.guide = p);
 		NbtUtils.readBlockPos(tag, "gate_min").ifPresent(p -> v.gateMin = p);
