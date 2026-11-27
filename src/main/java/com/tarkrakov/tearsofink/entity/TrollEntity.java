@@ -56,11 +56,12 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
     private static final EntityDataAccessor<Long> PREVIOUS = SynchedEntityData.defineId(TrollEntity.class, EntityDataSerializers.LONG);
 
     private static final EntityDataAccessor<Long> SLAM_LANDED = SynchedEntityData.defineId(TrollEntity.class, EntityDataSerializers.LONG);
+    private static final EntityDataAccessor<Boolean> POWER_SLAM = SynchedEntityData.defineId(TrollEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> FAST_WALK = SynchedEntityData.defineId(TrollEntity.class, EntityDataSerializers.BOOLEAN);
     private Vec3 home, bed;
     private Vec3 leapOrigin, leapGoal;
     private int leapTicks, noPlayerHit, leapCooldown;
-    private boolean leaping, leapPreviousGravity, breakBelly;
+    private boolean leaping, leapPreviousGravity;
     private BlockPos entrance, forageTree, punchTree;
     private UUID territoryId, unreachablePrey;
     private LivingEntity prey;
@@ -114,6 +115,7 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
         builder.define(PREVIOUS, 0L);
         builder.define(SLAM_LANDED, 0L);
         builder.define(FAST_WALK, false);
+        builder.define(POWER_SLAM, false);
     }
 
     public int clip() { return (int) (entityData.get(STATE) & 15); }
@@ -122,12 +124,14 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
     public int previousTicks() { return (int) (entityData.get(PREVIOUS) >>> 4); }
     public long slamLanded(){return entityData.get(SLAM_LANDED);}
     public boolean fastWalk(){return entityData.get(FAST_WALK);}
+    private boolean powerSlam(){return entityData.get(POWER_SLAM);}
+    private int leapFlightTicks(){return powerSlam()?LEAP_FLIGHT:18;}
     public float animationTicks(int c,float ticks,float partial) {
         if(c!=SLAM)return c==WALK&&fastWalk()?ticks*2:ticks;
         long landed=slamLanded();
         if(landed>0)return 28+Math.max(0,level().getGameTime()-landed+partial);
         if(ticks<=LEAP_WINDUP)return ticks;
-        return Math.min(27.8f,10+18*(ticks-LEAP_WINDUP)/LEAP_FLIGHT);
+        return Math.min(27.8f,10+18*(ticks-LEAP_WINDUP)/leapFlightTicks());
     }
 
     private int elapsed() {
@@ -419,7 +423,6 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
                 }
                 if (elapsed >= DURATION[clip]) {
                     attackIn = prey instanceof Player?6:18+random.nextInt(14);
-                    breakBelly=false;
                     punchTree = null;
                     play(IDLE);
                 }
@@ -479,7 +482,7 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
         boolean blocked=player&&(horizontal<=ENGAGE_RANGE*ENGAGE_RANGE&&!visible||pursuitStall>=24);
         // Do not require eye-level visibility to smash an obstruction in front.
         if(ready&&blocked&&TrollBlockSmash.hasObstacle(level,this,aim)){
-            stop();look(aim);breakBelly=true;pursuitStall=0;beginAttack(BELLY);return;
+            stop();look(aim);pursuitStall=0;beginAttack(BELLY);return;
         }
         if(ready&&player&&leapCooldown<=0&&needsLeap(offset.lengthSqr(),noPlayerHit)
                 &&LoadedFaunaTerrain.loaded(level,new AABB(position(),position().add(offset.normalize().scale(Math.min(LEAP_RANGE,offset.length())))).inflate(2),2)){
@@ -496,7 +499,7 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
             if(!player||horizontal<=2.6*2.6){stop();play(IDLE);return;}
         }
         if(player){
-            if(moveIn==PURSUIT_INTERVAL||getNavigation().isDone()){
+            if(moveIn==PURSUIT_INTERVAL){
                 if(LoadedFaunaTerrain.loaded(level,new AABB(position(),prey.position()),3)){
                     int off=Mth.floor(getBbWidth()+1)/2;
                     Path route=getNavigation().createPath(prey.blockPosition().offset(-off,0,-off),1);
@@ -519,7 +522,7 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
     private void beginAttack(int attack) {
         if (attack == LEFT || attack == RIGHT) leftPunch = !leftPunch;
         attackYaw = getYRot();
-        if(attack==SLAM){entityData.set(SLAM_LANDED,0L);leapTicks=0;leapOrigin=null;}
+        if(attack==SLAM){entityData.set(SLAM_LANDED,0L);entityData.set(POWER_SLAM,prey instanceof Player);leapTicks=0;leapOrigin=null;}
         play(attack);
         playSound(ModSounds.TROLL_WINDUP, .85f, attack == SLAM ? .85f : 1f + random.nextFloat() * .12f);
     }
@@ -540,10 +543,11 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
             }
             if(returning||prey==null||!onGround()){play(IDLE);return;}
             Vec3 delta=prey.position().subtract(position());
-            if(!(prey instanceof Player))delta=delta.scale(.4);
+            if(!powerSlam())delta=delta.scale(.4);
             Vec3 horizontal=new Vec3(delta.x,0,delta.z);
-            if(horizontal.length()>LEAP_RANGE)horizontal=horizontal.normalize().scale(LEAP_RANGE);
-            Vec3 candidate=position().add(horizontal.x,Math.clamp(delta.y,-8,LEAP_RISE),horizontal.z);
+            double reach=powerSlam()?LEAP_RANGE:2.5;
+            if(horizontal.length()>reach)horizontal=horizontal.normalize().scale(reach);
+            Vec3 candidate=position().add(horizontal.x,powerSlam()?Math.clamp(delta.y,-8,LEAP_RISE):0,horizontal.z);
             if(homeDistance(candidate)>CHASE*CHASE||!LoadedFaunaTerrain.loaded(level,new AABB(position(),candidate).inflate(3),2)){
                 play(IDLE);leapCooldown=20;return;
             }
@@ -553,14 +557,15 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
         }
         look(attackYaw);
         int step=++leapTicks;
-        double t=Math.min(1,step/(double)LEAP_FLIGHT);
+        int flight=leapFlightTicks();
+        double t=Math.min(1,step/(double)flight);
         double horizontal=leapHorizontal(t);
         Vec3 path=leapGoal.subtract(leapOrigin);
-        Vec3 desired=leapOrigin.add(path.x*horizontal,leapHeight(t,path.y),path.z*horizontal);
+        Vec3 desired=leapOrigin.add(path.x*horizontal,leapHeight(t,path.y)*(powerSlam()?1:.16),path.z*horizontal);
         Vec3 motion=desired.subtract(position());
         // Bounded physical movement, not teleportation. Obstructions remain
         // solid unless the griefing rules allow clearing the actual swept body.
-        if(step>LEAP_FLIGHT)motion=new Vec3(0,-Math.min(1.2,.2+(step-LEAP_FLIGHT)*.12),0);
+        if(step>flight)motion=new Vec3(0,-Math.min(1.2,.2+(step-flight)*.12),0);
         if(motion.length()>1.8)motion=motion.normalize().scale(1.8);
         if(!LoadedFaunaTerrain.loaded(level,getBoundingBox().expandTowards(motion),2)){
             cancelLeap();play(IDLE);leapCooldown=20;return;
@@ -569,7 +574,7 @@ public final class TrollEntity extends PathfinderMob implements Enemy {
         move(MoverType.SELF,motion);
         setDeltaMovement(Vec3.ZERO);
         fallDistance=0;
-        if((step>2&&motion.y<=0&&onGround())||step>=LEAP_FLIGHT+24){
+        if((step>2&&motion.y<=0&&onGround())||step>=flight+24){
             boolean landed=onGround();
             cancelLeap();entityData.set(SLAM_LANDED,level.getGameTime());
             leapCooldown=20;
