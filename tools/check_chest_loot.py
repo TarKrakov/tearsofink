@@ -5,7 +5,8 @@ from pathlib import Path
 root=Path("src/main/resources/data/tears-of-ink/loot_table/chests")
 tiers=("poor","common","rich")
 names={"ruins_start","ruins_poor","ruins_common","ruins_rich","ruins_inkwood","temple_pale_reward","temple_blood_supply","temple_blood_reward","settlement_supplies","settlement_pantry","gate_supplies","camp_supplies"}
-troll_caves={"troll_cave_pale","troll_cave_inkwood"}
+troll_caves={"troll_cave_pale","troll_cave_inkwood","troll_cave_pale_family","troll_cave_inkwood_family"}
+ink_troll_caves={"troll_cave_inkwood","troll_cave_inkwood_family"}
 names|=troll_caves
 names|={"ruins_scattered_"+t for t in (*tiers,"inkwood")}
 names|={pre+t for pre in ("gate_","gate_cache_","camp_cache_","watchtower_cache_","temple_pale_supply_") for t in tiers}
@@ -48,7 +49,7 @@ for name,table in tables.items():
         ink_range={"poor":(3,7),"common":(4,10),"rich":(7,10),"inkwood":(7,10)}[name.removeprefix("ruins_scattered_")]
     if name.startswith(("camp_","watchtower_")):
         ink_range=tuple(5*x for x in ink_range)
-    if name in troll_caves: ink_range=(13,20)
+    if name in troll_caves: ink_range=(36,52) if name.endswith("_family") else (18,26)
     ink_pools=[p for p in table["pools"] if any(e.get("name")==prefix+"ink" for e in p["entries"])]
     assert len(ink_pools)==1, name
     ip=ink_pools[0]
@@ -78,7 +79,7 @@ for name,table in tables.items():
         for c in pool.get("conditions",[]):
             if c["condition"]=="minecraft:random_chance": assert 0<=c["chance"]<=1
     assert rare_pools<=1
-    if name not in {"ruins_inkwood","ruins_scattered_inkwood","troll_cave_inkwood"}: assert expected(name,"raw_ink_metal")==0
+    if name not in {"ruins_inkwood","ruins_scattered_inkwood"}|ink_troll_caves: assert expected(name,"raw_ink_metal")==0
     if name not in {"temple_blood_supply","temple_blood_reward","settlement_supplies","settlement_pantry","ruins_poor","ruins_common","ruins_rich","ruins_scattered_poor","ruins_scattered_common","ruins_scattered_rich"}: assert expected(name,"raw_blood_metal")==0
     if name.startswith(("gate_","camp_","watchtower_","settlement_","temple_pale_supply_")) or name=="temple_blood_supply": assert rare_pools==0
 for name in ("gate_supplies","camp_supplies","settlement_supplies","settlement_pantry"):
@@ -112,7 +113,7 @@ for tier,ore,pig in zip(tiers,(1.0,1.275,1.9),(.05,.08,.10)):
     assert expected("ruins_"+tier,"blood_clot")==.05
 assert expected("ruins_inkwood","pigment")==.10
 for name in tables:
-    if name not in {"ruins_inkwood","ruins_scattered_inkwood","troll_cave_inkwood"}:
+    if name not in {"ruins_inkwood","ruins_scattered_inkwood"}|ink_troll_caves:
         assert expected(name,"tearbloom_brew")==0 and expected(name,"strong_tearbloom_brew")==0, name
     if name.startswith("temple_pale") or name=="ruins_start":
         assert expected(name,"blood_clot")==0
@@ -144,16 +145,23 @@ for tier,metal,ore,pig in (
     assert not metal_pool.get("conditions") and metal_pool["rolls"]==1 and len(metal_pool["entries"])==1
     assert expected(name,"raw_blood_metal")==expected(old,"raw_blood_metal")
     assert expected(name,"blood_clot")==expected(old,"blood_clot")
-for name,metal,average in (
-        ("troll_cave_pale","raw_pale_metal",12.5),("troll_cave_inkwood","raw_ink_metal",10)):
-    assert expected(name,metal)==average
-    assert any_item(name,{"raw_pale_metal","raw_ink_metal","raw_blood_metal"})==average
-    assert abs(expected(name,"pigment")-.45)<1e-9
-    assert abs(any_item(name,rare)-.30)<1e-9
-    metal_pool=next(p for p in tables[name]["pools"] if any(e.get("name")==prefix+metal for e in p["entries"]))
-    assert not metal_pool.get("conditions") and len(metal_pool["entries"])==1 and metal_pool["rolls"]==1
+for region,metal,bounds in (
+        ("pale","raw_pale_metal",(12,18)),("inkwood","raw_ink_metal",(10,15))):
+    for family in (False,True):
+        name="troll_cave_"+region+("_family" if family else "")
+        factor=2 if family else 1
+        for item,(lo,hi) in ((metal,bounds),("ink",(18,26)),("blood_clot",(6,10)),("pigment",(1,2))):
+            pool=next(p for p in tables[name]["pools"] if any(e.get("name")==prefix+item for e in p["entries"]))
+            assert not pool.get("conditions") and len(pool["entries"])==1 and pool["rolls"]==1
+            assert pool["entries"][0]["functions"]==[{"function":"minecraft:set_count","count":{"type":"minecraft:uniform","min":lo*factor,"max":hi*factor}}]
+            assert expected(name,item)==factor*(lo+hi)/2
+        assert any_item(name,{"raw_pale_metal","raw_ink_metal","raw_blood_metal"})==factor*sum(bounds)/2
+        assert expected(name,"asphoda")==0
+        assert abs(any_item(name,rare)-(.25 if family else .15))<1e-9
 cave=(java/"entity/TrollCave.java").read_text()
 assert set(re.findall(r'loot\("([^"]+)"\)',cave))==troll_caves
+assert "beds.size() == 2" in cave and "chest.getLootTableSeed()" in cave
+assert "PALE_LOOT.equals(original) || INK_LOOT.equals(original)" in cave
 piece=(java/"world/ruins/RuinPiece.java").read_text()
 assert 'tag.getBoolean("EnrichedScattered")' in piece and 'tag.putBoolean("EnrichedScattered",true)' in piece
 assert "enrichedScattered ? (pale ? Ruins.SCATTERED_LOOT[tier] : Ruins.SCATTERED_INKWOOD_LOOT)" in piece

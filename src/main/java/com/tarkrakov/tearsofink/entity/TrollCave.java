@@ -34,6 +34,8 @@ final class TrollCave {
     static final int RADIUS = 14;
     private static final ResourceKey<LootTable> PALE_LOOT = loot("troll_cave_pale");
     private static final ResourceKey<LootTable> INK_LOOT = loot("troll_cave_inkwood");
+    private static final ResourceKey<LootTable> PALE_FAMILY_LOOT = loot("troll_cave_pale_family");
+    private static final ResourceKey<LootTable> INK_FAMILY_LOOT = loot("troll_cave_inkwood_family");
     private static final int FLAGS = Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE;
 
     private TrollCave() {}
@@ -49,8 +51,25 @@ final class TrollCave {
             blocks.forEach((pos, state) -> level.setBlock(pos, state, FLAGS));
             level.setBlock(chest, Blocks.CHEST.defaultBlockState().setValue(ChestBlock.FACING, outward), FLAGS);
             if (level.getBlockEntity(chest) instanceof ChestBlockEntity storage) {
-                storage.setLootTable(inkwood ? INK_LOOT : PALE_LOOT, level.random.nextLong());
+                storage.setLootTable(beds.size() == 2 ? (inkwood ? INK_FAMILY_LOOT : PALE_FAMILY_LOOT) : (inkwood ? INK_LOOT : PALE_LOOT), level.random.nextLong());
             }
+        }
+    }
+
+    // Existing family caves: change only an intact, still unopened original
+    // chest. An already unpacked chest has no loot table and is never refilled.
+    static void upgradeUnopenedFamily(ServerLevel level, TrollTerritories.Zone zone) {
+        if (zone.entrance == null || zone.slots.size() != 2) return;
+        int dx = Integer.signum(zone.center.getX() - zone.entrance.getX());
+        int dz = Integer.signum(zone.center.getZ() - zone.entrance.getZ());
+        if (Math.abs(dx) + Math.abs(dz) != 1) return;
+        BlockPos pos = zone.entrance.offset(dx * 10, -3, dz * 10);
+        var chunk = LoadedFaunaTerrain.chunk(level, pos);
+        if (chunk == null || !(chunk.getBlockEntity(pos) instanceof ChestBlockEntity chest)) return;
+        var original = chest.getLootTable();
+        if (PALE_LOOT.equals(original) || INK_LOOT.equals(original)) {
+            chest.setLootTable(PALE_LOOT.equals(original) ? PALE_FAMILY_LOOT : INK_FAMILY_LOOT, chest.getLootTableSeed());
+            chest.setChanged();
         }
     }
 

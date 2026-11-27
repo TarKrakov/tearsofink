@@ -12,8 +12,8 @@
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 8,
-                "max": 12
+                "min": 10,
+                "max": 15
               }
             }
           ],
@@ -32,8 +32,8 @@
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 13,
-                "max": 20
+                "min": 18,
+                "max": 26
               }
             }
           ],
@@ -46,14 +46,14 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "tears-of-ink:asphoda",
+          "name": "tears-of-ink:blood_clot",
           "functions": [
             {
               "function": "minecraft:set_count",
               "count": {
                 "type": "minecraft:uniform",
-                "min": 4,
-                "max": 8
+                "min": 6,
+                "max": 10
               }
             }
           ],
@@ -124,6 +124,12 @@
             }
           ]
         }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:random_chance",
+          "chance": 0.5
+        }
       ]
     },
     {
@@ -132,13 +138,17 @@
         {
           "type": "minecraft:item",
           "name": "tears-of-ink:pigment",
-          "weight": 1
-        }
-      ],
-      "conditions": [
-        {
-          "condition": "minecraft:random_chance",
-          "chance": 0.45
+          "weight": 1,
+          "functions": [
+            {
+              "function": "minecraft:set_count",
+              "count": {
+                "type": "minecraft:uniform",
+                "min": 1,
+                "max": 2
+              }
+            }
+          ]
         }
       ]
     },
@@ -184,7 +194,7 @@
       "conditions": [
         {
           "condition": "minecraft:random_chance",
-          "chance": 0.3
+          "chance": 0.15
         }
       ]
     }

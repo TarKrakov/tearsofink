@@ -64,6 +64,7 @@ public final class TrollEncounters {
             boolean decorated=false;
             for(TrollTerritories.Zone z:data.zones()){
                 if(!within(p.getX(),p.getZ(),z.center.getX()+.5,z.center.getZ()+.5,SPAWN_MAX+BED_MAX))continue;
+                TrollCave.upgradeUnopenedFamily(l,z);
                 if(!decorated&&z.entrance!=null&&!z.clearingDone&&farFromPlayers(l,z.center)
                         &&TrollTrees.thinAround(l,z.center,z.entrance)){
                     data.clearingDone(z);decorated=true;count(l,"clearing");
