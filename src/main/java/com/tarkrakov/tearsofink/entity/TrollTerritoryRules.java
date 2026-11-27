@@ -21,6 +21,7 @@ public final class TrollTerritoryRules {
     static double leapHeight(double progress,double rise){
         double t=Math.clamp(progress,0,1);
         double end=Math.clamp(rise,-8,LEAP_RISE);
+        if(t>=1)return end;
         if(t<=.42){double u=t/.42;return LEAP_APEX*(2*u-u*u);}
         double u=(t-.42)/.58;
         return LEAP_APEX+(end-LEAP_APEX)*u*u;
